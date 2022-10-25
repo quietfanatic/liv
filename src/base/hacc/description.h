@@ -112,7 +112,7 @@ template <class T, class = void>
 static constexpr Destructor* destruct_p = null;
 template <class T>
 static constexpr Destructor* destruct_p<
-    T, std::void_t<decltype(reinterpret_cast<T*>(null)->~T())>
+    T, std::void_t<decltype(std::declval<T>().~T())>
 > = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
