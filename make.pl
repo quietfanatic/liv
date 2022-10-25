@@ -97,7 +97,7 @@ sub copy_rule {
 
 ##### SOURCES
 
-my $program = 'pokey.exe';
+my $program = 'iv';
 
 my @modules = qw(
     base/geo/mat

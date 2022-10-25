@@ -6,6 +6,7 @@
 
 namespace wind {
 
+ // An active loop using SDL.  The default on_step calls poll_events.
 struct Loop {
      // Desired framerate.
     double fps = 60;
@@ -18,9 +19,15 @@ struct Loop {
      //  frozen.
     double max_lag_tolerance = 3.0;
 
-    std::function<void()> step = []{};
-    std::function<void()> draw = []{};
+     // Will be called at the desired fps, unless slowdown happens.
+     // If on_step is null, then on step the loop will quit on SDL_QUIT and
+     // send other events through process_window_event (see window.h).
+    std::function<void()> on_step = null;
+     // Will be called at the desired fps, unless frameskip or slowdown happens.
+     // If on_draw is null, then on draw the loop will do nothing.
+    std::function<void()> on_draw = null;
 
+     // stop() has been called.
     bool stop_requested = false;
 
      // Loops over update and draw until stop is called

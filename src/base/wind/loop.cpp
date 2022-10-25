@@ -4,41 +4,33 @@
 #include <SDL2/SDL_timer.h>
 
 #include "../hacc/haccable.h"
+#include "window.h"
 
 namespace wind {
+
+static void default_on_step (Loop& self) {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT: {
+                self.stop();
+                break;
+            }
+            default: {
+                process_window_event(&event);
+                break;
+            }
+        }
+    }
+}
 
 void Loop::start () {
     double lag = 0;
     uint32 last_ticks = SDL_GetTicks();
     while (!stop_requested) {
-         // SDL event loop
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT: {
-                    stop(); break;
-                }
-                case SDL_KEYDOWN: {
-                    switch (event.key.keysym.scancode) {
-                        case 0x29: { // Escape
-                            stop(); break;
-                        }
-                        default: break;
-                    }
-                    break;
-                }
-                case SDL_WINDOWEVENT: {
-                    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                        // TODO
-                        //size = {event.window.data1, event.window.data2};
-                    }
-                    break;
-                }
-                default: break;
-            }
-        }
          // Run step
-        step();
+        if (on_step) on_step();
+        else default_on_step(*this);
          // Calculate timing
         lag -= 1/fps;
         if (lag > max_lag_tolerance/fps) {
@@ -52,7 +44,7 @@ void Loop::start () {
              // Tolerate tiny amount of lag
             if (lag > 1/fps) lag = 1/fps;
              // Render
-            draw();
+            if (on_draw) on_draw();
         }
          // Delay if we need to.
          // TODO: Is this the best place to put this?

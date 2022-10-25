@@ -31,24 +31,14 @@ int main (int argc, char** argv) {
     wind::Window window;
     window.open();
     glow::init();
+
     for (;;) {
         SDL_Event event;
         AS(SDL_WaitEvent(&event));
-        switch (event.type) {
-            case SDL_QUIT: {
-                window.close();
-                return 0;
-            }
-            case SDL_KEYDOWN: {
-                switch (event.key.keysym.scancode) {
-                    case 0x29: { // Escape
-                        window.close();
-                        return 0;
-                    }
-                    default: break;
-                }
-            }
-            default: break;
+        if (event.type == SDL_QUIT) {
+            window.close();
+            return 0;
         }
+        wind::process_window_event(&event);
     }
 }
