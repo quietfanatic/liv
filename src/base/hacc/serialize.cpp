@@ -944,7 +944,7 @@ static tap::TestSet tests ("base/hacc/serialize", []{
     std::vector<String> keys = item_get_keys(&ast);
     is(keys.size(), 2u, "item_get_keys (size)");
     ok((keys[0] == "a" && keys[1] == "b") || (keys[0] == "b" && keys[1] == "a"),
-        "set_get_keys (contents)"
+        "item_get_keys (contents)"
     );
     answer = 0;
     doesnt_throw([&]{
