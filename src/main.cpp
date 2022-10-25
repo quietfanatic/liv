@@ -1,13 +1,13 @@
 #include <string>
 #include <string_view>
 #include <SDL2/SDL.h>
-#include "base/glow/image.h"
+#include "base/glow/common.h"
 #include "base/hacc/resource.h"
 #include "base/tap/tap.h"
-#include "editor.h"
+#include "base/uni/common.h"
+#include "base/wind/window.h"
 
 using namespace std::literals;
-using namespace pokey;
 
 int main (int argc, char** argv) {
     char* base = AS(SDL_GetBasePath());
@@ -37,13 +37,13 @@ int main (int argc, char** argv) {
         switch (event.type) {
             case SDL_QUIT: {
                 window.close();
-                return;
+                return 0;
             }
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.scancode) {
                     case 0x29: { // Escape
                         window.close();
-                        return;
+                        return 0;
                     }
                     default: break;
                 }

@@ -13,7 +13,9 @@ my @compile_opts = (map("-I$_", @includes), qw(
     -Wall -Wextra -Wno-format-security -Wno-unused-function -Wno-strict-aliasing
     -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
-my @link_opts = ();
+my @link_opts = qw(
+    -lSDL2
+);
 #my @link_opts = (('-L' . rel2abs("$mingw_sdl2/lib")), qw(
 #    -static-libgcc -static-libstdc++
 #    -lmingw32 -lSDL2main -lSDL2
@@ -119,7 +121,6 @@ my @modules = qw(
     base/glow/gl
     base/glow/objects
     base/glow/program
-    base/glow/texture-program
     base/uni/common
     base/wind/loop
     base/wind/window

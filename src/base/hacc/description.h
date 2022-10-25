@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 #include "accessors.h"
 #include "tree.h"
@@ -111,7 +112,7 @@ template <class T, class = void>
 static constexpr Destructor* destruct_p = null;
 template <class T>
 static constexpr Destructor* destruct_p<
-    T, std::void_t<decltype(((T*)null)->~T(), 0)>
+    T, std::void_t<decltype(reinterpret_cast<T*>(null)->~T())>
 > = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
@@ -404,8 +405,9 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
         constexpr uint16 count = Desc::template count<dcr_type<T>>(); \
         static_assert(count <= 1, "Multiple " #dcr_name " descriptors in haccable description"); \
         if constexpr (count) { \
-            header.dcr_name##_offset = (size_t)desc.template get<dcr_type<T>>(0) \
-                                    - (size_t)&header; \
+            header.dcr_name##_offset = \
+                static_cast<ComparableAddress*>(desc.template get<dcr_type<T>>(0)) \
+              - static_cast<ComparableAddress*>(&header); \
         } \
     }
     APPLY_OFFSET(name, NameDcr)
