@@ -1,3 +1,5 @@
+// Utility case macros for parse.cpp and print.cpp
+
 #pragma once
 
 #define ANY_LETTER \

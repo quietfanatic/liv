@@ -8,11 +8,16 @@
 namespace hacc {
 
  // Represents a dynamically typed object with reference semantics.
+ //
  // Can reference any object that can be accessed through an Accessor, even if
- //  its address cannot be taken.  The empty value will cause null derefs if
- //  you do anything with it.  Just as with C++ references or pointers, do not
- //  dereference a Reference after the object it refers to goes away.
+ // its address cannot be taken.  The empty value will cause null derefs if
+ // you do anything with it.  Just as with C++ references or pointers, do not
+ // dereference a Reference after the object it refers to goes away.
+ //
  // The Reference object itself is immutable once created.
+ //
+ // This class contains convenience methods that call serialize functions on
+ // the referred-to object.
 struct Reference {
     Mu* const host;
     const in::AccessorOrType aot;

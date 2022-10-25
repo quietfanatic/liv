@@ -1,3 +1,6 @@
+// Provides haccabilities for builtin scalar types.  For template types like
+// std::vector, include the .h file.
+
 #include "haccable-standard.h"
 
 using namespace hacc;

@@ -9,7 +9,8 @@
 namespace hacc {
 
  // Represents a haccable type.  Provides dynamically-typed construction and
- //  destruction for any type as long as it is haccable.
+ // destruction for any type as long as it is haccable.
+ //
  // The default value will cause null derefs if you do anything with it.
 struct Type {
     const in::Description* desc;
@@ -34,7 +35,9 @@ struct Type {
     usize cpp_size () const;
     void default_construct (void* target) const;
     void destruct (Mu&) const;
-     // Not specified whether this uses new or malloc, so deallocate with deallocate.
+     // It is not specified whether this uses new or malloc, so if you use this
+     // to allocate space for an object, you must use deallocate() to deallocate
+     // it.
     void* allocate () const;
     void deallocate (void*) const;
     Mu* default_new () const;
@@ -47,7 +50,7 @@ struct Type {
      // Eventually we will implement base conversion.
 
      // Cast from derived class to base class.  Will throw X::CannotCoerce if
-     //  the requested Type is not a base of this Type.
+     // the requested Type is not a base of this Type.
     Mu* upcast_to (Type, Mu*) const;
     const Mu* upcast_to (Type t, const Mu* p) const {
         return (const Mu*)upcast_to(t, (Mu*)p);
@@ -62,9 +65,9 @@ struct Type {
     }
 
      // Cast from base class to derived class.  Will throw X::CannotCoerce if
-     //  the requested Type is not a base of this Type.  As with static_cast,
-     //  this cannot check that the pointed-to data really is the derived class,
-     //  and if it isn't, incorrect execution may occur.
+     // the requested Type is not a base of this Type.  As with static_cast,
+     // this cannot check that the pointed-to data really is the derived class,
+     // and if it isn't, incorrect execution may occur.
     Mu* downcast_to (Type, Mu*) const;
     const Mu* downcast_to (Type t, const Mu* p) const {
         return (const Mu*)downcast_to(t, (Mu*)p);

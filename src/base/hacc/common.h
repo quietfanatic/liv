@@ -1,6 +1,6 @@
-#pragma once
+ // This module contains various types and exceptions that are used throughout Hacc
 
- // This contains various types and exceptions that are used throughout Hacc
+#pragma once
 
 #include <cstdint>
 #include <limits>

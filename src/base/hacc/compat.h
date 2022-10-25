@@ -1,3 +1,6 @@
+ // This module contains cross-system compatibility functions, mostly UTF-8
+ // related functions.
+
 #pragma once
 
 #include <cstdio>

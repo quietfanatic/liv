@@ -1,7 +1,8 @@
-#pragma once
+// This module implements the central registry of all haccable types in the
+// program.  This is kind of a nexus of dependency, so we're keeping it in its
+// own module.
 
- // These things are kind of a nexus of dependency, so let's quarantine
- //  them into their own file.
+#pragma once
 
 #include <typeinfo>
 

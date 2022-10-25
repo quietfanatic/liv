@@ -1,3 +1,6 @@
+// This module contains the classes implementing the accessors that can be used
+// in haccable descriptions.
+
 #pragma once
 
 // TODO: Figure out how to get around strict-aliasing rules

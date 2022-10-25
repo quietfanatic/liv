@@ -1,3 +1,8 @@
+// This module implements static-layout haccable descriptions, which are
+// generated at compile time and accessed at runtime to determine how to
+// transform objects to and from trees.  The descriptions are mostly
+// declarative; the actual serialization code is in serialize.cpp.
+
 #pragma once
 
 #include <cstddef>

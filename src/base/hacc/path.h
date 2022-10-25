@@ -1,14 +1,17 @@
-#pragma once
-
 // This implements a recursive object that is a symbolic representation of a
-//  Reference.  I would have just used hacc::Array, but due to the way these
-//  are used, a linked list structure will be much more efficient than a
-//  packed array structure.
+// Reference.  I would have just used hacc::Array, but due to the way these
+// are used, a linked list structure will be much more efficient than a
+// packed array structure.
 // TODO: Are we sure about that?  A hacc::Array is just a std::vector of
-//  refcounted pointers.  Worth some benchmarking once we get around to it.
+// refcounted pointers.  Worth some benchmarking once we get around to it.
+//
+// These are NOT file paths (though they can contain a file path as their first
+// element).
 //
 // You shouldn't have to use this class directly, but I guess you can if you
-//  want.
+// want.
+
+#pragma once
 
 #include "common.h"
 

@@ -1,3 +1,5 @@
+// This module implements transforming trees into strings.
+
 #pragma once
 
 #include "tree.h"

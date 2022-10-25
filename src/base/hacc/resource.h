@@ -1,13 +1,7 @@
-#pragma once
-
-#include "common.h"
-#include "path.h"
-#include "reference.h"
-
  // A resource represents a top-level named piece of program data.  A resource
  //  has:
  //     - a source, which is by default a file on disk
- //     - a name, which in the case of files, is essentially its filename
+ //     - a name, which in the case of files, is essentially its file path
  //     - a value, which is a Dynamic
  //     - a state, which is usually UNLOADED or LOADED.
  // Resources can be loaded, reloaded, unloaded, and saved.
@@ -18,6 +12,12 @@
  //  will be updated if those resources are reloaded.  Named resources cannot
  //  be saved if they contain references to anonymous resources, because there's
  //  no way to serialize that reference as a path.
+
+#pragma once
+
+#include "common.h"
+#include "path.h"
+#include "reference.h"
 
 namespace hacc {
 

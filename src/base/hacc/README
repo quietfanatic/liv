@@ -30,6 +30,6 @@ The Hacc data language is similar to JSON but with the following differences:
 //    if it's large, storing it in a separate file.
 
 Unlike some other data languages, Hacc does not contain type annotations.  The
- typical way to seralize an object that can contain multiple types is to use an
+ typical way to serialize an object that can contain multiple types is to use an
  array with two elements, the first of which is the type name, and the second
  of which is the value.

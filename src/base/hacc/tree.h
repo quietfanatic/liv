@@ -1,5 +1,6 @@
  // This defines the main Tree datatype which represents a Hacc structure.
- // Trees are immutable and reference-counted, so copying is cheap.
+ // Trees are immutable and reference-counted, so copying is cheap, but they
+ // can't be accessed on multiple threads at a time.
 
 #pragma once
 

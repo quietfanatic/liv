@@ -1,3 +1,8 @@
+// This header provides template haccabilities for a few stl types.  The
+// corresponding .cpp file provides haccabilities for non-template types like
+// builtin integers.  If you want to use things like std::vector in haccable
+// descriptions, include this file.
+
 #pragma once
 
 #include <optional>
