@@ -1,0 +1,3 @@
+[submodule "src/external/make-pl"]
+	path = src/external/make-pl
+	url = https://github.com/quietfanatic/make-pl.git

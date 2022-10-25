@@ -1,0 +1,10 @@
+# products
+/tmp
+/out
+
+# Reference
+/ref
+*.draft.*
+
+# externals
+/src/external/SDL2-2.0.14

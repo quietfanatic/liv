@@ -1,0 +1,50 @@
+[hacc::Document {
+    program: [glow::TextureProgram {
+        shaders: [["" vertex 1] ["" fragment 1]]
+    }]
+    vertex: [glow::Shader {
+        type: GL_VERTEX_SHADER
+        source: "
+            #version 140
+
+            uniform float u_screen_rect [4];
+            uniform float u_tex_rect [4];
+            const ivec2 corners [4] = {
+                ivec2(0, 1),
+                ivec2(2, 1),
+                ivec2(2, 3),
+                ivec2(0, 3)
+            };
+            out vec2 v_tex_coords;
+
+            void main () {
+                gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
+                gl_Position.y = u_screen_rect[corners[gl_VertexID].y];
+                gl_Position.zw = vec2(0, 1);
+                v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
+                v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
+            }
+        "
+    }]
+    fragment: [glow::Shader {
+        type: GL_FRAGMENT_SHADER
+        source: "
+            #version 140
+
+            uniform int u_tex_target;
+            uniform sampler2D u_2d_tex;
+            uniform sampler2DRect u_rectangle_tex;
+            uniform sampler1DArray u_1d_array_tex;
+            in vec2 v_tex_coords;
+            out vec4 color;
+
+            void main () {
+                switch (u_tex_target) {
+                    case 0: color = texture(u_2d_tex, v_tex_coords); break;
+                    case 1: color = texture(u_rectangle_tex, v_tex_coords); break;
+                    case 2: color = texture(u_1d_array_tex, v_tex_coords); break;
+                }
+            }
+        "
+    }]
+}]

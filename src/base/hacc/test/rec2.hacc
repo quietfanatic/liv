@@ -1,0 +1,4 @@
+[hacc::Document {
+    val:[int32 4]
+    ref:[int32* [rec1.hacc val 1]]
+}]

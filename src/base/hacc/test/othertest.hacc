@@ -1,0 +1,4 @@
+[hacc::Document {
+    ext_ref:[hacc::Reference [testfile.hacc foo 1]]
+    ext_pointer:[std::string* [testfile.hacc bar 1]]
+}]
