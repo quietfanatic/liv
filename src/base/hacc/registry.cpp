@@ -45,7 +45,7 @@ const Description* register_description (const Description* desc) {
 }
 
 const Description* get_description_by_type_info (const std::type_info& t) {
-    auto ds = registry().by_cpp_type;
+    auto& ds = registry().by_cpp_type;
     auto iter = ds.find(t);
     if (iter != ds.end()) return iter->second;
     else return null;
@@ -58,7 +58,7 @@ const Description* need_description_for_type_info (const std::type_info& t) {
 
 const Description* get_description_by_name (Str name) {
     init_names();
-    auto ds = registry().by_name;
+    auto& ds = registry().by_name;
     auto iter = ds.find(name);
     if (iter != ds.end()) return iter->second;
     else return null;
@@ -83,7 +83,7 @@ bool is_valid_type (const Description* desc) {
 }
 
 void dump_descriptions () {
-    for (auto p : registry().by_cpp_type) {
+    for (auto& p : registry().by_cpp_type) {
         std::cerr << p.second->cpp_type->name() << ": "
                   << get_description_name(p.second) << " "
                   << p.second->cpp_size << " "
