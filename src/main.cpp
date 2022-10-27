@@ -2,11 +2,11 @@
 #include <string_view>
 #include <SDL2/SDL.h>
 #include "base/glow/common.h"
+#include "base/glow/file-texture.h"
 #include "base/hacc/resource.h"
 #include "base/tap/tap.h"
 #include "base/uni/common.h"
 #include "base/wind/window.h"
-#include "image-texture.h"
 
 using namespace std::literals;
 
@@ -35,7 +35,7 @@ int main (int argc, char** argv) {
 
     if (args.size() == 0) throw hacc::X::GenericError("No argument given");
     if (args.size() > 1) throw hacc::X::GenericError("Too many arguments given");
-    ImageTexture tex (args[0]);
+    glow::FileTexture tex (args[0]);
 
     for (;;) {
         SDL_Event event;

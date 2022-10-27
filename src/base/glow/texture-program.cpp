@@ -66,7 +66,7 @@ static tap::TestSet tests ("base/glow/texture-program", []{
 
     ImageTexture* tex;
     doesnt_throw([&]{
-        tex = hacc::Resource("/base/glow/test/texture.hacc").ref();
+        tex = hacc::Resource("/base/glow/test/texture-test.hacc")["texture"];
     }, "Can load texture");
 
     RGBA8 bg = uint32(0x331100ee);
@@ -77,9 +77,9 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     int height; glGetTexLevelParameteriv(tex->target, 0, GL_TEXTURE_HEIGHT, &height);
     is(height, 5, "Created texture has correct height");
 
-    Image tex_image (IVec{7, 5});
+    Image tex_image (tex->source.size());
     glGetTexImage(tex->target, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_image.pixels);
-    is(tex_image[{6, 2}], fg, "Created texture has correct content");
+    is(tex_image[{1, 1}], fg, "Created texture has correct content");
 
     glClearColor(bg.r/255.f, bg.g/255.f, bg.b/255.f, bg.a/255.f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -114,8 +114,9 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     no_match:;
     if (!ok(match, "Texture program wrote correct pixels")) {
          // NOTE: these images will be upside-down.
-        expected.save(hacc::resource_filename("/base/glow/test/texture-fail-expected"));
-        got.save(hacc::resource_filename("/base/glow/test/texture-fail-got"));
+         // TODO: bring image parsing/saving back
+//        expected.save(hacc::resource_filename("/base/glow/test/texture-fail-expected"));
+//        got.save(hacc::resource_filename("/base/glow/test/texture-fail-got"));
     }
 
     done_testing();

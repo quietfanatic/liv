@@ -1,0 +1,19 @@
+[hacc::Document {
+    image: [glow::Image {
+        size: [7 5]
+        pixels: [
+             # TODO: support hexadecimal in hacc
+            # &p: [0x26 0x74 0xdb 0xff]
+            &p: [38 116 235 255]
+            *p *p *p *p *p *p *p
+            *p *p *p *p *p *p *p
+            *p *p *p *p *p *p *p
+            *p *p *p *p *p *p *p
+            *p *p *p *p *p *p *p
+        ]
+    }]
+    texture: [glow::ImageTexture {
+        target: GL_TEXTURE_RECTANGLE
+        image: ["" image 1]
+    }]
+}]

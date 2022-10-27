@@ -1,4 +1,0 @@
-[glow::ImageTexture {
-    target: GL_TEXTURE_RECTANGLE
-    image: [image.png]
-}]

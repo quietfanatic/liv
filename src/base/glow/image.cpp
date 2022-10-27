@@ -4,72 +4,15 @@
 #include "../hacc/compat.h"
 #include "../hacc/haccable-standard.h"
 #include "../hacc/resource.h"
-#include "../../external/lodepng/lodepng.h"
 #include "gl.h"
-
-using namespace std::literals;
 
 namespace glow {
 
 Image::Image (IVec s) : size((AA(area(s) >= 0), s)), pixels(
     reinterpret_cast<RGBA8*>(malloc(area(size) * sizeof(RGBA8)))
 ) { }
-Image::Image (Str filename) : size(NAN), pixels(null) {
-    unsigned char* data = null;
-    unsigned w, h;
-    AA(filename[filename.size()] == 0);
-    auto err = lodepng_decode32_file(&data, &w, &h, filename.data());
-    if (err) {
-        free(data);
-        throw X::ImageLoadFailed(filename, lodepng_error_text(err));
-    }
-    const_cast<IVec&>(size) = IVec{w, h};
-    const_cast<RGBA8*&>(pixels) = reinterpret_cast<RGBA8*>(data);
-}
 
 Image::~Image () { free(pixels); }
-
-void Image::save (Str filename) const {
-    AA(pixels);
-    AA(filename[filename.size()] == 0);
-    auto err = lodepng_encode32_file(
-        filename.data(),
-        reinterpret_cast<uint8*>(pixels),
-        size.x, size.y
-    );
-    if (err) {
-        throw X::ImageSaveFailed(filename, lodepng_error_text(err));
-    }
-}
-
-struct PNGResourceHandler : hacc::ResourceHandler {
-    bool ResourceHandler_can_handle (hacc::Resource res) override {
-        auto name = res.name();
-        auto suffix = ".png"sv;
-        return name.size() >= suffix.size()
-            && name.substr(name.size() - suffix.size()) == suffix;
-    }
-    void ResourceHandler_load (hacc::Resource res) override {
-        auto filename = hacc::resource_filename(res.name());
-        res.set_value() = Image(filename);
-    }
-    std::function<void()> ResourceHandler_save (hacc::Resource res) override {
-        auto filename = hacc::resource_filename(res.name());
-        Image* img = res.ref();
-        AA(img->pixels);
-        return [img, filename{std::move(filename)}]{ img->save(filename); };
-    }
-    void ResourceHandler_remove_source (hacc::Resource res) override {
-        auto filename = hacc::resource_filename(res.name());
-        if (hacc::remove_utf8(filename.c_str()) != 0) {
-            if (errno != ENOENT) {
-                throw hacc::X::RemoveSourceFailed(res, errno);
-            }
-        }
-    }
-};
-
-static PNGResourceHandler png_resource_handler;
 
 void SubImage::validate () {
     if (!bounds) return;
@@ -119,8 +62,32 @@ HACCABLE(glow::RGBA8,
     )
 )
 
- // TODO
-HACCABLE_0(glow::Image)
+HACCABLE(glow::Image,
+    attrs(
+        attr("size", &Image::size),
+         // TODO: allow more than one data input method?  Either through
+         // a proxy type or by adding a "redundant" attr property to haccable
+        attr("pixels", mixed_funcs<std::vector<RGBA8>>(
+            [](const glow::Image& img){
+                AA(area(img.size) >= 0);
+                std::vector<RGBA8> pixels (area(img.size));
+                for (isize i = 0; i < area(img.size); i++) {
+                    pixels[i] = img.pixels[i];
+                }
+                return pixels;
+            },
+            [](glow::Image& img, const std::vector<RGBA8>& pixels){
+                AA(isize(pixels.size()) == area(img.size));
+                if (img.pixels) free(img.pixels);
+                const_cast<RGBA8*&>(img.pixels)
+                    = reinterpret_cast<RGBA8*>(malloc(area(img.size)));
+                for (isize i = 0; i < area(img.size); i++) {
+                    img.pixels[i] = pixels[i];
+                }
+            }
+        ))
+    )
+)
 
 HACCABLE(glow::SubImage,
     attrs(
@@ -169,34 +136,3 @@ HACCABLE(glow::X::ImageTextureIncompatibleTarget,
     elems( elem(&X::ImageTextureIncompatibleTarget::target) )
 )
 
-#ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
-
-static tap::TestSet tests ("base/glow/image", []{
-    using namespace hacc;
-    using namespace tap;
-    Image* test_image = nullptr;
-    auto image_res = Resource("/base/glow/test/image.png");
-    auto image_copy = Resource("/base/glow/test/image-copy.png");
-    remove_source(image_copy);
-    doesnt_throw([&]{
-        test_image = image_res.ref();
-    }, "Can load image through resource system");
-    is(test_image->size, IVec{7, 5}, "Image size is correct");
-    is((*test_image)[{5, 4}], uint32(0x2674dbff), "Image content is correct");
-    is((*test_image)[{3, 3}], uint32(0x2674dbff), "Previous run didn't accidentally overwrite test image");
-    (*test_image)[{3, 3}] = uint32(0x44556677);
-    doesnt_throw([&]{
-        rename(image_res, image_copy);
-        save(image_copy);
-    }, "Can save image through resource system");
-    Image* copy = nullptr;
-    doesnt_throw([&]{
-        unload(image_copy);
-        copy = image_copy.ref();
-    }, "Can load previously saved image");
-    is((*copy)[{5, 4}], uint32(0x2674dbff), "Copied image content 1");
-    is((*copy)[{3, 3}], uint32(0x44556677), "Copied image content 2");
-    done_testing();
-});
-#endif

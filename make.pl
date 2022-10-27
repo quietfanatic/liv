@@ -118,13 +118,15 @@ my @modules = qw(
     base/hacc/type
     base/tap/tap
     base/glow/common
+    base/glow/file-texture
     base/glow/gl
+    base/glow/image
     base/glow/objects
     base/glow/program
+    base/glow/texture-program
     base/uni/common
     base/wind/loop
     base/wind/window
-    image-texture
     main
 );
 my %opts = (

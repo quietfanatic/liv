@@ -1,9 +1,11 @@
-#include "image-texture.h"
+#include "file-texture.h"
 
 #include <SDL2/SDL_image.h>
-#include "base/glow/gl.h"
+#include "../glow/gl.h"
 
-ImageTexture::ImageTexture (String filename) : Texture(GL_TEXTURE_2D) {
+namespace glow {
+
+FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
     static const bool init [[maybe_unused]] = []{
          // TODO: more formats
         auto flags = IMG_INIT_JPG | IMG_INIT_PNG;
@@ -162,4 +164,6 @@ ImageTexture::ImageTexture (String filename) : Texture(GL_TEXTURE_2D) {
     }
 }
 
-ImageTexture::~ImageTexture () { }
+FileTexture::~FileTexture () { }
+
+} // namespace glow
