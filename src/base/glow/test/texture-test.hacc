@@ -13,7 +13,7 @@
         ]
     }]
     texture: [glow::ImageTexture {
-        target: GL_TEXTURE_RECTANGLE
+        target: GL_TEXTURE_2D
         image: ["" image 1]
     }]
 }]

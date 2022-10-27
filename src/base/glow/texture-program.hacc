@@ -9,12 +9,12 @@
 
             uniform float u_screen_rect [4];
             uniform float u_tex_rect [4];
-            const ivec2 corners [4] = {
+            const ivec2 corners [4] = ivec2[4](
                 ivec2(0, 1),
                 ivec2(2, 1),
                 ivec2(2, 3),
                 ivec2(0, 3)
-            };
+            );
             out vec2 v_tex_coords;
 
             void main () {

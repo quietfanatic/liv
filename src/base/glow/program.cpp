@@ -3,8 +3,6 @@
 #include "../hacc/haccable-standard.h"
 #include "gl.h"
 
-using namespace std::literals;
-
 namespace glow {
 
 Shader::Shader (uint type) :
@@ -168,3 +166,62 @@ HACCABLE(glow::X::ProgramLinkFailed,
         elem(&X::ProgramLinkFailed::info_log)
     )
 )
+
+#ifndef TAP_DISABLE_TESTS
+#include "../hacc/resource.h"
+#include "../geo/rect.h"
+#include "../geo/vec.h"
+#include "../tap/tap.h"
+#include "../wind/window.h"
+#include "colors.h"
+
+static tap::TestSet tests ("base/glow/program", []{
+    using namespace tap;
+    using namespace geo;
+    IVec test_size = {120, 120};
+    wind::Window window {
+        .title = "base/glow/program test window",
+        .size = test_size,
+        .hidden = true
+    };
+    window.open();
+    glow::init();
+
+    Program* program;
+    doesnt_throw([&]{
+        program = hacc::Resource("/base/glow/test/test-program.hacc")["program"][1];
+    }, "Can load program from hacc document");
+    program->use();
+    int u_screen_rect = glGetUniformLocation(*program, "u_screen_rect");
+    isnt(u_screen_rect, -1, "Can get a uniform location");
+    auto screen_rect = Rect{-0.5, -0.5, 0.5, 0.5};
+    doesnt_throw([&]{
+        glUniform1fv(u_screen_rect, 4, &screen_rect.l);
+    }, "Can set uniform array");
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    doesnt_throw([&]{
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }, "glDrawArrays");
+
+    std::vector<RGBA8> expected_pixels (area(test_size));
+    for (int y = 0; y < test_size.y; y++)
+    for (int x = 0; x < test_size.x; x++) {
+        if (y >= test_size.y / 4 && y < test_size.y * 3 / 4
+         && x >= test_size.x / 4 && x < test_size.x * 3 / 4) {
+            expected_pixels[y*test_size.x+x] = RGBA8(30, 40, 50, 60);
+        }
+        else {
+            expected_pixels[y*test_size.x+x] = RGBA8(0, 0, 0, 0);
+        }
+    }
+
+    std::vector<RGBA8> got_pixels (area(test_size));
+    glReadPixels(0, 0, test_size.x, test_size.y, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
+
+    is(got_pixels, expected_pixels, "Rendered correct image");
+
+    done_testing();
+});
+
+#endif

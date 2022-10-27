@@ -26,7 +26,7 @@ namespace X {
                     s += item_to_string(Reference(t, (Mu*)this), COMPACT);
                 }
                 catch (std::exception&) {
-                    s += "(Another error occurred while serializing the error data)"s;
+                    s += "(Another error occurred while printing this error)"s;
                 }
                 s += ']';
                 mess_cache = s;
