@@ -124,6 +124,7 @@ my @modules = qw(
     base/uni/common
     base/wind/loop
     base/wind/window
+    image-texture
     main
 );
 my %opts = (
