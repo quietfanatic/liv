@@ -8,11 +8,11 @@
 
 namespace glow {
 
-Image::Image (IVec s) : size((AA(area(s) >= 0), s)), pixels(
-    reinterpret_cast<RGBA8*>(malloc(area(size) * sizeof(RGBA8)))
-) { }
+Image::Image (IVec s) :
+    size((AA(area(s) >= 0), s)), pixels(new RGBA8 [area(size)])
+{ }
 
-Image::~Image () { free(pixels); }
+Image::~Image () { delete[](pixels); }
 
 void SubImage::validate () {
     if (!bounds) return;
@@ -64,6 +64,7 @@ HACCABLE(glow::RGBA8,
 
 HACCABLE(glow::Image,
     attrs(
+         // TODO: allocate
         attr("size", &Image::size),
          // TODO: allow more than one data input method?  Either through
          // a proxy type or by adding a "redundant" attr property to haccable
@@ -78,9 +79,9 @@ HACCABLE(glow::Image,
             },
             [](glow::Image& img, const std::vector<RGBA8>& pixels){
                 AA(isize(pixels.size()) == area(img.size));
-                if (img.pixels) free(img.pixels);
-                const_cast<RGBA8*&>(img.pixels)
-                    = reinterpret_cast<RGBA8*>(malloc(area(img.size)));
+                 // TODO: don't free
+                if (img.pixels) delete[](img.pixels);
+                const_cast<RGBA8*&>(img.pixels) = new RGBA8 [area(img.size)];
                 for (isize i = 0; i < area(img.size); i++) {
                     img.pixels[i] = pixels[i];
                 }
