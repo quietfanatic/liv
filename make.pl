@@ -14,7 +14,7 @@ my @compile_opts = (map("-I$_", @includes), qw(
     -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = qw(
-    -lSDL2
+    -lSDL2 -lSDL2_image
 );
 #my @link_opts = (('-L' . rel2abs("$mingw_sdl2/lib")), qw(
 #    -static-libgcc -static-libstdc++

@@ -7,6 +7,9 @@
 
 #include "../hacc/common.h"
 
+///// WHATEVER
+using namespace std::literals;
+
 ///// CONVENIENCE MACROS
 
 #define CE constexpr

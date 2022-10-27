@@ -18,6 +18,9 @@ using namespace geo;
  //  into a texture, it will likely have to be flipped at some point.
 struct Image {
     const IVec size;
+     // The allocation method of this is not specified, so if you take this
+     // pointer somewhere else, be sure to return it to an Image to deallocate
+     // it.
     RGBA8* const pixels;
 
     CE Image () : pixels(null) { }
