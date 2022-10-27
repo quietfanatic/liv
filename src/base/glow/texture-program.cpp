@@ -66,7 +66,7 @@ static tap::TestSet tests ("base/glow/texture-program", []{
 
     ImageTexture* tex;
     doesnt_throw([&]{
-        tex = hacc::Resource("/base/glow/test/texture-test.hacc")["texture"];
+        tex = hacc::Resource("/base/glow/test/texture-test.hacc")["texture"][1];
     }, "Can load texture");
 
     RGBA8 bg = uint32(0x331100ee);
