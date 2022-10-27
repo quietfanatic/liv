@@ -9,6 +9,7 @@
 namespace glow {
 using namespace geo;
 
+ // Only works with GL_TEXTURE_2D textures
 void draw_texture (
     const Texture& tex,
     const Rect& screen_rect,

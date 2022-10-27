@@ -10,33 +10,24 @@ namespace glow {
 struct TextureProgram : Program {
     int u_screen_rect = -1;
     int u_tex_rect = -1;
-    int u_tex_target = -1;
 
     void Program_after_link () override {
         u_screen_rect = glGetUniformLocation(id, "u_screen_rect");
         u_tex_rect = glGetUniformLocation(id, "u_tex_rect");
-        u_tex_target = glGetUniformLocation(id, "u_tex_target");
-        for (auto name : {"u_2d_tex", "u_rectangle_tex", "u_1d_array_tex"}) {
-            glUniform1i(glGetUniformLocation(id, name), 0);
-        }
+        glUniform1i(glGetUniformLocation(id, "u_2d_tex"), 0);
     }
 };
 
 void draw_texture (const Texture& tex, const Rect& screen_rect, const Rect& tex_rect) {
-    static TextureProgram* program = hacc::Resource("/base/glow/texture-program.hacc")["program"][1];
+    AA(!!tex);
+    AA(tex.target == GL_TEXTURE_2D);
 
-    int tex_target = 0;
-    switch (tex.target) {
-        case GL_TEXTURE_2D: tex_target = 0; break;
-        case GL_TEXTURE_RECTANGLE: tex_target = 1; break;
-        case GL_TEXTURE_1D_ARRAY: tex_target = 2; break;
-        default: AA(0); break;
-    }
+    static TextureProgram* program = hacc::Resource("/base/glow/texture-program.hacc")["program"][1];
     program->use();
+
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
     glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
-    glUniform1i(program->u_tex_target, tex_target);
-    glBindTexture(tex.target, tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
@@ -108,6 +99,8 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     for (int x = 0; x < test_size.x; x++) {
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
+            diag(hacc::item_to_string(&expected[{x, y}], hacc::COMPACT));
+            diag(hacc::item_to_string(&got[{x, y}], hacc::COMPACT));
             goto no_match;
         }
     }

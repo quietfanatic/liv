@@ -37,6 +37,7 @@ void ImageTexture::init () {
                 flip.y ? ib.t - y : ib.b + y
             }];
         }
+        glBindTexture(target, id);
         glTexImage2D(
             target,
             0, // level
@@ -51,6 +52,8 @@ void ImageTexture::init () {
     }
 }
 
+struct ImagePixelsProxy : Image { };
+
 } using namespace glow;
 
 HACCABLE(glow::RGBA8,
@@ -62,29 +65,30 @@ HACCABLE(glow::RGBA8,
     )
 )
 
+HACCABLE(glow::ImagePixelsProxy,
+     // TODO: Allow parsing hex string as an option?
+    length(value_funcs<usize>(
+        [](const ImagePixelsProxy& image){
+            return usize(area(image.size));
+        },
+        [](ImagePixelsProxy& image, usize len){
+            AA(area(image.size) == isize(len));
+            delete[](image.pixels);
+            const_cast<RGBA8*&>(image.pixels) = new RGBA8 [area(image.size)];
+        }
+    )),
+    elem_func([](ImagePixelsProxy& image, usize i){
+        return hacc::Reference(&image.pixels[i]);
+    })
+)
+
 HACCABLE(glow::Image,
     attrs(
-         // TODO: allocate
+         // TODO: allocate here instead of in the proxy?
         attr("size", &Image::size),
-         // TODO: allow more than one data input method?  Either through
-         // a proxy type or by adding a "redundant" attr property to haccable
-        attr("pixels", mixed_funcs<std::vector<RGBA8>>(
-            [](const glow::Image& img){
-                AA(area(img.size) >= 0);
-                std::vector<RGBA8> pixels (area(img.size));
-                for (isize i = 0; i < area(img.size); i++) {
-                    pixels[i] = img.pixels[i];
-                }
-                return pixels;
-            },
-            [](glow::Image& img, const std::vector<RGBA8>& pixels){
-                AA(isize(pixels.size()) == area(img.size));
-                 // TODO: don't free
-                if (img.pixels) delete[](img.pixels);
-                const_cast<RGBA8*&>(img.pixels) = new RGBA8 [area(img.size)];
-                for (isize i = 0; i < area(img.size); i++) {
-                    img.pixels[i] = pixels[i];
-                }
+        attr("pixels", ref_func<ImagePixelsProxy>(
+            [](Image& img) -> ImagePixelsProxy& {
+                return static_cast<ImagePixelsProxy&>(img);
             }
         ))
     )

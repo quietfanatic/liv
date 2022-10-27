@@ -31,19 +31,12 @@
         source: "
             #version 140
 
-            uniform int u_tex_target;
             uniform sampler2D u_2d_tex;
-            uniform sampler2DRect u_rectangle_tex;
-            uniform sampler1DArray u_1d_array_tex;
             in vec2 v_tex_coords;
             out vec4 color;
 
             void main () {
-                switch (u_tex_target) {
-                    case 0: color = texture(u_2d_tex, v_tex_coords); break;
-                    case 1: color = texture(u_rectangle_tex, v_tex_coords); break;
-                    case 2: color = texture(u_1d_array_tex, v_tex_coords); break;
-                }
+                color = texture(u_2d_tex, v_tex_coords);
             }
         "
     }]
