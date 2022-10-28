@@ -128,6 +128,7 @@ my @modules = qw(
     base/wind/loop
     base/wind/window
     main
+    page
 );
 my %opts = (
     'base/tap/tap' => [qw(-DTAP_SELF_TEST)],
@@ -137,6 +138,7 @@ my @resources = qw(
     base/hacc/test/*
     base/glow/test/*
     base/glow/texture-program.hacc
+    page.hacc
 );
 my %dlls = ();
 #my %dlls = (

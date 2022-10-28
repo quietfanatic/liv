@@ -42,9 +42,6 @@ HACCABLE(glow::TextureProgram,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include <vector>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
 #include "../hacc/serialize.h"
 #include "../tap/tap.h"
 #include "../wind/window.h"
