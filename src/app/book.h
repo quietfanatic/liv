@@ -8,24 +8,32 @@
 #include "../base/uni/common.h"
 
 namespace app {
-
+struct App;
 struct Page;
 
 struct Book {
+    App& app;
+
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;
-    isize current_page = 0;
+    isize current_page_no = 1; // 1-based index
 
      // Loads all image files in the folder as pages
-    explicit Book (Str folder);
+    explicit Book (App& app, Str folder);
      // Just loads the given files as pages
-    explicit Book (const std::vector<String>& filenames);
+    explicit Book (App& app, const std::vector<String>& filenames);
     ~Book ();
 
     wind::Window window;
 
      // Handles layout logic.
     void draw ();
+     // Change current_page
+    void next ();
+    void prev ();
+
+     // Returns true if no is in 1..pages.size()
+    bool valid_page_no (isize no);
 };
 
 } // namespace app

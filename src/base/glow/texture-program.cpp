@@ -85,8 +85,7 @@ static tap::TestSet tests ("base/glow/texture-program", []{
         }
     }
 
-    Image got (env.size);
-    glReadPixels(0, 0, env.size.x, env.size.y, GL_RGBA, GL_UNSIGNED_BYTE, got.pixels);
+    Image got = env.read_pixels();
 
     bool match = true;
     for (int y = 0; y < env.size.y; y++)
