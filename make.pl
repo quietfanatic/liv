@@ -100,6 +100,7 @@ sub copy_rule {
 my $program = 'iv';
 
 my @modules = qw(
+    app/app
     app/book
     app/main
     app/page

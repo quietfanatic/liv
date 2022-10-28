@@ -4,7 +4,6 @@
 #include <SDL2/SDL_timer.h>
 
 #include "../hacc/haccable.h"
-#include "window.h"
 
 namespace wind {
 
@@ -14,10 +13,6 @@ static void default_on_step (Loop& self) {
         switch (event.type) {
             case SDL_QUIT: {
                 self.stop();
-                break;
-            }
-            default: {
-                process_window_event(&event);
                 break;
             }
         }

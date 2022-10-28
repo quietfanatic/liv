@@ -11,7 +11,7 @@ namespace app {
 
 Page::Page (String filename) :
     filename(filename),
-    texture(new FileTexture(filename, GL_TEXTURE_RECTANGLE)),
+    texture(std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE)),
     size(texture->size())
 { }
 Page::~Page () { }

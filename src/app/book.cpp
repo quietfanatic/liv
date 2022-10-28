@@ -20,7 +20,7 @@ Book::Book (const std::vector<String>& filenames) :
     glow::init();
     pages.reserve(filenames.size());
     for (auto& filename : filenames) {
-        pages.emplace_back(new Page(filename));
+        pages.emplace_back(std::make_unique<Page>(filename));
     }
 }
 Book::~Book () { }

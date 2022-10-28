@@ -1,16 +1,8 @@
-#include <string>
-#include <string_view>
 #include <SDL2/SDL.h>
-#include "../base/glow/common.h"
-#include "../base/glow/file-texture.h"
-#include "../base/glow/texture-program.h"
 #include "../base/hacc/resource.h"
 #include "../base/tap/tap.h"
 #include "../base/uni/common.h"
-#include "../base/wind/window.h"
-#include "book.h"
-
-using namespace app;
+#include "app.h"
 
 int main (int argc, char** argv) {
     char* base = AS(SDL_GetBasePath());
@@ -31,15 +23,8 @@ int main (int argc, char** argv) {
         else args.emplace_back(argv[i]);
     }
 
-    Book book (args);
-    book.draw();
-
-    for (;;) {
-        SDL_Event event;
-        AS(SDL_WaitEvent(&event));
-        if (event.type == SDL_QUIT) {
-            return 0;
-        }
-        wind::process_window_event(&event);
-    }
+    app::App app;
+    app.open_files(args);
+    app.run();
+    return 0;
 }
