@@ -3,8 +3,8 @@
         size: [7 5]
         pixels: [
              # TODO: support hexadecimal in hacc
-            # &p: [0x26 0x74 0xdb 0xff]
-            &p: [38 116 219 255]
+            # &p: [0x26 0x74 0xdb 0xf0]
+            &p: [38 116 219 240]
             *p *p *p *p *p *p *p
             *p *p *p *p *p *p *p
             *p *p *p *p *p *p *p
@@ -15,5 +15,6 @@
     texture: [glow::ImageTexture {
         target: GL_TEXTURE_2D
         image: ["" image 1]
+        filter: GL_LINEAR
     }]
 }]

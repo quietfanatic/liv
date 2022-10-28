@@ -31,12 +31,12 @@
         source: "
             #version 140
 
-            uniform sampler2D u_2d_tex;
+            uniform sampler2D u_tex;
             in vec2 v_tex_coords;
             out vec4 color;
 
             void main () {
-                color = texture(u_2d_tex, v_tex_coords);
+                color = texture(u_tex, v_tex_coords);
             }
         "
     }]
