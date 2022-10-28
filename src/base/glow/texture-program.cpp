@@ -45,18 +45,12 @@ HACCABLE(glow::TextureProgram,
 #include "../hacc/serialize.h"
 #include "../tap/tap.h"
 #include "../wind/window.h"
+#include "test-environment.h"
 
 static tap::TestSet tests ("base/glow/texture-program", []{
     using namespace tap;
-    IVec test_size = {120, 120};
-    wind::Window window {
-        .title = "base/glow/texture test window",
-        .size = test_size,  // TODO: enforce window size!
-         // Window being the wrong size due to OS restrictions screws up this test
-        .hidden = true
-    };
-    window.open();
-    glow::init();
+
+    TestEnvironment env;
 
     ImageTexture* tex;
     doesnt_throw([&]{
@@ -79,11 +73,11 @@ static tap::TestSet tests ("base/glow/texture-program", []{
         draw_texture(*tex, Rect{-.5, -.5, .5, .5});
     }, "Can draw texture");
 
-    Image expected (test_size);
-    for (int y = 0; y < test_size.y; y++)
-    for (int x = 0; x < test_size.x; x++) {
-        if (y >= test_size.y / 4 && y < test_size.y * 3 / 4
-         && x >= test_size.x / 4 && x < test_size.x * 3 / 4) {
+    Image expected (env.size);
+    for (int y = 0; y < env.size.y; y++)
+    for (int x = 0; x < env.size.x; x++) {
+        if (y >= env.size.y / 4 && y < env.size.y * 3 / 4
+         && x >= env.size.x / 4 && x < env.size.x * 3 / 4) {
             expected[{x, y}] = fg;
         }
         else {
@@ -91,12 +85,12 @@ static tap::TestSet tests ("base/glow/texture-program", []{
         }
     }
 
-    Image got (test_size);
-    glReadPixels(0, 0, test_size.x, test_size.y, GL_RGBA, GL_UNSIGNED_BYTE, got.pixels);
+    Image got (env.size);
+    glReadPixels(0, 0, env.size.x, env.size.y, GL_RGBA, GL_UNSIGNED_BYTE, got.pixels);
 
     bool match = true;
-    for (int y = 0; y < test_size.y; y++)
-    for (int x = 0; x < test_size.x; x++) {
+    for (int y = 0; y < env.size.y; y++)
+    for (int x = 0; x < env.size.x; x++) {
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
             diag(hacc::item_to_string(&expected[{x, y}], hacc::COMPACT));

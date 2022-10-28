@@ -127,6 +127,7 @@ my @modules = qw(
     base/glow/image
     base/glow/objects
     base/glow/program
+    base/glow/test-environment
     base/glow/texture-program
     base/uni/common
     base/wind/loop

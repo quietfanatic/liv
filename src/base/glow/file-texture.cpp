@@ -185,22 +185,14 @@ FileTexture::~FileTexture () { }
 #ifndef TAP_DISABLE_TESTS
 #include "../hacc/resource.h"
 #include "../tap/tap.h"
-#include "../wind/window.h"
 #include "colors.h"
+#include "test-environment.h"
 
 static tap::TestSet tests ("base/glow/file-texture", []{
     using namespace tap;
     using namespace geo;
 
-    IVec test_size = {120, 120};
-    wind::Window window {
-        .title = "base/glow/texture test window",
-        .size = test_size,  // TODO: enforce window size!
-         // Window being the wrong size due to OS restrictions screws up this test
-        .hidden = true
-    };
-    window.open();
-    glow::init();
+    TestEnvironment env;
 
     FileTexture tex (hacc::file_resource_root() + "/base/glow/test/image.png");
     auto size = tex.size();
