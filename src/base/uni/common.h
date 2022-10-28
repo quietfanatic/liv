@@ -32,7 +32,28 @@ using Null = std::nullptr_t;
 CE Null null = nullptr;
 
 using String = std::string;
+using String16 = std::wstring;
 using Str = std::string_view;
+using Str16 = std::wstring_view;
+
+ // Why these aren't standard I don't know.
+static inline String operator + (Str a, Str b) {
+    String r;
+    r.reserve(a.size() + b.size());
+    r.append(a);
+    r.append(b);
+    return r;
+}
+static inline String16 operator + (Str16 a, Str16 b) {
+    String16 r;
+    r.reserve(a.size() + b.size());
+    r.append(a);
+    r.append(b);
+    return r;
+}
+static inline String& operator += (String& a, Str b) { return a.append(b); }
+static inline String16& operator += (String16& a, Str16 b) { return a.append(b); }
+
 
 ///// CLASS DEFINITION CONVENIENCE
  // Recommended that you make sure the move and copy constructors can't throw.

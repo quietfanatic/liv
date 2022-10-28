@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "base/glow/common.h"
 #include "base/glow/file-texture.h"
+#include "base/glow/texture-program.h"
 #include "base/hacc/resource.h"
 #include "base/tap/tap.h"
 #include "base/uni/common.h"
@@ -36,6 +37,8 @@ int main (int argc, char** argv) {
     if (args.size() == 0) throw hacc::X::GenericError("No argument given");
     if (args.size() > 1) throw hacc::X::GenericError("Too many arguments given");
     glow::FileTexture tex (args[0]);
+    draw_texture(tex, {-0.5, -0.5, 0.5, 0.5});
+    SDL_GL_SwapWindow(window.sdl_window);
 
     for (;;) {
         SDL_Event event;

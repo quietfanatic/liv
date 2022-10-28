@@ -11,10 +11,7 @@
 namespace glow {
 
 struct FileTexture : Texture {
-     // Technically redundant since we can get the texture size through GL
-     // but that's annoying and probably slow.
-    geo::IVec size;
-    FileTexture (std::string filename, uint32 target = GL_TEXTURE_RECTANGLE);
+    FileTexture (std::string filename, uint32 target = GL_TEXTURE_2D);
     ~FileTexture ();
 };
 
