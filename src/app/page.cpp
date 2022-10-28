@@ -10,8 +10,9 @@ using namespace glow;
 namespace app {
 
 Page::Page (String filename) :
-    texture(filename, GL_TEXTURE_RECTANGLE),
-    size(texture.size())
+    filename(filename),
+    texture(new FileTexture(filename, GL_TEXTURE_RECTANGLE)),
+    size(texture->size())
 { }
 Page::~Page () { }
 
@@ -31,8 +32,8 @@ struct PageProgram : Program {
 };
 
 void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
-    AA(!!texture);
-    AA(texture.target == GL_TEXTURE_RECTANGLE);
+    AA(texture && *texture);
+    AA(texture->target == GL_TEXTURE_RECTANGLE);
 
     static PageProgram* program = hacc::Resource("/app/page.hacc")["program"][1];
     program->use();
@@ -45,7 +46,7 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
         auto whole_page = Rect(Vec{0, 0}, size);
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
-    glBindTexture(GL_TEXTURE_RECTANGLE, texture);
+    glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <memory>
 #include "../base/geo/rect.h"
 #include "../base/geo/vec.h"
 #include "../base/glow/file-texture.h"
@@ -11,10 +12,12 @@ namespace app {
 
 struct Page {
     String filename;
-    glow::FileTexture texture;
+    std::unique_ptr<glow::FileTexture> texture;
     geo::IVec size;
     explicit Page (String filename);
     ~Page ();
+
+     // TODO: load and unload
 
     void draw (
         const geo::Rect& screen_rect,
