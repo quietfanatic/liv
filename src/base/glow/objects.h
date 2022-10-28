@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "../geo/vec.h"
 
 namespace glow {
 
@@ -22,6 +23,9 @@ struct Texture {
 
     const uint id = 0;
     operator uint () const { return id; }
+
+     // Uses glGetTexLevelParameter
+    geo::IVec size (int level = 0);
 };
 
 } // namespace glow

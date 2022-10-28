@@ -95,7 +95,7 @@ struct SubImage {
     }
 };
 
- // Represents a texture loaded from an image.
+ // Represents a texture loaded from an image.  Does not automatically support mipmaps.
 struct ImageTexture : Texture {
     SubImage source;
      // TODO: move back to SubImage?

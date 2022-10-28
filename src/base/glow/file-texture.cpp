@@ -203,13 +203,10 @@ static tap::TestSet tests ("base/glow/file-texture", []{
     glow::init();
 
     FileTexture tex (hacc::file_resource_root() + "/base/glow/test/image.png");
+    auto size = tex.size();
+    is(size, IVec{7, 5}, "Created texture has correct size");
 
-    int width; glGetTexLevelParameteriv(tex.target, 0, GL_TEXTURE_WIDTH, &width);
-    is(width, 7, "Created texture has correct width");
-    int height; glGetTexLevelParameteriv(tex.target, 0, GL_TEXTURE_HEIGHT, &height);
-    is(height, 5, "Created texture has correct height");
-
-    std::vector<RGBA8> got_pixels (width*height);
+    std::vector<RGBA8> got_pixels (area(size));
     glGetTexImage(tex.target, 0, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
     is(got_pixels[10], RGBA8(0x2674dbff), "Created texture has correct content");
 

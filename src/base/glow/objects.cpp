@@ -16,6 +16,14 @@ Texture::~Texture () {
     if (id) glDeleteTextures(1, &id);
 }
 
+geo::IVec Texture::size (int level) {
+    geo::IVec r;
+    glBindTexture(target, id);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &r.x);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &r.y);
+    return r;
+}
+
 enum TextureTarget { };
 enum TextureWrap { };
 enum TextureMagFilter { };

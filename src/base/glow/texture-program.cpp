@@ -69,10 +69,7 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     RGBA8 bg = uint32(0x331100ee);
     RGBA8 fg = uint32(0x2674dbf0);
 
-    int width; glGetTexLevelParameteriv(tex->target, 0, GL_TEXTURE_WIDTH, &width);
-    is(width, 7, "Created texture has correct width");
-    int height; glGetTexLevelParameteriv(tex->target, 0, GL_TEXTURE_HEIGHT, &height);
-    is(height, 5, "Created texture has correct height");
+    is(tex->size(), IVec{7, 5}, "Created texture has correct size");
 
     Image tex_image (tex->source.size());
     glGetTexImage(tex->target, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_image.pixels);
