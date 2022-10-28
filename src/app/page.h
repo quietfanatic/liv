@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "base/geo/rect.h"
-#include "base/geo/vec.h"
-#include "base/glow/file-texture.h"
-#include "base/uni/common.h"
+#include "../base/geo/rect.h"
+#include "../base/geo/vec.h"
+#include "../base/glow/file-texture.h"
+#include "../base/uni/common.h"
+
+namespace app {
 
 struct Page {
     String filename;
@@ -19,3 +21,5 @@ struct Page {
         const geo::Rect& tex_rect = geo::NAN // defaults to whole page
     );
 };
+
+} // namespace app

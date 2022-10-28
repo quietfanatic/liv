@@ -100,6 +100,8 @@ sub copy_rule {
 my $program = 'iv';
 
 my @modules = qw(
+    app/main
+    app/page
     base/geo/mat
     base/hacc/accessors
     base/hacc/common
@@ -127,8 +129,6 @@ my @modules = qw(
     base/uni/common
     base/wind/loop
     base/wind/window
-    main
-    page
 );
 my %opts = (
     'base/tap/tap' => [qw(-DTAP_SELF_TEST)],
@@ -138,7 +138,7 @@ my @resources = qw(
     base/hacc/test/*
     base/glow/test/*
     base/glow/texture-program.hacc
-    page.hacc
+    app/page.hacc
 );
 my %dlls = ();
 #my %dlls = (

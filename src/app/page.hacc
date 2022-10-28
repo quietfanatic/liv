@@ -1,5 +1,5 @@
 [hacc::Document {
-    program: [PageProgram {
+    program: [app::PageProgram {
         shaders: [["" vertex 1] ["" fragment 1]]
     }]
     vertex: [glow::Shader {

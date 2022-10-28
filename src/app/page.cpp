@@ -1,11 +1,13 @@
 #include "page.h"
 
-#include "base/glow/program.h"
-#include "base/hacc/haccable.h"
-#include "base/hacc/resource.h"
+#include "../base/glow/program.h"
+#include "../base/hacc/haccable.h"
+#include "../base/hacc/resource.h"
 
 using namespace geo;
 using namespace glow;
+
+namespace app {
 
 Page::Page (String filename) :
     texture(filename, GL_TEXTURE_RECTANGLE),
@@ -32,7 +34,7 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
     AA(!!texture);
     AA(texture.target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = hacc::Resource("/page.hacc")["program"][1];
+    static PageProgram* program = hacc::Resource("/app/page.hacc")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -47,17 +49,19 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-HACCABLE(PageProgram,
+} using namespace app;
+
+HACCABLE(app::PageProgram,
     delegate(base<Program>())
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "base/glow/image.h"
-#include "base/hacc/serialize.h"
-#include "base/tap/tap.h"
-#include "base/wind/window.h"
+#include "../base/glow/image.h"
+#include "../base/hacc/serialize.h"
+#include "../base/tap/tap.h"
+#include "../base/wind/window.h"
 
-static tap::TestSet tests ("page", []{
+static tap::TestSet tests ("app/page", []{
     using namespace tap;
     IVec test_size = {120, 120};
     wind::Window window {

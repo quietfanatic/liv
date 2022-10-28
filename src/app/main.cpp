@@ -1,16 +1,16 @@
 #include <string>
 #include <string_view>
 #include <SDL2/SDL.h>
-#include "base/glow/common.h"
-#include "base/glow/file-texture.h"
-#include "base/glow/texture-program.h"
-#include "base/hacc/resource.h"
-#include "base/tap/tap.h"
-#include "base/uni/common.h"
-#include "base/wind/window.h"
+#include "../base/glow/common.h"
+#include "../base/glow/file-texture.h"
+#include "../base/glow/texture-program.h"
+#include "../base/hacc/resource.h"
+#include "../base/tap/tap.h"
+#include "../base/uni/common.h"
+#include "../base/wind/window.h"
 #include "page.h"
 
-using namespace std::literals;
+using namespace app;
 
 int main (int argc, char** argv) {
     char* base = AS(SDL_GetBasePath());
