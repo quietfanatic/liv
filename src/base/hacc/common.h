@@ -48,6 +48,9 @@ struct Type;
  // (you can also take String&& as a parameter if you're going to store it)
 using String = std::string;
 using Str = std::string_view;
+ // For compatibility, but hacc natively works with UTF-8
+using String16 = std::u16string;
+using Str16 = std::u16string_view;
  // Dunno why the standard library doesn't have this
 static String operator + (Str a, const String& b) { return String(a) + b; }
 static String operator + (const String& a, Str b) { return a + String(b); }

@@ -1,7 +1,7 @@
 #include "tree-internal.h"
 
+#include "compat.h"
 #include "print.h"
-
 #include "haccable.h"
 
 using namespace std::literals;
@@ -58,6 +58,7 @@ Tree::Tree (String&& v) : Tree(
     v.empty() ? &global_empty_string
               : new TreeDataT<String>(std::move(v))
 ) { }
+Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
 Tree::Tree (const Array& v) : Tree(
     v.empty() ? &global_empty_array
               : new TreeDataT<Array>(v)
@@ -117,6 +118,7 @@ Tree::operator double () const {
 }
 Tree::operator Str () const { return data->as<String>(); }
 Tree::operator String () const { return data->as<String>(); }
+Tree::operator String16 () const { return to_utf16(data->as<String>()); }
 Tree::operator const Array& () const { return data->as<Array>(); }
 Tree::operator const Object& () const { return data->as<Object>(); }
 

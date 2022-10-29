@@ -16,9 +16,6 @@ namespace hacc {
  //  and overlong sequences are treated as Latin-1 characters, and unmatched
  //  UTF-16 surrogtes are encoded as-is into UTF-8.   UTF-16 is native-endian.
 
-using String16 = std::u16string;
-using Str16 = std::u16string_view;
-
  // Converts a UTF-8 string into a native-endian UTF-16 string.
 String16 to_utf16 (Str);
 

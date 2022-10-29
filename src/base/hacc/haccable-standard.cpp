@@ -25,10 +25,13 @@ SCALAR_HACCABLE(int64)
 SCALAR_HACCABLE(uint64)
 SCALAR_HACCABLE(float)
 SCALAR_HACCABLE(double)
- // For now, haccable std::string but not other std::basic_string types.
 HACCABLE(std::string,
     to_tree([](const std::string& v){ return Tree(v); }),
-    from_tree([](std::string& v, const Tree& t){ v = std::string(Str(t)); })
+    from_tree([](std::string& v, const Tree& t){ v = std::string(t); })
+)
+HACCABLE(std::u16string,
+    to_tree([](const std::u16string& v){ return Tree(v); }),
+    from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
 )
  // Str and const char* are not haccable because they're reference types.
 
@@ -37,6 +40,16 @@ HACCABLE(std::string,
 
 static tap::TestSet tests ("base/hacc/haccable-standard", []{
     using namespace tap;
+     // Test wstrings
+    std::string s8 = "\"あいうえお\""s;
+    std::u16string s16 = u"あいうえお"s;
+    is(item_to_string(&s16, COMPACT), s8, "Can serialize wstring");
+    std::u16string s16_got;
+    doesnt_throw([&]{
+        item_from_string(&s16_got, s8);
+    });
+    is(s16_got, s16, "Can deserialize wstring");
+     // Test tuples
     std::tuple<int32, String, std::vector<int32>> data;
     std::tuple<int32, String, std::vector<int32>> expected_data
         = {45, "asdf"s, {3, 4, 5}};

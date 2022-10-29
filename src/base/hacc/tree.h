@@ -43,6 +43,8 @@ struct Tree {
     explicit Tree (double v);
     explicit Tree (Str v) : Tree(String(v)) { }
     explicit Tree (String&& v);
+    explicit Tree (Str16 v) : Tree(String16(v)) { }
+    explicit Tree (String16&& v); // Converts to UTF8 internally
     explicit Tree (const char* v) : Tree(String(v)) { }
     explicit Tree (const Array& v);
     explicit Tree (Array&& v);
@@ -68,6 +70,7 @@ struct Tree {
     explicit operator double () const;
     explicit operator Str () const;
     explicit operator String () const;  // Does a copy
+    explicit operator String16 () const;
     explicit operator const Array& () const;
     explicit operator const Object& () const;
 
