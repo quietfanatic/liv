@@ -15,7 +15,6 @@
 
 namespace hacc {
 
- // TODO: Determine whether hacc namespace is inlined in subclasses
 template <class T, bool has_members = std::is_class_v<T> || std::is_union_v<T>>
 struct HaccabilityBase;
 

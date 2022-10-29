@@ -5,15 +5,22 @@
 
 #pragma once
 
+#include <array>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "common.h"
 #include "haccable.h"
 #include "reference.h"
 
+ // std::optional haccifies to null for nullopt and whatever it contains
+ // otherwise.  Yes, that means that this won't serialize properly if the
+ // contained object itself serializes to null.  Hopefully this won't be
+ // a problem.
 HACCABLE_TEMPLATE(
     HACCABLE_TEMPLATE_PARAMS(class T),
     HACCABLE_TEMPLATE_TYPE(std::optional<T>),
@@ -109,7 +116,8 @@ HACCABLE_TEMPLATE(
     hcb::name([]{
         using namespace hacc;
         using namespace std::literals;
-        static String r = Type::CppType<T>().name() + "["s + std::to_string(n) + "]"s;
+        static String r = Type::CppType<T>().name()
+                        + "["sv + std::to_string(n) + "]"sv;
         return Str(r);
     }),
     hcb::length(hcb::template constant<hacc::usize>(n)),
@@ -119,3 +127,100 @@ HACCABLE_TEMPLATE(
     })
 )
 
+HACCABLE_TEMPLATE(
+    HACCABLE_TEMPLATE_PARAMS(class T, hacc::usize n),
+    HACCABLE_TEMPLATE_TYPE(std::array<T, n>),
+    hcb::name([]{
+        using namespace hacc;
+        using namespace std::literals;
+        static String r = "std::array<"sv + Type::CppType<T>().name()
+                        + ", "sv + std::to_string(n) + ">"sv;
+        return Str(r);
+    }),
+    hcb::length(hcb::template constant<hacc::usize>(n)),
+    hcb::elem_func([](std::array<T, n>& v, hacc::usize i){
+        if (i < n) return hacc::Reference(&v[i]);
+        else return hacc::Reference();
+    })
+)
+
+HACCABLE_TEMPLATE(
+    HACCABLE_TEMPLATE_PARAMS(class A, class B),
+    HACCABLE_TEMPLATE_TYPE(std::pair<A, B>),
+    hcb::name([]{
+        using namespace hacc;
+        using namespace std::literals;
+        static String r = "std::pair<"sv + Type::CppType<A>().name()
+                        + ", "sv + Type::CppType<B>().name() + ">"sv;
+        return Str(r);
+    }),
+    hcb::elems(
+        hcb::elem(&std::pair<A, B>::first),
+        hcb::elem(&std::pair<A, B>::second)
+    )
+)
+
+ // A bit convoluted but hopefully worth it
+namespace haccable_standard_util {
+    using namespace hacc;
+    using namespace std::literals;
+
+     // Recursive template function to construct the type name of the tuple
+     // All this just to put commas between the type names.
+    template <class... Ts>
+    struct TupleNames;
+    template <>
+    struct TupleNames<> {
+        static String make () {
+            return "";
+        }
+    };
+    template <class T>
+    struct TupleNames<T> {
+        static String make () {
+            return String(Type::CppType<T>().name());
+        }
+    };
+    template <class A, class B, class... Ts>
+    struct TupleNames<A, B, Ts...> {
+        static String make () {
+            return Type::CppType<A>().name()
+                 + ", "s + TupleNames<B, Ts...>::make();
+        }
+    };
+
+     // No recursive templates or extra static tables, just expand the parameter
+     // pack right inside of elems(...).  We do need to move this out to an
+     // external struct though, to receive an index sequence.
+    template <class... Ts>
+    struct TupleElems {
+        using Tuple = std::tuple<Ts...>;
+        using hcb = hacc::HaccabilityBase<Tuple>;
+        template <class T>
+        using Getter = T&(*)(Tuple&);
+        template <usize... is>
+        static constexpr auto make (std::index_sequence<is...>) {
+            return hcb::elems(
+                hcb::elem(hcb::ref_func(
+                    Getter<typename std::tuple_element<is, Tuple>::type>(&std::get<is, Ts...>)
+                ))...
+            );
+        }
+    };
+}
+
+HACCABLE_TEMPLATE(
+    HACCABLE_TEMPLATE_PARAMS(class... Ts),
+    HACCABLE_TEMPLATE_TYPE(std::tuple<Ts...>),
+    hcb::name([]{
+        using namespace hacc;
+        using namespace std::literals;
+        static String r = "std::tuple<"sv
+            + haccable_standard_util::TupleNames<Ts...>::make()
+            + ">"sv;
+        return Str(r);
+    }),
+    haccable_standard_util::TupleElems<Ts...>::make(
+        std::index_sequence_for<Ts...>{}
+    )
+)
