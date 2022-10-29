@@ -22,6 +22,7 @@ TestEnvironment::~TestEnvironment () { }
 
 Image TestEnvironment::read_pixels () {
     Image r (size);
+    glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, r.pixels);
     return r;
 }
