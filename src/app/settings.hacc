@@ -1,0 +1,5 @@
+[app::Settings {
+    prev: [left]
+    next: [right]
+    quit: [ctrl q]
+}]

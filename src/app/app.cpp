@@ -2,8 +2,16 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include "../base/hacc/resource.h"
+#include "settings.h"
 
 namespace app {
+
+App::App () :
+    settings(hacc::Resource("/app/settings.hacc").ref())
+{ }
+
+App::~App () { }
 
 static void add_book (App& self, std::unique_ptr<Book>&& b) {
     auto& book = self.books.emplace_back(std::move(b));
@@ -32,23 +40,27 @@ void App::run () {
     while (!stop_requested) {
         SDL_Event event;
         AS(SDL_WaitEvent(&event));
+        Book* book = null;
         switch (event.type) {
-            case SDL_QUIT: return;
-            case SDL_KEYDOWN: {
-                Book* book = book_with_window_id(*this, event.key.windowID);
-                switch (event.key.keysym.sym) {
-                    case SDLK_ESCAPE: return;
-                    case SDLK_LEFT: {
-                        book->prev();
-                        break;
-                    }
-                    case SDLK_RIGHT: {
-                        book->next();
-                        break;
-                    }
-                }
-            }
+            case SDL_QUIT: stop(); break;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                book = book_with_window_id(*this, event.key.windowID);
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+                book = book_with_window_id(*this, event.button.windowID);
+                break;
             default: break;
+        }
+        if (input_matches_event(settings->prev, &event)) {
+            book->prev();
+        }
+        else if (input_matches_event(settings->next, &event)) {
+            book->next();
+        }
+        else if (input_matches_event(settings->quit, &event)) {
+            stop();
         }
     }
 }

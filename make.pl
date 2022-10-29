@@ -104,6 +104,7 @@ my @modules = qw(
     app/book
     app/main
     app/page
+    app/settings
     base/control/input
     base/geo/mat
     base/hacc/accessors
@@ -139,10 +140,11 @@ my %opts = (
 );
 
 my @resources = qw(
+    app/page.hacc
+    app/settings.hacc
     base/hacc/test/*
     base/glow/test/*
     base/glow/texture-program.hacc
-    app/page.hacc
 );
 my %dlls = ();
 #my %dlls = (
