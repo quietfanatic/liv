@@ -1,3 +1,5 @@
+// Generic 1-dimensional fixed-size vectors.
+
 #pragma once
 
 #include <cmath>  // for sqrt
@@ -91,9 +93,15 @@ struct GVec : GVecStorage<T, n> {
     }
 
     CE T& operator [] (usize i) {
+#ifdef NDEBUG
+        AA(i < n);
+#endif
         return this->e[i];
     }
     CE const T& operator [] (usize i) const {
+#ifdef NDEBUG
+        AA(i < n);
+#endif
         return this->e[i];
     }
     explicit CE operator bool () const {
@@ -122,7 +130,7 @@ GVEC_COMPARISON_OP(>, a[i] > b[i], false)
 GVEC_COMPARISON_OP(>=, a[i] >= b[i], true)
 #undef GVEC_COMPARISON_OP
 
-///// BINARY
+///// UNARY
 
 #define GVEC_UNARY_OP(op) \
 template <class T, usize n> \
@@ -135,8 +143,11 @@ CE auto operator op (const GVec<T, n>& a) { \
 }
 GVEC_UNARY_OP(+)
 GVEC_UNARY_OP(-)
-GVEC_UNARY_OP(!)
+ // Do not define ! because the user probably expects it to coerce to scalar.
+ // You can use ~ on BVecs.
 GVEC_UNARY_OP(~)
+
+///// BINARY
 
 #define GVEC_BINARY_OP(op) \
 template <class TA, class TB, usize n> \
@@ -168,9 +179,11 @@ GVEC_BINARY_OP(-)
 GVEC_BINARY_OP(*)
 GVEC_BINARY_OP(/)
 GVEC_BINARY_OP(%)
-GVEC_BINARY_OP(|)  // These intended mainly for BVec
+GVEC_BINARY_OP(|)  // These can be used on BVec
 GVEC_BINARY_OP(&)
 GVEC_BINARY_OP(^)
+GVEC_BINARY_OP(<<)
+GVEC_BINARY_OP(>>)
 #undef GVEC_BINARY_OP
 
 #define GVEC_ASSIGN_OP(op) \
@@ -195,6 +208,8 @@ GVEC_ASSIGN_OP(/=)
 GVEC_ASSIGN_OP(|=)
 GVEC_ASSIGN_OP(&=)
 GVEC_ASSIGN_OP(^=)
+GVEC_ASSIGN_OP(<<=)
+GVEC_ASSIGN_OP(>>=)
 #undef GVEC_ASSIGN_OP
 
 ///// SCALAR-LIKE FUNCTIONS
@@ -208,7 +223,7 @@ CE bool defined (const GVec<T, n>& a) {
     bool any_defined = false;
     bool all_defined = true;
     for (usize i = 0; i < n; i++) {
-        if (defined(a)) any_defined = true;
+        if (defined(a[i])) any_defined = true;
         else all_defined = false;
     }
     AA(any_defined == all_defined);
@@ -219,30 +234,30 @@ CE bool defined (const GVec<T, n>& a) {
 template <class T, usize n>
 CE bool finite (const GVec<T, n>& a) {
     for (usize i = 0; i < n; i++) {
-        if (!finite(a)) return false;
+        if (!finite(a[i])) return false;
     }
     return true;
 }
 
 template <class T, usize n>
-CE GVec<T, n> round (const GVec<T, n>& a) {
-    GVec<T, n> r;
+CE auto round (const GVec<T, n>& a) {
+    GVec<decltype(round(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = round(a[i]);
     }
     return r;
 }
 template <class T, usize n>
-CE GVec<T, n> floor (const GVec<T, n>& a) {
-    GVec<T, n> r;
+CE auto floor (const GVec<T, n>& a) {
+    GVec<decltype(floor(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = floor(a[i]);
     }
     return r;
 }
 template <class T, usize n>
-CE GVec<T, n> ceil (const GVec<T, n>& a) {
-    GVec<T, n> r;
+CE auto ceil (const GVec<T, n>& a) {
+    GVec<decltype(ceil(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = ceil(a[i]);
     }
@@ -293,7 +308,7 @@ CE auto distance (const TA& a, const TB& b) {
 }
 
  // Can be negative.
- // Equivalent to area(GRect{{0}, a})
+ // For 2-Vecs, equivalent to area(GRect{{0}, a})
 template <class T, usize n>
 CE T area (const GVec<T, n>& a) {
     T r = 1;

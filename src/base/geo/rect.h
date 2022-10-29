@@ -1,3 +1,5 @@
+// 2d rectangles stored in (left, bottom, right, top) order.
+
 #pragma once
 
 #include "vec.h"
@@ -11,6 +13,8 @@ using Rect = GRect<float>;
 using DRect = GRect<double>;
 using IRect = GRect<int32>;
 using LRect = GRect<int64>;
+ // I can imagine use cases for this.
+using BRect = GRect<bool>;
 
 template <class T>
 struct GRect {
@@ -258,7 +262,7 @@ CE bool covers (const GRect<T>& a, const GRect<T>& b) {
     return covers(a, b.lb()) && covers(a, b.rt());
 }
 
- // If p is outside of a, returns the closest point to p covered by a.
+ // If p is outside of a, returns the closest point to p contained in a.
 template <class T>
 CE GVec<T, 2> snap (const GRect<T>& a, const GVec<T, 2>& p) {
     return {
@@ -278,6 +282,7 @@ HACCABLE_TEMPLATE(
         else if CE (std::is_same_v<T, double>) return "geo::DRect"sv;
         else if CE (std::is_same_v<T, int32>) return "geo::IRect"sv;
         else if CE (std::is_same_v<T, int64>) return "geo::LRect"sv;
+        else if CE (std::is_same_v<T, bool>) return "geo::BRect"sv;
         else {
             static String r = "geo::GRect<" + String(hacc::Type::CppType<T>().name()) + ">";
             return Str(r);

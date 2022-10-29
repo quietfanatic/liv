@@ -1,3 +1,6 @@
+// 2D matrixes (matrices if you speak Latin)
+// Unlike GVec and GRect, these only support float.
+
 #pragma once
 
 #include "vec.h"

@@ -1,3 +1,6 @@
+// Implements various utilities for scalar math, such as symbolic INC and NAN,
+// constexpr rounding functions, and vector-like scalar functions.
+
 #pragma once
 
 #include <limits>
@@ -33,6 +36,7 @@ struct INF_t {
 CE INF_t INF;
 
  // Represents the minimum or maximum value of whatever it's cast to.
+ // TODO: merge this with INF_t
 #undef MAX
 struct MINMAX_t {
     bool minus;
@@ -86,9 +90,10 @@ CE T max (T a, T b) {
          : a >= b ? a : b;
 }
 
-// Rounding functions.
-// We're assuming you don't want to round floats that are too big
-//  to represent all integers.
+// Fast rounding functions.
+// May not work on floats that are so large that they can no longer represent
+// fractions.  Especially will not work on floats larger than the maximum of the
+// integral type.
 
 CE int32 trunc (float a) { return int32(a); }
 CE int64 trunc (double a) { return int64(a); }
@@ -121,7 +126,8 @@ CE int64 ceil (double a) {
     else return int64(a);
 }
 
- // Modulo and remainder.  These will not work if a / b is inordinately large.
+ // Fast modulo and remainder.
+ // These will not work if a / b is inordinately large.
 CE float mod (float a, float b) {
     if (a / b > int32(MAX) || a / b < int32(MIN)) return NAN;
     else return a - trunc(a / b) * b;
