@@ -88,11 +88,13 @@ static tap::TestSet tests ("app/book", []{
      // Note: this will break when the default fit mode is not stretch
     book.draw();
     glow::Image img (size);
+    glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 1, "Initial page is 1");
     is(img[{4, 4}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
+    glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 2, "Next page is 2");
     is(img[{4, 4}], glow::RGBA8(0x45942eff), "Second page is correct");
@@ -101,6 +103,7 @@ static tap::TestSet tests ("app/book", []{
     is(book.current_page_no, 2, "Can't go past last page");
 
     book.prev();
+    glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 1, "Go back to page 1");
     is(img[{4, 4}], glow::RGBA8(0x2674dbff), "Going back to first page works");
