@@ -351,3 +351,6 @@ const hacc::in::Description* const Haccability<T>::description = \
 HACCABLE_TEMPLATE_BEGIN(HACCABLE_ESCAPE(params), HACCABLE_ESCAPE(T)) \
     __VA_ARGS__ \
 HACCABLE_TEMPLATE_END(HACCABLE_ESCAPE(params), HACCABLE_ESCAPE(T))
+
+#define HACCABLE_INSTANTIATE(T) \
+static_assert(haccable::Haccability<T>::description);

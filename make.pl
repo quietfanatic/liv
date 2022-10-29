@@ -104,6 +104,7 @@ my @modules = qw(
     app/book
     app/main
     app/page
+    base/control/input
     base/geo/mat
     base/hacc/accessors
     base/hacc/common

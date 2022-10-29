@@ -52,6 +52,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <typeinfo>
 
@@ -383,6 +384,9 @@ std::string Show<T>::show (const T& v) {
         return v ? "\"" + std::string(v) + "\"" : "nullptr";
     }
     else if constexpr (std::is_same_v<T, std::string>) {
+        return "\"" + v + "\"";
+    }
+    else if constexpr (std::is_same_v<T, std::string_view>) {
         return "\"" + v + "\"";
     }
     else if constexpr (std::is_same_v<T, std::nullptr_t>) {
