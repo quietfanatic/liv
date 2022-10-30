@@ -7,7 +7,6 @@ use File::Copy;
 ##### COMMAND FLAGS
 
 my @includes = ();
- # -Wno-strict-aliasing is potentially dangerous but everything seems to work fine...for now.
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -Wall -Wextra -Wno-unused-function

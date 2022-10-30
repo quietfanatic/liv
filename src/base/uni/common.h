@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -76,17 +77,27 @@ void assert_failed_general (const char* function, const char* filename, uint lin
 void assert_failed_sdl (const char* function, const char* filename, uint line);
 
 template <class T>
-static T assert_general (T v, const char* function, const char* filename, uint line) {
-    if (!v) assert_failed_general(function, filename, line);
+static CE T assert_general (T v, const char* function, const char* filename, uint line) {
+    if (std::is_constant_evaluated()) {
+        assert(v);
+    }
+    else {
+        if (!v) assert_failed_general(function, filename, line);
+    }
     return v;
 }
 template <class T>
-static T assert_sdl (T v, const char* function, const char* filename, uint line) {
+static CE T assert_sdl (T v, const char* function, const char* filename, uint line) {
     if (!v) assert_failed_sdl(function, filename, line);
     return v;
 }
 
 #define AA(v) assert_general(v, __FUNCTION__, __FILE__, __LINE__)
+#ifdef NDEBUG
+#define DA(v)
+#else
+#define DA(v) AA(v)
+#endif
 #define AS(v) assert_sdl(v, __FUNCTION__, __FILE__, __LINE__)
 
 namespace uni::X {

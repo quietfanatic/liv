@@ -90,64 +90,85 @@ CE T max (T a, T b) {
          : a >= b ? a : b;
 }
 
-// Fast rounding functions.
-// May not work on floats that are so large that they can no longer represent
-// fractions.  Especially will not work on floats larger than the maximum of the
-// integral type.
+///// Fast constexpr rounding functions
 
-CE int32 trunc (float a) { return int32(a); }
-CE int64 trunc (double a) { return int64(a); }
+ // Round toward 0
+CE int32 trunc (float a) {
+    DA(a >= int32(MIN) && a <= int32(MAX));
+    return int32(a);
+}
+CE int64 trunc (double a) {
+    DA(a >= int32(MIN) && a <= int32(MAX));
+    return int64(a);
+}
 
  // 0.5 => 1, -0.5 => -1
 CE int32 round (float a) {
-    if (a >= 0) return int32(a + 0.5f);
-    else return int32(a - 0.5f);
+    if (a >= 0) return trunc(a + 0.5f);
+    else return trunc(a - 0.5f);
 }
 CE int64 round (double a) {
-    if (a >= 0) return int64(a + 0.5);
-    else return int64(a - 0.5);
+    if (a >= 0) return trunc(a + 0.5);
+    else return trunc(a - 0.5);
 }
 
 CE int32 floor (float a) {
-    if (a >= 0) return int32(a);
-    else return int32(MIN) - int32(int32(MIN) - a);
+    if (a >= 0) return trunc(a);
+    else return int32(MIN) - trunc(int32(MIN) - a);
 }
 CE int64 floor (double a) {
     if (a >= 0) return int64(a);
-    else return int64(MIN) - int64(int64(MIN) - a);
+    else return int64(MIN) - trunc(int64(MIN) - a);
 }
 
 CE int32 ceil (float a) {
-    if (a > 0) return int32(MAX) - int32(int32(MAX) - a);
-    else return int32(a);
+    if (a > 0) return int32(MAX) - trunc(int32(MAX) - a);
+    else return trunc(a);
 }
 CE int64 ceil (double a) {
-    if (a > 0) return int64(MAX) - int64(int64(MAX) - a);
-    else return int64(a);
+    if (a > 0) return int64(MAX) - trunc(int64(MAX) - a);
+    else return trunc(a);
 }
 
- // Fast modulo and remainder.
+///// Fast constexpr modulo and remainder
  // These will not work if a / b is inordinately large.
 CE float mod (float a, float b) {
-    if (a / b > int32(MAX) || a / b < int32(MIN)) return NAN;
-    else return a - trunc(a / b) * b;
+    float ratio = a / b;
+    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+        return a - trunc(ratio) * b;
+    }
+    else return NAN;
 }
 CE double mod (double a, double b) {
-    if (a / b > int32(MAX) || a / b < int32(MIN)) return NAN;
-    return a - trunc(a / b) * b;
+    double ratio = a / b;
+    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+        return a - trunc(ratio) * b;
+    }
+    else return NAN;
 }
 CE int32 mod (int32 a, int32 b) { return a % b; }
+CE int64 mod (int64 a, int64 b) { return a % b; }
 
  // Like mod but sign is always sign of b
 CE float rem (float a, float b) {
-    if (a / b > int32(MAX) || a / b < int32(MIN)) return NAN;
-    return a - floor(a / b) * b;
+    float ratio = a / b;
+    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+        return a - floor(ratio) * b;
+    }
+    else return NAN;
 }
 CE double rem (double a, double b) {
-    if (a / b > int32(MAX) || a / b < int32(MIN)) return NAN;
-    return a - floor(a / b) * b;
+    double ratio = a / b;
+    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+        return a - floor(ratio) * b;
+    }
+    else return NAN;
 }
 CE int32 rem (int32 a, int32 b) {
+    if (a >= 0) return a % b;
+    else return -a % -b;
+}
+CE int64 rem (int64 a, int64 b) {
     if (a >= 0) return a % b;
     else return -a % -b;
 }
@@ -157,32 +178,45 @@ CE int32 rem (int32 a, int32 b) {
 CE float length2 (float v) { return v * v; }
 CE double length2 (double v) { return v * v; }
 CE int32 length2 (int32 v) { return v * v; }
+CE int64 length2 (int64 v) { return v * v; }
  // Okay, I admit, I just wanted a constexpr abs
-CE float length (float v) { return v < 0 ? -v : v; }
-CE double length (double v) { return v < 0 ? -v : v; }
-CE int32 length (int32 v) { return v < 0 ? -v : v; }
+CE float length (float v) { return v >= 0 ? v : -v; }
+CE double length (double v) { return v >= 0 ? v : -v; }
+CE int32 length (int32 v) { return v >= 0 ? v : -v; }
+CE int64 length (int64 v) { return v >= 0 ? v : -v; }
 
  // AKA sign for scalars
  // (Can't use (v > 0) - (v < 0) because it converts NAN to 0)
 CE float normalize (float v) { return v > 0 ? 1 : v < 0 ? -1 : v; }
 CE double normalize (double v) { return v > 0 ? 1 : v < 0 ? -1 : v; }
 CE int32 normalize (int32 v) { return v > 0 ? 1 : v < 0 ? -1 : v; }
+CE int64 normalize (int64 v) { return v > 0 ? 1 : v < 0 ? -1 : v; }
 
  // AKA copysign for scalars
 CE float align (float a, float b) {
-    return b > 0 ? length(a) : -length(a);
+    return b >= 0 ? length(a) : -length(a);
 }
 CE double align (double a, double b) {
-    return b > 0 ? length(a) : -length(a);
+    return b >= 0 ? length(a) : -length(a);
 }
 CE int32 align (int32 a, int32 b) {
-    return b > 0 ? length(a) : -length(a);
+    return b >= 0 ? length(a) : -length(a);
+}
+CE int64 align (int64 a, int64 b) {
+    return b >= 0 ? length(a) : -length(a);
 }
 
-CE float lerp (float a, float b, float t) { return t*a + (1-t)*b; }
-CE double lerp (double a, double b, double t) { return t*a + (1-t)*b; }
+CE float lerp (float a, float b, float t) {
+    return t*a + (1-t)*b;
+}
+CE double lerp (double a, double b, double t) {
+    return t*a + (1-t)*b;
+}
 CE int32 lerp (int32 a, int32 b, double t) {
     return int32(lerp(double(a), double(b), t));
+}
+CE int64 lerp (int64 a, int64 b, double t) {
+    return int64(lerp(double(a), double(b), t));
 }
 
 } // namespace geo

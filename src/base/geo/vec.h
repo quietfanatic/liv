@@ -93,15 +93,11 @@ struct GVec : GVecStorage<T, n> {
     }
 
     CE T& operator [] (usize i) {
-#ifndef NDEBUG
-        AA(i < n);
-#endif
+        DA(i < n);
         return this->e[i];
     }
     CE const T& operator [] (usize i) const {
-#ifndef NDEBUG
-        AA(i < n);
-#endif
+        DA(i < n);
         return this->e[i];
     }
     explicit CE operator bool () const {
@@ -144,7 +140,7 @@ CE auto operator op (const GVec<T, n>& a) { \
 GVEC_UNARY_OP(+)
 GVEC_UNARY_OP(-)
  // Do not define ! because the user probably expects it to coerce to scalar.
- // You can use ~ on BVecs.
+ // You can use ~ on BVecs instead
 GVEC_UNARY_OP(~)
 
 ///// BINARY
@@ -217,18 +213,16 @@ GVEC_ASSIGN_OP(>>=)
  // Will debug assert if some but not all elements are defined
 template <class T, usize n>
 CE bool defined (const GVec<T, n>& a) {
-#ifdef NDEBUG
+    DA([&]{
+        bool any_defined = false;
+        bool all_defined = true;
+        for (usize i = 0; i < n; i++) {
+            if (defined(a[i])) any_defined = true;
+            else all_defined = false;
+        }
+        return any_defined == all_defined;
+    }());
     return defined(a[0]);
-#else
-    bool any_defined = false;
-    bool all_defined = true;
-    for (usize i = 0; i < n; i++) {
-        if (defined(a[i])) any_defined = true;
-        else all_defined = false;
-    }
-    AA(any_defined == all_defined);
-    return all_defined;
-#endif
 }
 
 template <class T, usize n>
