@@ -15,4 +15,9 @@ extern Command quit;
  // (FitMode) Set fit mode for current book
 extern Command fit_mode;
 
+ // () Enter or leave fullscreen mode
+extern Command fullscreen;
+ // () Leave fullscreen mode or quit if not fullscreen
+extern Command leave_fullscreen_or_quit;
+
 } // namespace app::command

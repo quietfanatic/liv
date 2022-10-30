@@ -44,34 +44,9 @@ void Book::draw () {
     glClear(GL_COLOR_BUFFER_BIT);
     if (valid_page_no(current_page_no)) {
         auto& page = *pages[current_page_no-1];
-        Rect screen_rect;
-        switch (view.fit_mode) {
-            case FIT: {
-                 // Fit to screen
-                 // slope = 1/aspect
-                float page_slope = slope(Vec(page.size));
-                float screen_slope = slope(Vec(window.size));
-                float scale = page_slope > screen_slope
-                    ? float(window.size.y) / page.size.y
-                    : float(window.size.x) / page.size.x;
-                Rect page_rect = Rect({0, 0}, page.size * scale);
-                 // Center
-                Rect book_rect = page_rect + (window.size - page_rect.size()) / 2;
-                 // Convert from pixel coords to OpenGL coords (-1,-1)..(1,1)
-                screen_rect = book_rect / Vec(window.size) * float(2) - Vec(1, 1);
-                break;
-            }
-            case STRETCH: {
-                screen_rect = {-1.0, -1.0, 1.0, 1.0};
-                break;
-            }
-            default:
-            case MANUAL: {
-                 // TODO
-                screen_rect = {-1.0, -1.0, 1.0, 1.0};
-                break;
-            }
-        }
+        Rect page_position = view.page_position(page.size, window.size);
+         // Convert to OpenGL coords (-1,-1)..(+1,+1)
+        Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
          // Draw
         page.draw(screen_rect);
     }
