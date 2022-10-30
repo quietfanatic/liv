@@ -10,8 +10,8 @@ my @includes = ();
  # -Wno-strict-aliasing is potentially dangerous but everything seems to work fine...for now.
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
-    -Wall -Wextra -Wno-format-security -Wno-unused-function -Wno-strict-aliasing
-    -fmax-errors=50 -fdiagnostics-color -fno-diagnostics-show-caret
+    -Wall -Wextra -Wno-unused-function
+    -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = qw(
     -lSDL2 -lSDL2_image
