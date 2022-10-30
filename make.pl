@@ -98,7 +98,7 @@ sub copy_rule {
 
 ##### SOURCES
 
-my $program = 'iv';
+my $program = 'liv';
 
 my @modules = qw(
     app/app
