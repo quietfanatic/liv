@@ -84,19 +84,18 @@ static tap::TestSet tests ("app/book", []{
         hacc::file_resource_root() + "/base/glow/test/image2.png"sv
     });
 
-     // Note: this will break when the default fit mode is not stretch
     book.draw();
     glow::Image img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 1, "Initial page is 1");
-    is(img[{4, 4}], glow::RGBA8(0x2674dbff), "First page is correct");
+    is(img[{60, 60}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 2, "Next page is 2");
-    is(img[{4, 4}], glow::RGBA8(0x45942eff), "Second page is correct");
+    is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
     is(book.current_page_no, 2, "Can't go past last page");
@@ -105,7 +104,7 @@ static tap::TestSet tests ("app/book", []{
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 1, "Go back to page 1");
-    is(img[{4, 4}], glow::RGBA8(0x2674dbff), "Going back to first page works");
+    is(img[{60, 60}], glow::RGBA8(0x2674dbff), "Going back to first page works");
 
     book.prev();
     is(book.current_page_no, 1, "Can't go before page 1");

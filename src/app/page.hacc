@@ -19,7 +19,7 @@
 
             void main () {
                 gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
-                gl_Position.y = u_screen_rect[corners[gl_VertexID].y];
+                gl_Position.y = -u_screen_rect[corners[gl_VertexID].y];
                 gl_Position.zw = vec2(0, 1);
                 v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
                 v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
