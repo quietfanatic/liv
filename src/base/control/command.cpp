@@ -85,9 +85,9 @@ HACCABLE(Statement,
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static std::vector<int> vals;
+static std::vector<int> test_vals;
 static void test_command_ (int a, int b) {
-    vals.push_back(a * b);
+    test_vals.push_back(a * b);
 }
 static Command test_command (test_command_, "_test_command", "Command for testing, do not use.", 1);
 
@@ -98,8 +98,8 @@ static tap::TestSet tests ("base/control/command", []{
     doesnt_throw([&]{
         s();
     }, "Can create a command in C++");
-    is(vals.size(), usize(1), "Can call command");
-    is(vals.back(), 12, "Command gave correct result");
+    is(test_vals.size(), usize(1), "Can call command");
+    is(test_vals.back(), 12, "Command gave correct result");
 
     s = Statement();
 
@@ -109,7 +109,7 @@ static tap::TestSet tests ("base/control/command", []{
     doesnt_throw([&]{
         s();
     }, "Can call command");
-    is(vals.back(), 30, "Command gave correct result");
+    is(test_vals.back(), 30, "Command gave correct result");
 
     is(hacc::item_to_string(&s, hacc::COMPACT), "[_test_command 5 6]",
         "Command serializes correctly"
@@ -122,6 +122,13 @@ static tap::TestSet tests ("base/control/command", []{
     throws<hacc::X::Error>([&]{
         hacc::item_from_string(&s, "[_test_command 1 2 3]");
     }, "Can't create command with too many args");
+
+    test_vals = {};
+    doesnt_throw([&]{
+        hacc::item_from_string(&s, "[seq [[_test_command 5 6] [_test_command 7 8]]]");
+        s();
+    }, "seq command");
+    is(test_vals.size(), usize(2), "seq command works");
 
     done_testing();
 });
