@@ -161,7 +161,7 @@ HACCABLE_TEMPLATE(
 )
 
  // A bit convoluted but hopefully worth it
-namespace haccable_standard_util {
+namespace hacc::in {
     using namespace hacc;
     using namespace std::literals;
 
@@ -209,6 +209,9 @@ namespace haccable_standard_util {
     };
 }
 
+ // Note that although std::tuple removes references from its members,
+ // Ts... is still stuck with references if it has them.  So please
+ // std::remove_cvref on the params before instantiating this.
 HACCABLE_TEMPLATE(
     HACCABLE_TEMPLATE_PARAMS(class... Ts),
     HACCABLE_TEMPLATE_TYPE(std::tuple<Ts...>),
@@ -216,11 +219,11 @@ HACCABLE_TEMPLATE(
         using namespace hacc;
         using namespace std::literals;
         static String r = "std::tuple<"sv
-            + haccable_standard_util::TupleNames<Ts...>::make()
+            + hacc::in::TupleNames<Ts...>::make()
             + ">"sv;
         return Str(r);
     }),
-    haccable_standard_util::TupleElems<Ts...>::make(
+    hacc::in::TupleElems<Ts...>::make(
         std::index_sequence_for<Ts...>{}
     )
 )

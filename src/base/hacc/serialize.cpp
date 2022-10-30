@@ -681,6 +681,9 @@ namespace hacc::test {
         int b;
          // Testing absence of copy constructor
         MemberTest (const MemberTest&) = delete;
+         // C++20 doesn't let you aggregate-initialize classes with ANY
+         // declared or deleted constructors any more.
+        MemberTest (int a, int b) : a(a), b(b) { }
     };
 
     struct BaseTest : MemberTest {
@@ -839,7 +842,7 @@ static tap::TestSet tests ("base/hacc/serialize", []{
     doesnt_throw([&]{ item_from_string(&vtt, "+nan"); });
     is(vtt, VTNAN, "item_from_tree works with string value");
 
-    auto mt = MemberTest{3, 4};
+    auto mt = MemberTest(3, 4);
     Tree mtt = item_to_tree(&mt);
     is(mtt, tree_from_string("{a:3 b:4}"), "item_to_tree works with attrs descriptor");
 
@@ -865,7 +868,7 @@ static tap::TestSet tests ("base/hacc/serialize", []{
         item_from_string(&mt, "{a:0 b:1 c:60}");
     }, "item_from_tree throws on extra attr");
 
-    auto bt = BaseTest{-1, -2, -3};
+    auto bt = BaseTest{{-1, -2}, -3};
     Tree btt = item_to_tree(&bt);
     is(btt, tree_from_string("{MemberTest:{a:-1,b:-2} c:-3}"), "item_to_tree with base attr");
     Tree from_tree_bt1 = tree_from_string("{c:-4,MemberTest:{a:-5,b:-6}}");
@@ -875,7 +878,7 @@ static tap::TestSet tests ("base/hacc/serialize", []{
         item_from_string(&bt, "{a:-7,b:-8,c:-9}");
     }, "item_from_tree with base attr throws when collapsed but inherit is not specified");
 
-    auto it = InheritTest{99, 88, 77, 66};
+    auto it = InheritTest{{{99, 88}, 77}, 66};
     Tree itt = item_to_tree(&it);
     is(itt, tree_from_string("{MemberTest:{a:99,b:88} c:77 d:66}"), "Inherit works with item_to_tree");
     Tree from_tree_it1 = tree_from_string("{d:55 c:44 MemberTest:{a:33 b:22}}");
@@ -885,7 +888,7 @@ static tap::TestSet tests ("base/hacc/serialize", []{
     item_from_tree(&it, from_tree_it2);
     is(it.b, 31, "Inherit works when not collapsed");
 
-    auto iot = InheritOptionalTest{23, 24, 25, 26};
+    auto iot = InheritOptionalTest{{{23, 24}, 25}, 26};
     Tree from_tree_iot1 = tree_from_string("{d:44}");
     item_from_tree(&iot, from_tree_iot1);
     is(iot.d, 44, "Inherit optional works");

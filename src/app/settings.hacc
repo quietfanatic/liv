@@ -1,5 +1,7 @@
 [app::Settings {
-    prev: [left]
-    next: [right]
-    quit: [ctrl q]
+    mappings: [
+        [[left] [prev]]
+        [[right] [next]]
+        [[ctrl q] [quit]]
+    ]
 }]

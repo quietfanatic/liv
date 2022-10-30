@@ -11,7 +11,8 @@ my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -Wall -Wextra -Wno-format-security -Wno-unused-function -Wno-strict-aliasing
-    -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
+    -Wno-cast-function-type
+    -fmax-errors=50 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = qw(
     -lSDL2 -lSDL2_image
@@ -61,7 +62,7 @@ sub cpp_rule {
     my ($to, $from, @opts) = @_;
     rule $to, $from, sub {
         ensure_path($_[0][0]);
-        run qw(g++ -std=c++17 -c),
+        run qw(g++ -std=c++20 -c),
             @{$_[1]}, @opts,
             '-o', $_[0][0];
     }, {fork => 1};
@@ -101,10 +102,13 @@ my $program = 'iv';
 
 my @modules = qw(
     app/app
+    app/app-commands
     app/book
     app/main
     app/page
     app/settings
+    base/control/command
+    base/control/command-builtins
     base/control/input
     base/geo/mat
     base/hacc/accessors

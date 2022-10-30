@@ -58,8 +58,18 @@ struct GMat {
         }
     }
 
-    GVec<float, rows>& operator [] (usize c) { return e[c]; }
-    const GVec<float, rows>& operator [] (usize c) const { return e[c]; }
+    CE GVec<float, rows>& operator [] (usize c) {
+#ifndef NDEBUG
+        AA(c < cols);
+#endif
+        return e[c];
+    }
+    const GVec<float, rows>& operator [] (usize c) const {
+#ifndef NDEBUG
+        AA(c < cols);
+#endif
+        return e[c];
+    }
     explicit CE operator bool () const {
         for (usize c = 0; c < cols; c++) {
             if (!e[c]) return false;

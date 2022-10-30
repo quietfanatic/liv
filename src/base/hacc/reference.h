@@ -39,6 +39,7 @@ struct Reference {
         aot(Type::CppType<T>(), true)
     { }
      // Construct from a Dynamic.
+     // TODO: construct readonly Reference from const Dynamic?
     Reference (Dynamic& d) : host(d.data), aot(d.type) { }
      // For use in attr_func and elem_func.
     template <class From, class Acr,

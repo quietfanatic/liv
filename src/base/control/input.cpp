@@ -1,5 +1,6 @@
 #include "input.h"
 
+#include <cstring>
 #include <SDL2/SDL_events.h>
 #include "../hacc/haccable.h"
 #include "../uni/hash.h"
@@ -23,6 +24,56 @@ bool input_matches_event (const Input& input, SDL_Event* event) {
         }
         default: return false;
     }
+}
+
+static SDL_Event new_event () {
+    SDL_Event r;
+    std::memset(&r, 0, sizeof(r));
+    return r;
+}
+
+static SDL_Event send_key_event (int type, int code, int window) {
+    SDL_Event event = new_event();
+    event.type = type;
+    event.key.windowID = window;
+    event.key.keysym.sym = code;
+    SDL_PushEvent(&event);
+}
+
+void send_input_as_event (const Input& input, int window) {
+    if (input.ctrl) send_key_event(SDL_KEYDOWN, SDLK_LCTRL, window);
+    if (input.alt) send_key_event(SDL_KEYDOWN, SDLK_LALT, window);
+    if (input.shift) send_key_event(SDL_KEYDOWN, SDLK_LSHIFT, window);
+    switch (input.type) {
+        case KEY: {
+            auto event = new_event();
+            event.type = SDL_KEYDOWN;
+            event.key.windowID = window;
+             // Ignore scancode for now
+            event.key.keysym.sym = input.code;
+            event.key.keysym.mod = input.ctrl * KMOD_LCTRL
+                                | input.alt * KMOD_LALT
+                                | input.shift * KMOD_LSHIFT;
+            SDL_PushEvent(&event);
+            event.type = SDL_KEYUP;
+            SDL_PushEvent(&event);
+            break;
+        }
+        case BUTTON: {
+            auto event = new_event();
+            event.type = SDL_MOUSEBUTTONDOWN;
+            event.window.windowID = window;
+            event.button.button = input.code;
+            SDL_PushEvent(&event);
+            event.type = SDL_MOUSEBUTTONUP;
+            SDL_PushEvent(&event);
+            break;
+        }
+        default: AA(false);
+    }
+    if (input.shift) send_key_event(SDL_KEYUP, SDLK_LSHIFT, window);
+    if (input.alt) send_key_event(SDL_KEYUP, SDLK_LALT, window);
+    if (input.ctrl) send_key_event(SDL_KEYUP, SDLK_LCTRL, window);
 }
 
 Input input_from_integer (int i) {
@@ -167,7 +218,7 @@ HACCABLE(control::Input,
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("control/input", []{
+static tap::TestSet tests ("base/control/input", []{
     using namespace tap;
 
     auto test2 = [](Str s, Input expect, Str s2){

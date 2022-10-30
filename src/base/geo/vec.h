@@ -93,13 +93,13 @@ struct GVec : GVecStorage<T, n> {
     }
 
     CE T& operator [] (usize i) {
-#ifdef NDEBUG
+#ifndef NDEBUG
         AA(i < n);
 #endif
         return this->e[i];
     }
     CE const T& operator [] (usize i) const {
-#ifdef NDEBUG
+#ifndef NDEBUG
         AA(i < n);
 #endif
         return this->e[i];

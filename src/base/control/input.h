@@ -26,6 +26,9 @@ struct Input {
 
 bool input_matches_event (const Input& i, SDL_Event* event);
 
+ // Mainly for testing
+void send_input_as_event (const Input& i, int windowID);
+
  // 0..9 map to the number keys, and other numbers are raw scancodes.
  // Does not work for mouse buttons.
 Input input_from_integer (int d);

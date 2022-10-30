@@ -1,14 +1,17 @@
 #pragma once
 
+#include "../base/control/command.h"
 #include "../base/control/input.h"
 
 namespace app {
 
+struct Mapping {
+    control::Input input;
+    control::Statement action;
+};
+
 struct Settings {
-     // TEMP
-    control::Input prev;
-    control::Input next;
-    control::Input quit;
+    std::vector<Mapping> mappings;
 };
 
 } // namespace app

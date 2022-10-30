@@ -33,4 +33,8 @@ struct App {
     bool hidden = false;
 };
 
+ // Temporal state for commands
+extern App* current_app;
+extern Book* current_book;
+
 } // namespace app
