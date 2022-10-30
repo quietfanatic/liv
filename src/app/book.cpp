@@ -36,10 +36,26 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 Book::~Book () { }
 
 void Book::draw () {
+     // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
     if (valid_page_no(current_page_no)) {
-        pages[current_page_no-1]->draw(Rect(-1, -1, 1, 1));
+        auto& page = *pages[current_page_no-1];
+         // Fit to screen
+         // slope = 1/aspect
+        float page_slope = slope(Vec(page.size));
+        float screen_slope = slope(Vec(window.size));
+        hacc::dump(window.size);
+        float scale = page_slope > screen_slope
+            ? float(window.size.y) / page.size.y
+            : float(window.size.x) / page.size.x;
+        Rect page_rect = Rect({0, 0}, page.size * scale);
+         // Center
+        Rect book_rect = page_rect + (window.size - page_rect.size()) / 2;
+         // Convert from pixel coords to OpenGL coords (-1,-1)..(1,1)
+        Rect screen_rect = book_rect / Vec(window.size) * float(2) - Vec(1, 1);
+         // Draw
+        page.draw(screen_rect);
     }
     SDL_GL_SwapWindow(window.sdl_window);
 }

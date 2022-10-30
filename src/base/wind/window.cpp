@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 
+#include "../glow/gl.h"
 #include "../hacc/haccable.h"
 
 namespace wind {
@@ -13,6 +14,17 @@ void Window::update () {
     SDL_SetWindowResizable(sdl_window, resizable ? SDL_TRUE : SDL_FALSE);
     if (hidden) SDL_HideWindow(sdl_window);
     else SDL_ShowWindow(sdl_window);
+}
+
+ // TODO: Supposedly this may be called on a different thread.
+ // This is probably dangerous?
+static int handle_resize (void* userdata, SDL_Event* event) {
+    if (event->type != SDL_WINDOWEVENT) return 0;
+    if (event->window.event != SDL_WINDOWEVENT_SIZE_CHANGED) return 0;
+    auto window = reinterpret_cast<Window*>(userdata);
+    window->size = {event->window.data1, event->window.data2};
+    glViewport(0, 0, window->size.x, window->size.y);
+    return 0;
 }
 
 void Window::open () {
@@ -34,6 +46,8 @@ void Window::open () {
         size.y,
         SDL_WINDOW_OPENGL | (hidden ? SDL_WINDOW_HIDDEN : 0)
     ));
+    SDL_SetWindowResizable(sdl_window, resizable ? SDL_TRUE : SDL_FALSE);
+    SDL_AddEventWatch(&handle_resize, this);
     gl_context = AS(SDL_GL_CreateContext(sdl_window));
     AS(!SDL_GL_SetSwapInterval(1));
 }
