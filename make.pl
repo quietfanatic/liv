@@ -107,6 +107,7 @@ my @modules = qw(
     app/main
     app/page
     app/settings
+    app/view
     base/control/command
     base/control/command-builtins
     base/control/input

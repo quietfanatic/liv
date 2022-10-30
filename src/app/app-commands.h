@@ -12,4 +12,7 @@ extern Command next;
  // () Quit app
 extern Command quit;
 
+ // (FitMode) Set fit mode for current book
+extern Command fit_mode;
+
 } // namespace app::command

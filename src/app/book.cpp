@@ -5,6 +5,7 @@
 #include "../base/glow/gl.h"
 #include "app.h"
 #include "page.h"
+#include "settings.h"
 
 using namespace geo;
 namespace fs = std::filesystem;
@@ -13,12 +14,14 @@ namespace app {
 
 Book::Book (App& app, Str folder) :
     app(app),
+    view(app.settings->default_view),
     folder(folder)
 {
     AA(false);
 }
 Book::Book (App& app, const std::vector<String>& filenames) :
     app(app),
+    view(app.settings->default_view),
     window{
         .title = "Image Viewer",
         .size = app.default_window_size,
@@ -41,19 +44,34 @@ void Book::draw () {
     glClear(GL_COLOR_BUFFER_BIT);
     if (valid_page_no(current_page_no)) {
         auto& page = *pages[current_page_no-1];
-         // Fit to screen
-         // slope = 1/aspect
-        float page_slope = slope(Vec(page.size));
-        float screen_slope = slope(Vec(window.size));
-        hacc::dump(window.size);
-        float scale = page_slope > screen_slope
-            ? float(window.size.y) / page.size.y
-            : float(window.size.x) / page.size.x;
-        Rect page_rect = Rect({0, 0}, page.size * scale);
-         // Center
-        Rect book_rect = page_rect + (window.size - page_rect.size()) / 2;
-         // Convert from pixel coords to OpenGL coords (-1,-1)..(1,1)
-        Rect screen_rect = book_rect / Vec(window.size) * float(2) - Vec(1, 1);
+        Rect screen_rect;
+        switch (view.fit_mode) {
+            case FIT: {
+                 // Fit to screen
+                 // slope = 1/aspect
+                float page_slope = slope(Vec(page.size));
+                float screen_slope = slope(Vec(window.size));
+                float scale = page_slope > screen_slope
+                    ? float(window.size.y) / page.size.y
+                    : float(window.size.x) / page.size.x;
+                Rect page_rect = Rect({0, 0}, page.size * scale);
+                 // Center
+                Rect book_rect = page_rect + (window.size - page_rect.size()) / 2;
+                 // Convert from pixel coords to OpenGL coords (-1,-1)..(1,1)
+                screen_rect = book_rect / Vec(window.size) * float(2) - Vec(1, 1);
+                break;
+            }
+            case STRETCH: {
+                screen_rect = {-1.0, -1.0, 1.0, 1.0};
+                break;
+            }
+            default:
+            case MANUAL: {
+                 // TODO
+                screen_rect = {-1.0, -1.0, 1.0, 1.0};
+                break;
+            }
+        }
          // Draw
         page.draw(screen_rect);
     }
@@ -124,6 +142,13 @@ static tap::TestSet tests ("app/book", []{
 
     book.prev();
     is(book.current_page_no, 1, "Can't go before page 1");
+
+    is(img[{0, 0}], glow::RGBA8(0x00000000), "Default to fit mode");
+    book.view.fit_mode = STRETCH;
+    book.draw();
+    glFinish();
+    glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
+    is(img[{0, 0}], glow::RGBA8(0x2674dbff), "Stretch mode fills screen");
 
     done_testing();
 });

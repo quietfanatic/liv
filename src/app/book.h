@@ -6,6 +6,7 @@
 #include <vector>
 #include "../base/wind/window.h"
 #include "../base/uni/common.h"
+#include "view.h"
 
 namespace app {
 struct App;
@@ -13,6 +14,8 @@ struct Page;
 
 struct Book {
     App& app;
+
+    View view;
 
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;

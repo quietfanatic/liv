@@ -1,4 +1,8 @@
 [app::Settings {
+    default_view: {
+        fit_mode: fit
+        zoom: 1.0
+    }
     mappings: [
         [[left] [prev]]
         [[right] [next]]

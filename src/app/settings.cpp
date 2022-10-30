@@ -16,6 +16,7 @@ HACCABLE(app::Mapping,
 
 HACCABLE(app::Settings,
     attrs(
+        attr("default_view", &Settings::default_view),
         attr("mappings", &Settings::mappings)
     )
 )
