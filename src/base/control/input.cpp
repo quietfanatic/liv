@@ -32,7 +32,7 @@ static SDL_Event new_event () {
     return r;
 }
 
-static SDL_Event send_key_event (int type, int code, int window) {
+static void send_key_event (int type, int code, int window) {
     SDL_Event event = new_event();
     event.type = type;
     event.key.windowID = window;

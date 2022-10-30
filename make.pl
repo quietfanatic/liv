@@ -11,7 +11,6 @@ my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -Wall -Wextra -Wno-format-security -Wno-unused-function -Wno-strict-aliasing
-    -Wno-cast-function-type
     -fmax-errors=50 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = qw(
