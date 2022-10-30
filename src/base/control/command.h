@@ -4,10 +4,10 @@
 #pragma once
 
 #include <utility>
-#include "../hacc/dynamic.h" 
+#include "../ayu/dynamic.h" 
  // For tuple haccability
-#include "../hacc/haccable-standard.h"
-#include "../hacc/type.h"
+#include "../ayu/describe-standard.h"
+#include "../ayu/type.h"
 #include "../uni/common.h"
 #include "command-template-utils.h"
 

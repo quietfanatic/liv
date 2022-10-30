@@ -1,7 +1,7 @@
 #include "serialize.h"
 
 #include "description-internal.h"
-#include "haccable.h"
+#include "describe.h"
 #include "parse.h"
 #include "reference.h"
 #include "resource.h"
@@ -660,8 +660,7 @@ HACCABLE(hacc::X::UnresolvedReference,
 #ifndef TAP_DISABLE_TESTS
 #include <unordered_map>
 #include "../tap/tap.h"
-#include "haccable.h"
-#include "haccable-standard.h"
+#include "describe-standard.h"
 
  // Putting these in a test namespace so their haccable names don't conflict
 namespace hacc::test {

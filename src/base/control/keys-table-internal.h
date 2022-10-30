@@ -12,7 +12,7 @@ ALT("\t", SDLK_TAB)
 KEY("space", SDLK_SPACE)
 ALT(" ", SDLK_SPACE)
  // Note that some of these keys are not on a qwerty keyboard.
- // Typing shift+1 gives the keycode of 1, not the keycode of !
+ // Typing shift+1 gives SDLK_1, not SDLK_EXCLAIM
 KEY("!", SDLK_EXCLAIM)
 KEY("\"", SDLK_QUOTEDBL)
 KEY("#", SDLK_HASH)
@@ -154,9 +154,7 @@ KEY("mute", SDLK_MUTE)
 KEY("volumeup", SDLK_VOLUMEUP)
 KEY("volumedown", SDLK_VOLUMEDOWN)
 KEY("kp,", SDLK_KP_COMMA)
-
  // Skippng a bunch of obscure keys
-
 KEY("lctrl", SDLK_LCTRL)
 KEY("lshift", SDLK_LSHIFT)
 KEY("lalt", SDLK_LALT)

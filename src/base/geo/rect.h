@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "../ayu/describe.h"
 #include "vec.h"
 
 namespace geo {

@@ -4,7 +4,7 @@
 #include <cstring>  // strerror
 #include "compat.h"
 #include "dynamic.h"
-#include "haccable.h"
+#include "describe.h"
 #include "parse.h"
 #include "print.h"
 #include "reference.h"
@@ -724,19 +724,19 @@ HACCABLE(hacc::X::ResourceHandlerCantRemoveSource,
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 #include "document.h"
-#include "haccable-standard.h"
+#include "describe-standard.h"
 
-static tap::TestSet tests ("base/hacc/resource", []{
+static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
      // Note: We're relying on the caller to set the file resource root!
-    Resource input ("/base/hacc/test/testfile.hacc");
-    Resource input2 ("/base/hacc/test/othertest.hacc");
-    Resource rec1 ("/base/hacc/test/rec1.hacc");
-    Resource rec2 ("/base/hacc/test/rec2.hacc");
-    Resource badinput ("/base/hacc/test/badref.hacc");
-    Resource output ("/base/hacc/test/test-output.hacc");
-    Resource unicode ("/base/hacc/test/ユニコード.hacc");
-    Resource unicode2 ("/base/hacc/test/ユニコード2.hacc");
+    Resource input ("/base/ayu/test/testfile.ayu");
+    Resource input2 ("/base/ayu/test/othertest.ayu");
+    Resource rec1 ("/base/ayu/test/rec1.ayu");
+    Resource rec2 ("/base/ayu/test/rec2.ayu");
+    Resource badinput ("/base/ayu/test/badref.ayu");
+    Resource output ("/base/ayu/test/test-output.ayu");
+    Resource unicode ("/base/ayu/test/ユニコード.ayu");
+    Resource unicode2 ("/base/ayu/test/ユニコード2.ayu");
 
     is(input.state(), UNLOADED, "Resources start out unloaded");
     doesnt_throw([&]{ load(input); }, "load");

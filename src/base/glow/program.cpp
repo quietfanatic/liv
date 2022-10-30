@@ -1,6 +1,6 @@
 #include "program.h"
 
-#include "../hacc/haccable-standard.h"
+#include "../ayu/describe-standard.h"
 #include "gl.h"
 
 namespace glow {
@@ -168,7 +168,7 @@ HACCABLE(glow::X::ProgramLinkFailed,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "../hacc/resource.h"
+#include "../ayu/resource.h"
 #include "../geo/rect.h"
 #include "../geo/vec.h"
 #include "../tap/tap.h"
@@ -189,7 +189,7 @@ static tap::TestSet tests ("base/glow/program", []{
 
     Program* program;
     doesnt_throw([&]{
-        program = hacc::Resource("/base/glow/test/test-program.hacc")["program"][1];
+        program = hacc::Resource("/base/glow/test/test-program.ayu")["program"][1];
     }, "Can load program from hacc document");
     program->use();
     int u_screen_rect = glGetUniformLocation(*program, "u_screen_rect");

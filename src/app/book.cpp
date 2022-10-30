@@ -76,9 +76,9 @@ bool Book::valid_page_no (isize no) {
 } using namespace app;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../base/tap/tap.h"
+#include "../base/ayu/resource.h"
 #include "../base/glow/image.h"
-#include "../base/hacc/resource.h"
+#include "../base/tap/tap.h"
 
 static tap::TestSet tests ("app/book", []{
     using namespace tap;

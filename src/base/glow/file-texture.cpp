@@ -183,7 +183,7 @@ FileTexture::~FileTexture () { }
 } using namespace glow;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../hacc/resource.h"
+#include "../ayu/resource.h"
 #include "../tap/tap.h"
 #include "colors.h"
 #include "test-environment.h"

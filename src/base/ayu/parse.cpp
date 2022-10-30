@@ -6,7 +6,7 @@
 
 #include "char-cases-internal.h"
 #include "compat.h"
-#include "haccable.h"
+#include "describe.h"
 #include "print.h"
 
 using namespace std::string_literals;

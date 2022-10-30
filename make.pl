@@ -110,21 +110,21 @@ my @modules = qw(
     base/control/command-builtins
     base/control/input
     base/geo/mat
-    base/hacc/accessors
-    base/hacc/common
-    base/hacc/compat
-    base/hacc/document
-    base/hacc/dynamic
-    base/hacc/haccable-standard
-    base/hacc/parse
-    base/hacc/path
-    base/hacc/print
-    base/hacc/reference
-    base/hacc/registry
-    base/hacc/resource
-    base/hacc/serialize
-    base/hacc/tree
-    base/hacc/type
+    base/ayu/accessors
+    base/ayu/common
+    base/ayu/compat
+    base/ayu/document
+    base/ayu/dynamic
+    base/ayu/describe-standard
+    base/ayu/parse
+    base/ayu/path
+    base/ayu/print
+    base/ayu/reference
+    base/ayu/registry
+    base/ayu/resource
+    base/ayu/serialize
+    base/ayu/tree
+    base/ayu/type
     base/tap/tap
     base/glow/common
     base/glow/file-texture
@@ -143,11 +143,11 @@ my %opts = (
 );
 
 my @resources = qw(
-    app/page.hacc
-    app/settings.hacc
-    base/hacc/test/*
+    app/page.ayu
+    app/settings.ayu
+    base/ayu/test/*
     base/glow/test/*
-    base/glow/texture-program.hacc
+    base/glow/texture-program.ayu
 );
 my %dlls = ();
 #my %dlls = (

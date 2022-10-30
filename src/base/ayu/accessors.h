@@ -3,8 +3,6 @@
 
 #pragma once
 
-// TODO: Figure out how to get around strict-aliasing rules
-
 #include <cassert>
 #include <typeinfo>
 

@@ -1,8 +1,8 @@
 #include "page.h"
 
 #include "../base/glow/program.h"
-#include "../base/hacc/haccable.h"
-#include "../base/hacc/resource.h"
+#include "../base/ayu/describe.h"
+#include "../base/ayu/resource.h"
 
 using namespace geo;
 using namespace glow;
@@ -35,7 +35,7 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
     AA(texture && *texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = hacc::Resource("/app/page.hacc")["program"][1];
+    static PageProgram* program = hacc::Resource("/app/page.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -58,7 +58,7 @@ HACCABLE(app::PageProgram,
 
 #ifndef TAP_DISABLE_TESTS
 #include "../base/glow/image.h"
-#include "../base/hacc/serialize.h"
+#include "../base/ayu/serialize.h"
 #include "../base/tap/tap.h"
 #include "../base/wind/window.h"
 

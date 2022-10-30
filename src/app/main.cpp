@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
-#include "../base/hacc/resource.h"
+#include "../base/ayu/common.h"
+#include "../base/ayu/resource.h"
 #include "../base/tap/tap.h"
 #include "../base/uni/common.h"
 #include "app.h"

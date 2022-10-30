@@ -2,13 +2,13 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
-#include "../base/hacc/resource.h"
+#include "../base/ayu/resource.h"
 #include "settings.h"
 
 namespace app {
 
 App::App () :
-    settings(hacc::Resource("/app/settings.hacc").ref())
+    settings(hacc::Resource("/app/settings.ayu").ref())
 { }
 
 App::~App () { }

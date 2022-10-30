@@ -1,6 +1,6 @@
 #include "command-builtins.h"
 
-#include "../hacc/compat.h"
+#include "../ayu/compat.h"
 
 namespace control::command {
 

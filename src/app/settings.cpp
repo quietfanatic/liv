@@ -1,7 +1,7 @@
 #include "settings.h"
 
-#include "../base/hacc/haccable.h"
-#include "../base/hacc/haccable-standard.h"
+#include "../base/ayu/describe.h"
+#include "../base/ayu/describe-standard.h"
 
 namespace app {
 

@@ -1,9 +1,8 @@
 #include "image.h"
 
 #include <cerrno>
-#include "../hacc/compat.h"
-#include "../hacc/haccable-standard.h"
-#include "../hacc/resource.h"
+#include "../ayu/compat.h"
+#include "../ayu/describe-standard.h"
 #include "gl.h"
 
 namespace glow {

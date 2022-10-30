@@ -1,6 +1,6 @@
 #include "texture-program.h"
 
-#include "../hacc/resource.h"
+#include "../ayu/resource.h"
 #include "gl.h"
 #include "image.h"
 #include "program.h"
@@ -26,7 +26,7 @@ void draw_texture (const Texture& tex, const Rect& screen_rect, const Rect& tex_
     AA(!!tex);
     AA(tex.target == GL_TEXTURE_2D);
 
-    static TextureProgram* program = hacc::Resource("/base/glow/texture-program.hacc")["program"][1];
+    static TextureProgram* program = hacc::Resource("/base/glow/texture-program.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -42,7 +42,7 @@ HACCABLE(glow::TextureProgram,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "../hacc/serialize.h"
+#include "../ayu/serialize.h"
 #include "../tap/tap.h"
 #include "../wind/window.h"
 #include "test-environment.h"

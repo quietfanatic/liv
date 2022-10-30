@@ -1,6 +1,6 @@
 #include "path.h"
 
-#include "haccable.h"
+#include "describe.h"
 #include "reference.h"
 #include "serialize.h"
 #include "tree-internal.h"
