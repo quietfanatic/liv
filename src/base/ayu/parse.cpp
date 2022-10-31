@@ -24,8 +24,9 @@ struct Parser {
 
      // std::unordered_map is supposedly slow, so we'll use std::vector instead.
      // We'll rethink if we ever need to parse a document with a large amount
-     // of refs (I can't imagine for my use cases having more than 20 or so).
-    Object refs;
+     // of shortcuts (I can't imagine for my use cases having more than 20
+     // or so).
+    Object shortcuts;
 
     Parser (Str s, Str filename = "") :
         filename(filename),
@@ -272,21 +273,21 @@ struct Parser {
         return o;
     }
 
-    void add_ref (Str name, Tree value) {
-        for (auto& p : refs) {
+    void set_shortcut (Str name, Tree value) {
+        for (auto& p : shortcuts) {
             if (p.first == name) {
-                throw error("Duplicate declaration of ref &"
+                throw error("Duplicate declaration of shortcut &"
                     + tree_to_string(Tree(name))
                 );
             }
         }
-        refs.emplace_back(String(name), std::move(value));
+        shortcuts.emplace_back(String(name), std::move(value));
     }
-    const Tree& get_ref (Str name) {
-        for (auto& p : refs) {
+    const Tree& get_shortcut (Str name) {
+        for (auto& p : shortcuts) {
             if (p.first == name) return p.second;
         }
-        throw error("Unknown ref *" +
+        throw error("Unknown shortcut *" +
             tree_to_string(Tree(name))
         );
     }
@@ -308,19 +309,19 @@ struct Parser {
             case ':': {
                 p++;
                 skip_ws();
-                add_ref(Str(name), parse_term());
+                set_shortcut(Str(name), parse_term());
                 skip_commas();
                 return parse_term();
             }
             default: {
                 Tree value = parse_term();
-                add_ref(Str(name), value);
+                set_shortcut(Str(name), value);
                 return value;
             }
         }
     }
 
-    Tree got_ref () {
+    Tree got_shortcut () {
         p++;  // for the *
         switch (look()) {
             case ANY_LETTER:
@@ -332,7 +333,7 @@ struct Parser {
         if (name.form() != STRING) {
             throw error("Can't use non-string " + tree_to_string(name) + " as ref name");
         }
-        return get_ref(Str(name));
+        return get_shortcut(Str(name));
     }
 
     Tree parse_term () {
@@ -356,7 +357,7 @@ struct Parser {
             case '{': return Tree(got_object());
 
             case '&': return got_decl();
-            case '*': return got_ref();
+            case '*': return got_shortcut();
 
             case ':':
             case ',':
