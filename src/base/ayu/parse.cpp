@@ -1,8 +1,8 @@
 #include "parse.h"
 
 #include <cstring>
-#include <sstream>
-#include <iomanip>
+#include <charconv>
+#include <limits>
 
 #include "char-cases-internal.h"
 #include "compat.h"
@@ -126,7 +126,7 @@ struct Parser {
         const char* start = p;
         p++;  // For the first character
         for (;;) switch (look()) {
-            case ANY_LETTER: case ANY_NUMBER: case ANY_WORD_SYMBOL:
+            case ANY_LETTER: case ANY_DECIMAL_DIGIT: case ANY_WORD_SYMBOL:
                 p++; break;
             case ':': {
                  // Allow :: (for c++ types) or :/ (for urls)
@@ -146,74 +146,80 @@ struct Parser {
         }
     }
 
-     // This is so horrible, wish I had from_chars
-     // TODO: support hexadecimal
-     // TODO: from_chars is available now, use it!
     Tree got_number () {
-        String word = got_word();
-        if (word == "+nan" || word == "-nan") return Tree(0.0/0.0);
-        else if (word == "+inf") return Tree(1.0/0.0);
-        else if (word == "-inf") return Tree(-1.0/0.0);
-         // Squeeze out _s in place
-        auto oi = word.begin();
-        for (auto ii = word.begin(); ii != word.end(); ii++) {
-            if (*ii != '_') {
-                *oi++ = *ii;
+         // Detect special numbers
+        if (end - p >= 4) {
+            if (p[0] == '+' && p[1] == 'n' && p[2] == 'a' && p[3] == 'n') {
+                p += 4;
+                return Tree(std::numeric_limits<double>::quiet_NaN());
+            }
+            if (p[0] == '+' && p[1] == 'i' && p[2] == 'n' && p[3] == 'f') {
+                p += 4;
+                return Tree(std::numeric_limits<double>::infinity());
+            }
+            if (p[0] == '-' && p[1] == 'i' && p[2] == 'n' && p[3] == 'f') {
+                p += 4;
+                return Tree(-std::numeric_limits<double>::infinity());
             }
         }
-        *oi = 0;
-         // First try reading as int
-        int64 i;
-        std::istringstream is (word);
-        is.imbue(std::locale::classic());
-        is >> i;
-        if (word[is.tellg()] == 0) return Tree(i);
-         // Didn't read the whole thing?  Try reading as double.
-        double d;
-        std::istringstream ds (word);
-        ds.imbue(std::locale::classic());
-        ds >> d;
-        if (word[ds.tellg()] == 0) return Tree(d);
-        throw error("Malformed numeric value");
+         // Detect sign
+        bool minus = false;
+        switch (look()) {
+            case '+': p++; break;
+            case '-': minus = true; p++; break;
+            default: break;
+        }
+         // Detect hex prefix
+        bool hex = false;
+        if (end - p >= 2 && p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+            p += 2;
+            hex = true;
+        }
+         // Try integer
+        {
+            int64 integer;
+            auto [ptr, ec] = std::from_chars(p, end, integer, hex ? 16 : 10);
+            if (ptr == p) {
+                 // If the integer parse failed, the float parse will also fail.
+                throw error("Malformed number");
+            }
+             // Is this really an integer?
+            if (ptr != end) switch (*ptr) {
+                case '.': case 'e': case 'E': case 'p': case 'P': {
+                    goto try_floating;
+                }
+                case ANY_INVALID_NUMBER_ENDER: {
+                    throw error("Junk at end of number");
+                }
+                default: break;
+            }
+            p = ptr;
+            return Tree(minus ? -integer : integer);
+        }
+        try_floating: {
+            double floating;
+            auto [ptr, ec] = std::from_chars(
+                p, end, floating,
+                hex ? std::chars_format::hex
+                    : std::chars_format::general
+            );
+            if (ptr == p) {
+                throw error("Malformed number");
+            }
+            if (ptr[-1] == '.') {
+                throw error("Number cannot end with .");
+            }
+            if (ptr != end) switch (*ptr) {
+                case ANY_LETTER:
+                case ANY_WORD_SYMBOL: {
+                    throw error("Junk at end of number");
+                }
+                default: break;
+            }
+            p = ptr;
+            return Tree(minus ? -floating : floating);
+        }
     }
-
-//    Tree parse_heredoc () {
-//        p++;  // for the <
-//        if (look() != '<') throw error("< isn't followed by another < for a heredoc");
-//        p++;
-//        String terminator = parse_ident("heredoc delimiter string after <<");
-//        while (look() == ' ' || look() == '\t' || look() == '\r') p++;
-//        if (look() != '\n') throw error("Extra stuff after <<" + terminator + " before end of line");
-//        p++;
-//        String got = "";
-//        while (1) {
-//            String ind = "";
-//            while (look() == ' ' || look() == '\t') {
-//                ind += look(); got += look(); p++;
-//            }
-//            if (p + terminator.size() > end) throw error("Ran into end of document before " + terminator);
-//            if (0==strncmp(p, terminator.c_str(), terminator.size())) {
-//                String ret;
-//                usize p1 = 0;
-//                usize p2 = got.find('\n');
-//                while (p2 != String::npos) {
-//                    p2 += 1;
-//                    if (0==strncmp(got.c_str() + p1, ind.c_str(), ind.size())) {
-//                        p1 += ind.size();
-//                    }
-//                    ret += got.substr(p1, p2 - p1);
-//                    p1 = p2;
-//                    p2 = got.find('\n', p2);
-//                }
-//                p += terminator.size();
-//                return Tree(ret);
-//            }
-//            while (look() != '\n') {
-//                got += look(); p++;
-//            }
-//            got += look(); p++;
-//        }
-//    }
 
     Array got_array () {
         Array a;
@@ -341,10 +347,9 @@ struct Parser {
                 else return Tree(word);
             }
 
-            case ANY_NUMBER:
+            case ANY_DECIMAL_DIGIT:
             case '+':
-            case '-':
-            case '.': return got_number();
+            case '-': return got_number();
 
             case '"': return Tree(got_string());
             case '[': return Tree(got_array());
@@ -435,6 +440,18 @@ static tap::TestSet tests ("base/ayu/parse", []{
     t("2.5", Tree(2.5));
     t("-4", Tree(-4.0));
     t("1e45", Tree(1e45));
+    t("0xdeadbeef00", Tree(0xdeadbeef00));
+    t("+0x40", Tree(0x40));
+    t("-0x40", Tree(-0x40));
+    t("000099", Tree(99));
+    t("000", Tree(0));
+    f("0.");
+    f(".0");
+    t("0xdead.beefP30", Tree(0xdead.beefP30));
+    t("+0xdead.beefP30", Tree(0xdead.beefP30));
+    t("-0xdead.beefP30", Tree(-0xdead.beefP30));
+    f("++0");
+    f("--0");
     t("+nan", Tree(0.0/0.0));
     t("+inf", Tree(1.0/0.0));
     t("-inf", Tree(-1.0/0.0));

@@ -22,6 +22,7 @@ The AYU data language is similar to JSON but with the following differences:
    not semantically visible; [&foo 1 \*foo] is exactly equivalent to [1 1].
    Backreferences can be used as the keys of attributes in objects if they
    refer to strings.
+ - Hexadecimal numbers are allowed starting with 0x.
  - Special floating point numbers +inf, -inf, and +nan are available.  The sign
    is required; nan and inf by themselves are considered strings.
  - The order of attributes in objects is generally preserved, but should not be

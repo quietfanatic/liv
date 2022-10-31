@@ -1,7 +1,6 @@
 #include "print.h"
 
-#include <iomanip>
-#include <sstream>
+#include <charconv>
 
 #include "char-cases-internal.h"
 #include "compat.h"
@@ -48,7 +47,7 @@ static String print_string (Str s) {
             }
             else return print_quoted(s);
         }
-        case ANY_LETTER: case ANY_NUMBER:
+        case ANY_LETTER: case ANY_DECIMAL_DIGIT:
         case '-': case '.': case '/': case '_': continue;
         default: return print_quoted(s);
     }
@@ -72,10 +71,10 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
             else if (v == 1.0/0.0) return "+inf";
             else if (v == -1.0/0.0) return "-inf";
             else {
-                std::ostringstream ss;
-                ss.imbue(std::locale::classic());
-                ss << std::setprecision(17) << v;
-                return ss.str();
+                char buf [32]; // Should be enough?
+                auto [ptr, ec] = std::to_chars(buf, buf+32, v);
+                if (ptr == buf) AYU_INTERNAL_ERROR();
+                return String(buf, ptr - buf);
             }
         }
         case Rep::STRING: return print_string(t.data->as_known<String>());

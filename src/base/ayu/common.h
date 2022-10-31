@@ -114,7 +114,7 @@ namespace X {
      // General IO-related problem
     struct IOError : Error {
         String filename;
-        int errnum;
+        int errnum; // TODO: use std::errc
         IOError (Str f, int e) : filename(f), errnum(e) { }
     };
      // Failure to open a file
