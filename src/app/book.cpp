@@ -87,6 +87,7 @@ void Book::next () {
     if (!valid_page_no(current_page_no)) {
         current_page_no = pages.size();
     }
+    view = app.settings->default_view;
     draw();
 }
 
@@ -95,6 +96,7 @@ void Book::prev () {
     if (!valid_page_no(current_page_no)) {
         current_page_no = 1;
     }
+    view = app.settings->default_view;
     draw();
 }
 
