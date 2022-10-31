@@ -40,7 +40,7 @@ AYU_DESCRIBE(std::u16string,
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("base/ayu/ayuable-standard", []{
+static tap::TestSet tests ("base/ayu/describe-standard", []{
     using namespace tap;
      // Test wstrings
     std::string s8 = "\"あいうえお\""s;
