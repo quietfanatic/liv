@@ -20,4 +20,7 @@ extern Command fullscreen;
  // () Leave fullscreen mode or quit if not fullscreen
 extern Command leave_fullscreen_or_quit;
 
+ // (float) Multiply zoom by amount
+extern Command zoom_multiply;
+
 } // namespace app::command

@@ -6,10 +6,12 @@
     mappings: [
         [[right] [next]]
         [[left] [prev]]
-        [[ctrl q] [quit]]
+        [["="] [zoom_multiply 1.4142135623731]]
+        [["-"] [zoom_multiply 0.707106781186547]]
         [[f11] [fullscreen]]
         [[f] [fit_mode fit]]
         [[s] [fit_mode stretch]]
         [[escape] [leave_fullscreen_or_quit]]
+        [[ctrl q] [quit]]
     ]
 }]

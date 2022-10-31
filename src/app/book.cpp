@@ -106,6 +106,16 @@ void Book::drag (Vec amount) {
     draw();
 }
 
+void Book::zoom_multiply (float factor) {
+    auto& page = *pages[current_page_no-1];
+    view.fit_mode = MANUAL;
+     // Hacky way to zoom from center
+    view.offset += page.size * view.zoom / 2;
+    view.zoom *= factor;
+    view.offset -= page.size * view.zoom / 2;
+    draw();
+}
+
 bool Book::valid_page_no (isize no) {
     return no >= 1 && usize(no) <= pages.size();
 }

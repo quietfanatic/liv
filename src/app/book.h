@@ -38,6 +38,8 @@ struct Book {
      // Adds amount to offset
     void drag (geo::Vec amount);
 
+    void zoom_multiply (float factor);
+
      // Returns true if no is in 1..pages.size()
     bool valid_page_no (isize no);
 };

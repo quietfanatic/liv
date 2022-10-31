@@ -58,4 +58,9 @@ Command leave_fullscreen_or_quit (
     leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
 );
 
+static void zoom_multiply_ (float factor) {
+    if (current_book) current_book->zoom_multiply(factor);
+}
+Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
+
 } // namespace app::command
