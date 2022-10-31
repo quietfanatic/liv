@@ -7,14 +7,14 @@ namespace app {
 
 } using namespace app;
 
-HACCABLE(app::Mapping,
+AYU_DESCRIBE(app::Mapping,
     elems(
         elem(&Mapping::input),
         elem(&Mapping::action)
     )
 )
 
-HACCABLE(app::Settings,
+AYU_DESCRIBE(app::Settings,
     attrs(
         attr("default_view", &Settings::default_view),
         attr("mappings", &Settings::mappings)

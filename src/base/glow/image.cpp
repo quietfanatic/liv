@@ -55,7 +55,7 @@ struct ImagePixelsProxy : Image { };
 
 } using namespace glow;
 
-HACCABLE(glow::RGBA8,
+AYU_DESCRIBE(glow::RGBA8,
     elems(
         elem(&RGBA8::r),
         elem(&RGBA8::g),
@@ -64,7 +64,7 @@ HACCABLE(glow::RGBA8,
     )
 )
 
-HACCABLE(glow::ImagePixelsProxy,
+AYU_DESCRIBE(glow::ImagePixelsProxy,
      // TODO: Allow parsing hex string as an option?
     length(value_funcs<usize>(
         [](const ImagePixelsProxy& image){
@@ -77,11 +77,11 @@ HACCABLE(glow::ImagePixelsProxy,
         }
     )),
     elem_func([](ImagePixelsProxy& image, usize i){
-        return hacc::Reference(&image.pixels[i]);
+        return ayu::Reference(&image.pixels[i]);
     })
 )
 
-HACCABLE(glow::Image,
+AYU_DESCRIBE(glow::Image,
     attrs(
          // TODO: allocate here instead of in the proxy?
         attr("size", &Image::size),
@@ -93,7 +93,7 @@ HACCABLE(glow::Image,
     )
 )
 
-HACCABLE(glow::SubImage,
+AYU_DESCRIBE(glow::SubImage,
     attrs(
         attr("image", &SubImage::image),
         attr("bounds", &SubImage::bounds, optional)
@@ -101,9 +101,9 @@ HACCABLE(glow::SubImage,
     init([](SubImage& v){ v.validate(); })
 )
 
-HACCABLE(glow::ImageTexture,
+AYU_DESCRIBE(glow::ImageTexture,
     attrs(
-         // TODO: make inherit work in hacc
+         // TODO: make inherit work in ayu
          // TODO: figure out how to make this optional without regenning texture
         attr("Texture", base<Texture>(), inherit),
         attr("SubImage", &ImageTexture::source, inherit),
@@ -113,30 +113,30 @@ HACCABLE(glow::ImageTexture,
     init([](ImageTexture& v){ v.init(); })
 )
 
-HACCABLE(glow::X::ImageLoadFailed,
+AYU_DESCRIBE(glow::X::ImageLoadFailed,
     elems(
         elem(&X::ImageLoadFailed::filename),
         elem(&X::ImageLoadFailed::details)
     )
 )
 
-HACCABLE(glow::X::ImageSaveFailed,
+AYU_DESCRIBE(glow::X::ImageSaveFailed,
     elems(
         elem(&X::ImageSaveFailed::filename),
         elem(&X::ImageSaveFailed::details)
     )
 )
-HACCABLE(glow::X::SubImageBoundsNotProper,
+AYU_DESCRIBE(glow::X::SubImageBoundsNotProper,
     elems( elem(&X::SubImageBoundsNotProper::bounds) )
 )
-HACCABLE(glow::X::SubImageOutOfBounds,
+AYU_DESCRIBE(glow::X::SubImageOutOfBounds,
     elems(
         elem(&X::SubImageOutOfBounds::image),
         elem(&X::SubImageOutOfBounds::size),
         elem(&X::SubImageOutOfBounds::bounds)
     )
 )
-HACCABLE(glow::X::ImageTextureIncompatibleTarget,
+AYU_DESCRIBE(glow::X::ImageTextureIncompatibleTarget,
     elems( elem(&X::ImageTextureIncompatibleTarget::target) )
 )
 

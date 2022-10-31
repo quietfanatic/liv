@@ -5,7 +5,7 @@
 #include "../tap/tap.h"
 #include "print.h"
 
-namespace hacc::in {
+namespace ayu::in {
 
 enum class Rep : uint8 {
     UNDEFINED,
@@ -27,7 +27,7 @@ constexpr Form form_of_rep (Rep rep) {
         case Rep::STRING: return STRING;
         case Rep::ARRAY: return ARRAY;
         case Rep::OBJECT: return OBJECT;
-        default: HACC_INTERNAL_ERROR();
+        default: AYU_INTERNAL_ERROR();
     }
 }
 
@@ -71,13 +71,13 @@ struct TreeDataT : TreeData {
     { }
 };
 
-} // namespace hacc::in
+} // namespace ayu::in
 
 namespace tap {
     template <>
-    struct Show<hacc::Tree> {
-        std::string show (const hacc::Tree& t) {
-            return tree_to_string(t, hacc::COMPACT);
+    struct Show<ayu::Tree> {
+        std::string show (const ayu::Tree& t) {
+            return tree_to_string(t, ayu::COMPACT);
         }
     };
 }

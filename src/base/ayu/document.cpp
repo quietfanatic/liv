@@ -8,7 +8,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 namespace in {
 
 static usize parse_numbered_name (const String& name) {
@@ -181,11 +181,11 @@ void Document::deallocate (void* p) {
     free(header);
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-HACCABLE(hacc::Document,
+AYU_DESCRIBE(ayu::Document,
     keys(mixed_funcs<std::vector<String>>(
-        [](const hacc::Document& v){
+        [](const ayu::Document& v){
             std::vector<String> r;
             for (auto link = v.data->items.next; link != &v.data->items; link = link->next) {
                 r.emplace_back(static_cast<DocumentItemHeader*>(link)->name());
@@ -193,7 +193,7 @@ HACCABLE(hacc::Document,
             r.emplace_back("_next_id"s);
             return r;
         },
-        [](hacc::Document& v, const std::vector<String>& ks){
+        [](ayu::Document& v, const std::vector<String>& ks){
             v.data->~DocumentData();
             new (v.data) DocumentData;
             for (auto& k : ks) {
@@ -202,7 +202,7 @@ HACCABLE(hacc::Document,
             }
         }
     )),
-    attr_func([](hacc::Document& v, Str k){
+    attr_func([](ayu::Document& v, Str k){
         if (k == "_next_id"sv) {
             return Reference(&v.data->next_id);
         }
@@ -214,7 +214,7 @@ HACCABLE(hacc::Document,
     })
 )
 
-HACCABLE(hacc::in::DocumentItemRef,
+AYU_DESCRIBE(ayu::in::DocumentItemRef,
      // Although nullishness is a valid state for DocumentItemRef (meaning the
      //  DocumentItemHeader has no type), we don't want to allow serializing it.
     elems(
@@ -252,18 +252,18 @@ HACCABLE(hacc::in::DocumentItemRef,
     )
 )
 
-HACCABLE(hacc::X::DocumentInvalidName,
+AYU_DESCRIBE(ayu::X::DocumentInvalidName,
     elems( elem(&X::DocumentInvalidName::name) )
 )
-HACCABLE(hacc::X::DocumentDuplicateName,
+AYU_DESCRIBE(ayu::X::DocumentDuplicateName,
     elems( elem(&X::DocumentDuplicateName::name) )
 )
-HACCABLE(hacc::X::DocumentDeleteWrongType,
+AYU_DESCRIBE(ayu::X::DocumentDeleteWrongType,
     elems(
         elem(&X::DocumentDeleteWrongType::existing),
         elem(&X::DocumentDeleteWrongType::deleted_as)
     )
 )
-HACCABLE(hacc::X::DocumentDeleteMissing,
+AYU_DESCRIBE(ayu::X::DocumentDeleteMissing,
     elems( elem(&X::DocumentDeleteMissing::name) )
 )

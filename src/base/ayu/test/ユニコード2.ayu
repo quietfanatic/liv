@@ -1,4 +1,4 @@
-[hacc::Document {
+[ayu::Document {
     i: [int32 4444]
     val:[std::string "qwert"]
     self_pointer:[std::string* ["" val 1]]

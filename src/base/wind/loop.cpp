@@ -58,7 +58,7 @@ void Loop::stop () {
 
 } using namespace wind;
 
-HACCABLE(wind::Loop,
+AYU_DESCRIBE(wind::Loop,
     attrs(
         attr("fps", &Loop::fps, optional),
         attr("min_lag_tolerance", &Loop::min_lag_tolerance, optional),

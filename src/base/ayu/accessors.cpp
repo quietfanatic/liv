@@ -2,7 +2,7 @@
 
 #include "reference.h"
 
-namespace hacc::in {
+namespace ayu::in {
 
 Type MemberAcr0::_type (const Accessor* acr, const Mu&) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
@@ -78,13 +78,13 @@ Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     return ref.address();
 }
 
-} using namespace hacc::in;
-using namespace hacc;
+} using namespace ayu::in;
+using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-namespace hacc::in {
+namespace ayu::in {
      // For making sure deduction works.  Won't bother making this for other Acrs.
     template <class From, class To>
     MemberAcr2<From, To> deduce_MemberAcr (To From::* mp) {
@@ -92,7 +92,7 @@ namespace hacc::in {
     }
 }
 
-static tap::TestSet tests ("base/hacc/accessors", []{
+static tap::TestSet tests ("base/ayu/accessors", []{
     using namespace tap;
     struct Thing {
         int a;

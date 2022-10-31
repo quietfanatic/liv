@@ -3,12 +3,12 @@
 #include "describe.h"
 #include "reference.h"
 
-using namespace hacc;
-using namespace hacc::in;
+using namespace ayu;
+using namespace ayu::in;
 
 static const Dynamic empty_dynamic;
 
-HACCABLE(hacc::Dynamic,
+AYU_DESCRIBE(ayu::Dynamic,
     values_custom(
         [](const Dynamic& a, const Dynamic& b) -> bool {
             return a.has_value() == b.has_value();
@@ -33,7 +33,7 @@ HACCABLE(hacc::Dynamic,
 #include "parse.h"
 #include "serialize.h"
 
-namespace hacc::test {
+namespace ayu::test {
     struct DynamicTest {
         int a;
         int b;
@@ -58,16 +58,16 @@ namespace hacc::test {
     struct NoDestructor {
         ~NoDestructor () = delete;
     };
-} using namespace hacc::test;
+} using namespace ayu::test;
 
  // The things here should work without any descriptions
-HACCABLE_0(hacc::test::DynamicTest)
-HACCABLE_0(hacc::test::Test2)
-HACCABLE_0(hacc::test::NoConstructor)
-HACCABLE_0(hacc::test::NoCopy)
-HACCABLE_0(hacc::test::NoDestructor)
+AYU_DESCRIBE_0(ayu::test::DynamicTest)
+AYU_DESCRIBE_0(ayu::test::Test2)
+AYU_DESCRIBE_0(ayu::test::NoConstructor)
+AYU_DESCRIBE_0(ayu::test::NoCopy)
+AYU_DESCRIBE_0(ayu::test::NoDestructor)
 
-static tap::TestSet tests ("base/hacc/dynamic", []{
+static tap::TestSet tests ("base/ayu/dynamic", []{
     using namespace tap;
     Dynamic d;
     ok(!d.has_value(), "Default Dynamic::has_value is false");

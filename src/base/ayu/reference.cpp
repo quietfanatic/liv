@@ -8,7 +8,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 namespace in {
 
 struct ChainAcr : Accessor {
@@ -170,11 +170,11 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
 static Reference empty_reference;
 
-HACCABLE(hacc::Reference,
+AYU_DESCRIBE(ayu::Reference,
     from_tree([](Reference& v, const Tree&){
         v = Reference();
     }),
@@ -194,9 +194,9 @@ HACCABLE(hacc::Reference,
     })
 )
 
-HACCABLE(hacc::X::WriteReadonlyReference,
+AYU_DESCRIBE(ayu::X::WriteReadonlyReference,
     elems( elem(&X::WriteReadonlyReference::ref) )
 )
-HACCABLE(hacc::X::UnaddressableReference,
+AYU_DESCRIBE(ayu::X::UnaddressableReference,
     elems( elem(&X::UnaddressableReference::ref) )
 )

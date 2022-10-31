@@ -194,7 +194,7 @@ static tap::TestSet tests ("base/glow/file-texture", []{
 
     TestEnvironment env;
 
-    FileTexture tex (hacc::file_resource_root() + "/base/glow/test/image.png");
+    FileTexture tex (ayu::file_resource_root() + "/base/glow/test/image.png");
     auto size = tex.size();
     is(size, IVec{7, 5}, "Created texture has correct size");
 

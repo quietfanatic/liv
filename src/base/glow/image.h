@@ -10,7 +10,7 @@ namespace glow {
 using namespace geo;
 
  // This type is not directly serializable.  Instead, you can get it from
- //  Image* something = hacc::Resource("something.png").ref();
+ //  Image* something = ayu::Resource("something.png").ref();
  // The pixels are stored so that these coordinates are in order:
  //  {0, 0}, {1, 0}, {0, 1}, {1, 1}
  // In other words, the way you expect.  However, image file formats and OpenGL

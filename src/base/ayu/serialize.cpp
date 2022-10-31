@@ -9,7 +9,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 using namespace in;
 
 ///// TO_TREE
@@ -197,7 +197,7 @@ void item_from_tree (const Reference& item, const Tree& tree) {
     }
     else {
         if (!swizzle_ops.empty() || !init_ops.empty()) {
-            HACC_INTERNAL_ERROR();
+            AYU_INTERNAL_ERROR();
         }
         in_from_tree = true;
         try {
@@ -562,7 +562,7 @@ Reference maybe_reference_from_path (Path path) {
         else if (auto index = path.index()) {
             return reference_from_path(*parent).elem(*index);
         }
-        else HACC_INTERNAL_ERROR();
+        else AYU_INTERNAL_ERROR();
     }
     else return universe_ref();
 }
@@ -575,7 +575,7 @@ Reference reference_from_path (Path path) {
         else if (auto index = path.index()) {
             return reference_from_path(*parent).elem(*index);
         }
-        else HACC_INTERNAL_ERROR();
+        else AYU_INTERNAL_ERROR();
     }
     else return universe_ref();
 }
@@ -593,39 +593,39 @@ namespace X {
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-HACCABLE(hacc::X::CannotToTree,
+AYU_DESCRIBE(ayu::X::CannotToTree,
     elems( elem(&X::CannotToTree::path_to_item) )
 )
-HACCABLE(hacc::X::CannotFromTree,
+AYU_DESCRIBE(ayu::X::CannotFromTree,
     elems( elem(&X::CannotFromTree::path_to_item) )
 )
-HACCABLE(hacc::X::InvalidForm,
+AYU_DESCRIBE(ayu::X::InvalidForm,
     elems( elem(&X::InvalidForm::path_to_item) )
 )
-HACCABLE(hacc::X::NoNameForValue,
+AYU_DESCRIBE(ayu::X::NoNameForValue,
     elems( elem(&X::NoNameForValue::path_to_item) )
 )
-HACCABLE(hacc::X::NoValueForName,
+AYU_DESCRIBE(ayu::X::NoValueForName,
     elems(
         elem(&X::NoValueForName::path_to_item),
         elem(&X::NoValueForName::tree)
     )
 )
-HACCABLE(hacc::X::MissingAttr,
+AYU_DESCRIBE(ayu::X::MissingAttr,
     elems(
         elem(&X::MissingAttr::path_to_item),
         elem(&X::MissingAttr::key)
     )
 )
-HACCABLE(hacc::X::UnwantedAttr,
+AYU_DESCRIBE(ayu::X::UnwantedAttr,
     elems(
         elem(&X::UnwantedAttr::path_to_item),
         elem(&X::UnwantedAttr::key)
     )
 )
-HACCABLE(hacc::X::WrongLength,
+AYU_DESCRIBE(ayu::X::WrongLength,
     elems(
         elem(&X::WrongLength::path_to_item),
         elem(&X::WrongLength::min),
@@ -633,25 +633,25 @@ HACCABLE(hacc::X::WrongLength,
         elem(&X::WrongLength::got)
     )
 )
-HACCABLE(hacc::X::NoAttrs,
+AYU_DESCRIBE(ayu::X::NoAttrs,
     elems( elem(&X::NoAttrs::path_to_item) )
 )
-HACCABLE(hacc::X::NoElems,
+AYU_DESCRIBE(ayu::X::NoElems,
     elems( elem(&X::NoElems::path_to_item) )
 )
-HACCABLE(hacc::X::AttrNotFound,
+AYU_DESCRIBE(ayu::X::AttrNotFound,
     elems(
         elem(&X::AttrNotFound::path_to_item),
         elem(&X::AttrNotFound::key)
     )
 )
-HACCABLE(hacc::X::ElemNotFound,
+AYU_DESCRIBE(ayu::X::ElemNotFound,
     elems(
         elem(&X::ElemNotFound::path_to_item),
         elem(&X::ElemNotFound::index)
     )
 )
-HACCABLE(hacc::X::UnresolvedReference,
+AYU_DESCRIBE(ayu::X::UnresolvedReference,
     elems( elem(&X::UnresolvedReference::type) )
 )
 
@@ -662,8 +662,8 @@ HACCABLE(hacc::X::UnresolvedReference,
 #include "../tap/tap.h"
 #include "describe-standard.h"
 
- // Putting these in a test namespace so their haccable names don't conflict
-namespace hacc::test {
+ // Putting these in a test namespace so their descibed names don't conflict
+namespace ayu::test {
     struct ToTreeTest {
         int value;
     };
@@ -721,14 +721,14 @@ namespace hacc::test {
         int value;
         int value_after_init = 0;
     };
-} using namespace hacc::test;
+} using namespace ayu::test;
 
-HACCABLE(hacc::test::ToTreeTest,
+AYU_DESCRIBE(ayu::test::ToTreeTest,
     to_tree([](const ToTreeTest& x){ return Tree(x.value); }),
     from_tree([](ToTreeTest& x, const Tree& t){ x.value = int(t); })
 )
 const ValuesTest vtnan = VTNAN;
-HACCABLE(hacc::test::ValuesTest,
+AYU_DESCRIBE(ayu::test::ValuesTest,
     values(
         value("vta", VTA),
         value(null, VTNULL),
@@ -736,38 +736,38 @@ HACCABLE(hacc::test::ValuesTest,
         value_pointer(nan, &vtnan)
     )
 )
-HACCABLE(hacc::test::MemberTest,
+AYU_DESCRIBE(ayu::test::MemberTest,
     attrs(
         attr("a", member(&MemberTest::a)),
         attr("b", &MemberTest::b)  // Implicit member()
     )
 )
-HACCABLE(hacc::test::BaseTest,
+AYU_DESCRIBE(ayu::test::BaseTest,
     attrs(
         attr("MemberTest", base<MemberTest>()),
         attr("c", member(&BaseTest::c))
     )
 )
-HACCABLE(hacc::test::InheritTest,
+AYU_DESCRIBE(ayu::test::InheritTest,
     attrs(
         attr("BaseTest", base<BaseTest>(), inherit),
         attr("d", &InheritTest::d)
     )
 )
-HACCABLE(hacc::test::InheritOptionalTest,
+AYU_DESCRIBE(ayu::test::InheritOptionalTest,
     attrs(
         attr("BaseTest", base<BaseTest>(), inherit|optional),
         attr("d", &InheritOptionalTest::d)
     )
 )
-HACCABLE(hacc::test::ElemTest,
+AYU_DESCRIBE(ayu::test::ElemTest,
     elems(
         elem(member(&ElemTest::x)),
         elem(&ElemTest::y),
         elem(member(&ElemTest::z))
     )
 )
-HACCABLE(hacc::test::ElemsTest,
+AYU_DESCRIBE(ayu::test::ElemsTest,
     length(value_funcs<usize>(
         [](const ElemsTest& v){
             return v.xs.size();
@@ -780,7 +780,7 @@ HACCABLE(hacc::test::ElemsTest,
         return Reference(&v.xs.at(i));
     })
 )
-HACCABLE(hacc::test::AttrsTest,
+AYU_DESCRIBE(ayu::test::AttrsTest,
     keys(mixed_funcs<std::vector<String>>(
         [](const AttrsTest& v){
             std::vector<String> r;
@@ -800,22 +800,22 @@ HACCABLE(hacc::test::AttrsTest,
         return Reference(&v.xs.at(String(k)));
     })
 )
-HACCABLE(hacc::test::DelegateTest,
+AYU_DESCRIBE(ayu::test::DelegateTest,
     delegate(member(&DelegateTest::et))
 )
-HACCABLE(hacc::test::SwizzleTest,
+AYU_DESCRIBE(ayu::test::SwizzleTest,
     swizzle([](SwizzleTest& v, const Tree&){
         v.swizzled = true;
     })
 )
-HACCABLE(hacc::test::InitTest,
+AYU_DESCRIBE(ayu::test::InitTest,
     delegate(member(&InitTest::value)),
     init([](InitTest& v){
         v.value_after_init = v.value + 1;
     })
 )
 
-static tap::TestSet tests ("base/hacc/serialize", []{
+static tap::TestSet tests ("base/ayu/serialize", []{
     using namespace tap;
     ok(get_description_by_type_info(typeid(MemberTest)), "Description was registered");
 
@@ -979,11 +979,11 @@ static tap::TestSet tests ("base/hacc/serialize", []{
     is(item_elem(&dt, 2).address_as<float>(), &dt.et.z, "item_elem works with delegate");
 
     std::vector<ToTreeTest> tttv {{444}, {333}};
-    is(item_to_tree(&tttv), tree_from_string("[444 333]"), "template haccable on std::vector works");
+    is(item_to_tree(&tttv), tree_from_string("[444 333]"), "template describe on std::vector works");
     doesnt_throw([&]{
         item_from_string(&tttv, "[222 111 666 555]");
     });
-    is(tttv[3].value, 555, "from_tree works with template haccable on std::vector");
+    is(tttv[3].value, 555, "from_tree works with template describe on std::vector");
 
     std::vector<SwizzleTest> stv;
     doesnt_throw([&]{

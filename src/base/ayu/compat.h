@@ -7,7 +7,7 @@
 
 #include "common.h"
 
-namespace hacc {
+namespace ayu {
 
 ///// UTF-8/UTF-16 CONVERSION
 
@@ -38,4 +38,4 @@ void warn_utf8 (Str s);
  // Delete a file
 int remove_utf8 (const char* filename);
 
-} // namespace hacc
+} // namespace ayu

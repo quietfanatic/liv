@@ -8,7 +8,7 @@
  // Resource names may not contain :, ?, or # (these are reserved for URIs)
  // Resources can have no name, in which case they are anonymous. Anonymous
  //  resources cannot be reloaded or saved, but they can be unloaded.  Anonymous
- //  resources can contain references to other resources, and those references
+ //  resources can contain references to named resources, and those references
  //  will be updated if those resources are reloaded.  Named resources cannot
  //  be saved if they contain references to anonymous resources, because there's
  //  no way to serialize that reference as a path.
@@ -19,7 +19,7 @@
 #include "path.h"
 #include "reference.h"
 
-namespace hacc {
+namespace ayu {
 
 ///// RESOURCES
 
@@ -30,7 +30,7 @@ enum ResourceState {
      //  though that value may not reflect what is on disk.
     LOADED,
 
-     // The following states will only be encountered while a hacc resource
+     // The following states will only be encountered while an ayu resource
      //  operation is ongoing.
 
      // load() is being called on this resource.  Its value may be partially
@@ -238,10 +238,10 @@ String resource_filename (Str name);
 
  // Create one of these on the top level to register a resource handler.  If a
  //  resource matches this handler, its methods will be used to load, save, etc.
- //  the resource.  If no handler matches a resource, it will be treated as a
- //  HACC data language file.  The type managed by the header has to have a
- //  HACCABLE declaration for hacc::Type to work, but it doesn't have to have
- //  any defined facets.
+ //  the resource.  If no handler matches a resource, it will be treated as an
+ //  ayu data language file.  The type managed by the header has to have a
+ //  AYU_DESCRIBE declaration for ayu::Type to work, but it doesn't have to
+ //  have any defined facets.
 struct ResourceHandler {
      // Given a resource name, returns whether this handler can handle the
      //  the resource.  As an example, you can check if the name ends in .png,
@@ -361,4 +361,4 @@ namespace in {
     };
 }
 
-} // namespace hacc
+} // namespace ayu

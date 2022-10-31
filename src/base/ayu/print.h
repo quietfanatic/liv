@@ -4,7 +4,7 @@
 
 #include "tree.h"
 
-namespace hacc {
+namespace ayu {
 
 enum PrintFlags {
     COMPACT = 1,
@@ -17,4 +17,4 @@ void string_to_file (Str, Str filename);
 
 void tree_to_file (const Tree&, Str filename, PrintFlags flags = PrintFlags(0));
 
-} // namespace hacc
+} // namespace ayu

@@ -1,4 +1,4 @@
-[hacc::Document {
+[ayu::Document {
     program: [app::PageProgram {
         shaders: [["" vertex 1] ["" fragment 1]]
     }]

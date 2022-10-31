@@ -32,7 +32,7 @@ Rect View::page_position (Vec page_size, Vec window_size) const {
 
 } using namespace app;
 
-HACCABLE(app::FitMode,
+AYU_DESCRIBE(app::FitMode,
     values(
         value("fit", FIT),
         value("stretch", STRETCH),
@@ -40,7 +40,7 @@ HACCABLE(app::FitMode,
     )
 )
 
-HACCABLE(app::View,
+AYU_DESCRIBE(app::View,
     attrs(
         attr("fit_mode", &View::fit_mode, optional),
         attr("zoom", &View::zoom, optional),

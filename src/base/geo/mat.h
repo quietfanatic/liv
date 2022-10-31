@@ -218,9 +218,9 @@ CE GMat<cols, rows+1> add_row (
 
 } // namespace geo
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(usize cols, usize rows),
-    HACCABLE_TEMPLATE_TYPE(geo::GMat<cols, rows>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(usize cols, usize rows),
+    AYU_DESCRIBE_TEMPLATE_TYPE(geo::GMat<cols, rows>),
     hcb::name([]{
         using namespace std::literals;
         if CE (cols == 2) {
@@ -265,7 +265,7 @@ HACCABLE_TEMPLATE(
     }(),
     hcb::length(hcb::template constant<usize>(cols)),
     hcb::elem_func([](geo::GMat<cols, rows>& v, usize i){
-        if (i < cols) return hacc::Reference(&v[i]);
-        else return hacc::Reference();
+        if (i < cols) return ayu::Reference(&v[i]);
+        else return ayu::Reference();
     })
 )

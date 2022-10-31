@@ -1,4 +1,4 @@
- // This defines the main Tree datatype which represents a Hacc structure.
+ // This defines the main Tree datatype which represents an ayu structure.
  // Trees are immutable and reference-counted, so copying is cheap, but they
  // can't be accessed on multiple threads at a time.
 
@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-namespace hacc {
+namespace ayu {
 
  // For unambiguity, types of trees are called forms.
 enum Form {
@@ -114,4 +114,4 @@ namespace in {
 template <class T, std::enable_if_t<std::is_same_v<std::decay_t<T>, bool>, bool>>
 Tree::Tree (T v) : Tree(in::TreeData_bool(v)) { }
 
-}  // namespace hacc
+}  // namespace ayu

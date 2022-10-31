@@ -8,7 +8,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 using namespace in;
 
 void dump_ref (const Reference& r) {
@@ -50,19 +50,19 @@ namespace in {
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
 
-HACCABLE(hacc::X::GenericError,
+AYU_DESCRIBE(ayu::X::GenericError,
     elems( elem(&X::GenericError::mess) )
 )
-HACCABLE(hacc::X::OpenFailed,
+AYU_DESCRIBE(ayu::X::OpenFailed,
     elems(
         elem(&X::OpenFailed::filename),
         elem(&X::OpenFailed::errnum)
     )
 )
-HACCABLE(hacc::X::CloseFailed,
+AYU_DESCRIBE(ayu::X::CloseFailed,
     elems(
         elem(&X::CloseFailed::filename),
         elem(&X::CloseFailed::errnum)

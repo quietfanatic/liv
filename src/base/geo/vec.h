@@ -368,11 +368,11 @@ CE auto map (const F& f, const GVec<T, n>& a) {
 
 } // namespace geo
 
-///// GENERIC HACCABILITY
+///// GENERIC AYU DESCRIPTION
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T, usize n),
-    HACCABLE_TEMPLATE_TYPE(geo::GVec<T, n>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T, usize n),
+    AYU_DESCRIBE_TEMPLATE_TYPE(geo::GVec<T, n>),
     hcb::name([]{
         using namespace std::literals;
         if CE (std::is_same_v<T, float>) {
@@ -400,14 +400,14 @@ HACCABLE_TEMPLATE(
             else if CE (n == 3) { return "geo::BVec3"sv; }
             else if CE (n == 4) { return "geo::BVec4"sv; }
         }
-        static String r = "geo::GVec<" + String(hacc::Type::CppType<T>().name())
+        static String r = "geo::GVec<" + String(ayu::Type::CppType<T>().name())
                         + ", " + std::to_string(n) + ">";
         return Str(r);
     }),
     hcb::length(hcb::template constant<usize>(n)),
     hcb::elem_func([](geo::GVec<T, n>& v, size_t i){
-        if (i < n) return hacc::Reference(&v[i]);
-        else return hacc::Reference();
+        if (i < n) return ayu::Reference(&v[i]);
+        else return ayu::Reference();
     })
 )
 

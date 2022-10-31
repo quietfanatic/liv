@@ -274,9 +274,9 @@ CE GVec<T, 2> snap (const GRect<T>& a, const GVec<T, 2>& p) {
 
 } // namespace geo
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T),
-    HACCABLE_TEMPLATE_TYPE(geo::GRect<T>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(geo::GRect<T>),
     hcb::name([]{
         using namespace std::literals;
         if CE (std::is_same_v<T, float>) return "geo::Rect"sv;
@@ -285,7 +285,7 @@ HACCABLE_TEMPLATE(
         else if CE (std::is_same_v<T, int64>) return "geo::LRect"sv;
         else if CE (std::is_same_v<T, bool>) return "geo::BRect"sv;
         else {
-            static String r = "geo::GRect<" + String(hacc::Type::CppType<T>().name()) + ">";
+            static String r = "geo::GRect<" + String(ayu::Type::CppType<T>().name()) + ">";
             return Str(r);
         }
     }),

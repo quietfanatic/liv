@@ -1,6 +1,7 @@
 // A super basic image type loaded through SDL_image and sent directly to an
-// OpenGL texture.  The image pixels do not stay in CPU memory.  Not haccable.
-// Does not support mipmaps (please set filtering to a non-mipmap mode).
+// OpenGL texture.  The image pixels do not stay in CPU memory.  Not
+// serializable.  Does not support mipmaps (please set filtering to a
+// non-mipmap mode).
 
 #pragma once
 

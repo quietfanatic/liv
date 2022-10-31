@@ -1,5 +1,5 @@
 // This module contains the classes implementing the accessors that can be used
-// in haccable descriptions.
+// in AYU_DESCRIBE descriptions.
 
 #pragma once
 
@@ -9,11 +9,11 @@
 #include "common.h"
 #include "type.h"
 
-namespace hacc::X {
+namespace ayu::X {
     struct WriteReadonlyAccessor : LogicError { };
 }
 
-namespace hacc::in {
+namespace ayu::in {
 
 ///// UNIVERSAL ACCESSOR STUFF
 
@@ -160,7 +160,7 @@ struct AccessorOrType {
         data(reinterpret_cast<usize>(acr))
     {
         if (!acr || reinterpret_cast<usize>(acr) & 3) {
-            HACC_INTERNAL_ERROR();
+            AYU_INTERNAL_ERROR();
         }
         if (acr && acr->ref_count != uint16(-1)) {
             data |= ACR;
@@ -171,7 +171,7 @@ struct AccessorOrType {
         data(reinterpret_cast<usize>(t.desc) | (readonly ? TYPE_READONLY : TYPE))
     {
         if (!t || reinterpret_cast<usize>(t.desc) & 3) {
-            HACC_INTERNAL_ERROR();
+            AYU_INTERNAL_ERROR();
         }
     }
     AccessorOrType (const AccessorOrType& o) : data(o.data) {
@@ -201,7 +201,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->accessor_flags & ACR_READONLY;
             case TYPE: return false;
             case TYPE_READONLY: return true;
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     Type type (const Mu& from) const {
@@ -210,7 +210,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->type(from);
             case TYPE:
             case TYPE_READONLY: return as_type();
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     void access (AccessOp op, Mu& from, Callback<void(Mu&)> cb) const {
@@ -222,7 +222,7 @@ struct AccessorOrType {
                 if (op != ACR_READ) throw X::WriteReadonlyAccessor();
                 return cb(from);
             }
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     Mu* address (Mu& from) const {
@@ -231,7 +231,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->address(from);
             case TYPE:
             case TYPE_READONLY: return &from;
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
 };
@@ -644,4 +644,4 @@ struct ReferenceFuncAcr2 : ReferenceFuncAcr1 {
     { }
 };
 
-} // namespace hacc::in
+} // namespace ayu::in

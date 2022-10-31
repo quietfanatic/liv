@@ -11,7 +11,7 @@
 
 using namespace std::string_literals;
 
-namespace hacc {
+namespace ayu {
 
 namespace in {
 
@@ -404,9 +404,9 @@ Tree tree_from_file (Str filename) {
     return tree_from_string(string_from_file(filename), filename);
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-HACCABLE(hacc::X::ParseError,
+AYU_DESCRIBE(ayu::X::ParseError,
     elems(
         elem(&X::ParseError::mess),
         elem(&X::ParseError::filename),
@@ -417,7 +417,7 @@ HACCABLE(hacc::X::ParseError,
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
-static tap::TestSet tests ("base/hacc/parse", []{
+static tap::TestSet tests ("base/ayu/parse", []{
     using namespace tap;
     auto t = [](const char* s, const Tree& t){
         try_is<Tree>([&]{return tree_from_string(s);}, t, "yes: "s + s);

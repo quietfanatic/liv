@@ -1,4 +1,4 @@
-// This module implements the central registry of all haccable types in the
+// This module implements the central registry of all described types in the
 // program.  This is kind of a nexus of dependency, so we're keeping it in its
 // own module.
 
@@ -8,18 +8,20 @@
 
 #include "common.h"
 
-namespace haccable {
+ // I was going to use ayu::desc here but using a nested namespace seems to
+ // cause weird errors in some situations.
+namespace ayu_desc {
     template <class T>
-    struct Haccability {
+    struct Describe {
         static constexpr bool defined = false;
     };
 }
 
-namespace hacc::X {
+namespace ayu::X {
      // TODO: serializing this doesn't work?
-    struct Unhaccable : LogicError {
+    struct UnknownType : LogicError {
         const std::type_info& cpp_type;
-        Unhaccable (const std::type_info& t) : cpp_type(t) { }
+        UnknownType (const std::type_info& t) : cpp_type(t) { }
     };
     struct TypeNotFound : LogicError {
         String name;
@@ -27,7 +29,7 @@ namespace hacc::X {
     };
 }
 
-namespace hacc::in {
+namespace ayu::in {
     const Description* register_description (const Description*);
     const Description* get_description_by_type_info (const std::type_info&);
     const Description* need_description_for_type_info (const std::type_info&);
@@ -42,8 +44,8 @@ namespace hacc::in {
 
     template <class T>
     const Description* get_description_by_cpp_type () {
-        if constexpr (haccable::Haccability<T>::defined) {
-            return haccable::Haccability<T>::description;
+        if constexpr (ayu_desc::Describe<T>::defined) {
+            return ayu_desc::Describe<T>::description;
         }
         else {
             return get_description_by_type_info(typeid(T));
@@ -51,8 +53,8 @@ namespace hacc::in {
     }
     template <class T>
     const Description* need_description_for_cpp_type () {
-        if constexpr (haccable::Haccability<T>::defined) {
-            return haccable::Haccability<T>::description;
+        if constexpr (ayu_desc::Describe<T>::defined) {
+            return ayu_desc::Describe<T>::description;
         }
         else {
             return need_description_for_type_info(typeid(T));

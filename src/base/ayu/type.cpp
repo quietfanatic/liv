@@ -8,7 +8,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 
 Str Type::name () const {
     if (!desc) return Str();
@@ -72,9 +72,9 @@ Mu* Type::cast_to (Type to, Mu* p) const {
     return p;
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-HACCABLE(hacc::Type,
+AYU_DESCRIBE(ayu::Type,
     values(
         value(null, Type())
     ),
@@ -88,19 +88,19 @@ HACCABLE(hacc::Type,
     ))
 )
 
-HACCABLE(hacc::X::WrongType,
+AYU_DESCRIBE(ayu::X::WrongType,
     elems(
         elem(&X::WrongType::expected),
         elem(&X::WrongType::got)
     )
 )
-HACCABLE(hacc::X::CannotDefaultConstruct,
+AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
     elems( elem(&X::CannotDefaultConstruct::type) )
 )
-HACCABLE(hacc::X::CannotDestruct,
+AYU_DESCRIBE(ayu::X::CannotDestruct,
     elems( elem(&X::CannotDestruct::type) )
 )
-HACCABLE(hacc::X::CannotCoerce,
+AYU_DESCRIBE(ayu::X::CannotCoerce,
     elems(
         elem(&X::CannotCoerce::from),
         elem(&X::CannotCoerce::to)

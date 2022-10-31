@@ -4,7 +4,7 @@
 
 #include "tree.h"
 
-namespace hacc {
+namespace ayu {
 
 Tree tree_from_string (Str, Str filename = "");
 
@@ -24,4 +24,4 @@ namespace X {
     };
 }
 
-} // namespace hacc
+} // namespace ayu

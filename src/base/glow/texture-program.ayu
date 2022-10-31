@@ -1,4 +1,4 @@
-[hacc::Document {
+[ayu::Document {
     program: [glow::TextureProgram {
         shaders: [["" vertex 1] ["" fragment 1]]
     }]

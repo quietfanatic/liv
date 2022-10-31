@@ -9,7 +9,7 @@
 
 using namespace std::string_literals;
 
-namespace hacc {
+namespace ayu {
 using namespace in;
 
 static String print_quoted (Str s) {
@@ -139,7 +139,7 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
                 r += "\n" + indent(ind);
             return r + "}";
         }
-        default: HACC_INTERNAL_ERROR();
+        default: AYU_INTERNAL_ERROR();
     }
 }
 
@@ -165,15 +165,15 @@ void tree_to_file (const Tree& tree, Str filename, PrintFlags flags) {
     return string_to_file(tree_to_string(tree, flags), filename);
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("base/hacc/print", []{
+static tap::TestSet tests ("base/ayu/print", []{
     using namespace tap;
     auto t = [](const Tree& t, const char* s){
-        is(tree_to_string(t, hacc::COMPACT), s, s);
+        is(tree_to_string(t, ayu::COMPACT), s, s);
     };
     t(Tree(null), "null");
     t(Tree(345), "345");

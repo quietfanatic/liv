@@ -6,17 +6,17 @@
 #include "common.h"
 #include "registry.h"
 
-namespace hacc {
+namespace ayu {
 
- // Represents a haccable type.  Provides dynamically-typed construction and
- // destruction for any type as long as it is haccable.
+ // Represents a type known to ayu.  Provides dynamically-typed construction and
+ // destruction for any type as long as it has an AYU_DESCRIBE declaration.
  //
  // The default value will cause null derefs if you do anything with it.
 struct Type {
     const in::Description* desc;
 
     constexpr Type (const in::Description* desc = null) : desc(desc) { }
-     // Can throw X::Unhaccable
+     // Can throw X::Unayuable
     Type (const std::type_info& t) :
         desc(in::need_description_for_type_info(t))
     { }
@@ -126,12 +126,12 @@ namespace X {
     };
 }
 
-} // namespace hacc;
+} // namespace ayu;
 
 namespace std {
     template <>
-    struct hash<hacc::Type> {
-        size_t operator () (hacc::Type t) const {
+    struct hash<ayu::Type> {
+        size_t operator () (ayu::Type t) const {
             return hash<void*>()((void*)t.desc);
         }
     };

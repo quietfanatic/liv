@@ -7,7 +7,7 @@
 
 int main (int argc, char** argv) {
     char* base = AS(SDL_GetBasePath());
-    hacc::set_file_resource_root(String(base) + "res");
+    ayu::set_file_resource_root(String(base) + "res");
     SDL_free(base);
 
     tap::allow_testing(argc, argv);
@@ -19,7 +19,7 @@ int main (int argc, char** argv) {
             if (argv[i] == "--"sv) {
                 done_flags = true;
             }
-            else throw hacc::X::GenericError("This program doesn't support options");
+            else throw ayu::X::GenericError("This program doesn't support options");
         }
         else args.emplace_back(argv[i]);
     }

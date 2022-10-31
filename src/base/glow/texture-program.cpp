@@ -26,7 +26,7 @@ void draw_texture (const Texture& tex, const Rect& screen_rect, const Rect& tex_
     AA(!!tex);
     AA(tex.target == GL_TEXTURE_2D);
 
-    static TextureProgram* program = hacc::Resource("/base/glow/texture-program.ayu")["program"][1];
+    static TextureProgram* program = ayu::Resource("/base/glow/texture-program.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -37,7 +37,7 @@ void draw_texture (const Texture& tex, const Rect& screen_rect, const Rect& tex_
 
 } using namespace glow;
 
-HACCABLE(glow::TextureProgram,
+AYU_DESCRIBE(glow::TextureProgram,
     delegate(base<Program>())
 )
 
@@ -54,7 +54,7 @@ static tap::TestSet tests ("base/glow/texture-program", []{
 
     ImageTexture* tex;
     doesnt_throw([&]{
-        tex = hacc::Resource("/base/glow/test/texture-test.hacc")["texture"][1];
+        tex = ayu::Resource("/base/glow/test/texture-test.ayu")["texture"][1];
     }, "Can load texture");
 
     RGBA8 bg = uint32(0x331100ee);
@@ -92,8 +92,8 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     for (int x = 0; x < env.size.x; x++) {
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
-            diag(hacc::item_to_string(&expected[{x, y}], hacc::COMPACT));
-            diag(hacc::item_to_string(&got[{x, y}], hacc::COMPACT));
+            diag(ayu::item_to_string(&expected[{x, y}], ayu::COMPACT));
+            diag(ayu::item_to_string(&got[{x, y}], ayu::COMPACT));
             goto no_match;
         }
     }
@@ -101,8 +101,8 @@ static tap::TestSet tests ("base/glow/texture-program", []{
     if (!ok(match, "Texture program wrote correct pixels")) {
          // NOTE: these images will be upside-down.
          // TODO: bring image parsing/saving back
-//        expected.save(hacc::resource_filename("/base/glow/test/texture-fail-expected"));
-//        got.save(hacc::resource_filename("/base/glow/test/texture-fail-got"));
+//        expected.save(ayu::resource_filename("/base/glow/test/texture-fail-expected"));
+//        got.save(ayu::resource_filename("/base/glow/test/texture-fail-got"));
     }
 //    SDL_GL_SwapWindow(window.sdl_window);
 //    SDL_Delay(5000);

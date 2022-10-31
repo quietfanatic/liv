@@ -13,7 +13,7 @@ void assert_failed_sdl (const char* function, const char* filename, uint line) {
     throw X::AssertionFailedSDL(function, filename, line, SDL_GetError());
 }
 
-HACCABLE(uni::X::AssertionFailed,
+AYU_DESCRIBE(uni::X::AssertionFailed,
     elems(
         elem(&X::AssertionFailed::function),
         elem(&X::AssertionFailed::filename),
@@ -21,7 +21,7 @@ HACCABLE(uni::X::AssertionFailed,
     )
 )
 
-HACCABLE(uni::X::AssertionFailedSDL,
+AYU_DESCRIBE(uni::X::AssertionFailedSDL,
     elems(
         elem(&X::AssertionFailedSDL::function),
         elem(&X::AssertionFailedSDL::filename),

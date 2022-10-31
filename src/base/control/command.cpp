@@ -29,7 +29,7 @@ const Command* require_command (Str name) {
     else throw X::CommandNotFound(name);
 }
 
-Statement::Statement (Command* c, hacc::Dynamic&& a) : command(c), args(std::move(a)) {
+Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(std::move(a)) {
     if (args.type != command->args_type()) {
         throw X::StatementWrongArgsType(args.type, command->args_type());
     }
@@ -45,7 +45,7 @@ void Statement::operator() () const {
 
 } using namespace control;
 
-HACCABLE(const Command*,
+AYU_DESCRIBE(const Command*,
     delegate(const_ref_funcs<String>(
         [](const Command* const& c)->const String&{
             return c->name;
@@ -56,29 +56,29 @@ HACCABLE(const Command*,
     ))
 )
 
-HACCABLE(Statement,
+AYU_DESCRIBE(Statement,
     to_tree([](const Statement& s){
          // Serialize the args and stick the command name in front
          // TODO: allow constructing readonly Reference from const Dynamic
-        auto args_tree = hacc::item_to_tree(const_cast<hacc::Dynamic&>(s.args));
-        auto a = hacc::Array(args_tree);
+        auto args_tree = ayu::item_to_tree(const_cast<ayu::Dynamic&>(s.args));
+        auto a = ayu::Array(args_tree);
         a.emplace(a.begin(), s.command->name);
-        return hacc::Tree(a);
+        return ayu::Tree(a);
     }),
-    from_tree([](Statement& s, const hacc::Tree& t){
+    from_tree([](Statement& s, const ayu::Tree& t){
          // Get the command from the first elem, then args from the rest.
          // TODO: optional parameters
-        auto a = hacc::Array(t);
+        auto a = ayu::Array(t);
         if (a.size() == 0) {
             s = {}; return;
         }
         s.command = require_command(Str(a[0]));
-        hacc::Array args_a;
+        ayu::Array args_a;
         for (usize i = 1; i < a.size(); i++) {
             args_a.push_back(a[i]);
         }
-        s.args = hacc::Dynamic(s.command->args_type());
-        hacc::item_from_tree(s.args, hacc::Tree(args_a));
+        s.args = ayu::Dynamic(s.command->args_type());
+        ayu::item_from_tree(s.args, ayu::Tree(args_a));
     })
 )
 
@@ -104,28 +104,28 @@ static tap::TestSet tests ("base/control/command", []{
     s = Statement();
 
     doesnt_throw([&]{
-        hacc::item_from_string(&s, "[_test_command 5 6]");
-    }, "Can create command from hacc");
+        ayu::item_from_string(&s, "[_test_command 5 6]");
+    }, "Can create command from ayu");
     doesnt_throw([&]{
         s();
     }, "Can call command");
     is(test_vals.back(), 30, "Command gave correct result");
 
-    is(hacc::item_to_string(&s, hacc::COMPACT), "[_test_command 5 6]",
+    is(ayu::item_to_string(&s, ayu::COMPACT), "[_test_command 5 6]",
         "Command serializes correctly"
     );
 
-    throws<hacc::X::Error>([&]{
-        hacc::item_from_string(&s, "[_test_command]");
+    throws<ayu::X::Error>([&]{
+        ayu::item_from_string(&s, "[_test_command]");
     }, "Can't create command with too few args");
 
-    throws<hacc::X::Error>([&]{
-        hacc::item_from_string(&s, "[_test_command 1 2 3]");
+    throws<ayu::X::Error>([&]{
+        ayu::item_from_string(&s, "[_test_command 1 2 3]");
     }, "Can't create command with too many args");
 
     test_vals = {};
     doesnt_throw([&]{
-        hacc::item_from_string(&s, "[seq [[_test_command 5 6] [_test_command 7 8]]]");
+        ayu::item_from_string(&s, "[seq [[_test_command 5 6] [_test_command 7 8]]]");
         s();
     }, "seq command");
     is(test_vals.size(), usize(2), "seq command works");

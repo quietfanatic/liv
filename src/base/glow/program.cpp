@@ -90,15 +90,15 @@ void Program::validate () {
     int loglen = 0; glGetProgramiv(id, GL_INFO_LOG_LENGTH, &loglen);
     auto info_log = std::string(loglen, 0);
     glGetProgramInfoLog(id, loglen, nullptr, info_log.data());
-    hacc::dump(status);
-    hacc::dump(info_log);
+    ayu::dump(status);
+    ayu::dump(info_log);
 }
 
 enum ShaderType { };
 
 } using namespace glow;
 
-HACCABLE(glow::ShaderType,
+AYU_DESCRIBE(glow::ShaderType,
     values(
         value(0, ShaderType(0)),
         value("GL_COMPUTE_SHADER", ShaderType(GL_COMPUTE_SHADER)),
@@ -110,7 +110,7 @@ HACCABLE(glow::ShaderType,
     )
 )
 
-HACCABLE(glow::Shader,
+AYU_DESCRIBE(glow::Shader,
     attrs(
         attr("type", value_funcs<ShaderType>(
             [](const Shader& v){
@@ -146,21 +146,21 @@ HACCABLE(glow::Shader,
     )
 )
 
-HACCABLE(glow::Program,
+AYU_DESCRIBE(glow::Program,
     attrs(
         attr("shaders", &Program::shaders)
     ),
     init([](Program& v){ v.link(); })
 )
 
-HACCABLE(glow::X::ShaderCompileFailed,
+AYU_DESCRIBE(glow::X::ShaderCompileFailed,
     elems(
         elem(&X::ShaderCompileFailed::shader),
         elem(&X::ShaderCompileFailed::info_log)
     )
 )
 
-HACCABLE(glow::X::ProgramLinkFailed,
+AYU_DESCRIBE(glow::X::ProgramLinkFailed,
     elems(
         elem(&X::ProgramLinkFailed::program),
         elem(&X::ProgramLinkFailed::info_log)
@@ -189,8 +189,8 @@ static tap::TestSet tests ("base/glow/program", []{
 
     Program* program;
     doesnt_throw([&]{
-        program = hacc::Resource("/base/glow/test/test-program.ayu")["program"][1];
-    }, "Can load program from hacc document");
+        program = ayu::Resource("/base/glow/test/test-program.ayu")["program"][1];
+    }, "Can load program from ayu document");
     program->use();
     int u_screen_rect = glGetUniformLocation(*program, "u_screen_rect");
     isnt(u_screen_rect, -1, "Can get a uniform location");

@@ -8,8 +8,8 @@ namespace glow {
 void init ();
 
 namespace X {
-    struct GlowError : hacc::X::Error {
-        using hacc::X::Error::Error;
+    struct GlowError : ayu::X::Error {
+        using ayu::X::Error::Error;
     };
 }
 

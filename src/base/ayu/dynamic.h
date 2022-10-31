@@ -5,10 +5,10 @@
 #include "common.h"
 #include "type.h"
 
-namespace hacc {
+namespace ayu {
 
  // Represents a dynamically typed object with value semantics.  This is
- //  always allocated on the heap.  Can only represent haccable types.
+ //  always allocated on the heap.  Can only represent types known to ayu.
  // The empty value will cause null derefs if you do anything with it.
 struct Dynamic {
     const Type type;
@@ -83,4 +83,4 @@ struct Dynamic {
     }
 };
 
-} // namespace hacc
+} // namespace ayu

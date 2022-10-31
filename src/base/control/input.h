@@ -1,5 +1,5 @@
 // Provides a class representing keyboard and mouse button inputs.
-// Primarily for use with hacc
+// Primarily for use with ayu
 
 #pragma once
 
@@ -40,7 +40,7 @@ Input input_from_string (Str c);
 Str input_to_string (const Input& i);
 
 namespace X {
-    struct InvalidInputName : hacc::X::Error {
+    struct InvalidInputName : ayu::X::Error {
         String name;
         InvalidInputName (String name) : name(name) { }
     };

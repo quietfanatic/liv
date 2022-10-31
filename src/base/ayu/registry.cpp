@@ -12,7 +12,7 @@
 
 using namespace std::string_literals;
 
-namespace hacc::in {
+namespace ayu::in {
 
 struct Registry {
     std::unordered_map<std::type_index, const Description*> by_cpp_type;
@@ -53,7 +53,7 @@ const Description* get_description_by_type_info (const std::type_info& t) {
 const Description* need_description_for_type_info (const std::type_info& t) {
     auto desc = get_description_by_type_info(t);
     if (desc) return desc;
-    else throw X::Unhaccable(t);
+    else throw X::UnknownType(t);
 }
 
 const Description* get_description_by_name (Str name) {
@@ -106,15 +106,15 @@ std::string get_demangled_name (const std::type_info& t) {
 #endif
 }
 
-} using namespace hacc::in;
-using namespace hacc;
+} using namespace ayu::in;
+using namespace ayu;
 
-HACCABLE(hacc::X::Unhaccable,
+AYU_DESCRIBE(ayu::X::UnknownType,
     elems(elem(value_func<std::string>(
-        [](const hacc::X::Unhaccable& v){ return get_demangled_name(v.cpp_type); }
+        [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }
     )))
 )
 
-HACCABLE(hacc::X::TypeNotFound,
+AYU_DESCRIBE(ayu::X::TypeNotFound,
     elems(elem(&X::TypeNotFound::name))
 )

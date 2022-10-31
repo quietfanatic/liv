@@ -5,7 +5,7 @@
 #include "accessors.h"
 #include "dynamic.h"
 
-namespace hacc {
+namespace ayu {
 
  // Represents a dynamically typed object with reference semantics.
  //
@@ -220,22 +220,22 @@ namespace X {
     };
 }
 
-} // namespace hacc
+} // namespace ayu
 
  // Allow Reference to be a key in unordered_map
 namespace std {
     template <>
-    struct hash<hacc::Reference> {
-        size_t operator () (const hacc::Reference& r) const {
+    struct hash<ayu::Reference> {
+        size_t operator () (const ayu::Reference& r) const {
              // This is in a different order than operator==, but
              //  I don't think that should be a problem, assuming the
              //  address is deterministic.
             auto a = r.address();
-            if (a) return hacc::in::hash_combine(
+            if (a) return ayu::in::hash_combine(
                 hash<void*>()((void*)a),
-                hash<hacc::Type>()(r.type())
+                hash<ayu::Type>()(r.type())
             );
-            else return hacc::in::hash_combine(
+            else return ayu::in::hash_combine(
                 hash<void*>()((void*)r.host),
                 hash<void*>()((void*)r.aot.data)
             );
@@ -246,7 +246,7 @@ namespace std {
  // Break cyclic dependency
  // TODO: this is no longer necessary
 #include "serialize.h"
-namespace hacc {
+namespace ayu {
 
 inline Tree Reference::to_tree () const { return item_to_tree(*this); }
 inline void Reference::from_tree (Tree t) const { item_from_tree(*this, t); }

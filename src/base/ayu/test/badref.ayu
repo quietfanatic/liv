@@ -1,3 +1,3 @@
-[hacc::Document {
-    ext_ref:[hacc::Reference [nosuchfile.ayu foo 1]]
+[ayu::Document {
+    ext_ref:[ayu::Reference [nosuchfile.ayu foo 1]]
 }]

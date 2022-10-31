@@ -4,7 +4,7 @@
 #include "common.h"
 #include "type.h"
 
-namespace hacc {
+namespace ayu {
 
 // This is a type storing dynamic values with optional names, intended to be the
 //  top-level item of a file.  Has fast insertion of newly-created unnamed items
@@ -78,4 +78,4 @@ namespace X {
     };
 }
 
-} // namespace hacc
+} // namespace ayu

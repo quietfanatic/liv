@@ -1,7 +1,8 @@
-// This module implements static-layout haccable descriptions, which are
+// This module implements static-layout type descriptions, which are
 // generated at compile time and accessed at runtime to determine how to
-// transform objects to and from trees.  The descriptions are mostly
-// declarative; the actual serialization code is in serialize.cpp.
+// construct, destroy, and transform objects to and from trees.  The
+// descriptions are mostly declarative; the actual serialization code is in
+// serialize.cpp.
 
 #pragma once
 
@@ -12,9 +13,9 @@
 #include "accessors.h"
 #include "tree.h"
 
-namespace hacc { struct Reference; }
+namespace ayu { struct Reference; }
 
-namespace hacc::in {
+namespace ayu::in {
 
 // The goal of this module is to allow descriptions to be laid out in memory
 //  at compile time.  Thanks to recent C++ standards, this is quite possible.
@@ -373,7 +374,7 @@ template <class T, class...>
 struct AssertAllDcrs;
 template <class T, class Head, class... Tail>
 struct AssertAllDcrs<T, Head, Tail...> {
-    static_assert(std::is_base_of_v<Descriptor<T>, Head>, "Element in HACCABLE description is not a descriptor for this type");
+    static_assert(std::is_base_of_v<Descriptor<T>, Head>, "Element in AYU_DESCRIBE description is not a descriptor for this type");
 };
 template <class T>
 struct AssertAllDcrs<T> { };
@@ -388,7 +389,7 @@ template <class T, class... Dcrs>
 constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
     AssertAllDcrs<T, Dcrs...>{};
     using Desc = FullDescription<T, Dcrs...>;
-    static_assert(sizeof(Desc) < 65536, "Haccable description is too large (>64k)");
+    static_assert(sizeof(Desc) < 65536, "AYU_DESCRIBE description is too large (>64k)");
 
     Desc desc (
         Description{},
@@ -399,7 +400,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     header.cpp_type = &typeid(T);
     header.cpp_size = sizeof(T);
      // My stdlib is missing aligned_alloc so it's easier to not deal with alignment
-    static_assert(alignof(T) <= alignof(std::max_align_t), "Haccability of types with larger than standard alignment is not currently supported, sorry.");
+    static_assert(alignof(T) <= alignof(std::max_align_t), "Types with larger than standard alignment are not currently supported, sorry.");
     header.default_construct = default_construct_p<T>;
     header.destruct = destruct_p<T>;
     header.name = name;
@@ -408,7 +409,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
 #define APPLY_OFFSET(dcr_name, dcr_type) \
     { \
         constexpr uint16 count = Desc::template count<dcr_type<T>>(); \
-        static_assert(count <= 1, "Multiple " #dcr_name " descriptors in haccable description"); \
+        static_assert(count <= 1, "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description"); \
         if constexpr (count) { \
             header.dcr_name##_offset = \
                 static_cast<ComparableAddress*>(desc.template get<dcr_type<T>>(0)) \
@@ -432,4 +433,4 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     return desc;
 }
 
-} // namespace hacc::in
+} // namespace ayu::in

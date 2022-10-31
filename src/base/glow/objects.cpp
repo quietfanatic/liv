@@ -31,7 +31,7 @@ enum TextureMinFilter { };
 
 } using namespace glow;
 
-HACCABLE(glow::TextureTarget,
+AYU_DESCRIBE(glow::TextureTarget,
     values(
         value("GL_TEXTURE_1D", TextureTarget(GL_TEXTURE_1D)),
         value("GL_TEXTURE_2D", TextureTarget(GL_TEXTURE_2D)),
@@ -47,7 +47,7 @@ HACCABLE(glow::TextureTarget,
     )
 )
 
-HACCABLE(glow::TextureWrap,
+AYU_DESCRIBE(glow::TextureWrap,
     values(
         value("GL_CLAMP_TO_EDGE", TextureWrap(GL_CLAMP_TO_EDGE)),
         value("GL_CLAMP_TO_BORDER", TextureWrap(GL_CLAMP_TO_BORDER)),
@@ -57,14 +57,14 @@ HACCABLE(glow::TextureWrap,
     )
 )
 
-HACCABLE(glow::TextureMagFilter,
+AYU_DESCRIBE(glow::TextureMagFilter,
     values(
         value("GL_NEAREST", TextureMagFilter(GL_NEAREST)),
         value("GL_LINEAR", TextureMagFilter(GL_LINEAR))
     )
 )
 
-HACCABLE(glow::TextureMinFilter,
+AYU_DESCRIBE(glow::TextureMinFilter,
     values(
         value("GL_NEAREST", TextureMinFilter(GL_NEAREST)),
         value("GL_LINEAR", TextureMinFilter(GL_LINEAR)),
@@ -75,7 +75,7 @@ HACCABLE(glow::TextureMinFilter,
     )
 )
 
-HACCABLE(glow::Texture,
+AYU_DESCRIBE(glow::Texture,
     attrs(
         attr("target", value_funcs<TextureTarget>(
             [](const Texture& v){ return TextureTarget(v.target); },

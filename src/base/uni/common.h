@@ -101,7 +101,7 @@ static CE T assert_sdl (T v, const char* function, const char* filename, uint li
 #define AS(v) assert_sdl(v, __FUNCTION__, __FILE__, __LINE__)
 
 namespace uni::X {
-    struct AssertionFailed : hacc::X::Error {
+    struct AssertionFailed : ayu::X::Error {
         String function;
         String filename;
         uint line;

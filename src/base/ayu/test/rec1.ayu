@@ -1,4 +1,4 @@
-[hacc::Document {
+[ayu::Document {
     val:[int32 3]
     ref:[int32* [rec2.ayu val 1]]
 }]

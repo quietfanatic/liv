@@ -19,7 +19,7 @@ struct App {
     void run ();
     void stop ();
 
-     // Loaded from a hacc::Resource
+     // Loaded from a ayu::Resource
     Settings* settings;
 
     std::vector<std::unique_ptr<Book>> books;

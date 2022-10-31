@@ -1,4 +1,5 @@
- // This module contains various types and exceptions that are used throughout Hacc
+// This module contains various types and exceptions that are used throughout
+// the library
 
 #pragma once
 
@@ -10,7 +11,7 @@
 #include <utility>  // pair
 #include <vector>
 
-namespace hacc {
+namespace ayu {
 
 ///// BASIC TYPES AND STUFF
 
@@ -48,7 +49,7 @@ struct Type;
  // (you can also take String&& as a parameter if you're going to store it)
 using String = std::string;
 using Str = std::string_view;
- // For compatibility, but hacc natively works with UTF-8
+ // For compatibility, but ayu natively works with UTF-8
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
  // Dunno why the standard library doesn't have this
@@ -92,7 +93,7 @@ void dump (const T& v) { dump_ref(&v); }
 ///// BASIC ERRORS
 
 namespace X {
-     // Base class for hacc-related errors.
+     // Base class for ayu-related errors.
     struct Error : std::exception {
          // Gotta cache the generated error message or the exception handling
          //  system will reference stack garbage.
@@ -204,7 +205,7 @@ namespace in {
      // Some internal error has occured, such as an invalid enum value, and i
      //  isn't safe to continue execution.
     [[noreturn]] void internal_error (const char* function, const char* filename, uint line);
-#define HACC_INTERNAL_ERROR() hacc::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
+#define AYU_INTERNAL_ERROR() ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}  // namespace hacc
+}  // namespace ayu

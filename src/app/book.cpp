@@ -89,8 +89,8 @@ static tap::TestSet tests ("app/book", []{
     app.hidden = true;
     app.default_window_size = size;
     Book book (app, {
-        hacc::file_resource_root() + "/base/glow/test/image.png"sv,
-        hacc::file_resource_root() + "/base/glow/test/image2.png"sv
+        ayu::file_resource_root() + "/base/glow/test/image.png"sv,
+        ayu::file_resource_root() + "/base/glow/test/image2.png"sv
     });
 
     book.draw();

@@ -1,11 +1,11 @@
-// A haccable function type, that can be used to make a non-turing-complete
+// A function type that can be used with ayu, to make a non-turing-complete
 // imperative DSL.
 
 #pragma once
 
 #include <utility>
 #include "../ayu/dynamic.h" 
- // For tuple haccability
+ // For tuple describability
 #include "../ayu/describe-standard.h"
 #include "../ayu/type.h"
 #include "../uni/common.h"
@@ -23,8 +23,8 @@ struct Command {
     String name;
     String description;
     usize required_arg_count;
-    Function<hacc::Type()>* args_type;
-    Function<std::vector<hacc::Type>()>* arg_types;
+    Function<ayu::Type()>* args_type;
+    Function<std::vector<ayu::Type>()>* arg_types;
 
     template <class... Args>
     CE Command (
@@ -37,10 +37,10 @@ struct Command {
         function(*reinterpret_cast<void**>(&f)),
         name(name), description(desc), required_arg_count(req),
         args_type([]{
-            return hacc::Type::CppType<StatementStorage<Args...>>();
+            return ayu::Type::CppType<StatementStorage<Args...>>();
         }),
         arg_types([]{
-            static std::vector<hacc::Type> r = {hacc::Type::CppType<Args>()...};
+            static std::vector<ayu::Type> r = {ayu::Type::CppType<Args>()...};
             return r;
         })
     {
@@ -58,16 +58,16 @@ const Command* lookup_command (Str name);
 const Command* require_command (Str name);
 
  // The structure you create to use a command.  You can create this manually,
- // but it doesn't support optional arguments unless you deserialize from hacc.
+ // but it doesn't support optional arguments unless you deserialize from ayu.
 struct Statement {
     const Command* command = null;
-    hacc::Dynamic args;  // Type must be command->args_type (std::tuple)
+    ayu::Dynamic args;  // Type must be command->args_type (std::tuple)
 
     CE Statement() { }
-    Statement (Command* c, hacc::Dynamic&& a);
+    Statement (Command* c, ayu::Dynamic&& a);
     template <class... Args>
     Statement (Command* c, Args... args) :
-        Statement(c, hacc::Dynamic(StatementStorage<Args...>(std::forward<Args>(args)...)))
+        Statement(c, ayu::Dynamic(StatementStorage<Args...>(std::forward<Args>(args)...)))
     { }
     template <class... Args>
     Statement (Str name, Args... args) :
@@ -82,7 +82,7 @@ struct Statement {
 };
 
 namespace X {
-    struct ConflictingCommandName : hacc::X::Error {
+    struct ConflictingCommandName : ayu::X::Error {
         String name;
         String desc_a;
         String desc_b;
@@ -90,14 +90,14 @@ namespace X {
             name(n), desc_a(a), desc_b(b)
         { }
     };
-    struct CommandNotFound : hacc::X::Error {
+    struct CommandNotFound : ayu::X::Error {
         String name;
         CommandNotFound(Str n) : name(n) { }
     };
-    struct StatementWrongArgsType : hacc::X::Error {
-        hacc::Type got;
-        hacc::Type expected;
-        StatementWrongArgsType(hacc::Type g, hacc::Type e) :
+    struct StatementWrongArgsType : ayu::X::Error {
+        ayu::Type got;
+        ayu::Type expected;
+        StatementWrongArgsType(ayu::Type g, ayu::Type e) :
             got(g), expected(e)
         { }
     };

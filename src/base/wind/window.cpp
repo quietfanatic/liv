@@ -68,7 +68,7 @@ Window::~Window () {
 
 } using namespace wind;
 
-HACCABLE(wind::Window,
+AYU_DESCRIBE(wind::Window,
     attrs(
         attr("title", &Window::title, optional),
         attr("size", &Window::size, optional),

@@ -10,7 +10,7 @@
 #include "tree.h"
 #include "type.h"
 
-namespace hacc {
+namespace ayu {
 
 ////// MAIN OPERATIONS
  // Convert an item to a tree.
@@ -88,11 +88,11 @@ void recursive_scan (
     Callback<void(const Reference&, Path)> cb
 );
 
-} // namespace hacc
+} // namespace ayu
 
 #include "reference.h"
 
-namespace hacc::X {
+namespace ayu::X {
     struct SerError : LogicError {
         Path path_to_item;
         SerError (const Reference& item);

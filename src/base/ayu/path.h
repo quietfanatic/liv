@@ -1,8 +1,8 @@
 // This implements a recursive object that is a symbolic representation of a
-// Reference.  I would have just used hacc::Array, but due to the way these
+// Reference.  I would have just used ayu::Array, but due to the way these
 // are used, a linked list structure will be much more efficient than a
 // packed array structure.
-// TODO: Are we sure about that?  A hacc::Array is just a std::vector of
+// TODO: Are we sure about that?  An ayu::Array is just a std::vector of
 // refcounted pointers.  Worth some benchmarking once we get around to it.
 //
 // These are NOT file paths (though they can contain a file path as their first
@@ -15,7 +15,7 @@
 
 #include "common.h"
 
-namespace hacc {
+namespace ayu {
 
  // Paths are a reference-counted pointer, so are cheap to copy.  Paths are
  //  immutable once created.
@@ -45,4 +45,4 @@ static bool operator != (const Path& a, const Path& b) { return !(a == b); }
 
  // Functions for converting paths to and from references are in serialize.h
 
-} // namespace hacc
+} // namespace ayu

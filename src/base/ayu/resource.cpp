@@ -14,7 +14,7 @@ using namespace std::literals;
 
 ///// INTERNALS
 
-namespace hacc {
+namespace ayu {
 namespace in {
 
     struct ResourceData {
@@ -113,7 +113,7 @@ Str show_ResourceState (ResourceState state) {
         case RELOAD_VERIFYING: return "RELOAD_VERIFYING"sv;
         case RELOAD_ROLLBACK: return "RELOAD_ROLLBACK"sv;
         case RELOAD_COMMITTING: return "RELOAD_COMMITTING"sv;
-        default: HACC_INTERNAL_ERROR();
+        default: AYU_INTERNAL_ERROR();
     }
 }
 
@@ -632,11 +632,11 @@ void ResourceHandler::deactivate () {
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-///// HACCABILITY
+///// DESCRIPTIONS
 
-HACCABLE(hacc::in::Universe,
+AYU_DESCRIBE(ayu::in::Universe,
     keys(value_func<std::vector<String>>([](const Universe& v){
         std::vector<String> ks;
         for (auto& p : v.resources) {
@@ -654,7 +654,7 @@ HACCABLE(hacc::in::Universe,
     })
 )
 
-HACCABLE(hacc::Resource,
+AYU_DESCRIBE(ayu::Resource,
     delegate(mixed_funcs<String>(
         [](const Resource& v){
             return v.data->name;
@@ -665,26 +665,26 @@ HACCABLE(hacc::Resource,
     ))
 )
 
-HACCABLE(hacc::X::InvalidResourceState,
+AYU_DESCRIBE(ayu::X::InvalidResourceState,
     elems(
         elem(&X::InvalidResourceState::tried),
         elem(&X::InvalidResourceState::state),
         elem(&X::InvalidResourceState::res)
     )
 )
-HACCABLE(hacc::X::UnloadWouldBreak,
+AYU_DESCRIBE(ayu::X::UnloadWouldBreak,
     elems(
         elem(&X::UnloadWouldBreak::from),
         elem(&X::UnloadWouldBreak::to)
     )
 )
-HACCABLE(hacc::X::ReloadWouldBreak,
+AYU_DESCRIBE(ayu::X::ReloadWouldBreak,
     elems(
         elem(&X::ReloadWouldBreak::from),
         elem(&X::ReloadWouldBreak::to)
     )
 )
-HACCABLE(hacc::X::RemoveSourceFailed,
+AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
     elems(
         elem(&X::RemoveSourceFailed::res),
         elem(value_func<String>(
@@ -694,28 +694,28 @@ HACCABLE(hacc::X::RemoveSourceFailed,
         ))
     )
 )
-HACCABLE(hacc::X::InvalidResourceName,
+AYU_DESCRIBE(ayu::X::InvalidResourceName,
     elems(elem(&X::InvalidResourceName::name))
 )
-HACCABLE(hacc::X::UnresolvedResourceName,
+AYU_DESCRIBE(ayu::X::UnresolvedResourceName,
     elems(elem(&X::UnresolvedResourceName::name))
 )
-HACCABLE(hacc::X::ResourceNameOutsideRoot,
+AYU_DESCRIBE(ayu::X::ResourceNameOutsideRoot,
     elems(elem(&X::ResourceNameOutsideRoot::name))
 )
-HACCABLE(hacc::X::ResourceHandlerConflict,
+AYU_DESCRIBE(ayu::X::ResourceHandlerConflict,
     elems(
         elem(&X::ResourceHandlerConflict::res),
         elem(&X::ResourceHandlerConflict::priority)
     )
 )
-HACCABLE(hacc::X::ResourceHandlerCantLoad,
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantLoad,
     elems(elem(&X::ResourceHandlerCantLoad::res))
 )
-HACCABLE(hacc::X::ResourceHandlerCantSave,
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantSave,
     elems(elem(&X::ResourceHandlerCantSave::res))
 )
-HACCABLE(hacc::X::ResourceHandlerCantRemoveSource,
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantRemoveSource,
     elems(elem(&X::ResourceHandlerCantRemoveSource::res))
 )
 
@@ -751,9 +751,9 @@ static tap::TestSet tests ("base/ayu/resource", []{
     is(input.state(), UNLOADED, "Resource state is UNLOADED after unloading");
     ok(!input.data->value.has_value(), "Resource has no value after unloading");
 
-    hacc::Document* doc = null;
+    ayu::Document* doc = null;
     doesnt_throw([&]{
-        doc = &input.value().as<hacc::Document>();
+        doc = &input.value().as<ayu::Document>();
     }, "Getting typed value from a resource");
     is(input.state(), LOADED, "Resource::value() automatically loads resource");
     is(input["foo"][1].get_as<int32>(), 4, "Value was generated properly (0)");
@@ -767,11 +767,11 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{ rename(input, output); }, "rename");
     is(input.state(), UNLOADED, "Old resource is UNLOADED after renaming");
     is(output.state(), LOADED, "New resource is LOADED after renaming");
-    is(&output.value().as<hacc::Document>(), doc, "Rename moves value without reconstructing it");
+    is(&output.value().as<ayu::Document>(), doc, "Rename moves value without reconstructing it");
 
     doesnt_throw([&]{ save(output); }, "save");
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
-        "[hacc::Document {bar:[std::string qux] asdf:[int32 51] _next_id:0}]"
+        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _next_id:0}]"
     ), "Resource was saved with correct contents");
     doesnt_throw([&]{ remove_source(output); }, "remove_source");
     throws<X::OpenFailed>([&]{
@@ -789,7 +789,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{
         is(ref.get_as<std::string>(), "qux", "reference_from_path got correct item");
     });
-    doc = &output.value().as<hacc::Document>();
+    doc = &output.value().as<ayu::Document>();
     ref = output["asdf"][1].address_as<int32>();
     doesnt_throw([&]{
         path = reference_to_path(ref);
@@ -800,7 +800,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doc->new_<int32*>(output["asdf"][1]);
     doesnt_throw([&]{ save(output); }, "save with pointer");
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
-        "[hacc::Document {bar:[std::string qux] asdf:[int32 51] _0:[hacc::Reference [\"" + output.name() + "\" bar 1]] _1:[int32* [\"" + output.name() + "\" asdf 1]] _next_id:2}]"
+        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference [\"" + output.name() + "\" bar 1]] _1:[int32* [\"" + output.name() + "\" asdf 1]] _next_id:2}]"
     ), "File was saved with correct reference as path");
     throws<X::OpenFailed>([&]{
         load(badinput);

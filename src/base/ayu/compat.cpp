@@ -7,7 +7,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 
 static usize to_utf16_buffer (char16_t* buffer, Str s) {
     char16_t* p = buffer;
@@ -191,12 +191,12 @@ int remove_utf8 (const char* filename) {
 #endif
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("base/hacc/compat", []{
+static tap::TestSet tests ("base/ayu/compat", []{
     using namespace tap;
     is(from_utf16(u"ユニコード"), "ユニコード", "from_utf16");
     is(to_utf16("ユニコード"), u"ユニコード", "to_utf16");

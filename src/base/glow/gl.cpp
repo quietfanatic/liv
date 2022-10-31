@@ -49,7 +49,7 @@ void throw_on_glGetError (
 
 } using namespace glow;
 
-HACCABLE(glow::X::GLError,
+AYU_DESCRIBE(glow::X::GLError,
     elems(
         elem(&X::GLError::error_code),
         elem(&X::GLError::gl_function),

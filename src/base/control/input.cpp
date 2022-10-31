@@ -156,10 +156,10 @@ Str input_to_string (const Input& input) {
 
 } using namespace control;
 
-HACCABLE(control::Input,
+AYU_DESCRIBE(control::Input,
     to_tree([](const Input& input){
-        hacc::Array a;
-        if (input.type == NONE) return hacc::Tree(a);
+        ayu::Array a;
+        if (input.type == NONE) return ayu::Tree(a);
         if (input.ctrl) a.emplace_back("ctrl"s);
         if (input.alt) a.emplace_back("alt"s);
         if (input.shift) a.emplace_back("shift"s);
@@ -187,14 +187,14 @@ HACCABLE(control::Input,
             }
             default: AA(false);
         }
-        return hacc::Tree(a);
+        return ayu::Tree(a);
     }),
-    from_tree([](Input& input, const hacc::Tree& tree) {
-        const auto& a = hacc::Array(tree);
+    from_tree([](Input& input, const ayu::Tree& tree) {
+        const auto& a = ayu::Array(tree);
         input = {};
         for (auto& e : a) {
-            if (e.form() == hacc::NUMBER) {
-                if (input.type != NONE) throw hacc::X::GenericError("Too many descriptors for Input");
+            if (e.form() == ayu::NUMBER) {
+                if (input.type != NONE) throw ayu::X::GenericError("Too many descriptors for Input");
                 Input tmp = input_from_integer(int(e));
                 input.type = tmp.type;
                 input.code = tmp.code;
@@ -205,7 +205,7 @@ HACCABLE(control::Input,
                 else if (name == "alt") input.alt = true;
                 else if (name == "shift") input.shift = true;
                 else {
-                    if (input.type != NONE) throw hacc::X::GenericError("Too many descriptors for Input");
+                    if (input.type != NONE) throw ayu::X::GenericError("Too many descriptors for Input");
                     Input tmp = input_from_string(name);
                     input.type = tmp.type;
                     input.code = tmp.code;
@@ -223,13 +223,13 @@ static tap::TestSet tests ("base/control/input", []{
 
     auto test2 = [](Str s, Input expect, Str s2){
         Input got;
-        hacc::item_from_string(&got, s);
+        ayu::item_from_string(&got, s);
         is(got.type, expect.type, s + " - type is correct");
         is(got.ctrl, expect.ctrl, s + " - ctrl is correct");
         is(got.alt, expect.alt, s + " - alt is correct");
         is(got.shift, expect.shift, s + " - shift is correct");
         is(got.code, expect.code, s + " - code is correct");
-        is(hacc::item_to_string(&expect, hacc::COMPACT), s2, s + " - item_to_string");
+        is(ayu::item_to_string(&expect, ayu::COMPACT), s2, s + " - item_to_string");
     };
     auto test = [&](Str s, Input expect){
         test2(s, expect, s);

@@ -8,7 +8,7 @@
 namespace app {
 
 App::App () :
-    settings(hacc::Resource("/app/settings.ayu").ref())
+    settings(ayu::Resource("/app/settings.ayu").ref())
 { }
 
 App::~App () { }
@@ -83,8 +83,8 @@ static tap::TestSet tests ("app/app", []{
     app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            hacc::file_resource_root() + "/base/glow/test/image.png"sv,
-            hacc::file_resource_root() + "/base/glow/test/image2.png"sv
+            ayu::file_resource_root() + "/base/glow/test/image.png"sv,
+            ayu::file_resource_root() + "/base/glow/test/image2.png"sv
         });
     }, "App::open_files");
     auto window_id = AS(SDL_GetWindowID(app.books[0]->window.sdl_window));

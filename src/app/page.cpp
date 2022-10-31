@@ -35,7 +35,7 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
     AA(texture && *texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = hacc::Resource("/app/page.ayu")["program"][1];
+    static PageProgram* program = ayu::Resource("/app/page.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -52,7 +52,7 @@ void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
 
 } using namespace app;
 
-HACCABLE(app::PageProgram,
+AYU_DESCRIBE(app::PageProgram,
     delegate(base<Program>())
 )
 
@@ -74,7 +74,7 @@ static tap::TestSet tests ("app/page", []{
     window.open();
     init();
 
-    Page page (hacc::file_resource_root() + "/base/glow/test/image.png");
+    Page page (ayu::file_resource_root() + "/base/glow/test/image.png");
     is(page.size, IVec(7, 5), "Page has correct size");
 
     glClearColor(0, 0, 0, 0);
@@ -104,8 +104,8 @@ static tap::TestSet tests ("app/page", []{
     for (int x = 0; x < test_size.x; x++) {
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
-            diag(hacc::item_to_string(&expected[{x, y}], hacc::COMPACT));
-            diag(hacc::item_to_string(&got[{x, y}], hacc::COMPACT));
+            diag(ayu::item_to_string(&expected[{x, y}], ayu::COMPACT));
+            diag(ayu::item_to_string(&got[{x, y}], ayu::COMPACT));
             goto no_match;
         }
     }

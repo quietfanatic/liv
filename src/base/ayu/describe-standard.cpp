@@ -1,44 +1,46 @@
-// Provides haccabilities for builtin scalar types.  For template types like
+// Provides ayu descriptions for builtin scalar types.  For template types like
 // std::vector, include the .h file.
 
 #include "describe-standard.h"
 
-using namespace hacc;
+using namespace ayu;
 
-#define SCALAR_HACCABLE(type) \
-HACCABLE(type, \
+#define AYU_DESCRIBE_SCALAR(type) \
+AYU_DESCRIBE(type, \
     to_tree([](const type& v){ return Tree(v); }), \
     from_tree([](type& v, const Tree& t){ v = type(t); }) \
 )
 
-SCALAR_HACCABLE(std::nullptr_t)
- // Even though these are in hacc::, serialize them without the prefix.
-SCALAR_HACCABLE(bool)
-SCALAR_HACCABLE(char)
-SCALAR_HACCABLE(int8)
-SCALAR_HACCABLE(uint8)
-SCALAR_HACCABLE(int16)
-SCALAR_HACCABLE(uint16)
-SCALAR_HACCABLE(int32)
-SCALAR_HACCABLE(uint32)
-SCALAR_HACCABLE(int64)
-SCALAR_HACCABLE(uint64)
-SCALAR_HACCABLE(float)
-SCALAR_HACCABLE(double)
-HACCABLE(std::string,
+AYU_DESCRIBE_SCALAR(std::nullptr_t)
+AYU_DESCRIBE_SCALAR(bool)
+AYU_DESCRIBE_SCALAR(char)
+ // Even though these are in ayu::, serialize them without the prefix.
+AYU_DESCRIBE_SCALAR(int8)
+AYU_DESCRIBE_SCALAR(uint8)
+AYU_DESCRIBE_SCALAR(int16)
+AYU_DESCRIBE_SCALAR(uint16)
+AYU_DESCRIBE_SCALAR(int32)
+AYU_DESCRIBE_SCALAR(uint32)
+AYU_DESCRIBE_SCALAR(int64)
+AYU_DESCRIBE_SCALAR(uint64)
+AYU_DESCRIBE_SCALAR(float)
+AYU_DESCRIBE_SCALAR(double)
+#undef AYU_DESCRIBE_SCALAR
+
+AYU_DESCRIBE(std::string,
     to_tree([](const std::string& v){ return Tree(v); }),
     from_tree([](std::string& v, const Tree& t){ v = std::string(t); })
 )
-HACCABLE(std::u16string,
+AYU_DESCRIBE(std::u16string,
     to_tree([](const std::u16string& v){ return Tree(v); }),
     from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
 )
- // Str and const char* are not haccable because they're reference types.
+ // Str and const char* are not ayuable because they're reference types.
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("base/hacc/haccable-standard", []{
+static tap::TestSet tests ("base/ayu/ayuable-standard", []{
     using namespace tap;
      // Test wstrings
     std::string s8 = "\"あいうえお\""s;
@@ -60,7 +62,7 @@ static tap::TestSet tests ("base/hacc/haccable-standard", []{
     is(data, expected_data, "gives correct result");
     String got_s;
     doesnt_throw([&]{
-        got_s = item_to_string(&expected_data, hacc::COMPACT);
+        got_s = item_to_string(&expected_data, ayu::COMPACT);
     }, "item_to_string on tuple");
     is(got_s, s, "gives correct result");
     done_testing();

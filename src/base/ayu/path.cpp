@@ -5,7 +5,7 @@
 #include "serialize.h"
 #include "tree-internal.h"
 
-namespace hacc {
+namespace ayu {
 namespace in {
 
 enum PathForm {
@@ -77,7 +77,7 @@ bool operator == (const Path& a, const Path& b) {
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
 static void p2a (Array& a, const Path& p) {
     if (!p.data) return;
@@ -94,7 +94,7 @@ static void p2a (Array& a, const Path& p) {
     }
 }
 
-HACCABLE(hacc::Path,
+AYU_DESCRIBE(ayu::Path,
     to_tree([](const Path& v){
         Array a;
         p2a(a, v);

@@ -6,7 +6,7 @@
 
 using namespace std::literals;
 
-namespace hacc {
+namespace ayu {
 using namespace in;
 
 Str form_name (Form f) {
@@ -182,13 +182,13 @@ bool operator == (const Tree& a, const Tree& b) {
            }
            return true;
         }
-        default: HACC_INTERNAL_ERROR();
+        default: AYU_INTERNAL_ERROR();
     }
 }
 
-} using namespace hacc;
+} using namespace ayu;
 
-HACCABLE(hacc::Form,
+AYU_DESCRIBE(ayu::Form,
     values(
         value("null", NULLFORM),
         value("bool", BOOL),
@@ -199,19 +199,19 @@ HACCABLE(hacc::Form,
     )
 )
 
-HACCABLE(hacc::Tree,
+AYU_DESCRIBE(ayu::Tree,
     to_tree([](const Tree& v){ return v; }),
     from_tree([](Tree& v, const Tree& t){ v = t; })
 )
 
-HACCABLE(hacc::X::WrongForm,
+AYU_DESCRIBE(ayu::X::WrongForm,
     elems(
         elem(&X::WrongForm::form),
         elem(&X::WrongForm::tree)
     )
 )
 
-HACCABLE(hacc::X::CantRepresent,
+AYU_DESCRIBE(ayu::X::CantRepresent,
     elems(
         elem(&X::CantRepresent::type_name),
         elem(&X::CantRepresent::tree)
@@ -221,7 +221,7 @@ HACCABLE(hacc::X::CantRepresent,
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-static tap::TestSet tests ("base/hacc/tree", []{
+static tap::TestSet tests ("base/ayu/tree", []{
     using namespace tap;
     isnt(Tree(null), Tree(0), "Comparisons fail on different types");
     is(Tree(3), Tree(3.0), "Compare integers with floats");

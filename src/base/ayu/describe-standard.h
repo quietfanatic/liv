@@ -1,6 +1,6 @@
-// This header provides template haccabilities for a few stl types.  The
-// corresponding .cpp file provides haccabilities for non-template types like
-// builtin integers.  If you want to use things like std::vector in haccable
+// This header provides template ayu descriptions for a few stl types.  The
+// corresponding .cpp file provides descriptions for non-template types like
+// builtin integers.  If you want to use things like std::vector in ayu
 // descriptions, include this file.
 
 #pragma once
@@ -17,50 +17,50 @@
 #include "describe.h"
 #include "reference.h"
 
- // std::optional haccifies to null for nullopt and whatever it contains
+ // std::optional serializes to null for nullopt and whatever it contains
  // otherwise.  Yes, that means that this won't serialize properly if the
  // contained object itself serializes to null.  Hopefully this won't be
  // a problem.
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T),
-    HACCABLE_TEMPLATE_TYPE(std::optional<T>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = Type::CppType<T>().name() + "?"s;
         return Str(r);
     }),
     hcb::values(
-        hcb::value(hacc::null, std::optional<T>())
+        hcb::value(ayu::null, std::optional<T>())
     ),
     hcb::delegate(hcb::template ref_func<T>(
         [](std::optional<T>& v)->T&{ return *v; }
     ))
 )
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T),
-    HACCABLE_TEMPLATE_TYPE(std::vector<T>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = "std::vector<"s + Type::CppType<T>().name() + ">"s;
         return Str(r);
     }),
-    hcb::length(hcb::template value_funcs<hacc::usize>(
+    hcb::length(hcb::template value_funcs<ayu::usize>(
         [](const std::vector<T>& v){ return v.size(); },
-        [](std::vector<T>& v, hacc::usize l){ v.resize(l); }
+        [](std::vector<T>& v, ayu::usize l){ v.resize(l); }
     )),
-    hcb::elem_func([](std::vector<T>& v, hacc::usize i){
-        return hacc::Reference(&v.at(i));
+    hcb::elem_func([](std::vector<T>& v, ayu::usize i){
+        return ayu::Reference(&v.at(i));
     })
 )
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T),
-    HACCABLE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = "std::unordered_map<std::string, "s
             + Type::CppType<T>().name() + ">"s;
@@ -81,74 +81,74 @@ HACCABLE_TEMPLATE(
             }
         }
     )),
-    hcb::attr_func([](std::unordered_map<std::string, T>& v, hacc::Str k){
-        return hacc::Reference(&v.at(std::string(k)));
+    hcb::attr_func([](std::unordered_map<std::string, T>& v, ayu::Str k){
+        return ayu::Reference(&v.at(std::string(k)));
     })
 )
 
  // TODO: figure out if we need to do something for const T*
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T),
-    HACCABLE_TEMPLATE_TYPE(T*),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(T*),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = Type::CppType<T>().name() + "*"s;
         return Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
      //  save that until we know we need it.
-    hcb::delegate(hcb::template value_funcs<hacc::Reference>(
+    hcb::delegate(hcb::template value_funcs<ayu::Reference>(
         [](T* const& v){
-            return hacc::Reference(v);
+            return ayu::Reference(v);
         },
-        [](T*& v, hacc::Reference r){
-            if (!r) v = hacc::null;
+        [](T*& v, ayu::Reference r){
+            if (!r) v = ayu::null;
             else v = r.require_address_as<T>();
         }
     ))
 )
 
  // I can't believe this works
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T, hacc::usize n),
-    HACCABLE_TEMPLATE_TYPE(T[n]),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
+    AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = Type::CppType<T>().name()
                         + "["sv + std::to_string(n) + "]"sv;
         return Str(r);
     }),
-    hcb::length(hcb::template constant<hacc::usize>(n)),
-    hcb::elem_func([](T(&v)[n], hacc::usize i){
-        if (i < n) return hacc::Reference(&v[i]);
-        else return hacc::Reference();
+    hcb::length(hcb::template constant<ayu::usize>(n)),
+    hcb::elem_func([](T(&v)[n], ayu::usize i){
+        if (i < n) return ayu::Reference(&v[i]);
+        else return ayu::Reference();
     })
 )
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class T, hacc::usize n),
-    HACCABLE_TEMPLATE_TYPE(std::array<T, n>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = "std::array<"sv + Type::CppType<T>().name()
                         + ", "sv + std::to_string(n) + ">"sv;
         return Str(r);
     }),
-    hcb::length(hcb::template constant<hacc::usize>(n)),
-    hcb::elem_func([](std::array<T, n>& v, hacc::usize i){
-        if (i < n) return hacc::Reference(&v[i]);
-        else return hacc::Reference();
+    hcb::length(hcb::template constant<ayu::usize>(n)),
+    hcb::elem_func([](std::array<T, n>& v, ayu::usize i){
+        if (i < n) return ayu::Reference(&v[i]);
+        else return ayu::Reference();
     })
 )
 
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class A, class B),
-    HACCABLE_TEMPLATE_TYPE(std::pair<A, B>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class A, class B),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = "std::pair<"sv + Type::CppType<A>().name()
                         + ", "sv + Type::CppType<B>().name() + ">"sv;
@@ -161,8 +161,8 @@ HACCABLE_TEMPLATE(
 )
 
  // A bit convoluted but hopefully worth it
-namespace hacc::in {
-    using namespace hacc;
+namespace ayu::in {
+    using namespace ayu;
     using namespace std::literals;
 
      // Recursive template function to construct the type name of the tuple
@@ -195,7 +195,7 @@ namespace hacc::in {
     template <class... Ts>
     struct TupleElems {
         using Tuple = std::tuple<Ts...>;
-        using hcb = hacc::HaccabilityBase<Tuple>;
+        using hcb = ayu::DescribeBase<Tuple>;
         template <class T>
         using Getter = T&(*)(Tuple&);
         template <usize... is>
@@ -212,18 +212,18 @@ namespace hacc::in {
  // Note that although std::tuple removes references from its members,
  // Ts... is still stuck with references if it has them.  So please
  // std::remove_cvref on the params before instantiating this.
-HACCABLE_TEMPLATE(
-    HACCABLE_TEMPLATE_PARAMS(class... Ts),
-    HACCABLE_TEMPLATE_TYPE(std::tuple<Ts...>),
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class... Ts),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::tuple<Ts...>),
     hcb::name([]{
-        using namespace hacc;
+        using namespace ayu;
         using namespace std::literals;
         static String r = "std::tuple<"sv
-            + hacc::in::TupleNames<Ts...>::make()
+            + ayu::in::TupleNames<Ts...>::make()
             + ">"sv;
         return Str(r);
     }),
-    hacc::in::TupleElems<Ts...>::make(
+    ayu::in::TupleElems<Ts...>::make(
         std::index_sequence_for<Ts...>{}
     )
 )

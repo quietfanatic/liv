@@ -1,6 +1,6 @@
 #pragma once
 
- // This is the interface for declaring haccability of types.
+ // This is the interface for describing types to ayu.
  // TODO: add documentation for all the facets.
 
 #include "accessors.h"
@@ -13,16 +13,16 @@
 #include <type_traits>
 #include <typeinfo>
 
-namespace hacc {
+namespace ayu {
 
 template <class T, bool has_members = std::is_class_v<T> || std::is_union_v<T>>
-struct HaccabilityBase;
+struct DescribeBase;
 
 template <class T>
-struct HaccabilityBase<T, false> {
+struct DescribeBase<T, false> {
     template <class... Dcrs>
     static constexpr in::FullDescription<T, Dcrs...> describe (
-        hacc::Str name, const Dcrs&... dcrs
+        ayu::Str name, const Dcrs&... dcrs
     ) {
         return in::make_description<T, Dcrs...>(name, dcrs...);
     }
@@ -108,7 +108,7 @@ struct HaccabilityBase<T, false> {
     ) {
          // Implicit member().
         if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return attr(key, HaccabilityBase<T, true>::member(acr), flags);
+            return attr(key, DescribeBase<T, true>::member(acr), flags);
         }
         else {
             static_assert(
@@ -130,7 +130,7 @@ struct HaccabilityBase<T, false> {
         in::AttrFlags flags = in::AttrFlags(0)
     ) {
         if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return elem(HaccabilityBase<T, true>::member(acr), flags);
+            return elem(DescribeBase<T, true>::member(acr), flags);
         }
         else {
             static_assert(
@@ -261,7 +261,7 @@ struct HaccabilityBase<T, false> {
 
  // This contains functions that aren't valid for scalar types like int
 template <class T>
-struct HaccabilityBase<T, true> : HaccabilityBase<T, false> {
+struct DescribeBase<T, true> : DescribeBase<T, false> {
     template <class T2, class M>
     static constexpr in::MemberAcr2<T, M> member (
         M T2::* mp,
@@ -278,78 +278,78 @@ struct HaccabilityBase<T, true> : HaccabilityBase<T, false> {
     }
 };
 
-} // namespace hacc
+} // namespace ayu
 
  // Stringify name as early as possible to avoid macro expansion
-#define HACCABLE_BEGIN(T) HACCABLE_BEGIN_NAME(T, #T)
-#define HACCABLE_BEGIN_NAME(T, name) \
-namespace haccable { \
+#define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
+#define AYU_DESCRIBE_BEGIN_NAME(T, name) \
+namespace ayu_desc { \
 template <> \
-struct Haccability<T> : hacc::HaccabilityBase<T> { \
+struct Describe<T> : ayu::DescribeBase<T> { \
     static constexpr bool defined = true; \
-    static constexpr auto full_description = hacc::HaccabilityBase<T>::describe(name,
+    static constexpr auto full_description = ayu::DescribeBase<T>::describe(name,
 
-#define HACCABLE_END(T) \
+#define AYU_DESCRIBE_END(T) \
     ); \
-    static const hacc::in::Description* const description; \
+    static const ayu::in::Description* const description; \
 }; \
-const hacc::in::Description* const Haccability<T>::description = \
-    hacc::in::register_description( \
-        full_description.template get<hacc::in::Description>(0) \
+const ayu::in::Description* const Describe<T>::description = \
+    ayu::in::register_description( \
+        full_description.template get<ayu::in::Description>(0) \
     ); \
 }
 
-#define HACCABLE(T, ...) HACCABLE_NAME(T, #T, __VA_ARGS__)
-#define HACCABLE_NAME(T, name, ...) \
-HACCABLE_BEGIN_NAME(T, name) \
+#define AYU_DESCRIBE(T, ...) AYU_DESCRIBE_NAME(T, #T, __VA_ARGS__)
+#define AYU_DESCRIBE_NAME(T, name, ...) \
+AYU_DESCRIBE_BEGIN_NAME(T, name) \
     __VA_ARGS__ \
-HACCABLE_END(T)
+AYU_DESCRIBE_END(T)
 
- // The only way to make an empty haccable list work
-#define HACCABLE_0(T) \
-namespace haccable { \
+ // The only way to make an empty description work
+#define AYU_DESCRIBE_0(T) \
+namespace ayu_desc { \
 template <> \
-struct Haccability<T> : hacc::HaccabilityBase<T> { \
-    using hcb = hacc::HaccabilityBase<T>; \
+struct Describe<T> : ayu::DescribeBase<T> { \
+    using hcb = ayu::DescribeBase<T>; \
     static constexpr bool defined = true; \
-    static constexpr auto full_description = hacc::HaccabilityBase<T>::describe(#T); \
-    static const hacc::in::Description* const description; \
+    static constexpr auto full_description = ayu::DescribeBase<T>::describe(#T); \
+    static const ayu::in::Description* const description; \
 }; \
-const hacc::in::Description* const Haccability<T>::description = \
-    hacc::in::register_description( \
-        full_description.template get<hacc::in::Description>(0) \
+const ayu::in::Description* const Describe<T>::description = \
+    ayu::in::register_description( \
+        full_description.template get<ayu::in::Description>(0) \
     ); \
 }
 
-#define HACCABLE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
-#define HACCABLE_TEMPLATE_TYPE(...) __VA_ARGS__
+#define AYU_DESCRIBE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
+#define AYU_DESCRIBE_TEMPLATE_TYPE(...) __VA_ARGS__
 
-#define HACCABLE_TEMPLATE_BEGIN(params, T) \
-namespace haccable { \
+#define AYU_DESCRIBE_TEMPLATE_BEGIN(params, T) \
+namespace ayu_desc { \
 template params \
-struct Haccability<T> : hacc::HaccabilityBase<T> { \
+struct Describe<T> : ayu::DescribeBase<T> { \
     /* annoying lookup problems in templates */ \
-    using hcb = hacc::HaccabilityBase<T>; \
+    using hcb = ayu::DescribeBase<T>; \
     static constexpr bool defined = true; \
-    static constexpr auto full_description = hcb::describe(hacc::Str(),
+    static constexpr auto full_description = hcb::describe(ayu::Str(),
 
-#define HACCABLE_TEMPLATE_END(params, T) \
+#define AYU_DESCRIBE_TEMPLATE_END(params, T) \
     ); \
-    static const hacc::in::Description* const description; \
+    static const ayu::in::Description* const description; \
 }; \
 template params \
-const hacc::in::Description* const Haccability<T>::description = \
-    hacc::in::register_description( \
-        full_description.template get<hacc::in::Description>(0) \
+const ayu::in::Description* const Describe<T>::description = \
+    ayu::in::register_description( \
+        full_description.template get<ayu::in::Description>(0) \
     ); \
 }
 
-#define HACCABLE_ESCAPE(...) __VA_ARGS__
+#define AYU_DESCRIBE_ESCAPE(...) __VA_ARGS__
 
-#define HACCABLE_TEMPLATE(params, T, ...) \
-HACCABLE_TEMPLATE_BEGIN(HACCABLE_ESCAPE(params), HACCABLE_ESCAPE(T)) \
+#define AYU_DESCRIBE_TEMPLATE(params, T, ...) \
+AYU_DESCRIBE_TEMPLATE_BEGIN(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T)) \
     __VA_ARGS__ \
-HACCABLE_TEMPLATE_END(HACCABLE_ESCAPE(params), HACCABLE_ESCAPE(T))
+AYU_DESCRIBE_TEMPLATE_END(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
 
-#define HACCABLE_INSTANTIATE(T) \
-static_assert(haccable::Haccability<T>::description);
+#define AYU_DESCRIBE_INSTANTIATE(T) \
+static_assert(ayu_desc::Describe<T>::description);

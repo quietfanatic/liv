@@ -4,7 +4,7 @@
 
 #include "tree-internal.h"
 
-namespace hacc::in {
+namespace ayu::in {
 
 template <class C>
 const C* offset_get (const void* base, uint16 offset) {
@@ -20,7 +20,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFINT64: return &((const ValueDcrWith<void*, int64, false>*)this)->name;
             case VFDOUBLE: return &((const ValueDcrWith<void*, double, false>*)this)->name;
             case VFCONSTCHARP: return &((const ValueDcrWith<void*, const char*, false>*)this)->name;
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     const Mu* get_value () const {
@@ -31,7 +31,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFINT64: return ((const ValueDcrWith<Mu, int64, true>*)this)->ptr;
             case VFDOUBLE: return ((const ValueDcrWith<Mu, double, true>*)this)->ptr;
             case VFCONSTCHARP: return ((const ValueDcrWith<Mu, const char*, true>*)this)->ptr;
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
         else switch (form) {
             case VFNULL: return (const Mu*)&((const ValueDcrWith<void*, Null, false>*)this)->value;
@@ -39,7 +39,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFINT64: return (const Mu*)&((const ValueDcrWith<void*, int64, false>*)this)->value;
             case VFDOUBLE: return (const Mu*)&((const ValueDcrWith<void*, double, false>*)this)->value;
             case VFCONSTCHARP: return (const Mu*)&((const ValueDcrWith<void*, const char*, false>*)this)->value;
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     Tree value_to_tree (const ValuesDcr<Mu>* values, const Mu& v) const {
@@ -50,7 +50,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFINT64: return Tree(*(const int64*)name());
                 case VFDOUBLE: return Tree(*(const double*)name());
                 case VFCONSTCHARP: return Tree(*(const char**)name());
-                default: HACC_INTERNAL_ERROR();
+                default: AYU_INTERNAL_ERROR();
             }
         }
         else return Tree();
@@ -75,7 +75,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFCONSTCHARP:
                 return tree.form() == STRING
                     && tree.data->as_known<String>() == *(const char*const*)name();
-            default: HACC_INTERNAL_ERROR();
+            default: AYU_INTERNAL_ERROR();
         }
     }
     const Mu* tree_to_value (Tree tree) const {
@@ -191,4 +191,4 @@ struct DescriptionPrivate : Description {
     }
 };
 
-} // namespace hacc::in
+} // namespace ayu::in
