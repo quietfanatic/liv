@@ -2,7 +2,8 @@
 
 #include <SDL2/SDL_video.h>
 #include "app.h"
-#include "view.h"
+#include "book.h"
+#include "settings.h"
 
 namespace app::command {
 

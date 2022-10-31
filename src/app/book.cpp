@@ -44,7 +44,36 @@ void Book::draw () {
     glClear(GL_COLOR_BUFFER_BIT);
     if (valid_page_no(current_page_no)) {
         auto& page = *pages[current_page_no-1];
-        Rect page_position = view.page_position(page.size, window.size);
+        Vec scale;
+         // Layout page
+        switch (view.fit_mode) {
+            case FIT: {
+                 // Fit to screen
+                 // slope = 1/aspect
+                view.zoom = slope(page.size) > slope(window.size)
+                    ? float(window.size.y) / page.size.y
+                    : float(window.size.x) / page.size.x;
+                scale = {view.zoom, view.zoom};
+                view.offset = (window.size - page.size) / 2;
+                break;
+            }
+            case STRETCH: {
+                 // Zoom isn't meaningful in stretch mode, but set it anyway
+                view.zoom = slope(page.size) > slope(window.size)
+                    ? float(window.size.y) / page.size.y
+                    : float(window.size.x) / page.size.x;
+                scale = window.size / page.size;
+                view.offset = {0, 0};
+                break;
+            }
+            case MANUAL: {
+                 // Use whatever zoom and offset already are
+                scale = {view.zoom, view.zoom};
+                break;
+            }
+            default: AA(false);
+        }
+        Rect page_position = {view.offset, view.offset + page.size * scale};
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
          // Draw

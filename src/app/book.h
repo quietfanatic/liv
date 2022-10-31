@@ -6,7 +6,7 @@
 #include <vector>
 #include "../base/wind/window.h"
 #include "../base/uni/common.h"
-#include "view.h"
+#include "settings.h"
 
 namespace app {
 struct App;

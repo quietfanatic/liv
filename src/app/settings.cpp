@@ -7,6 +7,23 @@ namespace app {
 
 } using namespace app;
 
+AYU_DESCRIBE(app::FitMode,
+    values(
+        value("fit", FIT),
+        value("stretch", STRETCH),
+        value("manual", MANUAL)
+    )
+)
+
+AYU_DESCRIBE(app::View,
+    attrs(
+        attr("fit_mode", &View::fit_mode, optional),
+        attr("zoom", &View::zoom, optional),
+        attr("offset", &View::offset, optional),
+        attr("fullscreen", &View::fullscreen, optional)
+    )
+)
+
 AYU_DESCRIBE(app::Mapping,
     elems(
         elem(&Mapping::input),
