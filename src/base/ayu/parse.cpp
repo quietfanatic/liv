@@ -148,6 +148,7 @@ struct Parser {
 
      // This is so horrible, wish I had from_chars
      // TODO: support hexadecimal
+     // TODO: from_chars is available now, use it!
     Tree got_number () {
         String word = got_word();
         if (word == "+nan" || word == "-nan") return Tree(0.0/0.0);
