@@ -6,11 +6,11 @@
 
 namespace ayu {
 
+ // TODO: Reverse this and use a PRETTY flag
 enum PrintFlags {
     COMPACT = 1,
 };
 
- // The filename parameter is used for error reporting.
 String tree_to_string (const Tree&, PrintFlags flags = PrintFlags(0));
 
 void string_to_file (Str, Str filename);

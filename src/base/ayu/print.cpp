@@ -12,6 +12,7 @@ using namespace std::string_literals;
 namespace ayu {
 using namespace in;
 
+ // TODO: Keep newlines in non-compact layout?
 static String print_quoted (Str s) {
     String r = "\""s;
     for (auto p = s.begin(); p != s.end(); p++)

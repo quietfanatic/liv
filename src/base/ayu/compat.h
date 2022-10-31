@@ -1,5 +1,6 @@
  // This module contains cross-system compatibility functions, mostly UTF-8
- // related functions.
+ // related functions for use on Windows.  There are apparently ways to get
+ // Windows programs to use UTF-8 encoding for IO, but I can't get it to work.
 
 #pragma once
 
@@ -12,14 +13,14 @@ namespace ayu {
 ///// UTF-8/UTF-16 CONVERSION
 
  // UTF-8/UTF-16 conversion functions.  These are best-effort, and never throw
- //  errors, instead passing invalid characters through.  Unmatched UTF-8 bytes
- //  and overlong sequences are treated as Latin-1 characters, and unmatched
- //  UTF-16 surrogtes are encoded as-is into UTF-8.   UTF-16 is native-endian.
+ // errors, instead passing invalid characters through.  Unmatched UTF-8 bytes
+ // and overlong sequences are treated as Latin-1 characters, and unmatched
+ // UTF-16 surrogtes are encoded as-is into UTF-8.   UTF-16 is native-endian.
 
- // Converts a UTF-8 string into a native-endian UTF-16 string.
+ // Convert a UTF-8 string into a native-endian UTF-16 string.
 String16 to_utf16 (Str);
 
- // Converts a native-endian UTF-16 string into a UTF=8 string.
+ // Convert a native-endian UTF-16 string into a UTF=8 string.
 String from_utf16 (Str16);
 
 ///// UTF-8 IO FUNCTIONS
@@ -27,8 +28,8 @@ String from_utf16 (Str16);
  // fopen but UTF-8 even on Windows
 std::FILE* fopen_utf8 (const char* filename, const char* mode);
 
- // Print UTF-8 formatted text to a file.  May not fuse starting or trailing
- //  umatched UTF-8 bytes between calls.
+ // Print UTF-8 formatted text to a file.  Might not fuse starting or trailing
+ // umatched UTF-8 bytes between calls.
 void fprint_utf8 (std::FILE* f, Str s);
  // Prints to stdout and flushes.
 void print_utf8 (Str s);

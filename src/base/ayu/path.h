@@ -18,13 +18,13 @@
 namespace ayu {
 
  // Paths are a reference-counted pointer, so are cheap to copy.  Paths are
- //  immutable once created.
+ // immutable once created.
 struct Path {
     in::RCP<in::PathData, in::delete_PathData> data;
      // Constructs a path to the root.
     Path () : data(null) { }
      // Constructs a path based on another one with an attribute key or an
-     //  element index.
+     // element index.
     Path (Path parent, String&& key);
     Path (Path parent, Str key) : Path(parent, String(key)) { }
     Path (Path parent, usize index);

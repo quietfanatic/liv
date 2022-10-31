@@ -20,7 +20,7 @@
          '!': case '$': case '%': case '+': case '-': case '.': \
     case '/': case '<': case '>': case '?': case '@': case '^': \
     case '_': case '~': case '#': case '&': case '*': case '='
-
+ // TODO: Where does ';' go?
 #define ANY_RESERVED_SYMBOL \
     '\\': case '`': case '(': case ')': case '\''
 

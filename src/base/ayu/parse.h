@@ -6,6 +6,7 @@
 
 namespace ayu {
 
+ // The filename parameter is used for error reporting.
 Tree tree_from_string (Str, Str filename = "");
 
 String string_from_file (Str filename);

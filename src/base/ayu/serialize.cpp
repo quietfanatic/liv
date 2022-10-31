@@ -359,8 +359,9 @@ Reference item_maybe_attr (const Reference& item, Str key) {
     if (desc->accepts_object()) {
         if (auto attrs = desc->attrs()) {
              // Note: This will likely be called once for each attr, making it
-             //  O(N^2) over the number of attrs.  If we want we could optimize for
-             //  large N by keeping a temporary map...somewhere
+             // O(N^2) over the number of attrs.  If we want we could optimize for
+             // large N by keeping a temporary map...somewhere
+             //
              // First check direct attrs
             for (uint i = 0; i < attrs->n_attrs; i++) {
                 auto attr = attrs->attr(i);
@@ -526,7 +527,10 @@ String show_reference (const Reference& ref) {
     }
 }
 
-void recursive_scan (const Reference& item, Path path, Callback<void(const Reference&, Path)> cb) {
+void recursive_scan (
+    const Reference& item, Path path,
+    Callback<void(const Reference&, Path)> cb
+) {
     if (!item) return;
     cb(item, path);
 

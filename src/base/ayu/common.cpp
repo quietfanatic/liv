@@ -41,21 +41,25 @@ namespace X {
 
 namespace in {
     void unrecoverable_exception (std::exception& e, Str when) {
-        std::cerr << "Unrecoverable exception " << when << ": " << e.what() << std::endl;
+        std::cerr << "Unrecoverable exception " << when
+                  << ": " << e.what() << std::endl;
         std::abort();
     }
-    void internal_error (const char* function, const char* filename, uint line) {
-        std::cerr << "Internal error in " << function << " at " << filename << ":" << line << std::endl;
+    void internal_error (
+        const char* function, const char* filename, uint line
+    ) {
+        std::cerr << "Internal error in " << function
+                  << " at " << filename << ":" << line << std::endl;
         std::abort();
     }
 }
 
 } using namespace ayu;
 
-
 AYU_DESCRIBE(ayu::X::GenericError,
     elems( elem(&X::GenericError::mess) )
 )
+ // TODO: Use attrs instead of elems
 AYU_DESCRIBE(ayu::X::OpenFailed,
     elems(
         elem(&X::OpenFailed::filename),

@@ -106,19 +106,23 @@ static bool operator != (Type a, Type b) {
 
 namespace X {
     struct TypeError : LogicError { };
+     // TODO: This is unused, get rid of it
     struct WrongType : TypeError {
         Type expected;
         Type got;
         WrongType (Type e, Type g) : expected(e), got(g) { }
     };
+     // Tried to default construct a type that has no default constructor.
     struct CannotDefaultConstruct : TypeError {
         Type type;
         CannotDefaultConstruct (Type t) : type(t) { }
     };
+     // Tried to construct or destroy a type that has no destructor.
     struct CannotDestruct : TypeError {
         Type type;
         CannotDestruct (Type t) : type(t) { }
     };
+     // Tried to coerce between types that can't be coerced.
     struct CannotCoerce : TypeError {
         Type from;
         Type to;

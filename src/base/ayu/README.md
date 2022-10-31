@@ -1,12 +1,14 @@
-AYU - All Your data is belong to yoU
-=======
+AYU
+===
+
+#### All Your data is belong to yoU
 
 This library includes:
  - A readable and writable structured data language
  - A serialization and reflection system for C++
  - A linked resource management system
 
-##AYU Data Language
+#### AYU Data Language
 
 The AYU data language is similar to JSON but with the following differences:
  - Commas are not required.
@@ -14,10 +16,10 @@ The AYU data language is similar to JSON but with the following differences:
    syntactic characters, excepting null, true, and false.
  - Comments are allowed starting with # and going to the end of the line.
  - There are backreferences like in YAML.  Preceding an item with &name will
-   allow a copy of the same item to be inserted later with *name.  Using &name
+   allow a copy of the same item to be inserted later with \*name.  Using &name
    followed by a : and then an item will declare a backreference to that item
    without inserting it into the document at that point.  Backreferences are
-   not semantically visible; [&foo 1 *foo] is exactly equivalent to [1 1].
+   not semantically visible; [&foo 1 \*foo] is exactly equivalent to [1 1].
    Backreferences can be used as the keys of attributes in objects if they
    refer to strings.
  - Special floating point numbers +inf, -inf, and +nan are available.  The sign
@@ -39,10 +41,10 @@ typical way to serialize an object that can contain multiple types is to use an
 array with two elements, the first of which is the type name, and the second
 of which is the value.
 
-##Serialization library
+#### Serialization library
 
 Documentation pending, but see describe.h
 
-##Resource management
+#### Resource management
 
 Documentation pending, but see resource.h

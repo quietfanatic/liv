@@ -1,4 +1,4 @@
- // This defines the main Tree datatype which represents an ayu structure.
+ // This defines the main Tree datatype which represents an AYU structure.
  // Trees are immutable and reference-counted, so copying is cheap, but they
  // can't be accessed on multiple threads at a time.
 
@@ -75,10 +75,10 @@ struct Tree {
     explicit operator const Object& () const;
 
      // Returns null if the invocant is not an OBJECT or does not have an
-     //  attribute with the given key.
+     // attribute with the given key.
     Tree* attr (Str key) const;
      // Returns null if the invocant is not an ARRAY or does not have an
-     //  element at the given index.
+     // element at the given index.
     Tree* elem (usize index) const;
 
      // Throws if the tree is not an object or doesn't have that attribute.
@@ -87,20 +87,23 @@ struct Tree {
     Tree operator[] (usize index) const;
 };
 
- // Test for equality.  Trees of disparate forms are considered unequal.
- //  Objects are equal if all their attributes are the same; the attributes
- //  don't have to be in the same order.  Unlike with normal floating point
- //  comparisons, Tree(NAN) == Tree(NAN).
+ // Test for equality.  Trees of different forms are considered unequal.
+ // Objects are equal if all their attributes are the same; the attributes
+ // don't have to be in the same order.  Unlike with normal floating point
+ // comparisons, Tree(NAN) == Tree(NAN).
 bool operator == (const Tree& a, const Tree& b);
- // Theoretically we could add < and friends, but it's a pain to program
+ // Theoretically we could add < and friends, but it's a pain to program.
 static bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
 
 namespace X {
+     // Tried to treat a tree as though it's a form which it's not.
     struct WrongForm : LogicError {
         Form form;
         Tree tree;
         WrongForm (Form f, Tree t) : form(f), tree(t) { }
     };
+     // Tried to extract a number from a tree, but the tree's number won't fit
+     // into the requested type.
     struct CantRepresent : LogicError {
         String type_name;
         Tree tree;

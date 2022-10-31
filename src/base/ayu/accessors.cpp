@@ -27,7 +27,7 @@ void RefFuncAcr0::_access (const Accessor* acr, AccessOp, Mu& from, Callback<voi
 }
 Mu* RefFuncAcr0::_address (const Accessor* acr, Mu& from) {
      // It's the programmer's responsibility to know whether they're
-     //  allowed to do this or not.
+     // allowed to do this or not.
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);
     return &(self->f)(from);
 }

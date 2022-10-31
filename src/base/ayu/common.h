@@ -1,5 +1,5 @@
 // This module contains various types and exceptions that are used throughout
-// the library
+// the library.
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <utility>  // pair
+#include <utility>
 #include <vector>
 
 namespace ayu {
@@ -49,7 +49,7 @@ struct Type;
  // (you can also take String&& as a parameter if you're going to store it)
 using String = std::string;
 using Str = std::string_view;
- // For compatibility, but ayu natively works with UTF-8
+ // Ayu works natively with UTF-8, but can convert to and from UTF-16.
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
  // Dunno why the standard library doesn't have this
@@ -61,7 +61,8 @@ using Pair = std::pair<String, Tree>;
 using Object = std::vector<Pair>;
 
  // A super lightweight callback class with reference semantics (std::function
- //  has value semantics and can be copied and moved, so it's way bigger.)
+ // has value semantics and can be copied and moved, so it's way bigger.)
+ // TODO: We should probably be able to make this movable though.
 template <class> struct CallbackV;
 template <class Ret, class... Args>
 struct CallbackV<Ret(Args...)> {
@@ -77,7 +78,7 @@ struct CallbackV<Ret(Args...)> {
         f(&f)
     { }
      // Looks like there's no way to avoid an extra copy of by-value args.
-     //  (std::function does it too)
+     // (std::function does it too)
     Ret operator () (Args... args) const {
         return wrapper(f, std::forward<Args>(args)...);
     }
@@ -96,7 +97,7 @@ namespace X {
      // Base class for ayu-related errors.
     struct Error : std::exception {
          // Gotta cache the generated error message or the exception handling
-         //  system will reference stack garbage.
+         // system will reference stack garbage.
         mutable String mess_cache;
          // Calls item_to_string on the most derived type
         const char* what () const noexcept override;
@@ -128,6 +129,7 @@ namespace X {
 }
 
 ///// INTERNAL STUFF THAT HAS TO BE IN THE HEADER ANYWAY
+// TODO: Put this in internal folder
 
 namespace in {
     struct DocumentData;
@@ -144,7 +146,8 @@ namespace in {
         mutable uint32 ref_count = 0;
     };
      // T must be BINARY-COMPATIBLE with RefCounted.
-     // This means RefCounted must be the FIRST BASE and NO VIRTUAL METHODS
+     // This means RefCounted must be the FIRST BASE and NO VIRTUAL METHODS.
+     // I haven't thought of a way to enforce this yet.
      // The benefit to this is that T need not be complete to use this class.
     template <class T, void(& deleter )(T*)>
     struct RCP {
@@ -204,8 +207,11 @@ namespace in {
     [[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
      // Some internal error has occured, such as an invalid enum value, and i
      //  isn't safe to continue execution.
-    [[noreturn]] void internal_error (const char* function, const char* filename, uint line);
-#define AYU_INTERNAL_ERROR() ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
+    [[noreturn]] void internal_error (
+        const char* function, const char* filename, uint line
+    );
+#define AYU_INTERNAL_ERROR() \
+    ::ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
 }
 
 }  // namespace ayu

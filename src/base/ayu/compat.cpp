@@ -9,6 +9,8 @@ using namespace std::literals;
 
 namespace ayu {
 
+ // Yes, I did write my own UTF conversion routines instead of taking a
+ // dependency on something else.
 static usize to_utf16_buffer (char16_t* buffer, Str s) {
     char16_t* p = buffer;
     for (usize i = 0; i < s.size(); i++) {
@@ -77,8 +79,8 @@ String16 to_utf16 (Str s) {
     }
     else {
          // Modern virtual memory systems mean that for big enough allocations,
-         //  even if we vastly overallocate we won't actually use much more
-         //  physical RAM than we write to.
+         // even if we vastly overallocate we won't actually use much more
+         // physical RAM than we write to.
         auto buffer = (char16_t*)malloc(sizeof(char16_t) * buffer_size);
         usize len = to_utf16_buffer(buffer, s);
         auto r = String16(buffer, len);
@@ -139,8 +141,8 @@ String from_utf16 (Str16 s) {
     }
     else {
          // Modern virtual memory systems mean that for big enough allocations,
-         //  even if we vastly overallocate we won't actually use much more
-         //  physical RAM than we write to.
+         // even if we vastly overallocate we won't actually use much more
+         // physical RAM than we write to.
         auto buffer = (char*)malloc(sizeof(char) * buffer_size);
         usize len = from_utf16_buffer(buffer, s);
         auto r = String(buffer, len);
@@ -185,7 +187,9 @@ void warn_utf8 (Str s) {
 
 int remove_utf8 (const char* filename) {
 #ifdef _WIN32
-    return _wremove(reinterpret_cast<const wchar_t*>(to_utf16(filename).c_str()));
+    return _wremove(
+        reinterpret_cast<const wchar_t*>(to_utf16(filename).c_str())
+    );
 #else
     return remove(filename);
 #endif

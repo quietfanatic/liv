@@ -14,7 +14,7 @@ AYU_DESCRIBE(type, \
 AYU_DESCRIBE_SCALAR(std::nullptr_t)
 AYU_DESCRIBE_SCALAR(bool)
 AYU_DESCRIBE_SCALAR(char)
- // Even though these are in ayu::, serialize them without the prefix.
+ // Even though these are in ayu::, serialize them without the namespace.
 AYU_DESCRIBE_SCALAR(int8)
 AYU_DESCRIBE_SCALAR(uint8)
 AYU_DESCRIBE_SCALAR(int16)
@@ -35,7 +35,8 @@ AYU_DESCRIBE(std::u16string,
     to_tree([](const std::u16string& v){ return Tree(v); }),
     from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
 )
- // Str and const char* are not ayuable because they're reference types.
+ // Str and const char* are not describable because they're reference types, so
+ // their ownership is ambiguous.
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"

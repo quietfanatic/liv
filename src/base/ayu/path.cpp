@@ -49,11 +49,15 @@ const Path* Path::parent () const {
     return data ? &data->parent : null;
 }
 const String* Path::key () const {
-    if (data && data->form == KEY) return &static_cast<KeyPath*>(data.p)->key;
+    if (data && data->form == KEY) {
+        return &static_cast<KeyPath*>(data.p)->key;
+    }
     else return null;
 }
 const usize* Path::index () const {
-    if (data && data->form == INDEX) return &static_cast<IndexPath*>(data.p)->index;
+    if (data && data->form == INDEX) {
+        return &static_cast<IndexPath*>(data.p)->index;
+    }
     else return null;
 }
 
@@ -76,6 +80,27 @@ bool operator == (const Path& a, const Path& b) {
             == static_cast<IndexPath*>(b.data.p)->index;
     }
 }
+// TODO: replace with this (slightly more efficient and idiomatic)
+//bool operator == (const Path& a, const Path& b) {
+//    if (a.data == b.data) return true;
+//    if (!a.data || !b.data) return false;
+//    if (a.data->length != b.data->length) return false;
+//    if (a.data->form != b.data->form) return false;
+//    switch (a.data->>form) {
+//        case KEY:
+//            auto ka = static_cast<KeyPath*>(a.data.p);
+//            auto kb = static_cast<KeyPath*>(b.data.p);
+//            if (ka->key != kb->key) return false;
+//            break;
+//        case INDEX:
+//            auto ia = static_cast<IndexPath*>(a.data.p);
+//            auto ib = static_cast<IndexPath*>(b.data.p);
+//            if (ia->index != ib->index) return false;
+//            break;
+//    }
+//     // Finally recurse
+//    return a.data->parent == b.data->parent;
+//}
 
 } using namespace ayu;
 
@@ -129,3 +154,4 @@ AYU_DESCRIBE(ayu::Path,
     })
 );
 
+// TODO: tests

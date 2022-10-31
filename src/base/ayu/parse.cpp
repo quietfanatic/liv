@@ -22,9 +22,9 @@ struct Parser {
     const char* p;
     const char* end;
 
-     // std::unordered_map is apparently slow, so we'll use std::vector instead.
-     //  We'll rethink if we ever need to parse a document with a large amount
-     //  of refs (I can't imagine for my use cases having more than 20 or so).
+     // std::unordered_map is supposedly slow, so we'll use std::vector instead.
+     // We'll rethink if we ever need to parse a document with a large amount
+     // of refs (I can't imagine for my use cases having more than 20 or so).
     Object refs;
 
     Parser (Str s, Str filename = "") :

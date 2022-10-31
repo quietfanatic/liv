@@ -93,13 +93,14 @@ struct ValuesDcrPrivate : ValuesDcr<Mu> {
 struct AttrDcrPrivate : AttrDcr<Mu> {
     const Accessor* acr () const {
          // We have to take a somewhat roundabout way to get a pointer to acr,
-         //  because we can't instantiate AttrDcrWith<Mu, Accessor>
-         //  because Accessor is abstract, and we can't pretend it's a
-         //  concrete Accessor type because the optimizer will devirtualize
-         //  method calls incorrectly.
+         // because we can't instantiate AttrDcrWith<Mu, Accessor> because
+         // Accessor is abstract, and we can't pretend it's a concrete Accessor
+         // type because then the optimizer will devirtualize method calls
+         // incorrectly.
+         //
          // The Accessor should be right after the attr base in memory, without
-         //  any padding.  This should be the case if vtable pointers have the same
-         //  alignment as Str and there's nothing else funny going on.
+         // any padding.  This should be the case if vtable pointers have the
+         // same alignment as Str and there's nothing else funny going on.
         static_assert(sizeof(AttrDcr<Mu>) % alignof(Accessor) == 0);
         return (const Accessor*)((char*)this + sizeof(AttrDcr<Mu>));
     }
@@ -114,7 +115,7 @@ struct AttrsDcrPrivate : AttrsDcr<Mu> {
 struct ElemDcrPrivate : ElemDcr<Mu> {
     const Accessor* acr () const {
          // This is much easier than attrs...as long as we don't add
-         //  anything to ElemDcr...
+         // anything to ElemDcr...
         return (const Accessor*)this;
     }
 };
@@ -172,6 +173,9 @@ struct DescriptionPrivate : Description {
     bool accepts_array () const {
         return elems_offset || length_offset;
     }
+     // Figure out whether this description prefers being serialized as an array
+     // or as an object.  Whichever has a related facet specified first will
+     // be picked.
     Form preference () const {
         uint16 smallest_offset = 0;
         Form preferred = NULLFORM;

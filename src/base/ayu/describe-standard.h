@@ -74,7 +74,9 @@ AYU_DESCRIBE_TEMPLATE(
             }
             return r;
         },
-        [](std::unordered_map<std::string, T>& v, const std::vector<std::string>& ks){
+        [](std::unordered_map<std::string, T>& v,
+           const std::vector<std::string>& ks
+        ){
             v.clear();
             for (auto& k : ks) {
                 v.emplace(k, T());
@@ -97,7 +99,7 @@ AYU_DESCRIBE_TEMPLATE(
         return Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
-     //  save that until we know we need it.
+     // save that until we know we need it.
     hcb::delegate(hcb::template value_funcs<ayu::Reference>(
         [](T* const& v){
             return ayu::Reference(v);
@@ -202,7 +204,9 @@ namespace ayu::in {
         static constexpr auto make (std::index_sequence<is...>) {
             return hcb::elems(
                 hcb::elem(hcb::ref_func(
-                    Getter<typename std::tuple_element<is, Tuple>::type>(&std::get<is, Ts...>)
+                    Getter<typename std::tuple_element<is, Tuple>::type>(
+                        &std::get<is, Ts...>
+                    )
                 ))...
             );
         }

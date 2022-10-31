@@ -17,23 +17,23 @@ namespace ayu { struct Reference; }
 
 namespace ayu::in {
 
-// The goal of this module is to allow descriptions to be laid out in memory
-//  at compile time.  Thanks to recent C++ standards, this is quite possible.
-//  The caveat is that it is not really possible to generate static pointers
-//  to static objects.  To get around this, we are representing all "pointers"
-//  as offsets from the beginning of the description object.
+// The goal of this module is to allow descriptions to be laid out in memory at
+// compile time.  Thanks to recent C++ standards, this is quite possible.
+// The caveat is that it is not really possible to generate static pointers to
+// static objects.  To get around this, we are representing all "pointers" as
+// offsets from the beginning of the description object.
 
 ///// MEMORY LAYOUT
 
  // To compare addresses of disparate types, we need to cast them to a common
- //  type.  reinterpret_cast is not allowed in constexprs (and in recent gcc
- //  versions, neither are C-style casts), but static_cast to a common base
- //  type is.
+ // type.  reinterpret_cast is not allowed in constexprs (and in recent gcc
+ // versions, neither are C-style casts), but static_cast to a common base
+ // type is.
 struct ComparableAddress { };
 static_assert(sizeof(ComparableAddress) == 1);
 
- // [[no_unique_address]] causes internal compiler errors in my current version
- //  of GCC (9.1), so we're still relying on this workaround.
+ // [[no_unique_address]] causes internal compiler errors in GCC 9.1, so we're
+ // still relying on this classical workaround.  TODO: Undo workaround.
  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98463
 template <size_t, class Head, bool = std::is_empty_v<Head>>
 struct CatHead;
@@ -79,7 +79,8 @@ struct Cat<Head, Tail...> : CatHead<sizeof...(Tail), Head>, Cat<Tail...> {
 
     template <class T>
     static constexpr uint16 count () {
-        return Cat<Tail...>::template count<T>() + (std::is_base_of<T, Head>::value ? 1 : 0);
+        return Cat<Tail...>::template count<T>()
+            + (std::is_base_of<T, Head>::value ? 1 : 0);
     }
 };
 
@@ -122,14 +123,14 @@ static constexpr Destructor* destruct_p<
 > = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
- //  values() absolutely requires them.
+ // values() absolutely requires them.
 template <class T>
 static constexpr bool(* compare_p )(const T&, const T&) =
-[](const T& a, const T& b) { return a == b; };
+    [](const T& a, const T& b) { return a == b; };
 
 template <class T>
 static constexpr void(* assign_p )(T&, const T&) =
-[](T& a, const T& b) { a = b; };
+    [](T& a, const T& b) { a = b; };
 
 ///// DESCRIPTORS
 
@@ -215,8 +216,9 @@ struct ValuesDcrWith : ValuesDcr<T> {
         values(vs...)
     {
         for (uint i = 0; i < sizeof...(Values); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(values.template get<ValueDcr<T>>(i))
-                       - static_cast<const ComparableAddress*>(this);
+            offsets[i] = static_cast<const ComparableAddress*>(
+                values.template get<ValueDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
         }
     }
     constexpr ValuesDcrWith (
@@ -228,8 +230,9 @@ struct ValuesDcrWith : ValuesDcr<T> {
         values(vs...)
     {
         for (uint i = 0; i < sizeof...(Values); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(values.template get<ValueDcr<T>>(i))
-                       - static_cast<const ComparableAddress*>(this);
+            offsets[i] = static_cast<const ComparableAddress*>(
+                values.template get<ValueDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
         }
     }
 };
@@ -261,8 +264,9 @@ struct AttrsDcrWith : AttrsDcr<T> {
         attrs(as...)
     {
         for (uint i = 0; i < sizeof...(Attrs); i++) {
-            offsets[i] = static_cast<ComparableAddress*>(attrs.template get<AttrDcr<T>>(i))
-                       - static_cast<ComparableAddress*>(this);
+            offsets[i] = static_cast<ComparableAddress*>(
+                attrs.template get<AttrDcr<T>>(i)
+            ) - static_cast<ComparableAddress*>(this);
         }
     }
 };
@@ -291,8 +295,9 @@ struct ElemsDcrWith : ElemsDcr<T> {
         elems(es...)
     {
         for (uint i = 0; i < sizeof...(Elems); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(elems.template get<ElemDcr<T>>(i))
-                       - static_cast<const ComparableAddress*>(this);
+            offsets[i] = static_cast<const ComparableAddress*>(
+                elems.template get<ElemDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
         }
     }
 };
@@ -302,7 +307,9 @@ struct KeysDcr : Descriptor<T> { };
 template <class T, class Acr>
 struct KeysDcrWith : KeysDcr<T> {
     static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-    static_assert(std::is_same_v<typename Acr::AccessorToType, std::vector<String>>);
+    static_assert(std::is_same_v<
+        typename Acr::AccessorToType, std::vector<String>
+    >);
     Acr acr;
     constexpr KeysDcrWith (const Acr& a) :
         acr(constexpr_acr(a))
@@ -374,7 +381,10 @@ template <class T, class...>
 struct AssertAllDcrs;
 template <class T, class Head, class... Tail>
 struct AssertAllDcrs<T, Head, Tail...> {
-    static_assert(std::is_base_of_v<Descriptor<T>, Head>, "Element in AYU_DESCRIBE description is not a descriptor for this type");
+    static_assert(
+        std::is_base_of_v<Descriptor<T>, Head>,
+        "Element in AYU_DESCRIBE description is not a descriptor for this type"
+    );
 };
 template <class T>
 struct AssertAllDcrs<T> { };
@@ -389,7 +399,10 @@ template <class T, class... Dcrs>
 constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
     AssertAllDcrs<T, Dcrs...>{};
     using Desc = FullDescription<T, Dcrs...>;
-    static_assert(sizeof(Desc) < 65536, "AYU_DESCRIBE description is too large (>64k)");
+    static_assert(
+        sizeof(Desc) < 65536,
+        "AYU_DESCRIBE description is too large (>64k)"
+    );
 
     Desc desc (
         Description{},
@@ -399,36 +412,43 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     auto& header = *desc.template get<Description>(0);
     header.cpp_type = &typeid(T);
     header.cpp_size = sizeof(T);
-     // My stdlib is missing aligned_alloc so it's easier to not deal with alignment
-    static_assert(alignof(T) <= alignof(std::max_align_t), "Types with larger than standard alignment are not currently supported, sorry.");
+     // Some stdlibs are missing aligned_alloc so it's easier to not deal with alignment
+    static_assert(
+        alignof(T) <= alignof(std::max_align_t),
+        "Types with larger than standard alignment are not currently supported, sorry."
+    );
     header.default_construct = default_construct_p<T>;
     header.destruct = destruct_p<T>;
     header.name = name;
 
      // template lambdas please?
-#define APPLY_OFFSET(dcr_name, dcr_type) \
+#define AYU_APPLY_OFFSET(dcr_name, dcr_type) \
     { \
         constexpr uint16 count = Desc::template count<dcr_type<T>>(); \
-        static_assert(count <= 1, "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description"); \
+        static_assert( \
+            count <= 1, \
+            "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description" \
+        ); \
         if constexpr (count) { \
-            header.dcr_name##_offset = \
-                static_cast<ComparableAddress*>(desc.template get<dcr_type<T>>(0)) \
-              - static_cast<ComparableAddress*>(&header); \
+            header.dcr_name##_offset = static_cast<ComparableAddress*>( \
+                desc.template get<dcr_type<T>>(0) \
+            ) - static_cast<ComparableAddress*>(&header); \
         } \
     }
-    APPLY_OFFSET(name, NameDcr)
-    APPLY_OFFSET(to_tree, ToTreeDcr)
-    APPLY_OFFSET(from_tree, FromTreeDcr)
-    APPLY_OFFSET(swizzle, SwizzleDcr)
-    APPLY_OFFSET(init, InitDcr)
-    APPLY_OFFSET(values, ValuesDcr)
-    APPLY_OFFSET(attrs, AttrsDcr)
-    APPLY_OFFSET(elems, ElemsDcr)
-    APPLY_OFFSET(keys, KeysDcr)
-    APPLY_OFFSET(attr_func, AttrFuncDcr)
-    APPLY_OFFSET(length, LengthDcr)
-    APPLY_OFFSET(elem_func, ElemFuncDcr)
-    APPLY_OFFSET(delegate, DelegateDcr)
+    AYU_APPLY_OFFSET(name, NameDcr)
+    AYU_APPLY_OFFSET(to_tree, ToTreeDcr)
+    AYU_APPLY_OFFSET(from_tree, FromTreeDcr)
+    AYU_APPLY_OFFSET(swizzle, SwizzleDcr)
+    AYU_APPLY_OFFSET(init, InitDcr)
+    AYU_APPLY_OFFSET(values, ValuesDcr)
+    AYU_APPLY_OFFSET(attrs, AttrsDcr)
+    AYU_APPLY_OFFSET(elems, ElemsDcr)
+    AYU_APPLY_OFFSET(keys, KeysDcr)
+    AYU_APPLY_OFFSET(attr_func, AttrFuncDcr)
+    AYU_APPLY_OFFSET(length, LengthDcr)
+    AYU_APPLY_OFFSET(elem_func, ElemFuncDcr)
+    AYU_APPLY_OFFSET(delegate, DelegateDcr)
+#undef AYU_APPLY_OFFSET
 
     return desc;
 }

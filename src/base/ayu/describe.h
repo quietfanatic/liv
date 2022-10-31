@@ -221,7 +221,7 @@ struct DescribeBase<T, false> {
     }
 
      // This one is not constexpr, so it is only valid in attr_func, elem_func,
-     //  or reference_func.
+     // or reference_func.
     template <class M>
     static in::VariableAcr2<T, M> variable (
         M&& v,
@@ -279,6 +279,8 @@ struct DescribeBase<T, true> : DescribeBase<T, false> {
 };
 
 } // namespace ayu
+
+// TODO: Put _ before these names so they don't accidentally shadow other things
 
  // Stringify name as early as possible to avoid macro expansion
 #define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
