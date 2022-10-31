@@ -23,7 +23,7 @@ Book::Book (App& app, const std::vector<String>& filenames) :
     app(app),
     view(app.settings->default_view),
     window{
-        .title = "Image Viewer",
+        .title = "Little Image Viewer",
         .size = app.default_window_size,
         .resizable = true,
         .hidden = app.hidden
