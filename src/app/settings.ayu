@@ -4,8 +4,8 @@
         zoom: 1.0
     }
     mappings: [
-        [[left] [prev]]
         [[right] [next]]
+        [[left] [prev]]
         [[ctrl q] [quit]]
         [[f11] [fullscreen]]
         [[f] [fit_mode fit]]

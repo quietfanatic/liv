@@ -48,9 +48,21 @@ void App::run () {
                 current_book = book_with_window_id(*this, event.key.windowID);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEBUTTONUP: {
                 current_book = book_with_window_id(*this, event.button.windowID);
                 break;
+            }
+            case SDL_MOUSEMOTION: {
+                if (event.motion.state & SDL_BUTTON_RMASK)
+                if (current_book = book_with_window_id(*this, event.motion.windowID)) {
+                     // TODO: make book coordinates top-down
+                    current_book->drag(geo::Vec(
+                        event.motion.xrel,
+                        -event.motion.yrel
+                    ));
+                }
+                break;
+            }
             default: break;
         }
         for (auto& [input, action] : settings->mappings) {

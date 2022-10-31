@@ -54,7 +54,7 @@ void Book::draw () {
                     ? float(window.size.y) / page.size.y
                     : float(window.size.x) / page.size.x;
                 scale = {view.zoom, view.zoom};
-                view.offset = (window.size - page.size) / 2;
+                view.offset = (window.size - page.size * scale) / 2;
                 break;
             }
             case STRETCH: {
@@ -82,6 +82,14 @@ void Book::draw () {
     SDL_GL_SwapWindow(window.sdl_window);
 }
 
+void Book::next () {
+    current_page_no += 1;
+    if (!valid_page_no(current_page_no)) {
+        current_page_no = pages.size();
+    }
+    draw();
+}
+
 void Book::prev () {
     current_page_no -= 1;
     if (!valid_page_no(current_page_no)) {
@@ -90,11 +98,9 @@ void Book::prev () {
     draw();
 }
 
-void Book::next () {
-    current_page_no += 1;
-    if (!valid_page_no(current_page_no)) {
-        current_page_no = pages.size();
-    }
+void Book::drag (Vec amount) {
+    view.fit_mode = MANUAL;
+    view.offset += amount;
     draw();
 }
 

@@ -5,10 +5,10 @@
 namespace app::command {
 using namespace control;
 
- // () Go to previous page(s)
-extern Command prev;
  // () Go to next page(s)
 extern Command next;
+ // () Go to previous page(s)
+extern Command prev;
  // () Quit app
 extern Command quit;
 
