@@ -18,7 +18,6 @@ struct Book {
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
-    isize previous_page_no = 1;
 
     FitMode fit_mode = FIT;  // Reset on page turn
     float zoom = 1;
@@ -33,6 +32,10 @@ struct Book {
     explicit Book (App& app, const std::vector<String>& filenames);
     ~Book ();
 
+     // Returns true if no is in 1..pages.size()
+    bool valid_page_no (isize no);
+     // Returns null if not valid page number
+    Page* get_page (isize no);
 
      // Handles layout logic.  Returns true if drawing was actually done.
     bool draw_if_needed ();
@@ -50,9 +53,6 @@ struct Book {
     void set_fullscreen (bool);
 
     void window_size_changed (geo::IVec new_size);
-
-     // Returns true if no is in 1..pages.size()
-    bool valid_page_no (isize no);
 
      // Preload images perhaps
      // Returns true if any processing was actually done

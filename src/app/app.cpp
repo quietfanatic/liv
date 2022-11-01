@@ -114,7 +114,7 @@ void App::run () {
             if (stop_requested) goto stopped;
         }
         else {
-             // No more events?  Draw or do backgroud processing once
+             // No more events?  Draw or do some backgroud processing
             bool did_stuff = false;
             for (auto& book : books) {
                 if (book->draw_if_needed()) {

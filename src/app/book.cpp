@@ -40,6 +40,15 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 }
 Book::~Book () { }
 
+bool Book::valid_page_no (isize no) {
+    return no >= 1 && usize(no) <= pages.size();
+}
+
+Page* Book::get_page (isize no) {
+    if (valid_page_no(no)) return &*pages[no-1];
+    else return null;
+}
+
 bool Book::draw_if_needed () {
     if (!need_draw) return false;
     need_draw = false;
@@ -49,9 +58,8 @@ bool Book::draw_if_needed () {
      // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    if (valid_page_no(current_page_no)) {
-        auto& page = *pages[current_page_no-1];
-        page.load();
+    if (Page* page = get_page(current_page_no)) {
+        page->load();
         Vec scale;
          // Layout page
         switch (fit_mode) {
@@ -59,19 +67,19 @@ bool Book::draw_if_needed () {
                  // Fit to screen
                  // slope = 1/aspect
                  // TODO: This seems to behave incorrectly sometimes
-                zoom = slope(page.size) > slope(window.size)
-                    ? float(window.size.y) / page.size.y
-                    : float(window.size.x) / page.size.x;
+                zoom = slope(page->size) > slope(window.size)
+                    ? float(window.size.y) / page->size.y
+                    : float(window.size.x) / page->size.x;
                 scale = {zoom, zoom};
-                offset = (window.size - page.size * scale) / 2;
+                offset = (window.size - page->size * scale) / 2;
                 break;
             }
             case STRETCH: {
                  // Zoom isn't meaningful in stretch mode, but set it anyway
-                zoom = slope(page.size) > slope(window.size)
-                    ? float(window.size.y) / page.size.y
-                    : float(window.size.x) / page.size.x;
-                scale = window.size / page.size;
+                zoom = slope(page->size) > slope(window.size)
+                    ? float(window.size.y) / page->size.y
+                    : float(window.size.x) / page->size.x;
+                scale = window.size / page->size;
                 offset = {0, 0};
                 break;
             }
@@ -82,11 +90,11 @@ bool Book::draw_if_needed () {
             }
             default: AA(false);
         }
-        Rect page_position = {offset, offset + page.size * scale};
+        Rect page_position = {offset, offset + page->size * scale};
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
          // Draw
-        page.draw(screen_rect);
+        page->draw(screen_rect);
     }
     SDL_GL_SwapWindow(window.sdl_window);
     return true;
@@ -122,13 +130,14 @@ void Book::drag (Vec amount) {
 }
 
 void Book::zoom_multiply (float factor) {
-    auto& page = *pages[current_page_no-1];
-    fit_mode = MANUAL;
-     // Hacky way to zoom from center
-    offset += page.size * zoom / 2;
-    zoom *= factor;
-    offset -= page.size * zoom / 2;
-    need_draw = true;
+    if (Page* page = get_page(current_page_no)) {
+        fit_mode = MANUAL;
+         // Hacky way to zoom from center
+        offset += page->size * zoom / 2;
+        zoom *= factor;
+        offset -= page->size * zoom / 2;
+        need_draw = true;
+    }
 }
 
 bool Book::is_fullscreen () {
@@ -149,11 +158,26 @@ void Book::window_size_changed (IVec new_size) {
     need_draw = true;
 }
 
-bool Book::valid_page_no (isize no) {
-    return no >= 1 && usize(no) <= pages.size();
-}
-
 bool Book::idle_processing () {
+     // Preload pages forwards
+    for (uint32 i = 1; i <= app.settings->memory.preload_ahead; i++) {
+        if (Page* page = get_page(current_page_no + i)) {
+            if (!page->texture) {
+                page->load();
+                return true;
+            }
+        }
+    }
+     // Preload pages backwards
+    for (uint32 i = 1; i <= app.settings->memory.preload_behind; i++) {
+        if (Page* page = get_page(current_page_no - i)) {
+            if (!page->texture) {
+                page->load();
+                return true;
+            }
+        }
+    }
+     // Nothing to do
     return false;
 }
 

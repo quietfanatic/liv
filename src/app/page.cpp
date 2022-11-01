@@ -1,7 +1,7 @@
 #include "page.h"
 
 #include "../base/glow/program.h"
-#include "../base/ayu/describe.h"
+#include "../base/ayu/describe-standard.h"
 #include "../base/ayu/resource.h"
 
 using namespace geo;
@@ -11,7 +11,8 @@ namespace app {
 
 Page::Page (String filename) :
     filename(filename)
-{ }
+{
+}
 Page::~Page () { }
 
 void Page::load () {

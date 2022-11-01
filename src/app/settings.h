@@ -27,8 +27,8 @@ struct Settings {
         bool fullscreen = false;
     } window;
     struct Memory {
-        int32 preload_ahead = 1;
-        int32 preload_behind = 1;
+        uint32 preload_ahead = 1;
+        uint32 preload_behind = 1;
     } memory;
     std::vector<Mapping> mappings;
 };
