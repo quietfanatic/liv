@@ -38,7 +38,12 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 }
 Book::~Book () { }
 
-void Book::draw () {
+void Book::draw_if_needed () {
+    if (!need_draw) return;
+    need_draw = false;
+     // TODO: Currently we have a different context for each window, would it
+     // be better to share a context between all windows?
+    SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
      // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -89,7 +94,7 @@ void Book::next () {
         current_page_no = pages.size();
     }
     view = app.settings->default_view;
-    draw();
+    need_draw = true;
 }
 
 void Book::prev () {
@@ -98,18 +103,18 @@ void Book::prev () {
         current_page_no = 1;
     }
     view = app.settings->default_view;
-    draw();
+    need_draw = true;
 }
 
 void Book::set_fit_mode (FitMode mode) {
     view.fit_mode = mode;
-    draw();
+    need_draw = true;
 }
 
 void Book::drag (Vec amount) {
     view.fit_mode = MANUAL;
     view.offset += amount;
-    draw();
+    need_draw = true;
 }
 
 void Book::zoom_multiply (float factor) {
@@ -119,7 +124,7 @@ void Book::zoom_multiply (float factor) {
     view.offset += page.size * view.zoom / 2;
     view.zoom *= factor;
     view.offset -= page.size * view.zoom / 2;
-    draw();
+    need_draw = true;
 }
 
 void Book::set_fullscreen (bool fs) {
@@ -128,7 +133,7 @@ void Book::set_fullscreen (bool fs) {
         window.sdl_window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
     ));
-    draw();
+    need_draw = true;
 }
 
 bool Book::valid_page_no (isize no) {
@@ -155,7 +160,7 @@ static tap::TestSet tests ("app/book", []{
         ayu::file_resource_root() + "/base/glow/test/image2.png"sv
     });
 
-    book.draw();
+    book.draw_if_needed();
     glow::Image img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
@@ -163,26 +168,30 @@ static tap::TestSet tests ("app/book", []{
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
+    book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 2, "Next page is 2");
     is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
+    book.draw_if_needed();
     is(book.current_page_no, 2, "Can't go past last page");
 
     book.prev();
+    book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.current_page_no, 1, "Go back to page 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "Going back to first page works");
 
     book.prev();
+    book.draw_if_needed();
     is(book.current_page_no, 1, "Can't go before page 1");
 
     is(img[{0, 0}], glow::RGBA8(0x00000000), "Default to fit mode");
-    book.view.fit_mode = STRETCH;
-    book.draw();
+    book.set_fit_mode(STRETCH);
+    book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{0, 0}], glow::RGBA8(0x2674dbff), "Stretch mode fills screen");

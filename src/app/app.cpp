@@ -19,7 +19,6 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
         AS(SDL_GetWindowID(book->window.sdl_window)),
         &*book
     );
-    book->draw();
 }
 
 static Book* book_with_window_id (App& self, uint32 id) {
@@ -35,46 +34,61 @@ void App::open_files (const std::vector<String>& files) {
     add_book(*this, std::make_unique<Book>(*this, files));
 }
 
+static void handle_event (App& self, SDL_Event* event) {
+    current_app = &self;
+    switch (event->type) {
+        case SDL_QUIT: self.stop(); break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            current_book = book_with_window_id(self, event->key.windowID);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP: {
+            current_book = book_with_window_id(self, event->button.windowID);
+            break;
+        }
+        case SDL_MOUSEMOTION: {
+            if (event->motion.state & SDL_BUTTON_RMASK) {
+                current_book = book_with_window_id(
+                    self, event->motion.windowID
+                );
+                if (current_book) {
+                     // TODO: make book coordinates top-down
+                    current_book->drag(geo::Vec(
+                        event->motion.xrel,
+                        -event->motion.yrel
+                    ));
+                }
+            }
+            break;
+        }
+        default: break;
+    }
+    for (auto& [input, action] : self.settings->mappings) {
+        if (input_matches_event(input, event)) {
+            action();
+        }
+    }
+    current_book = null;
+    current_app = null;
+}
+
 void App::run () {
     stop_requested = false;
-    while (!stop_requested) {
+    for (;;) {
         SDL_Event event;
-        AS(SDL_WaitEvent(&event));
-        current_app = this;
-        switch (event.type) {
-            case SDL_QUIT: stop(); break;
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                current_book = book_with_window_id(*this, event.key.windowID);
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP: {
-                current_book = book_with_window_id(*this, event.button.windowID);
-                break;
-            }
-            case SDL_MOUSEMOTION: {
-                if (event.motion.state & SDL_BUTTON_RMASK) {
-                    current_book = book_with_window_id(*this, event.motion.windowID);
-                    if (current_book) {
-                         // TODO: make book coordinates top-down
-                        current_book->drag(geo::Vec(
-                            event.motion.xrel,
-                            -event.motion.yrel
-                        ));
-                    }
-                }
-                break;
-            }
-            default: break;
+        while (SDL_PollEvent(&event)) {
+            handle_event(*this, &event);
+            if (stop_requested) goto stopped;
         }
-        for (auto& [input, action] : settings->mappings) {
-            if (input_matches_event(input, &event)) {
-                action();
-            }
+        for (auto& book : books) {
+            book->draw_if_needed();
         }
-        current_book = null;
-        current_app = null;
+        SDL_WaitEvent(&event);
+        handle_event(*this, &event);
+        if (stop_requested) goto stopped;
     }
+    stopped:;
 }
 
 void App::stop () {

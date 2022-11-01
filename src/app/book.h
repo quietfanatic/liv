@@ -21,6 +21,8 @@ struct Book {
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
 
+    bool need_draw = true;
+
      // Loads all image files in the folder as pages
     explicit Book (App& app, Str folder);
      // Just loads the given files as pages
@@ -30,7 +32,7 @@ struct Book {
     wind::Window window;
 
      // Handles layout logic.
-    void draw ();
+    void draw_if_needed ();
      // Change current_page
     void next ();
     void prev ();
