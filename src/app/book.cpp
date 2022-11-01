@@ -40,8 +40,8 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 }
 Book::~Book () { }
 
-void Book::draw_if_needed () {
-    if (!need_draw) return;
+bool Book::draw_if_needed () {
+    if (!need_draw) return false;
     need_draw = false;
      // TODO: Currently we have a different context for each window, would it
      // be better to share a context between all windows?
@@ -89,6 +89,7 @@ void Book::draw_if_needed () {
         page.draw(screen_rect);
     }
     SDL_GL_SwapWindow(window.sdl_window);
+    return true;
 }
 
 void Book::next () {
@@ -150,6 +151,10 @@ void Book::window_size_changed (IVec new_size) {
 
 bool Book::valid_page_no (isize no) {
     return no >= 1 && usize(no) <= pages.size();
+}
+
+bool Book::idle_processing () {
+    return false;
 }
 
 } using namespace app;

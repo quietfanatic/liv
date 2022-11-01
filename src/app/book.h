@@ -18,6 +18,7 @@ struct Book {
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
+    isize previous_page_no = 1;
 
     FitMode fit_mode = FIT;  // Reset on page turn
     float zoom = 1;
@@ -33,8 +34,8 @@ struct Book {
     ~Book ();
 
 
-     // Handles layout logic.
-    void draw_if_needed ();
+     // Handles layout logic.  Returns true if drawing was actually done.
+    bool draw_if_needed ();
      // Change current_page
     void next ();
     void prev ();
@@ -52,6 +53,10 @@ struct Book {
 
      // Returns true if no is in 1..pages.size()
     bool valid_page_no (isize no);
+
+     // Preload images perhaps
+     // Returns true if any processing was actually done
+    bool idle_processing ();
 };
 
 } // namespace app

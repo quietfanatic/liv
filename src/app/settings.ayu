@@ -2,6 +2,14 @@
     page: {
         fit_mode: fit
     }
+    window: {
+        size: [720 720]
+        fullscreen: false
+    }
+    memory: {
+        preload_ahead: 1
+        preload_behind: 1
+    }
     mappings: [
         [[right] [next]]
         [[left] [prev]]

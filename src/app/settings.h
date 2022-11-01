@@ -26,6 +26,10 @@ struct Settings {
         geo::IVec size = {720, 720};
         bool fullscreen = false;
     } window;
+    struct Memory {
+        int32 preload_ahead = 1;
+        int32 preload_behind = 1;
+    } memory;
     std::vector<Mapping> mappings;
 };
 

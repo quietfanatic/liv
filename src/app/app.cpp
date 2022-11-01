@@ -106,16 +106,39 @@ void App::run () {
     stop_requested = false;
     for (;;) {
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
+        SDL_PumpEvents();
+        if (SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
+             // Handle an event if we have it.
+            SDL_PollEvent(&event);
             handle_event(*this, &event);
             if (stop_requested) goto stopped;
         }
-        for (auto& book : books) {
-            book->draw_if_needed();
+        else {
+             // No more events?  Draw or do backgroud processing once
+            bool did_stuff = false;
+            for (auto& book : books) {
+                if (book->draw_if_needed()) {
+                    did_stuff = true;
+                }
+            }
+            if (!did_stuff) {
+                for (auto& book : books) {
+                     // This prioritizes earlier-numbered books.  Probably
+                     // doesn't matter though, since idle processing generally
+                     // happens in response to user input, and the user is
+                     // probably only interacting with one book.  And currently
+                     // we only have one book per process anyway.
+                    if (book->idle_processing()) {
+                        did_stuff = true;
+                        break;
+                    }
+                }
+            }
+            if (!did_stuff) {
+                 // No events and nothing to do, so go to sleep
+                SDL_WaitEvent(null);
+            }
         }
-        SDL_WaitEvent(&event);
-        handle_event(*this, &event);
-        if (stop_requested) goto stopped;
     }
     stopped:;
 }
