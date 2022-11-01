@@ -14,10 +14,13 @@ struct Page {
     String filename;
     std::unique_ptr<glow::FileTexture> texture;
     geo::IVec size;
+    int64 estimated_memory = 0;
+
     explicit Page (String filename);
     ~Page ();
 
-     // TODO: load and unload
+    void load ();
+    void unload ();
 
     void draw (
         const geo::Rect& screen_rect,

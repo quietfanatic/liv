@@ -10,11 +10,21 @@ using namespace glow;
 namespace app {
 
 Page::Page (String filename) :
-    filename(filename),
-    texture(std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE)),
-    size(texture->size())
+    filename(filename)
 { }
 Page::~Page () { }
+
+void Page::load () {
+    if (!texture) {
+        texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
+        size = texture->size();
+        estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
+    }
+}
+
+void Page::unload () {
+    texture = {};
+}
 
 struct PageProgram : Program {
     int u_screen_rect = -1;
@@ -32,6 +42,7 @@ struct PageProgram : Program {
 };
 
 void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
+    load();
     AA(texture && *texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 
@@ -75,6 +86,8 @@ static tap::TestSet tests ("app/page", []{
     init();
 
     Page page (ayu::file_resource_root() + "/base/glow/test/image.png");
+    is(page.size, IVec(0, 0), "Page isn't loaded yet");
+    page.load();
     is(page.size, IVec(7, 5), "Page has correct size");
 
     glClearColor(0, 0, 0, 0);

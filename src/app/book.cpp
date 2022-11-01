@@ -51,6 +51,7 @@ void Book::draw_if_needed () {
     glClear(GL_COLOR_BUFFER_BIT);
     if (valid_page_no(current_page_no)) {
         auto& page = *pages[current_page_no-1];
+        page.load();
         Vec scale;
          // Layout page
         switch (fit_mode) {
