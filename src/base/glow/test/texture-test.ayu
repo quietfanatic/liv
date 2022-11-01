@@ -2,9 +2,7 @@
     image: [glow::Image {
         size: [7 5]
         pixels: [
-             # TODO: support hexadecimal in ayu
-            # &p: [0x26 0x74 0xdb 0xf0]
-            &p: [38 116 219 240]
+            &p: [0x26 0x74 0xdb 0xf0]
             *p *p *p *p *p *p *p
             *p *p *p *p *p *p *p
             *p *p *p *p *p *p *p
