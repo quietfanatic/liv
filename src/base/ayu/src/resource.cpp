@@ -729,14 +729,14 @@ AYU_DESCRIBE(ayu::X::ResourceHandlerCantRemoveSource,
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
      // Note: We're relying on the caller to set the file resource root!
-    Resource input ("/base/ayu/test/testfile.ayu");
-    Resource input2 ("/base/ayu/test/othertest.ayu");
-    Resource rec1 ("/base/ayu/test/rec1.ayu");
-    Resource rec2 ("/base/ayu/test/rec2.ayu");
-    Resource badinput ("/base/ayu/test/badref.ayu");
-    Resource output ("/base/ayu/test/test-output.ayu");
-    Resource unicode ("/base/ayu/test/ユニコード.ayu");
-    Resource unicode2 ("/base/ayu/test/ユニコード2.ayu");
+    Resource input ("/base/ayu/src/test/testfile.ayu");
+    Resource input2 ("/base/ayu/src/test/othertest.ayu");
+    Resource rec1 ("/base/ayu/src/test/rec1.ayu");
+    Resource rec2 ("/base/ayu/src/test/rec2.ayu");
+    Resource badinput ("/base/ayu/src/test/badref.ayu");
+    Resource output ("/base/ayu/src/test/test-output.ayu");
+    Resource unicode ("/base/ayu/src/test/ユニコード.ayu");
+    Resource unicode2 ("/base/ayu/src/test/ユニコード2.ayu");
 
     is(input.state(), UNLOADED, "Resources start out unloaded");
     doesnt_throw([&]{ load(input); }, "load");
