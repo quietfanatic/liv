@@ -27,7 +27,7 @@ constexpr Form form_of_rep (Rep rep) {
         case Rep::STRING: return STRING;
         case Rep::ARRAY: return ARRAY;
         case Rep::OBJECT: return OBJECT;
-        default: AYU_INTERNAL_ERROR();
+        default: AYU_INTERNAL_UGUU();
     }
 }
 

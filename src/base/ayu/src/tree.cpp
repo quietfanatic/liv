@@ -182,7 +182,7 @@ bool operator == (const Tree& a, const Tree& b) {
            }
            return true;
         }
-        default: AYU_INTERNAL_ERROR();
+        default: AYU_INTERNAL_UGUU();
     }
 }
 

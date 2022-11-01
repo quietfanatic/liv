@@ -73,7 +73,7 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
             else {
                 char buf [32]; // Should be enough?
                 auto [ptr, ec] = std::to_chars(buf, buf+32, v);
-                if (ptr == buf) AYU_INTERNAL_ERROR();
+                if (ptr == buf) AYU_INTERNAL_UGUU();
                 return String(buf, ptr - buf);
             }
         }
@@ -139,7 +139,7 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
                 r += "\n" + indent(ind);
             return r + "}";
         }
-        default: AYU_INTERNAL_ERROR();
+        default: AYU_INTERNAL_UGUU();
     }
 }
 

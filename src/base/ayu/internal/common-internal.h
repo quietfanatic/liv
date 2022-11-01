@@ -6,6 +6,7 @@
 
 namespace ayu::in {
 
+ // Predeclare some private classes
 struct DocumentData;
 struct Description;
 struct PathData;
@@ -76,15 +77,15 @@ static usize hash_combine (usize a, usize b) {
 }
 
  // Called when an exception is thrown in a place where the library can't
- //  properly clean up after itself, such as when a resource value throws
- //  from its destructor.
+ // properly clean up after itself, such as when a resource value throws
+ // from its destructor.
 [[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
- // Some internal error has occured, such as an invalid enum value, and i
- //  isn't safe to continue execution.
+ // Some internal error has occured, such as an invalid enum value, and it
+ // isn't safe to continue execution.
 [[noreturn]] void internal_error (
     const char* function, const char* filename, uint line
 );
-#define AYU_INTERNAL_ERROR() \
+#define AYU_INTERNAL_UGUU() \
 ::ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
 
 }  // namespace ayu::in

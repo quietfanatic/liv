@@ -114,7 +114,7 @@ Str show_ResourceState (ResourceState state) {
         case RELOAD_VERIFYING: return "RELOAD_VERIFYING"sv;
         case RELOAD_ROLLBACK: return "RELOAD_ROLLBACK"sv;
         case RELOAD_COMMITTING: return "RELOAD_COMMITTING"sv;
-        default: AYU_INTERNAL_ERROR();
+        default: AYU_INTERNAL_UGUU();
     }
 }
 

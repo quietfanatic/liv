@@ -197,7 +197,7 @@ void item_from_tree (const Reference& item, const Tree& tree) {
     }
     else {
         if (!swizzle_ops.empty() || !init_ops.empty()) {
-            AYU_INTERNAL_ERROR();
+            AYU_INTERNAL_UGUU();
         }
         in_from_tree = true;
         try {
@@ -566,7 +566,7 @@ Reference maybe_reference_from_path (Path path) {
         else if (auto index = path.index()) {
             return reference_from_path(*parent).elem(*index);
         }
-        else AYU_INTERNAL_ERROR();
+        else AYU_INTERNAL_UGUU();
     }
     else return universe_ref();
 }
@@ -579,7 +579,7 @@ Reference reference_from_path (Path path) {
         else if (auto index = path.index()) {
             return reference_from_path(*parent).elem(*index);
         }
-        else AYU_INTERNAL_ERROR();
+        else AYU_INTERNAL_UGUU();
     }
     else return universe_ref();
 }

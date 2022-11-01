@@ -173,7 +173,7 @@ struct AccessorOrType {
         data(reinterpret_cast<usize>(acr))
     {
         if (!acr || reinterpret_cast<usize>(acr) & 3) {
-            AYU_INTERNAL_ERROR();
+            AYU_INTERNAL_UGUU();
         }
         if (acr && acr->ref_count != uint16(-1)) {
             data |= ACR;
@@ -187,7 +187,7 @@ struct AccessorOrType {
         )
     {
         if (!t || reinterpret_cast<usize>(t.desc) & 3) {
-            AYU_INTERNAL_ERROR();
+            AYU_INTERNAL_UGUU();
         }
     }
     AccessorOrType (const AccessorOrType& o) : data(o.data) {
@@ -217,7 +217,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->accessor_flags & ACR_READONLY;
             case TYPE: return false;
             case TYPE_READONLY: return true;
-            default: AYU_INTERNAL_ERROR();
+            default: AYU_INTERNAL_UGUU();
         }
     }
     Type type (const Mu& from) const {
@@ -226,7 +226,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->type(from);
             case TYPE:
             case TYPE_READONLY: return as_type();
-            default: AYU_INTERNAL_ERROR();
+            default: AYU_INTERNAL_UGUU();
         }
     }
     void access (AccessOp op, Mu& from, Callback<void(Mu&)> cb) const {
@@ -238,7 +238,7 @@ struct AccessorOrType {
                 if (op != ACR_READ) throw X::WriteReadonlyAccessor();
                 return cb(from);
             }
-            default: AYU_INTERNAL_ERROR();
+            default: AYU_INTERNAL_UGUU();
         }
     }
     Mu* address (Mu& from) const {
@@ -247,7 +247,7 @@ struct AccessorOrType {
             case ACR: return as_acr()->address(from);
             case TYPE:
             case TYPE_READONLY: return &from;
-            default: AYU_INTERNAL_ERROR();
+            default: AYU_INTERNAL_UGUU();
         }
     }
 };
