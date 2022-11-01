@@ -34,10 +34,39 @@ void App::open_files (const std::vector<String>& files) {
     add_book(*this, std::make_unique<Book>(*this, files));
 }
 
+void App::close_book (Book* book) {
+    AA(book);
+    for (auto iter = books.begin(); iter != books.end(); iter++) {
+        if (&**iter == book) {
+            books.erase(iter);
+            return;
+        }
+    }
+    AA(false);
+}
+
 static void handle_event (App& self, SDL_Event* event) {
     current_app = &self;
     switch (event->type) {
         case SDL_QUIT: self.stop(); break;
+        case SDL_WINDOWEVENT: {
+            current_book = book_with_window_id(self, event->window.windowID);
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                    current_book->window_size_changed({
+                        event->window.data1,
+                        event->window.data2
+                    });
+                    break;
+                }
+                case SDL_WINDOWEVENT_CLOSE: {
+                    self.close_book(current_book);
+                    current_book = null;
+                    break;
+                }
+            }
+            break;
+        }
         case SDL_KEYDOWN:
         case SDL_KEYUP:
             current_book = book_with_window_id(self, event->key.windowID);

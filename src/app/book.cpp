@@ -136,6 +136,11 @@ void Book::set_fullscreen (bool fs) {
     need_draw = true;
 }
 
+void Book::window_size_changed (IVec new_size) {
+    view.window_size = new_size;
+    need_draw = true;
+}
+
 bool Book::valid_page_no (isize no) {
     return no >= 1 && usize(no) <= pages.size();
 }

@@ -16,6 +16,8 @@ struct App {
     void open_folder (Str folder);
     void open_files (const std::vector<String>& files);
 
+    void close_book (Book*);
+
     void run ();
     void stop ();
 

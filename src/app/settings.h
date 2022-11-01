@@ -16,9 +16,10 @@ struct View {
     FitMode fit_mode = FIT;
      // These are only meaningful if fit_mode is MANUAL
     float zoom = 1.0;
-     // Relative to window, bottom-left origin
+     // In pixels, relative to window, bottom-left origin
     geo::Vec offset;
     bool fullscreen = false;
+    geo::IVec window_size = {720, 720};
 };
 
 struct Mapping {

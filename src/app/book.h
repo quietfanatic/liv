@@ -45,6 +45,8 @@ struct Book {
 
     void set_fullscreen (bool);
 
+    void window_size_changed (geo::IVec new_size);
+
      // Returns true if no is in 1..pages.size()
     bool valid_page_no (isize no);
 };
