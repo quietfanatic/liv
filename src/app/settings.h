@@ -6,20 +6,11 @@
 
 namespace app {
 
-enum FitMode {
+ // TODO: Add more fit modes
+enum FitMode : uint8 {
     FIT,
     STRETCH,
     MANUAL
-};
-
-struct View {
-    FitMode fit_mode = FIT;
-     // These are only meaningful if fit_mode is MANUAL
-    float zoom = 1.0;
-     // In pixels, relative to window, bottom-left origin
-    geo::Vec offset;
-    bool fullscreen = false;
-    geo::IVec window_size = {720, 720};
 };
 
 struct Mapping {
@@ -28,7 +19,13 @@ struct Mapping {
 };
 
 struct Settings {
-    View default_view;
+    struct Page {
+        FitMode fit_mode = FIT;
+    } page;
+    struct Window {
+        geo::IVec size = {720, 720};
+        bool fullscreen = false;
+    } window;
     std::vector<Mapping> mappings;
 };
 

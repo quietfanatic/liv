@@ -15,12 +15,15 @@ struct Page;
 struct Book {
     App& app;
 
-    View view;
-
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
 
+    FitMode fit_mode = FIT;  // Reset on page turn
+    float zoom = 1;
+    geo::Vec offset;  // Pixels, bottom-left origin
+
+    wind::Window window;
     bool need_draw = true;
 
      // Loads all image files in the folder as pages
@@ -29,7 +32,6 @@ struct Book {
     explicit Book (App& app, const std::vector<String>& filenames);
     ~Book ();
 
-    wind::Window window;
 
      // Handles layout logic.
     void draw_if_needed ();
@@ -43,6 +45,7 @@ struct Book {
 
     void zoom_multiply (float factor);
 
+    bool is_fullscreen ();
     void set_fullscreen (bool);
 
     void window_size_changed (geo::IVec new_size);

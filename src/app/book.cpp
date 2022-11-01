@@ -14,22 +14,24 @@ namespace app {
 
 Book::Book (App& app, Str folder) :
     app(app),
-    view(app.settings->default_view),
     folder(folder)
 {
     AA(false);
 }
 Book::Book (App& app, const std::vector<String>& filenames) :
     app(app),
-    view(app.settings->default_view),
+    fit_mode(app.settings->page.fit_mode),
     window{
         .title = "Little Image Viewer",
-        .size = app.default_window_size,
+        .size = app.settings->window.size,
         .resizable = true,
         .hidden = app.hidden
     }
 {
     window.open();
+    if (app.settings->window.fullscreen) {
+        set_fullscreen(true);
+    }
     glow::init();
     pages.reserve(filenames.size());
     for (auto& filename : filenames) {
@@ -51,35 +53,35 @@ void Book::draw_if_needed () {
         auto& page = *pages[current_page_no-1];
         Vec scale;
          // Layout page
-        switch (view.fit_mode) {
+        switch (fit_mode) {
             case FIT: {
                  // Fit to screen
                  // slope = 1/aspect
                  // TODO: This seems to behave incorrectly sometimes
-                view.zoom = slope(page.size) > slope(window.size)
+                zoom = slope(page.size) > slope(window.size)
                     ? float(window.size.y) / page.size.y
                     : float(window.size.x) / page.size.x;
-                scale = {view.zoom, view.zoom};
-                view.offset = (window.size - page.size * scale) / 2;
+                scale = {zoom, zoom};
+                offset = (window.size - page.size * scale) / 2;
                 break;
             }
             case STRETCH: {
                  // Zoom isn't meaningful in stretch mode, but set it anyway
-                view.zoom = slope(page.size) > slope(window.size)
+                zoom = slope(page.size) > slope(window.size)
                     ? float(window.size.y) / page.size.y
                     : float(window.size.x) / page.size.x;
                 scale = window.size / page.size;
-                view.offset = {0, 0};
+                offset = {0, 0};
                 break;
             }
             case MANUAL: {
                  // Use whatever zoom and offset already are
-                scale = {view.zoom, view.zoom};
+                scale = {zoom, zoom};
                 break;
             }
             default: AA(false);
         }
-        Rect page_position = {view.offset, view.offset + page.size * scale};
+        Rect page_position = {offset, offset + page.size * scale};
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
          // Draw
@@ -93,7 +95,7 @@ void Book::next () {
     if (!valid_page_no(current_page_no)) {
         current_page_no = pages.size();
     }
-    view = app.settings->default_view;
+    fit_mode = app.settings->page.fit_mode;
     need_draw = true;
 }
 
@@ -102,33 +104,37 @@ void Book::prev () {
     if (!valid_page_no(current_page_no)) {
         current_page_no = 1;
     }
-    view = app.settings->default_view;
+    fit_mode = app.settings->page.fit_mode;
     need_draw = true;
 }
 
 void Book::set_fit_mode (FitMode mode) {
-    view.fit_mode = mode;
+    fit_mode = mode;
     need_draw = true;
 }
 
 void Book::drag (Vec amount) {
-    view.fit_mode = MANUAL;
-    view.offset += amount;
+    fit_mode = MANUAL;
+    offset += amount;
     need_draw = true;
 }
 
 void Book::zoom_multiply (float factor) {
     auto& page = *pages[current_page_no-1];
-    view.fit_mode = MANUAL;
+    fit_mode = MANUAL;
      // Hacky way to zoom from center
-    view.offset += page.size * view.zoom / 2;
-    view.zoom *= factor;
-    view.offset -= page.size * view.zoom / 2;
+    offset += page.size * zoom / 2;
+    zoom *= factor;
+    offset -= page.size * zoom / 2;
     need_draw = true;
 }
 
+bool Book::is_fullscreen () {
+    auto flags = AS(SDL_GetWindowFlags(window.sdl_window));
+    return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
+}
+
 void Book::set_fullscreen (bool fs) {
-    view.fullscreen = fs;
     AS(!SDL_SetWindowFullscreen(
         window.sdl_window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
@@ -137,7 +143,7 @@ void Book::set_fullscreen (bool fs) {
 }
 
 void Book::window_size_changed (IVec new_size) {
-    view.window_size = new_size;
+    new_size = new_size;
     need_draw = true;
 }
 
@@ -159,7 +165,7 @@ static tap::TestSet tests ("app/book", []{
 
     App app;
     app.hidden = true;
-    app.default_window_size = size;
+    app.settings->window.size = size;
     Book book (app, {
         ayu::file_resource_root() + "/base/glow/test/image.png"sv,
         ayu::file_resource_root() + "/base/glow/test/image2.png"sv

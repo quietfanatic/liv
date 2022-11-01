@@ -286,6 +286,7 @@ CE T length2 (const GVec<T, n>& a) {
     return r;
 }
  // May be double or float
+ // TODO: CE sqrt
 template <class T, usize n>
 CE auto length (const GVec<T, n>& a) {
     return std::sqrt(length2(a));

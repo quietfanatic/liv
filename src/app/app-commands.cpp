@@ -32,16 +32,13 @@ Command fit_mode (fit_mode_, "fit_mode", "Set fit mode: fit, stretch, or manual"
  // TODO: move logic to Book
 static void fullscreen_ () {
     if (current_book) {
-        current_book->set_fullscreen(!current_book->view.fullscreen);
+        current_book->set_fullscreen(!current_book->is_fullscreen());
     }
 }
 Command fullscreen (fullscreen_, "fullscreen", "Toggle fullscreen mode");
 
 static void leave_fullscreen_or_quit_ () {
-     // TODO: For some reason when leaving fullscreen on pressing ESC, the app
-     // receives another ESC input, causing it to quit immediately.  Add a
-     // timeout here so that doesn't happen, or something?
-    if (current_book && current_book->view.fullscreen) {
+    if (current_book && current_book->is_fullscreen()) {
         current_book->set_fullscreen(false);
     }
     else if (current_app) {

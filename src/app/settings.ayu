@@ -1,7 +1,6 @@
 [app::Settings {
-    default_view: {
+    page: {
         fit_mode: fit
-        zoom: 1.0
     }
     mappings: [
         [[right] [next]]

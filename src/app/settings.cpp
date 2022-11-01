@@ -15,15 +15,6 @@ AYU_DESCRIBE(app::FitMode,
     )
 )
 
-AYU_DESCRIBE(app::View,
-    attrs(
-        attr("fit_mode", &View::fit_mode, optional),
-        attr("zoom", &View::zoom, optional),
-        attr("offset", &View::offset, optional),
-        attr("fullscreen", &View::fullscreen, optional)
-    )
-)
-
 AYU_DESCRIBE(app::Mapping,
     elems(
         elem(&Mapping::input),
@@ -31,9 +22,23 @@ AYU_DESCRIBE(app::Mapping,
     )
 )
 
+AYU_DESCRIBE(app::Settings::Page,
+    attrs(
+        attr("fit_mode", &Settings::Page::fit_mode, optional)
+    )
+)
+
+AYU_DESCRIBE(app::Settings::Window,
+    attrs(
+        attr("size", &Settings::Window::size, optional),
+        attr("fullscreen", &Settings::Window::fullscreen, optional)
+    )
+)
+
 AYU_DESCRIBE(app::Settings,
     attrs(
-        attr("default_view", &Settings::default_view),
+        attr("page", &Settings::page, optional),
+        attr("window", &Settings::window, optional),
         attr("mappings", &Settings::mappings)
     )
 )
