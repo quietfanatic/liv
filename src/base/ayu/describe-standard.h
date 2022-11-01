@@ -38,6 +38,7 @@ AYU_DESCRIBE_TEMPLATE(
     ))
 )
 
+ // std::vector
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
@@ -56,6 +57,7 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
+ // std::unordered_map
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
@@ -88,6 +90,7 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
+ // Raw pointers
  // TODO: figure out if we need to do something for const T*
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
@@ -111,7 +114,7 @@ AYU_DESCRIBE_TEMPLATE(
     ))
 )
 
- // I can't believe this works
+ // Raw arrays T[n] - I can't believe this works
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
@@ -129,6 +132,29 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
+ // Special case for const char[n], which is probably a string literal.
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(ayu::usize n),
+    AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
+    hcb::name([]{
+        using namespace ayu;
+        using namespace std::literals;
+        static String r = "char[" + std::to_string(n) + "]"sv;
+        return Str(r);
+    }),
+     // Serialize like a string
+    hcb::to_tree([](const char(&v)[n]){
+        return ayu::Tree(v);
+    }),
+     // But allow treating as an array if you want
+    hcb::length(hcb::template constant<ayu::usize>(n)),
+    hcb::elem_func([](char(&v)[n], ayu::usize i){
+        if (i < n) return ayu::Reference(&v[i]);
+        else return ayu::Reference();
+    })
+)
+
+ // std::array
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
@@ -145,6 +171,7 @@ AYU_DESCRIBE_TEMPLATE(
         else return ayu::Reference();
     })
 )
+
 
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class A, class B),
