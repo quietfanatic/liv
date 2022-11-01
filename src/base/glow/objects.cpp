@@ -23,6 +23,14 @@ geo::IVec Texture::size (int level) {
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &r.y);
     return r;
 }
+int32 Texture::bpp (int level) {
+    GLint rsize, gsize, bsize, asize;
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_RED_SIZE, &rsize);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_GREEN_SIZE, &gsize);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_BLUE_SIZE, &bsize);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_ALPHA_SIZE, &asize);
+    return rsize + gsize + bsize + asize;
+}
 
 enum TextureTarget { };
 enum TextureWrap { };

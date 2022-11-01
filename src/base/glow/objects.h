@@ -5,6 +5,8 @@
 
 namespace glow {
 
+ // TODO: Rename this to texture.h
+
  // A texture in video memory.
  // glGenTextures will be called on construction and glDeleteTextures on
  //  destruction.
@@ -25,7 +27,11 @@ struct Texture {
     operator uint () const { return id; }
 
      // Uses glGetTexLevelParameter
+     // Returns {0, 0} if this texture (level) has not been initialized
     geo::IVec size (int level = 0);
+     // Returns 0 if this texture (level) has not been initialized
+     // I believe this can return a maximum of 256 (double precision RGBA)
+    int32 bpp (int level = 0);
 };
 
 } // namespace glow
