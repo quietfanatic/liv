@@ -29,7 +29,7 @@ enum AccessorFlags {
      // or similar, but have their derived references still be addressable.
     ACR_ANCHORED_TO_PARENT = 0x2
 };
-static constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
+constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
     return AccessorFlags(int(a)|int(b));
 }
 
@@ -50,7 +50,7 @@ enum AttrFlags {
      // if it is addressable.  This is not currently supported on elems.
     ATTR_INHERIT = 0x2
 };
-static constexpr AttrFlags operator | (const AttrFlags& a, const AttrFlags& b) {
+constexpr AttrFlags operator | (const AttrFlags& a, const AttrFlags& b) {
     return AttrFlags(int(a)|int(b));
 }
 
@@ -140,7 +140,7 @@ struct Accessor {
 };
 
 template <class Acr>
-static constexpr Acr constexpr_acr (const Acr& a) {
+constexpr Acr constexpr_acr (const Acr& a) {
     Acr r = a;
     r.ref_count = uint16(-1);
     return r;
@@ -251,10 +251,10 @@ struct AccessorOrType {
         }
     }
 };
-static bool operator == (const AccessorOrType& a, const AccessorOrType& b) {
+inline bool operator == (const AccessorOrType& a, const AccessorOrType& b) {
     return a.data == b.data;
 }
-static bool operator != (const AccessorOrType& a, const AccessorOrType& b) {
+inline bool operator != (const AccessorOrType& a, const AccessorOrType& b) {
     return a.data != b.data;
 }
 

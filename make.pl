@@ -9,7 +9,7 @@ use File::Copy;
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
-    -Wall -Wextra -Wno-unused-function
+    -Wall -Wextra
     -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = qw(

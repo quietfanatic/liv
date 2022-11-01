@@ -97,10 +97,10 @@ struct Type {
 };
 
  // The same type will always have the same description pointer.
-static bool operator == (Type a, Type b) {
+inline bool operator == (Type a, Type b) {
     return a.desc == b.desc;
 }
-static bool operator != (Type a, Type b) {
+inline bool operator != (Type a, Type b) {
     return a.desc != b.desc;
 }
 

@@ -52,8 +52,8 @@ using Str = std::string_view;
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
  // Dunno why the standard library doesn't have this
-static String operator + (Str a, const String& b) { return String(a) + b; }
-static String operator + (const String& a, Str b) { return a + String(b); }
+inline String operator + (Str a, const String& b) { return String(a) + b; }
+inline String operator + (const String& a, Str b) { return a + String(b); }
 
 using Array = std::vector<Tree>;
 using Pair = std::pair<String, Tree>;

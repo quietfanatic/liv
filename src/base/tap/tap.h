@@ -130,10 +130,10 @@ bool try_isnt_strcmp(const std::function<const char*()>& code, const char* unexp
 bool within (double got, double range, double expected, const std::string& name = "");
 bool try_within (const std::function<double()>& code, double range, double expected, const std::string& name = "");
  // Tests that got is within a factor of .001 of expected.
-static bool about (double got, double expected, const std::string& name = "") {
+static inline bool about (double got, double expected, const std::string& name = "") {
     return within(got, expected*0.001, expected, name);
 }
-static bool try_about (const std::function<double()>& code, double expected, const std::string& name = "") {
+static inline bool try_about (const std::function<double()>& code, double expected, const std::string& name = "") {
     return try_within(code, expected*0.001, expected, name);
 }
 
@@ -160,7 +160,7 @@ bool pass (const std::string& name = "");
 bool fail (const std::string& name = "");
 
  // Alias for doesnt_throw
-static bool try_pass (const std::function<void()>& code, const std::string& name = "") {
+static inline bool try_pass (const std::function<void()>& code, const std::string& name = "") {
     return doesnt_throw(code, name);
 }
 
@@ -168,19 +168,19 @@ static bool try_pass (const std::function<void()>& code, const std::string& name
  //  todo tests fail, the test set is still considered successful.
 void todo (unsigned num, const std::string& excuse = "");
  // Just todo one test.
-static void todo (const std::string& excuse = "") {
+static inline void todo (const std::string& excuse = "") {
     todo(1, excuse);
 }
  // The block form marks as todo every test that runs inside it.  It can be safely
 void todo (const std::string& excuse, const std::function<void()> code);
-static void todo (const std::function<void()> code, const std::string& excuse = "") {
+static inline void todo (const std::function<void()> code, const std::string& excuse = "") {
     todo(excuse, code);
 }
 
  // Declare that you've skipped num tests.  You must not still run the tests.
 void skip (unsigned num, const std::string& excuse = "");
  // Just skip one test.
-static void skip (const std::string& excuse = "") {
+static inline void skip (const std::string& excuse = "") {
     skip(1, excuse);
 }
 
@@ -273,10 +273,10 @@ bool try_is (const std::function<A()>& code, const B& expected, const std::strin
         }
     }, name);
 }
-static bool is (const char* got, const char* expected, const std::string& name) {
+static inline bool is (const char* got, const char* expected, const std::string& name) {
     return is_strcmp(got, expected, name);
 }
-static bool try_is (const std::function<const char*()>& code, const char* expected, const std::string& name) {
+static inline bool try_is (const std::function<const char*()>& code, const char* expected, const std::string& name) {
     return try_is_strcmp(code, expected, name);
 }
 
@@ -292,10 +292,10 @@ bool try_isnt (const std::function<A()>& code, const B& unexpected, const std::s
         return try_ok(code() != unexpected, name);
     }, name);
 }
-static bool isnt (const char* got, const char* unexpected, const std::string& name) {
+static inline bool isnt (const char* got, const char* unexpected, const std::string& name) {
     return isnt_strcmp(got, unexpected, name);
 }
-static bool try_isnt (const std::function<const char*()>& code, const char* unexpected, const std::string& name) {
+static inline bool try_isnt (const std::function<const char*()>& code, const char* unexpected, const std::string& name) {
     return try_isnt_strcmp(code, unexpected, name);
 }
 

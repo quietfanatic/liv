@@ -214,14 +214,14 @@ struct Reference {
  // elem_func will not be comparable, and thus cannot be serialized.  Those
  // references are likely to be very inefficient anyway, so try not to create
  // them.
-static bool operator == (const Reference& a, const Reference& b) {
+inline bool operator == (const Reference& a, const Reference& b) {
     if (a.host == b.host && a.aot == b.aot) return true;
     if (!a || !b) return false;
     if (a.type() != b.type()) return false;
     auto aa = a.address();
     return aa && aa == b.address();
 }
-static bool operator != (const Reference& a, const Reference& b) {
+inline bool operator != (const Reference& a, const Reference& b) {
     return !(a == b);
 }
 

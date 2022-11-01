@@ -41,7 +41,7 @@ struct Path {
 };
 
 bool operator == (const Path& a, const Path& b);
-static bool operator != (const Path& a, const Path& b) { return !(a == b); }
+inline bool operator != (const Path& a, const Path& b) { return !(a == b); }
 
  // Functions for converting paths to and from references are in serialize.h
 

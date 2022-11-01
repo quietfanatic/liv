@@ -72,7 +72,7 @@ using disable_if_Dynamic_or_Type = std::enable_if_t<
 template <class T>
 using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
 
-static usize hash_combine (usize a, usize b) {
+inline usize hash_combine (usize a, usize b) {
     return a*3 + b;
 }
 

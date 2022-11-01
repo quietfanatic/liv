@@ -109,27 +109,27 @@ using Destructor = void(Mu&);
 
  // Determine presence of constructors and stuff using a sfinae trick
 template <class T, class = void>
-static constexpr DefaultConstructor* default_construct_p = null;
+constexpr DefaultConstructor* default_construct_p = null;
 template <class T>
-static constexpr DefaultConstructor* default_construct_p<
+constexpr DefaultConstructor* default_construct_p<
     T, std::void_t<decltype(new (null) T)>
 > = [](void* target){ new (target) T; };
 
 template <class T, class = void>
-static constexpr Destructor* destruct_p = null;
+constexpr Destructor* destruct_p = null;
 template <class T>
-static constexpr Destructor* destruct_p<
+constexpr Destructor* destruct_p<
     T, std::void_t<decltype(std::declval<T>().~T())>
 > = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
  // values() absolutely requires them.
 template <class T>
-static constexpr bool(* compare_p )(const T&, const T&) =
+constexpr bool(* compare_p )(const T&, const T&) =
     [](const T& a, const T& b) { return a == b; };
 
 template <class T>
-static constexpr void(* assign_p )(T&, const T&) =
+constexpr void(* assign_p )(T&, const T&) =
     [](T& a, const T& b) { a = b; };
 
 ///// DESCRIPTORS

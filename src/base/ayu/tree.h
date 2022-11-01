@@ -93,7 +93,7 @@ struct Tree {
  // comparisons, Tree(NAN) == Tree(NAN).
 bool operator == (const Tree& a, const Tree& b);
  // Theoretically we could add < and friends, but it's a pain to program.
-static bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
+inline bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
 
 namespace X {
      // Tried to treat a tree as though it's a form which it's not.

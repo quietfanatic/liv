@@ -136,8 +136,8 @@ struct Resource {
 
  // Resources are considered equal if their names are equal (Resources with the
  // same name will always have the same data pointer).
-static bool operator == (Resource a, Resource b) { return a.data == b.data; }
-static bool operator != (Resource a, Resource b) { return !(a == b); }
+inline bool operator == (Resource a, Resource b) { return a.data == b.data; }
+inline bool operator != (Resource a, Resource b) { return !(a == b); }
 
 ///// RESOURCE OPERATIONS
 
