@@ -126,7 +126,7 @@ AYU_DESCRIBE_TEMPLATE(
         return Str(r);
     }),
     hcb::length(hcb::template constant<ayu::usize>(n)),
-    hcb::elem_func([](T(&v)[n], ayu::usize i){
+    hcb::elem_func([](T(& v )[n], ayu::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
@@ -142,13 +142,34 @@ AYU_DESCRIBE_TEMPLATE(
         static String r = "char[" + std::to_string(n) + "]"sv;
         return Str(r);
     }),
-     // Serialize like a string
-    hcb::to_tree([](const char(&v)[n]){
+     // Serialize as a string
+    hcb::to_tree([](const char(& v )[n]){
         return ayu::Tree(v);
     }),
-     // But allow treating as an array if you want
+     // Deserialize as either a string or an array
+    hcb::from_tree([](char(& v )[n], const ayu::Tree& tree){
+        if (tree.form() == ayu::STRING) {
+            auto s = ayu::Str(tree);
+            if (s.size() != n) {
+                throw ayu::X::WrongLength(&v, n, n, s.size());
+            }
+            for (uint i = 0; i < n; i++) {
+                v[i] = s[i];
+            }
+        }
+        else if (tree.form() == ayu::ARRAY) {
+            const auto& a = ayu::Array(tree);
+            if (a.size() != n) {
+                throw ayu::X::WrongLength(&v, n, n, a.size());
+            }
+            for (uint i = 0; i < n; i++) {
+                v[i] = char(a[i]);
+            }
+        }
+    }),
+     // Allow accessing individual elements like an array
     hcb::length(hcb::template constant<ayu::usize>(n)),
-    hcb::elem_func([](char(&v)[n], ayu::usize i){
+    hcb::elem_func([](char(& v )[n], ayu::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
