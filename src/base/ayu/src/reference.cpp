@@ -1,10 +1,10 @@
-#include "reference.h"
+#include "../reference.h"
 
-#include "describe.h"
-#include "dynamic.h"
-#include "resource.h"
-#include "serialize.h"
-#include "tree-internal.h"
+#include "../describe.h"
+#include "../dynamic.h"
+#include "../resource.h"
+#include "../serialize.h"
+#include "tree-private.h"
 
 using namespace std::literals;
 

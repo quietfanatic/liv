@@ -3,7 +3,7 @@
 #include <cassert>
 #include <type_traits>
 
-#include "accessors.h"
+#include "internal/accessors-internal.h"
 #include "dynamic.h"
 
 namespace ayu {

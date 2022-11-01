@@ -1,7 +1,7 @@
-#include "dynamic.h"
+#include "../dynamic.h"
 
-#include "describe.h"
-#include "reference.h"
+#include "../describe.h"
+#include "../reference.h"
 
 using namespace ayu;
 using namespace ayu::in;
@@ -29,9 +29,9 @@ AYU_DESCRIBE(ayu::Dynamic,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
-#include "parse.h"
-#include "serialize.h"
+#include "../../tap/tap.h"
+#include "../parse.h"
+#include "../serialize.h"
 
 namespace ayu::test {
     struct DynamicTest {

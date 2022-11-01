@@ -1,8 +1,8 @@
-#include "tree-internal.h"
+#include "tree-private.h"
 
-#include "compat.h"
-#include "print.h"
-#include "describe.h"
+#include "../compat.h"
+#include "../print.h"
+#include "../describe.h"
 
 using namespace std::literals;
 
@@ -219,7 +219,7 @@ AYU_DESCRIBE(ayu::X::CantRepresent,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
+#include "../../tap/tap.h"
 
 static tap::TestSet tests ("base/ayu/tree", []{
     using namespace tap;

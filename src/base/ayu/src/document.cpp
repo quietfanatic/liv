@@ -1,10 +1,10 @@
-#include "document.h"
+#include "../document.h"
 
 #include <cctype>
 
-#include "common.h"
-#include "describe.h"
-#include "reference.h"
+#include "../common.h"
+#include "../describe.h"
+#include "../reference.h"
 
 using namespace std::literals;
 

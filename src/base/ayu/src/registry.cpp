@@ -1,4 +1,4 @@
-#include "registry.h"
+#include "../internal/registry-internal.h"
 
 #include <iostream>
 #include <typeindex>
@@ -7,8 +7,7 @@
 #include <cxxabi.h>
 #endif
 
-#include "description.h"
-#include "describe.h"
+#include "../describe.h"
 
 using namespace std::string_literals;
 

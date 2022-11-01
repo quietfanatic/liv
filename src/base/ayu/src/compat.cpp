@@ -1,4 +1,4 @@
-#include "compat.h"
+#include "../compat.h"
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -198,7 +198,7 @@ int remove_utf8 (const char* filename) {
 } using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
+#include "../../tap/tap.h"
 
 static tap::TestSet tests ("base/ayu/compat", []{
     using namespace tap;

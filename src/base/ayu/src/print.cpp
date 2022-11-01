@@ -1,10 +1,10 @@
-#include "print.h"
+#include "../print.h"
 
 #include <charconv>
 
-#include "char-cases-internal.h"
-#include "compat.h"
-#include "tree-internal.h"
+#include "../compat.h"
+#include "char-cases-private.h"
+#include "tree-private.h"
 
 using namespace std::string_literals;
 
@@ -168,7 +168,7 @@ void tree_to_file (const Tree& tree, Str filename, PrintFlags flags) {
 } using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
+#include "../../tap/tap.h"
 
 static tap::TestSet tests ("base/ayu/print", []{
     using namespace tap;

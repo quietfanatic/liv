@@ -4,7 +4,7 @@
 #include <typeinfo>
 
 #include "common.h"
-#include "registry.h"
+#include "internal/registry-internal.h"
 
 namespace ayu {
 
@@ -130,8 +130,9 @@ namespace X {
     };
 }
 
-} // namespace ayu;
+} // namespace ayu
 
+ // Allow hashing Type for std::unordered_map
 namespace std {
     template <>
     struct hash<ayu::Type> {
@@ -140,3 +141,4 @@ namespace std {
         }
     };
 }
+

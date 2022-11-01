@@ -1,11 +1,11 @@
-#include "serialize.h"
+#include "../serialize.h"
 
-#include "description-internal.h"
-#include "describe.h"
-#include "parse.h"
-#include "reference.h"
-#include "resource.h"
-#include "tree-internal.h"
+#include "../describe.h"
+#include "../parse.h"
+#include "../reference.h"
+#include "../resource.h"
+#include "tree-private.h"
+#include "describe-private.h"
 
 using namespace std::literals;
 
@@ -663,8 +663,8 @@ AYU_DESCRIBE(ayu::X::UnresolvedReference,
 
 #ifndef TAP_DISABLE_TESTS
 #include <unordered_map>
-#include "../tap/tap.h"
-#include "describe-standard.h"
+#include "../../tap/tap.h"
+#include "../describe-standard.h"
 
  // Putting these in a test namespace so their descibed names don't conflict
 namespace ayu::test {

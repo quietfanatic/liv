@@ -1,6 +1,6 @@
-#include "accessors.h"
+#include "../internal/accessors-internal.h"
 
-#include "reference.h"
+#include "../reference.h"
 
 namespace ayu::in {
 
@@ -82,7 +82,7 @@ Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
 using namespace ayu;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
+#include "../../tap/tap.h"
 
 namespace ayu::in {
      // For making sure deduction works.  Won't bother making this for other Acrs.

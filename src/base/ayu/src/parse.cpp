@@ -1,13 +1,13 @@
-#include "parse.h"
+#include "../parse.h"
 
 #include <cstring>
 #include <charconv>
 #include <limits>
 
-#include "char-cases-internal.h"
-#include "compat.h"
-#include "describe.h"
-#include "print.h"
+#include "../compat.h"
+#include "../describe.h"
+#include "../print.h"
+#include "char-cases-private.h"
 
 using namespace std::string_literals;
 
@@ -423,7 +423,7 @@ AYU_DESCRIBE(ayu::X::ParseError,
 )
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
+#include "../../tap/tap.h"
 static tap::TestSet tests ("base/ayu/parse", []{
     using namespace tap;
     auto t = [](const char* s, const Tree& t){

@@ -10,8 +10,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "accessors.h"
-#include "tree.h"
+#include "accessors-internal.h"
+#include "../tree.h"
 
 namespace ayu { struct Reference; }
 

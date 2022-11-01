@@ -1,10 +1,10 @@
-#include "type.h"
+#include "../type.h"
 
 #include <cstdlib>
 #include <string>
 
-#include "description.h"
-#include "describe.h"
+#include "../internal/describe-internal.h"
+#include "../describe.h"
 
 using namespace std::literals;
 

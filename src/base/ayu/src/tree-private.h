@@ -1,9 +1,9 @@
 #pragma once
 
-#include "tree.h"
+#include "../tree.h"
 
-#include "../tap/tap.h"
-#include "print.h"
+#include "../../tap/tap.h"
+#include "../print.h"
 
 namespace ayu::in {
 

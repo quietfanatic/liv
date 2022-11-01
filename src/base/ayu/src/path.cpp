@@ -1,9 +1,9 @@
-#include "path.h"
+#include "../path.h"
 
-#include "describe.h"
-#include "reference.h"
-#include "serialize.h"
-#include "tree-internal.h"
+#include "../describe.h"
+#include "../reference.h"
+#include "../serialize.h"
+#include "tree-private.h"
 
 namespace ayu {
 namespace in {

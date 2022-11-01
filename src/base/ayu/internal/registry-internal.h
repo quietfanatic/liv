@@ -1,14 +1,15 @@
 // This module implements the central registry of all described types in the
 // program.  This is kind of a nexus of dependency, so we're keeping it in its
 // own module.
-// TODO: move to internal folder
+// TODO: Make this internal/type-internal.h and merge registry.cpp into type.cpp
 
 #pragma once
 
 #include <typeinfo>
 
-#include "common.h"
+#include "../common.h"
 
+ // TODO: Move this out
  // I was going to use ayu::desc here but using a nested namespace seems to
  // cause weird errors in some situations.
 namespace ayu_desc {

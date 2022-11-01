@@ -1,10 +1,10 @@
-#include "common.h"
+#include "../common.h"
 
 #include <cstdlib>
 #include <iostream>
 
-#include "describe.h"
-#include "serialize.h"
+#include "../describe.h"
+#include "../serialize.h"
 
 using namespace std::literals;
 

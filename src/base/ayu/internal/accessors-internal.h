@@ -1,16 +1,15 @@
 // This module contains the classes implementing the accessors that can be used
 // in AYU_DESCRIBE descriptions.
 
-// TODO: Move most of this to internal folder
-
 #pragma once
 
 #include <cassert>
 #include <typeinfo>
 
-#include "common.h"
-#include "type.h"
+#include "../common.h"
+#include "../type.h"
 
+ // TODO: Find somewhere to put this not in the internal folder?
 namespace ayu::X {
     struct WriteReadonlyAccessor : LogicError { };
 }

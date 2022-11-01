@@ -1,14 +1,15 @@
-#include "resource.h"
+#include "../resource.h"
 
 #include <cerrno>
 #include <cstring>  // strerror
-#include "compat.h"
-#include "dynamic.h"
-#include "describe.h"
-#include "parse.h"
-#include "print.h"
-#include "reference.h"
-#include "serialize.h"
+#include "../compat.h"
+#include "../dynamic.h"
+#include "../describe.h"
+#include "../describe-standard.h"
+#include "../parse.h"
+#include "../print.h"
+#include "../reference.h"
+#include "../serialize.h"
 
 using namespace std::literals;
 
@@ -722,9 +723,8 @@ AYU_DESCRIBE(ayu::X::ResourceHandlerCantRemoveSource,
 ///// TESTS
 
 #ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
-#include "document.h"
-#include "describe-standard.h"
+#include "../../tap/tap.h"
+#include "../document.h"
 
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;

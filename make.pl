@@ -109,21 +109,21 @@ my @modules = qw(
     base/control/command-builtins
     base/control/input
     base/geo/mat
-    base/ayu/accessors
-    base/ayu/common
-    base/ayu/compat
-    base/ayu/document
-    base/ayu/dynamic
+    base/ayu/src/accessors
+    base/ayu/src/common
+    base/ayu/src/compat
+    base/ayu/src/document
+    base/ayu/src/dynamic
+    base/ayu/src/parse
+    base/ayu/src/path
+    base/ayu/src/print
+    base/ayu/src/reference
+    base/ayu/src/registry
+    base/ayu/src/resource
+    base/ayu/src/serialize
+    base/ayu/src/tree
+    base/ayu/src/type
     base/ayu/describe-standard
-    base/ayu/parse
-    base/ayu/path
-    base/ayu/print
-    base/ayu/reference
-    base/ayu/registry
-    base/ayu/resource
-    base/ayu/serialize
-    base/ayu/tree
-    base/ayu/type
     base/tap/tap
     base/glow/common
     base/glow/file-texture

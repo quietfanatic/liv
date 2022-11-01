@@ -1,17 +1,16 @@
-#pragma once
-
  // This is the interface for describing types to ayu.
- // TODO: add documentation for all the facets.
+ // TODO: add documentation for all the descriptors.
 
-#include "accessors.h"
-#include "common.h"
-#include "description.h"
-#include "registry.h"
-#include "reference.h"
-#include "tree.h"
+#pragma once
 
 #include <type_traits>
 #include <typeinfo>
+
+#include "internal/accessors-internal.h"
+#include "internal/describe-internal.h"
+#include "common.h"
+#include "reference.h"
+#include "tree.h"
 
 namespace ayu {
 

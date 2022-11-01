@@ -1,8 +1,8 @@
 #pragma once
 
-#include "description.h"
+#include "../internal/describe-internal.h"
 
-#include "tree-internal.h"
+#include "tree-private.h"
 
 namespace ayu::in {
 
