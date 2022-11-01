@@ -1,4 +1,4 @@
-#include "../common.h"
+#include "../internal/common-internal.h"
 
 #include <cstdlib>
 #include <iostream>

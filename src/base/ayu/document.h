@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "internal/common-internal.h"
 #include "type.h"
 
 namespace ayu {

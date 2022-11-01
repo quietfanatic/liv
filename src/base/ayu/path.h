@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "internal/common-internal.h"
 
 namespace ayu {
 

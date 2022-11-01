@@ -3,7 +3,7 @@
 #include <functional>  // for std::hash
 #include <typeinfo>
 
-#include "common.h"
+#include "internal/common-internal.h"
 #include "internal/type-internal.h"
 
 namespace ayu {
