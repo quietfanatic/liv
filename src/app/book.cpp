@@ -50,6 +50,7 @@ void Book::draw () {
             case FIT: {
                  // Fit to screen
                  // slope = 1/aspect
+                 // TODO: This seems to behave incorrectly sometimes
                 view.zoom = slope(page.size) > slope(window.size)
                     ? float(window.size.y) / page.size.y
                     : float(window.size.x) / page.size.x;
@@ -100,6 +101,11 @@ void Book::prev () {
     draw();
 }
 
+void Book::set_fit_mode (FitMode mode) {
+    view.fit_mode = mode;
+    draw();
+}
+
 void Book::drag (Vec amount) {
     view.fit_mode = MANUAL;
     view.offset += amount;
@@ -113,6 +119,15 @@ void Book::zoom_multiply (float factor) {
     view.offset += page.size * view.zoom / 2;
     view.zoom *= factor;
     view.offset -= page.size * view.zoom / 2;
+    draw();
+}
+
+void Book::set_fullscreen (bool fs) {
+    view.fullscreen = fs;
+    AS(!SDL_SetWindowFullscreen(
+        window.sdl_window,
+        fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
+    ));
     draw();
 }
 

@@ -35,10 +35,13 @@ struct Book {
     void next ();
     void prev ();
 
-     // Adds amount to offset
+    void set_fit_mode (FitMode);
+     // Adds amount to view.offset
     void drag (geo::Vec amount);
 
     void zoom_multiply (float factor);
+
+    void set_fullscreen (bool);
 
      // Returns true if no is in 1..pages.size()
     bool valid_page_no (isize no);

@@ -24,8 +24,7 @@ Command quit (quit_, "quit", "Quit application");
 
 static void fit_mode_ (FitMode mode) {
     if (current_book) {
-        current_book->view.fit_mode = mode;
-        current_book->draw();
+        current_book->set_fit_mode(mode);
     }
 }
 Command fit_mode (fit_mode_, "fit_mode", "Set fit mode: fit, stretch, or manual");
@@ -33,22 +32,17 @@ Command fit_mode (fit_mode_, "fit_mode", "Set fit mode: fit, stretch, or manual"
  // TODO: move logic to Book
 static void fullscreen_ () {
     if (current_book) {
-        bool& fs = current_book->view.fullscreen;
-        fs = !fs;
-        AS(!SDL_SetWindowFullscreen(
-            current_book->window.sdl_window,
-            fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
-        ));
-        current_book->draw();
+        current_book->set_fullscreen(!current_book->view.fullscreen);
     }
 }
 Command fullscreen (fullscreen_, "fullscreen", "Toggle fullscreen mode");
 
 static void leave_fullscreen_or_quit_ () {
+     // TODO: For some reason when leaving fullscreen on pressing ESC, the app
+     // receives another ESC input, causing it to quit immediately.  Add a
+     // timeout here so that doesn't happen, or something?
     if (current_book && current_book->view.fullscreen) {
-        current_book->view.fullscreen = false;
-        AS(!SDL_SetWindowFullscreen(current_book->window.sdl_window, 0));
-        current_book->draw();
+        current_book->set_fullscreen(false);
     }
     else if (current_app) {
         current_app->stop();
