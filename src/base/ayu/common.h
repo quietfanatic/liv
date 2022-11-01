@@ -85,10 +85,12 @@ struct CallbackV<Ret(Args...)> {
 template <class Sig>
 using Callback = const CallbackV<Sig>&;
 
-void dump_ref (const Reference&);
+void dump_refs (const std::vector<Reference>&);
  // Primarily for debugging.  Prints item_to_string(Reference(&v)) to stderr
-template <class T>
-void dump (const T& v) { dump_ref(&v); }
+template <class... Args>
+void dump (const Args&... v) {
+    dump_refs({&v...});
+}
 
 ///// BASIC ERRORS
 

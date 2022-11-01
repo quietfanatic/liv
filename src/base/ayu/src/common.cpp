@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "../compat.h"
 #include "../describe.h"
 #include "../serialize.h"
 
@@ -11,8 +12,20 @@ using namespace std::literals;
 namespace ayu {
 using namespace in;
 
-void dump_ref (const Reference& r) {
-    std::cerr << item_to_string(r) << std::flush;
+void dump_refs (const std::vector<Reference>& rs) {
+    switch (rs.size()) {
+        case 0: warn_utf8("[]\n"); break;
+        case 1: warn_utf8(item_to_string(rs[0])); break;
+        default: {
+            std::string r = "[";
+            r += item_to_string(rs[0], COMPACT);
+            for (usize i = 1; i < rs.size(); i++) {
+                r += " " + item_to_string(rs[i], COMPACT);
+            }
+            warn_utf8(r + "]\n");
+            break;
+        }
+    }
 }
 
 namespace X {
