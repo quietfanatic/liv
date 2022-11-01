@@ -447,6 +447,7 @@ void item_set_length (const Reference& item, usize l) {
         }
     }
     else if (auto elems = desc->elems()) {
+         // TODO: process inheritance
         usize min = elems->n_elems;
         usize max = elems->n_elems;
          // Scan for optional elems starting from the end.
@@ -465,6 +466,7 @@ void item_set_length (const Reference& item, usize l) {
 }
 
 Reference item_maybe_elem (const Reference& item, usize index) {
+     // TODO: process inheritance
     auto desc = DescriptionPrivate::get(item.type());
     if (desc->accepts_array()) {
         if (auto elems = desc->elems()) {
@@ -556,19 +558,6 @@ void recursive_scan (
             return;
         }
     }
-}
-
-Reference maybe_reference_from_path (Path path) {
-    if (auto parent = path.parent()) {
-        if (auto key = path.key()) {
-            return reference_from_path(*parent).attr(*key);
-        }
-        else if (auto index = path.index()) {
-            return reference_from_path(*parent).elem(*index);
-        }
-        else AYU_INTERNAL_UGUU();
-    }
-    else return universe_ref();
 }
 
 Reference reference_from_path (Path path) {

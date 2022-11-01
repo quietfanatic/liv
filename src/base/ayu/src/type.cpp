@@ -65,6 +65,7 @@ void Type::delete_ (Mu* p) const {
     deallocate(p);
 }
 
+ // TODO
 Mu* Type::upcast_to (Type to, Mu* p) const {
     if (*this != to) throw X::CannotCoerce(*this, to);
     return p;
