@@ -4,7 +4,7 @@
 #include <typeinfo>
 
 #include "common.h"
-#include "internal/registry-internal.h"
+#include "internal/type-internal.h"
 
 namespace ayu {
 
@@ -106,6 +106,18 @@ static bool operator != (Type a, Type b) {
 
 namespace X {
     struct TypeError : LogicError { };
+     // Tried to map a C++ type to an AYU type, but AYU doesn't know about this
+     // type (it has no AYU_DESCRIBE description).
+     // TODO: serializing this doesn't work?
+    struct UnknownType : TypeError {
+        const std::type_info& cpp_type;
+        UnknownType (const std::type_info& t) : cpp_type(t) { }
+    };
+     // Tried to look up a type by name, but there is no type with that name.
+    struct TypeNotFound : TypeError {
+        String name;
+        TypeNotFound (String&& n) : name(n) { }
+    };
      // TODO: This is unused, get rid of it
     struct WrongType : TypeError {
         Type expected;

@@ -118,7 +118,6 @@ my @modules = qw(
     base/ayu/src/path
     base/ayu/src/print
     base/ayu/src/reference
-    base/ayu/src/registry
     base/ayu/src/resource
     base/ayu/src/serialize
     base/ayu/src/tree

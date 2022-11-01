@@ -1,7 +1,6 @@
 // This module implements the central registry of all described types in the
 // program.  This is kind of a nexus of dependency, so we're keeping it in its
 // own module.
-// TODO: Make this internal/type-internal.h and merge registry.cpp into type.cpp
 
 #pragma once
 
@@ -9,29 +8,12 @@
 
 #include "../common.h"
 
- // TODO: Move this out
  // I was going to use ayu::desc here but using a nested namespace seems to
  // cause weird errors in some situations.
 namespace ayu_desc {
     template <class T>
     struct Describe {
         static constexpr bool defined = false;
-    };
-}
-
- // TODO: Move these to type.h
-namespace ayu::X {
-     // Tried to map a C++ type to an AYU type, but AYU doesn't know about this
-     // type (it has no AYU_DESCRIBE description).
-     // TODO: serializing this doesn't work?
-    struct UnknownType : LogicError {
-        const std::type_info& cpp_type;
-        UnknownType (const std::type_info& t) : cpp_type(t) { }
-    };
-     // Tried to look up a type by name, but there is no type with that name.
-    struct TypeNotFound : LogicError {
-        String name;
-        TypeNotFound (String&& n) : name(n) { }
     };
 }
 
