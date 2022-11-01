@@ -33,6 +33,8 @@ typical way to serialize an object that can contain multiple types is to use an
 array with two elements, the first of which is the type name, and the second
 of which is the value.
 
+See ayu-data-language.md for more details.
+
 #### Serialization library
 
 Documentation pending, but see describe.h
