@@ -90,6 +90,14 @@ CE T max (T a, T b) {
          : a >= b ? a : b;
 }
 
+template <class T, class Low, class High>
+CE T clamp (T a, Low low, High high) {
+    return a != a ? a
+         : a < low ? T(low)
+         : a > high ? T(high)
+         : a;
+}
+
 ///// Fast constexpr rounding functions
 
  // Round toward 0
