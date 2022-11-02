@@ -36,11 +36,26 @@
             #version 140
 
             uniform sampler2DRect u_tex;
+            uniform int u_interpolation_mode;
             in vec2 v_tex_coords;
             out vec4 color;
 
             void main () {
-                color = texture(u_tex, v_tex_coords);
+                switch (u_interpolation_mode) {
+                    case 0: {  // nearest
+                        color = texture(u_tex, floor(v_tex_coords + 0.5));
+                        break;
+                    }
+                    case 1: {  // linear
+                        color = texture(u_tex, v_tex_coords);
+                        break;
+                    }
+                    case 2: {  // cubic
+                         // NYI
+                        color = texture(u_tex, v_tex_coords);
+                        break;
+                    }
+                }
             }
         "
     }]

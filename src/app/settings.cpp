@@ -15,6 +15,14 @@ AYU_DESCRIBE(app::FitMode,
     )
 )
 
+AYU_DESCRIBE(app::InterpolationMode,
+    values(
+        value("nearest", NEAREST),
+        value("linear", LINEAR)
+//        value("cubic", CUBIC)
+    )
+)
+
 AYU_DESCRIBE(app::Mapping,
     elems(
         elem(&Mapping::input),
@@ -24,7 +32,8 @@ AYU_DESCRIBE(app::Mapping,
 
 AYU_DESCRIBE(app::Settings::Page,
     attrs(
-        attr("fit_mode", &Settings::Page::fit_mode, optional)
+        attr("fit_mode", &Settings::Page::fit_mode, optional),
+        attr("interpolation_mode", &Settings::Page::interpolation_mode, optional)
     )
 )
 

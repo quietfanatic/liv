@@ -9,18 +9,22 @@ using namespace control;
 extern Command next;
  // () Go to previous page(s)
 extern Command prev;
- // () Quit app
-extern Command quit;
 
  // (FitMode) Set fit mode for current book
 extern Command fit_mode;
+
+ // (InterpolationMode) Set interpolation mode for current book
+extern Command interpolation_mode;
+
+ // (float) Multiply zoom by amount
+extern Command zoom_multiply;
 
  // () Enter or leave fullscreen mode
 extern Command fullscreen;
  // () Leave fullscreen mode or quit if not fullscreen
 extern Command leave_fullscreen_or_quit;
 
- // (float) Multiply zoom by amount
-extern Command zoom_multiply;
+ // () Quit app
+extern Command quit;
 
 } // namespace app::command

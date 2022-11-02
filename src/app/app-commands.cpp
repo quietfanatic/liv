@@ -17,10 +17,10 @@ static void prev_ () {
 }
 Command prev (prev_, "prev", "Go to previous page or pages");
 
-static void quit_ () {
-    if (current_app) current_app->stop();
+static void seek_ (isize count) {
+    if (current_book) current_book->seek(count);
 }
-Command quit (quit_, "quit", "Quit application");
+Command seek (seek_, "seek", "Add given amount to the current page number");
 
 static void fit_mode_ (FitMode mode) {
     if (current_book) {
@@ -28,6 +28,18 @@ static void fit_mode_ (FitMode mode) {
     }
 }
 Command fit_mode (fit_mode_, "fit_mode", "Set fit mode: fit, stretch, or manual");
+
+static void interpolation_mode_ (InterpolationMode mode) {
+    if (current_book) {
+        current_book->set_interpolation_mode(mode);
+    }
+}
+Command interpolation_mode (interpolation_mode_, "interpolation_mode", "Set the pixel interpolation mode: nearest, linear, or cubic");
+
+static void zoom_multiply_ (float factor) {
+    if (current_book) current_book->zoom_multiply(factor);
+}
+Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
 
  // TODO: move logic to Book
 static void fullscreen_ () {
@@ -49,14 +61,9 @@ Command leave_fullscreen_or_quit (
     leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
 );
 
-static void zoom_multiply_ (float factor) {
-    if (current_book) current_book->zoom_multiply(factor);
+static void quit_ () {
+    if (current_app) current_app->stop();
 }
-Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
-
-static void seek_ (isize count) {
-    if (current_book) current_book->seek(count);
-}
-Command seek (seek_, "seek", "Add given amount to the current page number");
+Command quit (quit_, "quit", "Quit application");
 
 } // namespace app::command

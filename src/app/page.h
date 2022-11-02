@@ -7,6 +7,7 @@
 #include "../base/geo/vec.h"
 #include "../base/glow/file-texture.h"
 #include "../base/uni/common.h"
+#include "settings.h"
 
 namespace app {
 
@@ -24,6 +25,7 @@ struct Page {
     void unload ();
 
     void draw (
+        InterpolationMode interpolation_mode,
         const geo::Rect& screen_rect,
         const geo::Rect& tex_rect = geo::NAN // defaults to whole page
     );

@@ -13,6 +13,12 @@ enum FitMode : uint8 {
     MANUAL
 };
 
+enum InterpolationMode : uint8 {
+    NEAREST,
+    LINEAR,
+//    CUBIC
+};
+
 struct Mapping {
     control::Input input;
     control::Statement action;
@@ -21,6 +27,7 @@ struct Mapping {
 struct Settings {
     struct Page {
         FitMode fit_mode = FIT;
+        InterpolationMode interpolation_mode = LINEAR;
     } page;
     struct Window {
         geo::IVec size = {720, 720};

@@ -20,6 +20,7 @@ struct Book {
     isize current_page_no = 1; // 1-based index
 
     FitMode fit_mode = FIT;  // Reset on page turn
+    InterpolationMode interpolation_mode = LINEAR;
     float zoom = 1;
     geo::Vec offset;  // Pixels, bottom-left origin
 
@@ -48,6 +49,7 @@ struct Book {
     void seek (isize count);
 
     void set_fit_mode (FitMode);
+    void set_interpolation_mode (InterpolationMode);
      // Adds amount to view.offset
     void drag (geo::Vec amount);
 

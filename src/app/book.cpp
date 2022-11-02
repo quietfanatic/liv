@@ -39,6 +39,7 @@ Book::Book (App& app, Str folder) :
 Book::Book (App& app, const std::vector<String>& filenames) :
     app(app),
     fit_mode(app.settings->page.fit_mode),
+    interpolation_mode(app.settings->page.interpolation_mode),
     window{
         .title = "Little Image Viewer",
         .size = app.settings->window.size,
@@ -129,7 +130,7 @@ bool Book::draw_if_needed () {
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
          // Draw
-        page->draw(screen_rect);
+        page->draw(interpolation_mode, screen_rect);
     }
     SDL_GL_SwapWindow(window.sdl_window);
     return true;
@@ -164,6 +165,11 @@ void Book::seek (isize amount) {
 
 void Book::set_fit_mode (FitMode mode) {
     fit_mode = mode;
+    need_draw = true;
+}
+
+void Book::set_interpolation_mode (InterpolationMode mode) {
+    interpolation_mode = mode;
     need_draw = true;
 }
 

@@ -1,6 +1,7 @@
 [app::Settings {
     page: {
         fit_mode: fit
+        interpolation_mode: linear
     }
     window: {
         size: [720 720]
@@ -23,5 +24,8 @@
         [[s] [fit_mode stretch]]
         [[escape] [leave_fullscreen_or_quit]]
         [[ctrl q] [quit]]
+        [[ctrl 1] [interpolation_mode nearest]]
+        [[ctrl 2] [interpolation_mode linear]]
+        #[[ctrl 3] [interpolation_mode cubic]]
     ]
 }]
