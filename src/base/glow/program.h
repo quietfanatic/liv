@@ -41,12 +41,14 @@ namespace X {
     struct ShaderCompileFailed : GlowError {
         Shader* shader;
         std::string info_log;
-        ShaderCompileFailed (Shader* s, std::string&& l) : shader(s), info_log(l) { }
+         // TODO: Un-null s once exception serialization works
+        ShaderCompileFailed (Shader* s, std::string&& l) : shader(null), info_log(l) { }
     };
     struct ProgramLinkFailed : GlowError {
         Program* program;
         std::string info_log;
-        ProgramLinkFailed (Program* p, std::string&& l) : program(p), info_log(l) { }
+         // TODO: Un-null p once exception serialization works
+        ProgramLinkFailed (Program* p, std::string&& l) : program(null), info_log(l) { }
     };
 }
 
