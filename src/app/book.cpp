@@ -14,6 +14,22 @@ namespace fs = std::filesystem;
 
 namespace app {
 
+static void update_title (Book& self) {
+    String title;
+    if (self.pages.size() == 0) {
+        title = "Little Image Viewer (no pages loaded)"s;
+    }
+    else {
+        if (self.pages.size() > 1) {
+            title = "[" + std::to_string(self.current_page_no)
+                  + "/" + std::to_string(self.pages.size()) + "] ";
+        }
+        title += self.get_page(self.current_page_no)->filename;
+    }
+    self.window.title = std::move(title);
+    self.window.update();
+}
+
 Book::Book (App& app, Str folder) :
     app(app),
     folder(folder)
@@ -39,6 +55,7 @@ Book::Book (App& app, const std::vector<String>& filenames) :
     for (auto& filename : filenames) {
         pages.emplace_back(std::make_unique<Page>(filename));
     }
+    update_title(*this);
 }
 Book::~Book () { }
 
@@ -124,6 +141,7 @@ void Book::next () {
         current_page_no = pages.size();
     }
     fit_mode = app.settings->page.fit_mode;
+    update_title(*this);
     need_draw = true;
 }
 
@@ -133,12 +151,14 @@ void Book::prev () {
         current_page_no = 1;
     }
     fit_mode = app.settings->page.fit_mode;
+    update_title(*this);
     need_draw = true;
 }
 
 void Book::seek (isize amount) {
     current_page_no = clamp(current_page_no + amount, 1, isize(pages.size()));
     fit_mode = app.settings->page.fit_mode;
+    update_title(*this);
     need_draw = true;
 }
 
