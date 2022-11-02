@@ -108,7 +108,6 @@ using DefaultConstructor = void(void*);
 using Destructor = void(Mu&);
 
  // Determine presence of constructors and stuff using a sfinae trick
- // TODO: Merge trivial ctors/dtors for slight space savings
 template <class T, class = void>
 constexpr DefaultConstructor* default_construct_p = null;
 template <class T>

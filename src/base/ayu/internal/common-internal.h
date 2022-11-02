@@ -62,16 +62,6 @@ bool operator != (const RCP<T, deleter>& a, const RCP<T, deleter>& b) {
     return a.p != b.p;
 }
 
- // Some type traits and stuff
-template <class T>
-using disable_if_Dynamic_or_Type = std::enable_if_t<
-    !std::is_base_of_v<Dynamic, std::decay_t<T>>
-    && !std::is_base_of_v<Type, std::decay_t<T>>
-, bool>;
- // Don't have this until C++20
-template <class T>
-using remove_cvref = std::remove_cv_t<std::remove_reference_t<T>>;
-
 inline usize hash_combine (usize a, usize b) {
     return a*3 + b;
 }

@@ -16,6 +16,14 @@ struct Dynamic {
     const Type type;
     Mu* const data;
 
+     // Filter out types that aren't allowed here
+    template <class T>
+    using AllowedForDynamic = std::enable_if_t<
+        !std::is_base_of_v<Dynamic, T>
+        && !std::is_base_of_v<Type, T>
+        && !std::is_reference_v<T>
+    , bool>;
+
      // The empty value will cause null derefs if you do anything with it.
     constexpr Dynamic () : type(), data(null) { }
      // Create from internal data.  Takes ownership.
@@ -32,7 +40,7 @@ struct Dynamic {
         const_cast<Mu*&>(o.data) = null;
     }
      // Construct by moving an arbitrary type in
-    template <class T, in::disable_if_Dynamic_or_Type<T> = true>
+    template <class T, AllowedForDynamic<T> = true>
     Dynamic (T&& v) :
         Dynamic(Type::CppType<T>(), reinterpret_cast<Mu*>(new T (std::move(v))))
     { }
@@ -67,28 +75,28 @@ struct Dynamic {
         return *type.cast_to(t, (const Mu*)data);
     }
     template <class T>
-    in::remove_cvref<T>& as () {
-        return reinterpret_cast<in::remove_cvref<T>&>(
-            as(Type::CppType<in::remove_cvref<T>>())
+    std::remove_cvref_t<T>& as () {
+        return reinterpret_cast<std::remove_cvref_t<T>&>(
+            as(Type::CppType<std::remove_cvref_t<T>>())
         );
     }
     template <class T>
-    const in::remove_cvref<T>& as () const {
-        return reinterpret_cast<const in::remove_cvref<T>&>(
-            as(Type::CppType<in::remove_cvref<T>>())
+    const std::remove_cvref_t<T>& as () const {
+        return reinterpret_cast<const std::remove_cvref_t<T>&>(
+            as(Type::CppType<std::remove_cvref_t<T>>())
         );
     }
      // Copying accessor
     template <class T>
-    in::remove_cvref<T> get () const {
-        return as<in::remove_cvref<T>>();
+    std::remove_cvref_t<T> get () const {
+        return as<std::remove_cvref_t<T>>();
     }
      // Explicit coercion
-    template <class T, in::disable_if_Dynamic_or_Type<T> = true>
+    template <class T, AllowedForDynamic<T> = true>
     explicit operator T& () {
         return as<T>();
     }
-    template <class T, in::disable_if_Dynamic_or_Type<T> = true>
+    template <class T, AllowedForDynamic<T> = true>
     explicit operator const T& () const {
         return as<T>();
     }
