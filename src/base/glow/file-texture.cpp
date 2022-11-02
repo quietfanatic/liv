@@ -3,6 +3,10 @@
 #include <SDL2/SDL_image.h>
 #include "../glow/gl.h"
 
+#ifdef GLOW_PROFILING
+#include "../uni/time.h"
+#endif
+
 namespace glow {
 
 FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
@@ -12,7 +16,14 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
         AA(IMG_Init(flags) == flags);
         return true;
     }();
+#ifdef GLOW_PROFILING
+    double time0 = uni::now();
+#endif
     SDL_Surface* surf = AS(IMG_Load(filename.c_str()));
+#ifdef GLOW_PROFILING
+    double time1 = uni::now();
+    double time2 = time1;
+#endif
      // Translate SDL formats into OpenGL formats
      // TODO: select more efficient internal format
     GLenum internal_format;
@@ -50,6 +61,9 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
             SDL_Surface* new_surf = AS(SDL_ConvertSurfaceFormat(surf, sdl_format, 0));
             SDL_FreeSurface(surf);
             surf = new_surf;
+#ifdef GLOW_PROFILING
+            time2 = uni::now();
+#endif
             break;
         }
     }
@@ -93,6 +107,9 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
         else if (greyscale) internal_format = GL_RG8; // G -> A
         else if (unused_alpha) internal_format = GL_RGB8;
     }
+#ifdef GLOW_PROFILING
+    double time3 = uni::now();
+#endif
      // Now upload texture
     AA(surf->w > 0 && surf->h > 0);
     glBindTexture(target, id);
@@ -112,6 +129,14 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
         glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GL_RED);
         glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GL_GREEN);
     }
+#ifdef GLOW_PROFILING
+    double time4 = uni::now();
+    int64 mem = surf->w * surf->h;
+    if (internal_format == GL_RG8) mem *= 2;
+    else if (internal_format == GL_RGB8) mem *= 3;
+    else if (internal_format == GL_RGBA8) mem *= 4;
+    ayu::dump(filename, time1 - time0, time2 - time1, time3 - time2, time4 - time3, mem);
+#endif
     SDL_FreeSurface(surf);
 }
 
