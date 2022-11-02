@@ -15,19 +15,10 @@ struct Page;
 struct Book {
     App& app;
 
+    ///// Book contents
     String folder; // empty if not a folder
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
-
-    FitMode fit_mode = FIT;  // Reset on page turn
-    InterpolationMode interpolation_mode = CUBIC;
-    float zoom = 1;
-    geo::Vec offset;  // Pixels, bottom-left origin
-
-    wind::Window window;
-    bool need_draw = true;
-
-    int64 estimated_page_memory = 0;
 
      // Loads all image files in the folder as pages
     explicit Book (App& app, Str folder);
@@ -40,15 +31,41 @@ struct Book {
      // Returns null if not valid page number
     Page* get_page (isize no);
 
-     // Handles layout logic.  Returns true if drawing was actually done.
-    bool draw_if_needed ();
-     // Change current_page
-    void next ();
-    void prev ();
-     // Add to current_page_no (stopping at first/last page)
-    void seek (isize count);
+    ///// Layout decision logic
+    AutoZoomMode auto_zoom_mode = FIT;
+     // TODO: MAKE THESE ACTUALLY TOP-RIGHT ORIGIN
+     // Controls alignment of the image when it's smaller than the window.
+     // (0, 0) means the image's top-left corner is in the top-left corner of
+     // the window.  (1, 1) means the image's bottom-right corner is in the
+     // bottom-right corner of the window.  (0.5, 0.5) means the image's center
+     // is in the center of the window.
+    geo::Vec small_align;
+     // Controls alignment of the image when it's larger than the window.
+    geo::Vec large_align;
+     // Controls texture filtering
+    InterpolationMode interpolation_mode = CUBIC;
 
-    void set_fit_mode (FitMode);
+    ///// Actual layout logic
+     // Zoom has been manually changed, so ignore auto_zoom
+    bool manual_zoom = false;
+     // Offset has been manually changed, so ignore auto_zoom and aligns.
+    bool manual_align = false;
+     // Current zoom level.
+    float zoom = 1;
+    geo::Vec offset;  // Pixels, top-left origin TODO
+
+    ///// Controls
+     // Clamps to valid page numbers
+    void set_page (isize no);
+     // Increment current page by 1
+     // TODO: Increments by two if viewing 2 pages (NYI)
+    void next () { set_page(current_page_no + 1); }
+    void prev () { set_page(current_page_no - 1); }
+     // Add to current page (stopping at first/last page)
+    void seek (isize count) { set_page(current_page_no + count); }
+
+    void set_auto_zoom_mode (AutoZoomMode);
+    void set_align (geo::Vec small, geo::Vec large);
     void set_interpolation_mode (InterpolationMode);
      // Adds amount to view.offset
     void drag (geo::Vec amount);
@@ -58,11 +75,19 @@ struct Book {
     bool is_fullscreen ();
     void set_fullscreen (bool);
 
-    void window_size_changed (geo::IVec new_size);
 
+    ///// Internal stuff
+    wind::Window window;
+    bool need_draw = true;
+
+    int64 estimated_page_memory = 0;
+     // Handles layout logic.  Returns true if drawing was actually done.
+    bool draw_if_needed ();
      // Preload images perhaps
      // Returns true if any processing was actually done
     bool idle_processing ();
+
+    void window_size_changed (geo::IVec new_size);
 };
 
 } // namespace app

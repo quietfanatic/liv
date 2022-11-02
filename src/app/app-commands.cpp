@@ -5,6 +5,8 @@
 #include "book.h"
 #include "settings.h"
 
+using namespace geo;
+
 namespace app::command {
 
 static void next_ () {
@@ -22,12 +24,19 @@ static void seek_ (isize count) {
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
 
-static void fit_mode_ (FitMode mode) {
+static void auto_zoom_mode_ (AutoZoomMode mode) {
     if (current_book) {
-        current_book->set_fit_mode(mode);
+        current_book->set_auto_zoom_mode(mode);
     }
 }
-Command fit_mode (fit_mode_, "fit_mode", "Set fit mode: fit, stretch, or manual");
+Command auto_zoom_mode (auto_zoom_mode_, "auto_zoom_mode", "Set auto zoom mode: fit or original");
+
+static void align_ (Vec small, Vec large) {
+    if (current_book) {
+        current_book->set_align(small, large);
+    }
+}
+Command align (align_, "align", "Set page alignment (small_align and large_align)");
 
 static void interpolation_mode_ (InterpolationMode mode) {
     if (current_book) {

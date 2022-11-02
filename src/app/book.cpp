@@ -14,6 +14,8 @@ namespace fs = std::filesystem;
 
 namespace app {
 
+///// Private helpers
+
 static void update_title (Book& self) {
     String title;
     if (self.pages.size() == 0) {
@@ -30,6 +32,23 @@ static void update_title (Book& self) {
     self.window.update();
 }
 
+static void load_page (Book& self, Page* page) {
+    if (!page->texture) {
+        page->load();
+        self.estimated_page_memory += page->estimated_memory;
+    }
+}
+
+static void unload_page (Book& self, Page* page) {
+    if (page->texture) {
+        page->unload();
+        self.estimated_page_memory -= page->estimated_memory;
+        DA(self.estimated_page_memory >= 0);
+    }
+}
+
+///// Contents
+
 Book::Book (App& app, Str folder) :
     app(app),
     folder(folder)
@@ -38,7 +57,9 @@ Book::Book (App& app, Str folder) :
 }
 Book::Book (App& app, const std::vector<String>& filenames) :
     app(app),
-    fit_mode(app.settings->page.fit_mode),
+    auto_zoom_mode(app.settings->page.auto_zoom_mode),
+    small_align(app.settings->page.small_align),
+    large_align(app.settings->page.large_align),
     interpolation_mode(app.settings->page.interpolation_mode),
     window{
         .title = "Little Image Viewer",
@@ -60,6 +81,7 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 }
 Book::~Book () { }
 
+
 bool Book::valid_page_no (isize no) {
     return no >= 1 && usize(no) <= pages.size();
 }
@@ -69,102 +91,30 @@ Page* Book::get_page (isize no) {
     else return null;
 }
 
-static void load_page (Book& self, Page* page) {
-    if (!page->texture) {
-        page->load();
-        self.estimated_page_memory += page->estimated_memory;
-    }
-}
+///// Controls
 
-static void unload_page (Book& self, Page* page) {
-    if (page->texture) {
-        page->unload();
-        self.estimated_page_memory -= page->estimated_memory;
-        DA(self.estimated_page_memory >= 0);
+void Book::set_page (isize no) {
+    current_page_no = clamp(no, 1, isize(pages.size()));
+    if (app.settings->page.reset_zoom_on_page_turn) {
+        manual_zoom = false;
+        manual_align = false;
     }
-}
-
-bool Book::draw_if_needed () {
-    if (!need_draw) return false;
-    need_draw = false;
-     // TODO: Currently we have a different context for each window, would it
-     // be better to share a context between all windows?
-    SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
-     // Clear
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    if (Page* page = get_page(current_page_no)) {
-        load_page(*this, page);
-        page->last_viewed_at = uni::now();
-        Vec scale;
-         // Layout page
-        switch (fit_mode) {
-            case FIT: {
-                 // Fit to screen
-                 // slope = 1/aspect
-                 // TODO: This seems to behave incorrectly sometimes
-                zoom = slope(Vec(page->size)) > slope(Vec(window.size))
-                    ? float(window.size.y) / page->size.y
-                    : float(window.size.x) / page->size.x;
-                scale = {zoom, zoom};
-                offset = (window.size - page->size * scale) / 2;
-                break;
-            }
-            case STRETCH: {
-                 // Zoom isn't meaningful in stretch mode, but set it anyway
-                zoom = slope(page->size) > slope(window.size)
-                    ? float(window.size.y) / page->size.y
-                    : float(window.size.x) / page->size.x;
-                scale = window.size / page->size;
-                offset = {0, 0};
-                break;
-            }
-            case MANUAL: {
-                 // Use whatever zoom and offset already are
-                scale = {zoom, zoom};
-                break;
-            }
-            default: AA(false);
-        }
-        Rect page_position = {offset, offset + page->size * scale};
-         // Convert to OpenGL coords (-1,-1)..(+1,+1)
-        Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
-         // Draw
-        page->draw(interpolation_mode, screen_rect);
-    }
-    SDL_GL_SwapWindow(window.sdl_window);
-    return true;
-}
-
-void Book::next () {
-    current_page_no += 1;
-    if (!valid_page_no(current_page_no)) {
-        current_page_no = pages.size();
-    }
-    fit_mode = app.settings->page.fit_mode;
     update_title(*this);
     need_draw = true;
 }
 
-void Book::prev () {
-    current_page_no -= 1;
-    if (!valid_page_no(current_page_no)) {
-        current_page_no = 1;
-    }
-    fit_mode = app.settings->page.fit_mode;
-    update_title(*this);
-    need_draw = true;
+void Book::set_align (Vec small, Vec large) {
+    if (defined(small.x)) small_align.x = small.x;
+    if (defined(small.y)) small_align.y = small.y;
+    if (defined(large.x)) large_align.x = large.x;
+    if (defined(large.y)) large_align.y = large.y;
+    if (!manual_align) need_draw = true;
 }
 
-void Book::seek (isize amount) {
-    current_page_no = clamp(current_page_no + amount, 1, isize(pages.size()));
-    fit_mode = app.settings->page.fit_mode;
-    update_title(*this);
-    need_draw = true;
-}
-
-void Book::set_fit_mode (FitMode mode) {
-    fit_mode = mode;
+void Book::set_auto_zoom_mode (AutoZoomMode mode) {
+    auto_zoom_mode = mode;
+    manual_zoom = false;
+    manual_align = false;
     need_draw = true;
 }
 
@@ -174,18 +124,24 @@ void Book::set_interpolation_mode (InterpolationMode mode) {
 }
 
 void Book::drag (Vec amount) {
-    fit_mode = MANUAL;
+    manual_align = true;
     offset += amount;
     need_draw = true;
 }
 
 void Book::zoom_multiply (float factor) {
     if (Page* page = get_page(current_page_no)) {
-        fit_mode = MANUAL;
-         // Hacky way to zoom from center
-        offset += page->size * zoom / 2;
-        zoom *= factor;
-        offset -= page->size * zoom / 2;
+        manual_zoom = true;
+        if (manual_align) {
+             // Hacky way to zoom from center
+             // TODO: zoom from center of window, not center of page
+            offset += page->size * zoom / 2;
+            zoom *= factor;
+            offset -= page->size * zoom / 2;
+        }
+        else {
+            zoom *= factor;
+        }
         need_draw = true;
     }
 }
@@ -203,9 +159,50 @@ void Book::set_fullscreen (bool fs) {
     need_draw = true;
 }
 
-void Book::window_size_changed (IVec new_size) {
-    new_size = new_size;
-    need_draw = true;
+///// Internal stuff
+
+bool Book::draw_if_needed () {
+    if (!need_draw) return false;
+    need_draw = false;
+     // TODO: Currently we have a different context for each window, would it
+     // be better to share a context between all windows?
+    SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
+     // Clear
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    if (Page* page = get_page(current_page_no)) {
+        load_page(*this, page);
+        page->last_viewed_at = uni::now();
+         // Determine layout
+        if (!manual_align) {
+            if (!manual_zoom) {
+                switch (auto_zoom_mode) {
+                    case FIT: {
+                         // slope = 1 / aspect ratio
+                        zoom = slope(Vec(page->size)) > slope(Vec(window.size))
+                            ? float(window.size.y) / page->size.y
+                            : float(window.size.x) / page->size.x;
+                        break;
+                    }
+                    case ORIGINAL: {
+                        zoom = 1;
+                        break;
+                    }
+                }
+            }
+             // Auto align
+            Vec range = window.size - (page->size * zoom); // Can be negative
+            offset.x = range.x * (range.x > 0 ? small_align.x : large_align.x);
+            offset.y = range.y * (range.y > 0 ? small_align.y : large_align.y);
+        }
+        Rect page_position = {offset, offset + page->size * zoom};
+         // Convert to OpenGL coords (-1,-1)..(+1,+1)
+        Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
+         // Draw
+        page->draw(interpolation_mode, screen_rect);
+    }
+    SDL_GL_SwapWindow(window.sdl_window);
+    return true;
 }
 
 bool Book::idle_processing () {
@@ -252,6 +249,11 @@ bool Book::idle_processing () {
     }
      // Didn't do anything
     return false;
+}
+
+void Book::window_size_changed (IVec new_size) {
+    new_size = new_size;
+    need_draw = true;
 }
 
 } using namespace app;
@@ -303,12 +305,12 @@ static tap::TestSet tests ("app/book", []{
     book.draw_if_needed();
     is(book.current_page_no, 1, "Can't go before page 1");
 
-    is(img[{0, 0}], glow::RGBA8(0x00000000), "Default to fit mode");
-    book.set_fit_mode(STRETCH);
+    is(img[{0, 60}], glow::RGBA8(0x2674dbff), "Default to auto_zoom_mode = fit");
+    book.set_auto_zoom_mode(ORIGINAL);
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(img[{0, 0}], glow::RGBA8(0x2674dbff), "Stretch mode fills screen");
+    is(img[{0, 60}], glow::RGBA8(0x00000000), "auto_zoom_mode = original");
 
     done_testing();
 });

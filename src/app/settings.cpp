@@ -7,11 +7,10 @@ namespace app {
 
 } using namespace app;
 
-AYU_DESCRIBE(app::FitMode,
+AYU_DESCRIBE(app::AutoZoomMode,
     values(
         value("fit", FIT),
-        value("stretch", STRETCH),
-        value("manual", MANUAL)
+        value("original", ORIGINAL)
     )
 )
 
@@ -32,7 +31,10 @@ AYU_DESCRIBE(app::Mapping,
 
 AYU_DESCRIBE(app::Settings::Page,
     attrs(
-        attr("fit_mode", &Settings::Page::fit_mode, optional),
+        attr("auto_zoom_mode", &Settings::Page::auto_zoom_mode, optional),
+        attr("reset_zoom_on_page_turn", &Settings::Page::reset_zoom_on_page_turn, optional),
+        attr("small_align", &Settings::Page::small_align, optional),
+        attr("large_align", &Settings::Page::large_align, optional),
         attr("interpolation_mode", &Settings::Page::interpolation_mode, optional)
     )
 )

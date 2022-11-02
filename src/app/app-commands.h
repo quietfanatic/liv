@@ -10,8 +10,11 @@ extern Command next;
  // () Go to previous page(s)
 extern Command prev;
 
- // (FitMode) Set fit mode for current book
-extern Command fit_mode;
+ // (AutoZoomMode) Set auto zoom mode for current book
+extern Command auto_zoom_mode;
+
+ // (Vec Vec) Set alignment (small_align and large_align)
+extern Command align;
 
  // (InterpolationMode) Set interpolation mode for current book
 extern Command interpolation_mode;

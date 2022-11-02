@@ -7,10 +7,9 @@
 namespace app {
 
  // TODO: Add more fit modes
-enum FitMode : uint8 {
+enum AutoZoomMode : uint8 {
     FIT,
-    STRETCH,
-    MANUAL
+    ORIGINAL
 };
 
 enum InterpolationMode : uint8 {
@@ -26,7 +25,12 @@ struct Mapping {
 
 struct Settings {
     struct Page {
-        FitMode fit_mode = FIT;
+        AutoZoomMode auto_zoom_mode = FIT;
+        bool reset_zoom_on_page_turn = true;
+        // float maximum_zoom = 16;
+        // float minimum_page_size = 8;
+        geo::Vec small_align = {0.5, 0.5};
+        geo::Vec large_align = {0.5, 0.5};
         InterpolationMode interpolation_mode = CUBIC;
     } page;
     struct Window {

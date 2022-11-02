@@ -1,6 +1,9 @@
 [app::Settings {
     page: {
-        fit_mode: fit
+        auto_zoom_mode: fit
+        reset_zoom_on_page_turn: true
+        small_align: [0.5 0.5]
+        large_align: [0.5 0.5]
         interpolation_mode: cubic
     }
     window: {
@@ -20,8 +23,8 @@
         [["="] [zoom_multiply 1.4142135623731]]
         [["-"] [zoom_multiply 0.707106781186547]]
         [[f11] [fullscreen]]
-        [[f] [fit_mode fit]]
-        [[s] [fit_mode stretch]]
+        [[f] [auto_zoom_mode fit]]
+        [[o] [auto_zoom_mode original]]
         [[escape] [leave_fullscreen_or_quit]]
         [[ctrl q] [quit]]
         [[ctrl 1] [interpolation_mode nearest]]
