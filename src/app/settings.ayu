@@ -26,6 +26,6 @@
         [[ctrl q] [quit]]
         [[ctrl 1] [interpolation_mode nearest]]
         [[ctrl 2] [interpolation_mode linear]]
-        #[[ctrl 3] [interpolation_mode cubic]]
+        [[ctrl 3] [interpolation_mode cubic]]
     ]
 }]

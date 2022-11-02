@@ -18,8 +18,8 @@ AYU_DESCRIBE(app::FitMode,
 AYU_DESCRIBE(app::InterpolationMode,
     values(
         value("nearest", NEAREST),
-        value("linear", LINEAR)
-//        value("cubic", CUBIC)
+        value("linear", LINEAR),
+        value("cubic", CUBIC)
     )
 )
 

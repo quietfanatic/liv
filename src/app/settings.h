@@ -16,7 +16,7 @@ enum FitMode : uint8 {
 enum InterpolationMode : uint8 {
     NEAREST,
     LINEAR,
-//    CUBIC
+    CUBIC
 };
 
 struct Mapping {
