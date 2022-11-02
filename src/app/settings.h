@@ -29,6 +29,7 @@ struct Settings {
     struct Memory {
         uint32 preload_ahead = 1;
         uint32 preload_behind = 1;
+        double page_cache_mb = 200;
     } memory;
     std::vector<Mapping> mappings;
 };

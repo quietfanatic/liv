@@ -11,8 +11,7 @@ namespace app {
 
 Page::Page (String filename) :
     filename(filename)
-{
-}
+{ }
 Page::~Page () { }
 
 void Page::load () {
@@ -43,7 +42,6 @@ struct PageProgram : Program {
 };
 
 void Page::draw (const Rect& screen_rect, const Rect& tex_rect) {
-    load();
     AA(texture && *texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 

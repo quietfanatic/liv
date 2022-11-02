@@ -38,7 +38,8 @@ AYU_DESCRIBE(app::Settings::Window,
 AYU_DESCRIBE(app::Settings::Memory,
     attrs(
         attr("preload_ahead", &Settings::Memory::preload_ahead, optional),
-        attr("preload_behind", &Settings::Memory::preload_behind, optional)
+        attr("preload_behind", &Settings::Memory::preload_behind, optional),
+        attr("page_cache_mb", &Settings::Memory::page_cache_mb, optional)
     )
 )
 

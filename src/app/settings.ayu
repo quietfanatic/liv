@@ -9,6 +9,7 @@
     memory: {
         preload_ahead: 1
         preload_behind: 1
+        page_cache_mb: 200
     }
     mappings: [
         [[right] [next]]

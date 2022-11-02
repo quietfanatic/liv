@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <SDL2/SDL_video.h>
 #include "../base/glow/gl.h"
+#include "../base/uni/time.h"
 #include "app.h"
 #include "page.h"
 #include "settings.h"
@@ -49,6 +50,21 @@ Page* Book::get_page (isize no) {
     else return null;
 }
 
+static void load_page (Book& self, Page* page) {
+    if (!page->texture) {
+        page->load();
+        self.estimated_page_memory += page->estimated_memory;
+    }
+}
+
+static void unload_page (Book& self, Page* page) {
+    if (page->texture) {
+        page->unload();
+        self.estimated_page_memory -= page->estimated_memory;
+        DA(self.estimated_page_memory >= 0);
+    }
+}
+
 bool Book::draw_if_needed () {
     if (!need_draw) return false;
     need_draw = false;
@@ -59,7 +75,8 @@ bool Book::draw_if_needed () {
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
     if (Page* page = get_page(current_page_no)) {
-        page->load();
+        load_page(*this, page);
+        page->last_viewed_at = uni::now();
         Vec scale;
          // Layout page
         switch (fit_mode) {
@@ -160,24 +177,47 @@ void Book::window_size_changed (IVec new_size) {
 
 bool Book::idle_processing () {
      // Preload pages forwards
-    for (uint32 i = 1; i <= app.settings->memory.preload_ahead; i++) {
+    auto& memory_settings = app.settings->memory;
+    for (uint32 i = 1; i <= memory_settings.preload_ahead; i++) {
         if (Page* page = get_page(current_page_no + i)) {
             if (!page->texture) {
-                page->load();
+                load_page(*this, page);
                 return true;
             }
         }
     }
      // Preload pages backwards
-    for (uint32 i = 1; i <= app.settings->memory.preload_behind; i++) {
+    for (uint32 i = 1; i <= memory_settings.preload_behind; i++) {
         if (Page* page = get_page(current_page_no - i)) {
             if (!page->texture) {
-                page->load();
+                load_page(*this, page);
                 return true;
             }
         }
     }
-     // Nothing to do
+     // Unload pages if we're above the memory limit
+    int64 limit = memory_settings.page_cache_mb * (1024*1024);
+    if (estimated_page_memory > limit) {
+        double oldest_viewed_at = INF;
+        Page* oldest_page = null;
+        for (isize no = 1; no <= isize(pages.size()); no++) {
+             // Don't unload images in the preload region
+            if (no >= current_page_no - memory_settings.preload_behind
+             && no <= current_page_no + memory_settings.preload_ahead) {
+                continue;
+            }
+            Page* page = get_page(no);
+            if (!page->texture) continue;
+            if (page->last_viewed_at < oldest_viewed_at) {
+                oldest_viewed_at = page->last_viewed_at;
+                oldest_page = page;
+            }
+        }
+        if (oldest_page) {
+            unload_page(*this, oldest_page);
+        }
+    }
+     // Didn't do anything
     return false;
 }
 

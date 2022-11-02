@@ -15,6 +15,7 @@ struct Page {
     std::unique_ptr<glow::FileTexture> texture;
     geo::IVec size;
     int64 estimated_memory = 0;
+    double last_viewed_at = 0;
 
     explicit Page (String filename);
     ~Page ();

@@ -26,6 +26,8 @@ struct Book {
     wind::Window window;
     bool need_draw = true;
 
+    int64 estimated_page_memory = 0;
+
      // Loads all image files in the folder as pages
     explicit Book (App& app, Str folder);
      // Just loads the given files as pages
