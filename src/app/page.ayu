@@ -1,94 +1,100 @@
+&vertex_source:
+"#version 140
+
+uniform float u_screen_rect [4];
+uniform float u_tex_rect [4];
+uniform sampler2DRect u_tex;
+out vec2 v_tex_coords;
+
+const ivec2 corners [4] = ivec2[4](
+    ivec2(0, 1),
+    ivec2(2, 1),
+    ivec2(2, 3),
+    ivec2(0, 3)
+);
+
+void main () {
+    gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
+    gl_Position.y = u_screen_rect[corners[gl_VertexID].y];
+    gl_Position.zw = vec2(0, 1);
+    v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
+    v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
+     // Flip vertically
+    v_tex_coords.y = textureSize(u_tex).y - v_tex_coords.y;
+}"
+
+&fragment_source:
+"#version 140
+
+uniform sampler2DRect u_tex;
+uniform int u_interpolation_mode;
+in vec2 v_tex_coords;
+out vec4 color;
+
+ // With help from
+ // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
+ // https://en.wikipedia.org/wiki/Bicubic_interpolation
+vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
+    vec4 v0 =       2*b;
+    vec4 v1 =  -a       +   c;
+    vec4 v2 = 2*a - 5*b + 4*c - d;
+    vec4 v3 =  -a + 3*b - 3*c + d;
+    return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2;
+}
+
+void main () {
+    switch (u_interpolation_mode) {
+        case 0: {  // nearest
+            color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));
+            break;
+        }
+        case 1: {  // linear
+            color = texture(u_tex, v_tex_coords);
+            break;
+        }
+        case 2: {  // cubic
+             // It's easy to run into off-by-one-half errors, because texels
+             // aren't centered around integer coordinates, they're centered
+             // around (_.5,_.5) coordinates.
+            vec2 adjusted_coords = v_tex_coords - 0.5;
+            ivec2 int_coords = ivec2(floor(adjusted_coords));
+            vec2 frac_coords = adjusted_coords - int_coords;
+            vec4 s00 = texelFetchOffset(u_tex, int_coords, ivec2(-1, -1));
+            vec4 s10 = texelFetchOffset(u_tex, int_coords, ivec2(+0, -1));
+            vec4 s20 = texelFetchOffset(u_tex, int_coords, ivec2(+1, -1));
+            vec4 s30 = texelFetchOffset(u_tex, int_coords, ivec2(+2, -1));
+            vec4 s01 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +0));
+            vec4 s11 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +0));
+            vec4 s21 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +0));
+            vec4 s31 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +0));
+            vec4 s02 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +1));
+            vec4 s12 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +1));
+            vec4 s22 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +1));
+            vec4 s32 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +1));
+            vec4 s03 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +2));
+            vec4 s13 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +2));
+            vec4 s23 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +2));
+            vec4 s33 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +2));
+            vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
+            vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
+            vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
+            vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
+            color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
+            break;
+        }
+    }
+}"
+
 [ayu::Document {
     program: [app::PageProgram {
         shaders: [["" vertex 1] ["" fragment 1]]
     }]
     vertex: [glow::Shader {
         type: GL_VERTEX_SHADER
-        source: "
-            #version 140
-
-            uniform float u_screen_rect [4];
-            uniform float u_tex_rect [4];
-            uniform sampler2DRect u_tex;
-            out vec2 v_tex_coords;
-
-            const ivec2 corners [4] = ivec2[4](
-                ivec2(0, 1),
-                ivec2(2, 1),
-                ivec2(2, 3),
-                ivec2(0, 3)
-            );
-
-            void main () {
-                gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
-                gl_Position.y = u_screen_rect[corners[gl_VertexID].y];
-                gl_Position.zw = vec2(0, 1);
-                v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
-                v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
-                 // Flip vertically
-                v_tex_coords.y = textureSize(u_tex).y - v_tex_coords.y;
-            }
-        "
+        source: *vertex_source
     }]
     fragment: [glow::Shader {
         type: GL_FRAGMENT_SHADER
-        source: "
-            #version 140
-
-            uniform sampler2DRect u_tex;
-            uniform int u_interpolation_mode;
-            in vec2 v_tex_coords;
-            out vec4 color;
-
-             // With help from
-             // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
-             // https://en.wikipedia.org/wiki/Bicubic_interpolation
-            vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
-                vec4 v0 =       2*b;
-                vec4 v1 =  -a       +   c;
-                vec4 v2 = 2*a - 5*b + 4*c - d;
-                vec4 v3 =  -a + 3*b - 3*c + d;
-                return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2;
-            }
-
-            void main () {
-                switch (u_interpolation_mode) {
-                    case 0: {  // nearest
-                        color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));
-                        break;
-                    }
-                    case 1: {  // linear
-                        color = texture(u_tex, v_tex_coords);
-                        break;
-                    }
-                    case 2: {  // cubic
-                        ivec2 int_coords = ivec2(floor(v_tex_coords));
-                        vec2 frac_coords = v_tex_coords - int_coords;
-                        vec4 s00 = texelFetchOffset(u_tex, int_coords, ivec2(-1, -1));
-                        vec4 s10 = texelFetchOffset(u_tex, int_coords, ivec2(0, -1));
-                        vec4 s20 = texelFetchOffset(u_tex, int_coords, ivec2(1, -1));
-                        vec4 s30 = texelFetchOffset(u_tex, int_coords, ivec2(2, -1));
-                        vec4 s01 = texelFetchOffset(u_tex, int_coords, ivec2(-1, 0));
-                        vec4 s11 = texelFetchOffset(u_tex, int_coords, ivec2(0, 0));
-                        vec4 s21 = texelFetchOffset(u_tex, int_coords, ivec2(1, 0));
-                        vec4 s31 = texelFetchOffset(u_tex, int_coords, ivec2(2, 0));
-                        vec4 s02 = texelFetchOffset(u_tex, int_coords, ivec2(-1, 1));
-                        vec4 s12 = texelFetchOffset(u_tex, int_coords, ivec2(0, 1));
-                        vec4 s22 = texelFetchOffset(u_tex, int_coords, ivec2(1, 1));
-                        vec4 s32 = texelFetchOffset(u_tex, int_coords, ivec2(2, 1));
-                        vec4 s03 = texelFetchOffset(u_tex, int_coords, ivec2(-1, 2));
-                        vec4 s13 = texelFetchOffset(u_tex, int_coords, ivec2(0, 2));
-                        vec4 s23 = texelFetchOffset(u_tex, int_coords, ivec2(1, 2));
-                        vec4 s33 = texelFetchOffset(u_tex, int_coords, ivec2(2, 2));
-                        vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
-                        vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
-                        vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
-                        vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
-                        color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
-                        break;
-                    }
-                }
-            }
-        "
+        source: *fragment_source
     }]
 }]
