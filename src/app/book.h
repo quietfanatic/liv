@@ -44,6 +44,8 @@ struct Book {
      // Change current_page
     void next ();
     void prev ();
+     // Add to current_page_no (stopping at first/last page)
+    void seek (isize count);
 
     void set_fit_mode (FitMode);
      // Adds amount to view.offset

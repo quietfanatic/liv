@@ -54,4 +54,9 @@ static void zoom_multiply_ (float factor) {
 }
 Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
 
+static void seek_ (isize count) {
+    if (current_book) current_book->seek(count);
+}
+Command seek (seek_, "seek", "Add given amount to the current page number");
+
 } // namespace app::command

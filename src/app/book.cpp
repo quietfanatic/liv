@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <SDL2/SDL_video.h>
+#include "../base/geo/scalar.h"
 #include "../base/glow/gl.h"
 #include "../base/uni/time.h"
 #include "app.h"
@@ -84,7 +85,7 @@ bool Book::draw_if_needed () {
                  // Fit to screen
                  // slope = 1/aspect
                  // TODO: This seems to behave incorrectly sometimes
-                zoom = slope(page->size) > slope(window.size)
+                zoom = slope(Vec(page->size)) > slope(Vec(window.size))
                     ? float(window.size.y) / page->size.y
                     : float(window.size.x) / page->size.x;
                 scale = {zoom, zoom};
@@ -131,6 +132,12 @@ void Book::prev () {
     if (!valid_page_no(current_page_no)) {
         current_page_no = 1;
     }
+    fit_mode = app.settings->page.fit_mode;
+    need_draw = true;
+}
+
+void Book::seek (isize amount) {
+    current_page_no = clamp(current_page_no + amount, 1, isize(pages.size()));
     fit_mode = app.settings->page.fit_mode;
     need_draw = true;
 }
