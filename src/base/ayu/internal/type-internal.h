@@ -27,7 +27,7 @@ namespace ayu::in {
 
     Str get_description_name (const Description*);
      // If this returns false, the type is probably a corrupted pointer and
-     //  shouldn't be dereferenced.
+     // shouldn't be dereferenced.
     bool is_valid_type (const Description*);
 
     template <class T>

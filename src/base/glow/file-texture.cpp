@@ -20,138 +20,25 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
     GLenum type;
      // I think these are correct wrt endianness
     switch (surf->format->format) {
-        case SDL_PIXELFORMAT_RGB332:
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-            type = GL_UNSIGNED_BYTE_3_3_2;
-            break;
-        case SDL_PIXELFORMAT_RGB444:
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-            type = GL_UNSIGNED_SHORT_4_4_4_4;
-            break;
-        case SDL_PIXELFORMAT_RGB555:
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-            type = GL_UNSIGNED_SHORT_5_5_5_1;
-            break;
-        case SDL_PIXELFORMAT_BGR555:
-            internal_format = GL_RGB8;
-            format = GL_BGR;
-            type = GL_UNSIGNED_SHORT_5_5_5_1;
-            break;
-        case SDL_PIXELFORMAT_ARGB4444:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_SHORT_4_4_4_4_REV;
-            break;
-        case SDL_PIXELFORMAT_RGBA4444:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_SHORT_4_4_4_4;
-            break;
-        case SDL_PIXELFORMAT_ABGR4444:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_SHORT_4_4_4_4_REV;
-            break;
-        case SDL_PIXELFORMAT_BGRA4444:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_SHORT_4_4_4_4;
-            break;
-        case SDL_PIXELFORMAT_ARGB1555:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-            break;
-        case SDL_PIXELFORMAT_RGBA5551:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_SHORT_5_5_5_1;
-            break;
-        case SDL_PIXELFORMAT_ABGR1555:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-            break;
-        case SDL_PIXELFORMAT_BGRA5551:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_SHORT_5_5_5_1;
-            break;
-        case SDL_PIXELFORMAT_RGB565:
-            internal_format = GL_RGB8;
-            format = GL_RGB;
-            type = GL_UNSIGNED_SHORT_5_6_5;
-            break;
-        case SDL_PIXELFORMAT_BGR565:
-            internal_format = GL_RGB8;
-            format = GL_BGR;
-            type = GL_UNSIGNED_SHORT_5_6_5;
-            break;
+         // I've never seen IMG_Load give me image formats besides these, so
+         // we'll go ahead and convert everything else
         case SDL_PIXELFORMAT_RGB24:
             internal_format = GL_RGB8;
             format = GL_RGB;
             type = GL_UNSIGNED_BYTE;
             break;
-        case SDL_PIXELFORMAT_BGR24:
-            internal_format = GL_RGB8;
-            format = GL_BGR;
+        case SDL_PIXELFORMAT_RGBA32:
+            internal_format = GL_RGBA8;
+            format = GL_RGBA;
             type = GL_UNSIGNED_BYTE;
-            break;
-        case SDL_PIXELFORMAT_RGB888:
-            internal_format = GL_RGB8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SDL_PIXELFORMAT_RGBX8888:
-            internal_format = GL_RGB8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_INT_8_8_8_8;
-            break;
-        case SDL_PIXELFORMAT_BGR888:
-            internal_format = GL_RGB8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SDL_PIXELFORMAT_BGRX8888:
-            internal_format = GL_RGB8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_INT_8_8_8_8;
-            break;
-        case SDL_PIXELFORMAT_ARGB8888:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SDL_PIXELFORMAT_RGBA8888:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_INT_8_8_8_8;
-            break;
-        case SDL_PIXELFORMAT_ABGR8888:
-            internal_format = GL_RGBA8;
-            format = GL_RGBA;
-            type = GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SDL_PIXELFORMAT_BGRA8888:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_INT_8_8_8_8;
-            break;
-        case SDL_PIXELFORMAT_ARGB2101010:
-            internal_format = GL_RGBA8;
-            format = GL_BGRA;
-            type = GL_UNSIGNED_INT_2_10_10_10_REV;
             break;
         default: {
             uint32 sdl_format;
             if (SDL_ISPIXELFORMAT_ALPHA(surf->format->format)) {
-                sdl_format = SDL_PIXELFORMAT_RGBA8888;
+                sdl_format = SDL_PIXELFORMAT_RGBA32;
                 internal_format = GL_RGBA8;
                 format = GL_RGBA;
-                type = GL_UNSIGNED_INT_8_8_8_8;
+                type = GL_UNSIGNED_BYTE;
             }
             else {
                 sdl_format = SDL_PIXELFORMAT_RGB24;
@@ -166,6 +53,46 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
             break;
         }
     }
+     // Detect greyscale images and unused alpha channels
+    auto pixels = reinterpret_cast<uint8*>(surf->pixels);
+    if (surf->format->format == SDL_PIXELFORMAT_RGB24) {
+        bool greyscale = true;
+        for (int32 y = 0; y < surf->h; y++)
+        for (int32 x = 0; x < surf->w; x++) {
+            uint8 r = pixels[y * surf->pitch + x*3];
+            uint8 g = pixels[y * surf->pitch + x*3 + 1];
+            uint8 b = pixels[y * surf->pitch + x*3 + 2];
+            if (r != g || g != b) {
+                greyscale = false;
+                goto done_24;
+            }
+        }
+        done_24:;
+        if (greyscale) internal_format = GL_R8;
+    }
+    else if (surf->format->format == SDL_PIXELFORMAT_RGBA32) {
+        bool greyscale = true;
+        bool unused_alpha = true;
+        for (int32 y = 0; y < surf->h; y++)
+        for (int32 x = 0; x < surf->w; x++) {
+            uint8 r = pixels[y * surf->pitch + x*4];
+            uint8 g = pixels[y * surf->pitch + x*4 + 1];
+            uint8 b = pixels[y * surf->pitch + x*4 + 2];
+            uint8 a = pixels[y * surf->pitch + x*4 + 3];
+            if (r != g || g != b) {
+                greyscale = false;
+                goto done_32;
+            }
+            if (a != 255) {
+                unused_alpha = false;
+                goto done_32;
+            }
+        }
+        done_32:;
+        if (greyscale && unused_alpha) internal_format = GL_R8;
+        else if (greyscale) internal_format = GL_RG8; // G -> A
+        else if (unused_alpha) internal_format = GL_RGB8;
+    }
      // Now upload texture
     AA(surf->w > 0 && surf->h > 0);
     glBindTexture(target, id);
@@ -175,6 +102,16 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
     );
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+     // Make sure the right channels go to the right colors
+    if (internal_format == GL_R8) {
+        glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+    }
+    else if (internal_format == GL_RG8) {
+        glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+        glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, GL_GREEN);
+    }
     SDL_FreeSurface(surf);
 }
 
