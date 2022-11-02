@@ -33,13 +33,11 @@ namespace X {
         if (mess_cache.empty()) {
             auto& cppt = typeid(*this);
             if (Type t = get_description_by_type_info(cppt)) {
-                String s = "["s + t.name() + ' ';
-                try {
+                String s = "[" + t.name() + ' ';
+                {
+                    DiagnosticSerialization ds;
                      // TODO: this is INCORRECT and will BREAK without downcast
                     s += item_to_string(Reference(t, (Mu*)this), COMPACT);
-                }
-                catch (std::exception&) {
-                    s += "(Another error occurred while printing this error)"s;
                 }
                 s += ']';
                 mess_cache = s;

@@ -17,6 +17,7 @@ Str form_name (Form f) {
         case STRING: return "string"sv;
         case ARRAY: return "array"sv;
         case OBJECT: return "object"sv;
+        case ERROR: return "error"sv;
         default: return "(invalid form ID)"sv;
     }
 }
@@ -28,6 +29,7 @@ namespace in {
             case Rep::STRING: delete static_cast<TreeDataT<String>*>(data); break;
             case Rep::ARRAY: delete static_cast<TreeDataT<Array>*>(data); break;
             case Rep::OBJECT: delete static_cast<TreeDataT<Object>*>(data); break;
+            case Rep::ERROR: delete static_cast<TreeDataT<std::exception_ptr>*>(data); break;
             default: delete data; break;
         }
     }
@@ -96,6 +98,9 @@ Tree::operator T () const { \
             if (double(T(v)) == v) return v; \
             else throw X::CantRepresent(#T, *this); \
         } \
+        case Rep::ERROR: { \
+            std::rethrow_exception(data->as_known<std::exception_ptr>()); \
+        } \
         default: throw X::WrongForm(NUMBER, *this); \
     } \
 }
@@ -113,6 +118,9 @@ Tree::operator double () const {
         case Rep::NULLREP: return nan;
         case Rep::INT64: return data->as_known<int64>();
         case Rep::DOUBLE: return data->as_known<double>();
+        case Rep::ERROR: {
+            rethrow_exception(data->as_known<std::exception_ptr>());
+        }
         default: throw X::WrongForm(NUMBER, *this);
     }
 }
@@ -182,6 +190,9 @@ bool operator == (const Tree& a, const Tree& b) {
            }
            return true;
         }
+        case Rep::ERROR: {
+            std::rethrow_exception(ad.as_known<std::exception_ptr>());
+        }
         default: AYU_INTERNAL_UGUU();
     }
 }
@@ -195,10 +206,12 @@ AYU_DESCRIBE(ayu::Form,
         value("number", NUMBER),
         value("string", STRING),
         value("array", ARRAY),
-        value("object", OBJECT)
+        value("object", OBJECT),
+        value("error", ERROR)
     )
 )
 
+ // TODO: Add attrs and elems?
 AYU_DESCRIBE(ayu::Tree,
     to_tree([](const Tree& v){ return v; }),
     from_tree([](Tree& v, const Tree& t){ v = t; })

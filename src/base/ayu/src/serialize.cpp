@@ -12,56 +12,68 @@ using namespace std::literals;
 namespace ayu {
 using namespace in;
 
+static int64 diagnostic_serialization = 0;
+
 ///// TO_TREE
 
 Tree item_to_tree (const Reference& item) {
-    auto desc = DescriptionPrivate::get(item.type());
-    if (auto to_tree = desc->to_tree()) {
-        Tree r;
-        item.read([&](const Mu& v){
-            r = to_tree->f(v);
-        });
-        return r;
-    }
-    if (auto values = desc->values()) {
-        Tree r;
-        item.read([&](const Mu& v){
-            for (uint i = 0; i < values->n_values; i++) {
-                r = values->value(i)->value_to_tree(values, v);
-                if (r.has_value()) return;
-            }
-        });
-        if (r.has_value()) return r;
-    }
-    switch (desc->preference()) {
-        case OBJECT: {
-            Object o;
-            for (auto& k : item_get_keys(item)) {
-                Reference attr = item_attr(item, k);
-                if (!attr.readonly()) {
-                    o.emplace_back(k, item_to_tree(attr));
+    try {
+        auto desc = DescriptionPrivate::get(item.type());
+        if (auto to_tree = desc->to_tree()) {
+            Tree r;
+            item.read([&](const Mu& v){
+                r = to_tree->f(v);
+            });
+            return r;
+        }
+        if (auto values = desc->values()) {
+            Tree r;
+            item.read([&](const Mu& v){
+                for (uint i = 0; i < values->n_values; i++) {
+                    r = values->value(i)->value_to_tree(values, v);
+                    if (r.has_value()) return;
                 }
-            }
-            return Tree(std::move(o));
+            });
+            if (r.has_value()) return r;
         }
-        case ARRAY: {
-            usize l = item_get_length(item);
-            Array a;
-            for (usize i = 0; i < l; i++) {
-                Reference elem = item_elem(item, i);
-                if (!elem.readonly()) {
-                    a.emplace_back(item_to_tree(elem));
+        switch (desc->preference()) {
+            case OBJECT: {
+                Object o;
+                for (auto& k : item_get_keys(item)) {
+                    Reference attr = item_attr(item, k);
+                    if (!attr.readonly()) {
+                        o.emplace_back(k, item_to_tree(attr));
+                    }
                 }
+                return Tree(std::move(o));
             }
-            return Tree(std::move(a));
-        }
-        default: {
-            if (auto acr = desc->delegate_acr()) {
-                return item_to_tree(item.chain(acr));
+            case ARRAY: {
+                usize l = item_get_length(item);
+                Array a;
+                for (usize i = 0; i < l; i++) {
+                    Reference elem = item_elem(item, i);
+                    if (!elem.readonly()) {
+                        a.emplace_back(item_to_tree(elem));
+                    }
+                }
+                return Tree(std::move(a));
             }
-            else if (desc->values()) throw X::NoNameForValue(item);
-            else throw X::CannotToTree(item);
+            default: {
+                if (auto acr = desc->delegate_acr()) {
+                    return item_to_tree(item.chain(acr));
+                }
+                else if (desc->values()) throw X::NoNameForValue(item);
+                else throw X::CannotToTree(item);
+            }
         }
+    }
+    catch (const X::Error& e) {
+        if (diagnostic_serialization) {
+            return new TreeDataT<std::exception_ptr>(
+                std::current_exception()
+            );
+        }
+        else throw;
     }
 }
 
@@ -155,6 +167,10 @@ static void item_populate (const Reference& item, const Tree& tree) {
                 return;
             }
             else break;
+        }
+        case ERROR: {
+             // Dunno how we got this far but whatever
+            std::rethrow_exception(tree.data->as_known<std::exception_ptr>());
         }
         default: {
             if (auto values = desc->values()) {
@@ -571,6 +587,15 @@ Reference reference_from_path (Path path) {
         else AYU_INTERNAL_UGUU();
     }
     else return universe_ref();
+}
+
+///// DIAGNOSTIC HELP
+
+DiagnosticSerialization::DiagnosticSerialization () {
+    diagnostic_serialization += 1;
+}
+DiagnosticSerialization::~DiagnosticSerialization () {
+    diagnostic_serialization -= 1;
 }
 
 ///// ERRORS

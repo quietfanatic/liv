@@ -60,11 +60,6 @@ Reference reference_from_path (Path);
  // subsequent calls to reference_to_path will be very fast.
 Path reference_to_path (const Reference&);
 
- // Converts a reference to a string using reference_to_path.  If a
- // std::exception happens, will catch it and return a message containing its
- // what().  Intended for use in error message generation functions.
-String show_reference (const Reference&);
-
  // While this is alive, a cache mapping references to paths will be kept,
  // making reference_to_path faster.  Do not modify any resource data while
  // keeping the path cache, since there is no way for the cache to stay
@@ -87,6 +82,18 @@ void recursive_scan (
     Path base,
     Callback<void(const Reference&, Path)> cb
 );
+
+///// DIAGNOSTICS HELP
+
+ // While this object is alive, if an exception is thrown while serializing an
+ // item (and that exception is described to AYU), then the exception will be
+ // caught and reported inline in the serialized output.  It will be in a format
+ // that is not valid to read back in, so only use it for debugging.
+ // Internally, this is used when generating the .what() message for exceptions.
+struct DiagnosticSerialization {
+    DiagnosticSerialization ();
+    ~DiagnosticSerialization ();
+};
 
 } // namespace ayu
 

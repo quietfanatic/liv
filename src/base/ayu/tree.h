@@ -16,6 +16,9 @@ enum Form {
     STRING,
     ARRAY,
     OBJECT,
+     // A form that carries a stored exception, used for error reporting.
+     // If you try to do anything with it, it will probably throw its contents.
+    ERROR
 };
  // Readable name of a form in lowercase.
 Str form_name (Form);

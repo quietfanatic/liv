@@ -15,7 +15,8 @@ enum class Rep : uint8 {
     DOUBLE,
     STRING,
     ARRAY,
-    OBJECT
+    OBJECT,
+    ERROR
 };
 
 constexpr Form form_of_rep (Rep rep) {
@@ -27,6 +28,7 @@ constexpr Form form_of_rep (Rep rep) {
         case Rep::STRING: return STRING;
         case Rep::ARRAY: return ARRAY;
         case Rep::OBJECT: return OBJECT;
+        case Rep::ERROR: return ERROR;
         default: AYU_INTERNAL_UGUU();
     }
 }
@@ -39,6 +41,7 @@ template <> constexpr Rep rep_of_type<double> = Rep::DOUBLE;
 template <> constexpr Rep rep_of_type<String> = Rep::STRING;
 template <> constexpr Rep rep_of_type<Array> = Rep::ARRAY;
 template <> constexpr Rep rep_of_type<Object> = Rep::OBJECT;
+template <> constexpr Rep rep_of_type<std::exception_ptr> = Rep::ERROR;
 
 template <class T> constexpr Form form_of_type = form_of_rep(rep_of_type<T>);
 
@@ -56,6 +59,9 @@ struct TreeData : RefCounted {
     template <class T>
     T& as () {
         if (rep_of_type<T> == rep) return as_known<T>();
+        else if (rep == Rep::ERROR) {
+            std::rethrow_exception(as_known<std::exception_ptr>());
+        }
         else throw X::WrongForm(form_of_type<T>, Tree(this));
     }
 };

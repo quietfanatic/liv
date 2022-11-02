@@ -130,9 +130,14 @@ AYU_DESCRIBE(ayu::Path,
         Path r;
         for (auto& e : t.data->as_known<Array>()) {
             switch (e.form()) {
-            case STRING: r = Path(r, e.data->as_known<String>()); break;
-            case NUMBER: r = Path(r, int64(e)); break;
-            default: throw X::GenericError("Path element is not string or integer");
+                case STRING: r = Path(r, e.data->as_known<String>()); break;
+                case NUMBER: r = Path(r, int64(e)); break;
+                case ERROR: {
+                    std::rethrow_exception(e.data->as_known<std::exception_ptr>());
+                }
+                default: {
+                    throw X::GenericError("Path element is not string or integer");
+                }
             }
         }
         v = std::move(r);

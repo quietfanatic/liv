@@ -3,6 +3,7 @@
 #include <charconv>
 
 #include "../compat.h"
+#include "../type.h"
 #include "char-cases-private.h"
 #include "tree-private.h"
 
@@ -138,6 +139,19 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
             if (!print_compact)
                 r += "\n" + indent(ind);
             return r + "}";
+        }
+        case Rep::ERROR: {
+            try {
+                std::rethrow_exception(t.data->as_known<std::exception_ptr>());
+            }
+            catch (const X::Error& e) {
+                try {
+                    return "?(" + Type(typeid(e)).name() + ")";
+                }
+                catch (const X::UnknownType&) {
+                    return "?("s + typeid(e).name() + ")";
+                }
+            }
         }
         default: AYU_INTERNAL_UGUU();
     }

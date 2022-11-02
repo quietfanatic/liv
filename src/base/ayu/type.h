@@ -16,10 +16,11 @@ struct Type {
     const in::Description* desc;
 
     constexpr Type (const in::Description* desc = null) : desc(desc) { }
-     // Can throw X::Unayuable
+     // Can throw X::UnknownType
     Type (const std::type_info& t) :
         desc(in::need_description_for_type_info(t))
     { }
+     // Can throw X::UnknownType
     template <class T>
     static Type CppType () {
         return in::need_description_for_cpp_type<T>();
