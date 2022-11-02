@@ -399,7 +399,10 @@ String string_from_file (Str filename) {
     rewind(f);
 
     String r (size, 0);
-    fread(const_cast<char*>(r.data()), 1, size, f);
+    usize did_read = fread(const_cast<char*>(r.data()), 1, size, f);
+    if (did_read != size) {
+        throw X::ReadFailed(filename, errno);
+    }
 
     if (fclose(f) != 0) {
         throw X::CloseFailed(filename, errno);

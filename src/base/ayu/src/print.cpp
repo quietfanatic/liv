@@ -61,6 +61,7 @@ static String indent (uint n) {
     return r;
 }
 
+ // TODO: Use a string builder system
 String print_tree (const Tree& t, PrintFlags flags, uint ind) {
     switch (t.data->rep) {
         case Rep::NULLREP: return "null";

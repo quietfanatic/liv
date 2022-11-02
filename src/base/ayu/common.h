@@ -122,6 +122,10 @@ namespace X {
     struct OpenFailed : IOError {
         using IOError::IOError;
     };
+     // Failure to read from an open file
+    struct ReadFailed : IOError {
+        using IOError::IOError;
+    };
      // Failure to close a file
     struct CloseFailed : IOError {
         using IOError::IOError;
