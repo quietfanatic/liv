@@ -279,6 +279,13 @@ struct DescribeBase<T, true> : DescribeBase<T, false> {
 
 } // namespace ayu
 
+#ifdef AYU_DISCARD_ALL_DESCRIPTIONS
+#define AYU_DESCRIBE(...)
+#define AYU_DESCRIBE_0(...)
+#define AYU_DESCRIBE_TEMPLATE(...)
+#define AYU_DESCRIBE_INSTANTIATE(...)
+#else
+
 // TODO: Put _ before these names so they don't accidentally shadow other things
 
  // Stringify name as early as possible to avoid macro expansion
@@ -354,3 +361,5 @@ AYU_DESCRIBE_TEMPLATE_END(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
 
 #define AYU_DESCRIBE_INSTANTIATE(T) \
 static_assert(ayu_desc::Describe<T>::description);
+
+#endif

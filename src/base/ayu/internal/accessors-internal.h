@@ -86,7 +86,7 @@ struct AccessorVT {
     void(* destroy_this )(Accessor*) = [](Accessor*){ };
 };
 
- // The base class for all accessors
+ // The base class for all accessors.  Try to keep this small.
 struct Accessor {
     static constexpr AccessorVT _vt = {};
     const AccessorVT* vt = &_vt;
@@ -149,7 +149,8 @@ constexpr Acr constexpr_acr (const Acr& a) {
  // A struct representing a pointer to a refcounted accessor, with an
  // tagged-pointer optimization for simple pass-through with type.
  // TODO: Is this optimization really necesary?  How expensive would be having
- // an identity accessor for each type?
+ // an identity accessor for each type?  Is there a way to do it without taking
+ // an extra word or requiring an extra refcounted accessor?
  // TODO: Move to reference.h or equivalent internal header
 struct AccessorOrType {
     enum AccessorForm {
@@ -172,9 +173,11 @@ struct AccessorOrType {
     AccessorOrType (const Accessor* acr) :
         data(reinterpret_cast<usize>(acr))
     {
+#ifndef NDEBUG
         if (!acr || reinterpret_cast<usize>(acr) & 3) {
             AYU_INTERNAL_UGUU();
         }
+#endif
         if (acr && acr->ref_count != uint16(-1)) {
             data |= ACR;
             acr->inc();
@@ -186,9 +189,11 @@ struct AccessorOrType {
             | (readonly ? TYPE_READONLY : TYPE)
         )
     {
+#ifndef NDEBUG
         if (!t || reinterpret_cast<usize>(t.desc) & 3) {
             AYU_INTERNAL_UGUU();
         }
+#endif
     }
     AccessorOrType (const AccessorOrType& o) : data(o.data) {
         if (form() == ACR) { as_acr()->inc(); }
