@@ -1,7 +1,7 @@
 [app::Settings {
     page: {
         fit_mode: fit
-        interpolation_mode: linear
+        interpolation_mode: cubic
     }
     window: {
         size: [720 720]

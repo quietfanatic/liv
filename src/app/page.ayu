@@ -57,24 +57,28 @@ void main () {
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
             vec2 adjusted_coords = v_tex_coords - 0.5;
-            ivec2 int_coords = ivec2(floor(adjusted_coords));
+            vec2 int_coords = floor(adjusted_coords);
             vec2 frac_coords = adjusted_coords - int_coords;
-            vec4 s00 = texelFetchOffset(u_tex, int_coords, ivec2(-1, -1));
-            vec4 s10 = texelFetchOffset(u_tex, int_coords, ivec2(+0, -1));
-            vec4 s20 = texelFetchOffset(u_tex, int_coords, ivec2(+1, -1));
-            vec4 s30 = texelFetchOffset(u_tex, int_coords, ivec2(+2, -1));
-            vec4 s01 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +0));
-            vec4 s11 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +0));
-            vec4 s21 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +0));
-            vec4 s31 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +0));
-            vec4 s02 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +1));
-            vec4 s12 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +1));
-            vec4 s22 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +1));
-            vec4 s32 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +1));
-            vec4 s03 = texelFetchOffset(u_tex, int_coords, ivec2(-1, +2));
-            vec4 s13 = texelFetchOffset(u_tex, int_coords, ivec2(+0, +2));
-            vec4 s23 = texelFetchOffset(u_tex, int_coords, ivec2(+1, +2));
-            vec4 s33 = texelFetchOffset(u_tex, int_coords, ivec2(+2, +2));
+             // Use textureOffset instead of texelFetchOffset because the
+             // latter bypasses GL_CLAMP_TO_BORDER...but then we have to
+             // add the 0.5 back.
+            vec2 lookup_coords = int_coords + 0.5;
+            vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
+            vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
+            vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
+            vec4 s30 = textureOffset(u_tex, lookup_coords, ivec2(+2, -1));
+            vec4 s01 = textureOffset(u_tex, lookup_coords, ivec2(-1, +0));
+            vec4 s11 = textureOffset(u_tex, lookup_coords, ivec2(+0, +0));
+            vec4 s21 = textureOffset(u_tex, lookup_coords, ivec2(+1, +0));
+            vec4 s31 = textureOffset(u_tex, lookup_coords, ivec2(+2, +0));
+            vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
+            vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
+            vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
+            vec4 s32 = textureOffset(u_tex, lookup_coords, ivec2(+2, +1));
+            vec4 s03 = textureOffset(u_tex, lookup_coords, ivec2(-1, +2));
+            vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
+            vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
+            vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
             vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
             vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
             vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);

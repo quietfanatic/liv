@@ -27,7 +27,7 @@ struct Mapping {
 struct Settings {
     struct Page {
         FitMode fit_mode = FIT;
-        InterpolationMode interpolation_mode = LINEAR;
+        InterpolationMode interpolation_mode = CUBIC;
     } page;
     struct Window {
         geo::IVec size = {720, 720};

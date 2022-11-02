@@ -20,7 +20,7 @@ struct Book {
     isize current_page_no = 1; // 1-based index
 
     FitMode fit_mode = FIT;  // Reset on page turn
-    InterpolationMode interpolation_mode = LINEAR;
+    InterpolationMode interpolation_mode = CUBIC;
     float zoom = 1;
     geo::Vec offset;  // Pixels, bottom-left origin
 
