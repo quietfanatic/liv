@@ -8,6 +8,9 @@ This library includes:
  - A serialization and reflection system for C++
  - A linked resource management system
 
+This is under heavy development and a couple features aren't fully implemented
+yet.  Use at your own risk.
+
 #### AYU Data Language
 
 The AYU data language is similar to JSON but with the following differences:
