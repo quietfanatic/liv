@@ -20,7 +20,7 @@ namespace app {
 static void update_title (Book& self) {
     String title;
     if (self.pages.size() == 0) {
-        title = "Little Image Viewer (no pages loaded)"s;
+        title = "Little Image Viewer (nothing loaded)"s;
     }
     else {
         if (self.pages.size() > 1) {
@@ -103,8 +103,9 @@ isize Book::clamp_page_no (isize no) {
 }
 
 Page* Book::get_page (isize no) {
-    if (clamp_page_no(no) == no) return &*pages[no-1];
-    else return null;
+    if (!pages.size()) return null;
+    if (clamp_page_no(no) != no) return null;
+    return &*pages[no-1];
 }
 
 ///// Layout logic
