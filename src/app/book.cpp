@@ -28,6 +28,11 @@ static void update_title (Book& self) {
                   + "/" + std::to_string(self.pages.size()) + "] ";
         }
         title += self.get_page(self.current_page_no)->filename;
+         // In general, direct comparisons of floats are not good, but we do
+         // slight snapping of our floats to half-integers, so this is fine.
+        if (self.zoom != 1) {
+            title += " (" + std::to_string(geo::round(self.zoom * 100)) + "%)";
+        }
     }
     SDL_SetWindowTitle(self.sdl_window, title.c_str());
 }
@@ -87,7 +92,6 @@ Book::Book (App& app, const std::vector<String>& filenames) :
     for (auto& filename : filenames) {
         pages.emplace_back(std::make_unique<Page>(filename));
     }
-    update_title(*this);
     need_draw = true;
 }
 Book::~Book () { }
@@ -113,9 +117,15 @@ float Book::clamp_zoom (float zoom) {
             min_page_size / page->size.x,
             min_page_size / page->size.y
         ));
-        return clamp(zoom, min_zoom, max_zoom);
+        zoom = clamp(zoom, min_zoom, max_zoom);
     }
-    else return clamp(zoom, 1/max_zoom, max_zoom);
+    else zoom = clamp(zoom, 1/max_zoom, max_zoom);
+     // Slightly snap to half integers
+    auto rounded = geo::round(zoom * 2) / 2;
+    if (distance(zoom, rounded) < 0.0001) {
+        zoom = rounded;
+    }
+    return zoom;
 }
 
 ///// Controls
@@ -126,7 +136,6 @@ void Book::set_page (isize no) {
         manual_zoom = false;
         manual_align = false;
     }
-    update_title(*this);
     need_draw = true;
 }
 
@@ -252,6 +261,7 @@ bool Book::draw_if_needed () {
          // Draw
         page->draw(interpolation_mode, screen_rect);
     }
+    update_title(*this);
     SDL_GL_SwapWindow(sdl_window);
     return true;
 }
@@ -309,7 +319,9 @@ IVec Book::get_window_size () {
     return {w, h};
 }
 
-void Book::window_size_changed (IVec) {
+void Book::window_size_changed (IVec size) {
+    AA(size.x > 0 && size.y > 0);
+    glViewport(0, 0, size.x, size.y);
     need_draw = true;
 }
 

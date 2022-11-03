@@ -17,7 +17,7 @@ struct Book {
     App& app;
 
     ///// Book contents
-    String folder; // empty if not a folder
+    String folder; // empty if not in a folder
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
 
