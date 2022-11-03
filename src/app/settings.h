@@ -26,9 +26,9 @@ struct Mapping {
 struct Settings {
     struct Page {
         AutoZoomMode auto_zoom_mode = FIT;
+        float max_zoom = 32;
+        float min_page_size = 16;
         bool reset_zoom_on_page_turn = true;
-        // float maximum_zoom = 16;
-        // float minimum_page_size = 8;
         geo::Vec small_align = {0.5, 0.5};
         geo::Vec large_align = {0.5, 0.5};
         InterpolationMode interpolation_mode = CUBIC;

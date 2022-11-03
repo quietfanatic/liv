@@ -82,19 +82,35 @@ Book::Book (App& app, const std::vector<String>& filenames) :
 Book::~Book () { }
 
 
-bool Book::valid_page_no (isize no) {
-    return no >= 1 && usize(no) <= pages.size();
+isize Book::clamp_page_no (isize no) {
+    if (!pages.empty()) return clamp(no, 1, isize(pages.size()));
+    else return 1;
 }
 
 Page* Book::get_page (isize no) {
-    if (valid_page_no(no)) return &*pages[no-1];
+    if (clamp_page_no(no) == no) return &*pages[no-1];
     else return null;
+}
+
+///// Layout logic
+
+float Book::clamp_zoom (float zoom) {
+    auto max_zoom = app.settings->page.max_zoom;
+    auto min_page_size = app.settings->page.min_page_size;
+    if (Page* page = get_page(current_page_no)) {
+        float min_zoom = min(1.f, min(
+            min_page_size / page->size.x,
+            min_page_size / page->size.y
+        ));
+        return clamp(zoom, min_zoom, max_zoom);
+    }
+    else return clamp(zoom, 1/max_zoom, max_zoom);
 }
 
 ///// Controls
 
 void Book::set_page (isize no) {
-    current_page_no = clamp(no, 1, isize(pages.size()));
+    current_page_no = clamp_page_no(no);
     if (app.settings->page.reset_zoom_on_page_turn) {
         manual_zoom = false;
         manual_align = false;
@@ -136,11 +152,11 @@ void Book::zoom_multiply (float factor) {
              // Hacky way to zoom from center
              // TODO: zoom from center of window, not center of page
             offset += page->size * zoom / 2;
-            zoom *= factor;
+            zoom = clamp_zoom(zoom * factor);
             offset -= page->size * zoom / 2;
         }
         else {
-            zoom *= factor;
+            zoom = clamp_zoom(zoom * factor);
         }
         need_draw = true;
     }
@@ -179,9 +195,13 @@ bool Book::draw_if_needed () {
                 switch (auto_zoom_mode) {
                     case FIT: {
                          // slope = 1 / aspect ratio
-                        zoom = slope(Vec(page->size)) > slope(Vec(window.size))
-                            ? float(window.size.y) / page->size.y
-                            : float(window.size.x) / page->size.x;
+                        if (slope(Vec(page->size)) > slope(Vec(window.size))) {
+                            zoom = float(window.size.y) / page->size.y;
+                        }
+                        else {
+                            zoom = float(window.size.x) / page->size.x;
+                        }
+                        zoom = clamp_zoom(zoom);
                         break;
                     }
                     case ORIGINAL: {

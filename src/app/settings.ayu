@@ -2,6 +2,8 @@
     page: {
         auto_zoom_mode: fit
         reset_zoom_on_page_turn: true
+        max_zoom: 32
+        min_page_size: 16
         small_align: [0.5 0.5]
         large_align: [0.5 0.5]
         interpolation_mode: cubic

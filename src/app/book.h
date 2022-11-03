@@ -26,8 +26,8 @@ struct Book {
     explicit Book (App& app, const std::vector<String>& filenames);
     ~Book ();
 
-     // Returns true if no is in 1..pages.size()
-    bool valid_page_no (isize no);
+     // Turns an invalid page number into a valid one
+    isize clamp_page_no (isize no);
      // Returns null if not valid page number
     Page* get_page (isize no);
 
@@ -44,6 +44,9 @@ struct Book {
     geo::Vec large_align;
      // Controls texture filtering
     InterpolationMode interpolation_mode = CUBIC;
+
+     // Clamps zoom level according to max_zoom and min_page_size
+    float clamp_zoom (float);
 
     ///// Actual layout logic
      // Zoom has been manually changed, so ignore auto_zoom

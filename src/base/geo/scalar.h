@@ -90,6 +90,33 @@ CE T max (T a, T b) {
          : a >= b ? a : b;
 }
 
+//TODO
+// // min and max propagate NANs and prefer left side if equal
+//template <class T, class... Ts>
+//CE auto min (T a, Ts... ts);
+//template <class T>
+//CE auto min (T a) {
+//    return a;
+//}
+//template <class A, class B, class... Ts>
+//CE auto min (A a, B b, Ts... rest) {
+//    return a != a ? a
+//         : a <= b ? a
+//         : min(b, ts...);
+//}
+//template <class T, class... Ts>
+//CE auto max (T a, Ts... ts);
+//template <class T>
+//CE auto max (T a) {
+//    return a;
+//}
+//template <class A, class B, class... Ts>
+//CE auto max (A a, B b, Ts... rest) {
+//    return a != a ? a
+//         : a >= b ? a
+//         : max(b, ts...);
+//}
+
 template <class T, class Low, class High>
 CE T clamp (T a, Low low, High high) {
     return a != a ? a

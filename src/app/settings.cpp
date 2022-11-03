@@ -33,6 +33,8 @@ AYU_DESCRIBE(app::Settings::Page,
     attrs(
         attr("auto_zoom_mode", &Settings::Page::auto_zoom_mode, optional),
         attr("reset_zoom_on_page_turn", &Settings::Page::reset_zoom_on_page_turn, optional),
+        attr("max_zoom", &Settings::Page::max_zoom, optional),
+        attr("min_page_size", &Settings::Page::min_page_size, optional),
         attr("small_align", &Settings::Page::small_align, optional),
         attr("large_align", &Settings::Page::large_align, optional),
         attr("interpolation_mode", &Settings::Page::interpolation_mode, optional)
