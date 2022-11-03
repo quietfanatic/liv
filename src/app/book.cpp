@@ -54,14 +54,9 @@ static void unload_page (Book& self, Page* page) {
 
 ///// Contents
 
-Book::Book (App& app, Str folder) :
+Book::Book (App& app, const std::vector<String>& filenames, String&& folder) :
     app(app),
-    folder(folder)
-{
-    AA(false);
-}
-Book::Book (App& app, const std::vector<String>& filenames) :
-    app(app),
+    folder(std::move(folder)),
     auto_zoom_mode(app.settings->page.auto_zoom_mode),
     small_align(app.settings->page.small_align),
     large_align(app.settings->page.large_align),

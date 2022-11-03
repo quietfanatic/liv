@@ -27,9 +27,6 @@ static Book* book_with_window_id (App& self, uint32 id) {
     return &*iter->second;
 }
 
-void App::open_folder (Str folder) {
-    add_book(*this, std::make_unique<Book>(*this, folder));
-}
 void App::open_files (const std::vector<String>& files) {
     add_book(*this, std::make_unique<Book>(*this, files));
 }

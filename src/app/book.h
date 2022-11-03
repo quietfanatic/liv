@@ -21,10 +21,12 @@ struct Book {
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
 
-     // Loads all image files in the folder as pages
-    explicit Book (App& app, Str folder);
      // Just loads the given files as pages
-    explicit Book (App& app, const std::vector<String>& filenames);
+    explicit Book (
+        App& app,
+        const std::vector<String>& filenames,
+        String&& folder = ""
+    );
     ~Book ();
 
      // Turns an invalid page number into a valid one
