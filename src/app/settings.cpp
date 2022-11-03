@@ -10,6 +10,9 @@ namespace app {
 AYU_DESCRIBE(app::AutoZoomMode,
     values(
         value("fit", FIT),
+        value("fit_width", FIT_WIDTH),
+        value("fit_height", FIT_HEIGHT),
+        value("fill", FILL),
         value("original", ORIGINAL)
     )
 )

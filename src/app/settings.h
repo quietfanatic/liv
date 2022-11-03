@@ -9,6 +9,9 @@ namespace app {
  // TODO: Add more fit modes
 enum AutoZoomMode : uint8 {
     FIT,
+    FIT_WIDTH,
+    FIT_HEIGHT,
+    FILL,
     ORIGINAL
 };
 

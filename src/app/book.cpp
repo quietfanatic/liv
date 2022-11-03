@@ -204,6 +204,25 @@ bool Book::draw_if_needed () {
                         zoom = clamp_zoom(zoom);
                         break;
                     }
+                    case FIT_WIDTH: {
+                        zoom = clamp_zoom(float(window.size.x) / page->size.x);
+                        break;
+                    }
+                    case FIT_HEIGHT: {
+                        zoom = clamp_zoom(float(window.size.y) / page->size.y);
+                        break;
+                    }
+                    case FILL: {
+                         // slope = 1 / aspect ratio
+                        if (slope(Vec(page->size)) > slope(Vec(window.size))) {
+                            zoom = float(window.size.x) / page->size.x;
+                        }
+                        else {
+                            zoom = float(window.size.y) / page->size.y;
+                        }
+                        zoom = clamp_zoom(zoom);
+                        break;
+                    }
                     case ORIGINAL: {
                         zoom = 1;
                         break;
