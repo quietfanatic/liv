@@ -130,6 +130,7 @@ static void do_inits () {
 static void item_populate (const Reference& item, const Tree& tree) {
     auto desc = DescriptionPrivate::get(item.type());
      // TODO: Put these last!
+     // TODOTODO: Why?  I forgot.
     if (auto swizzle = desc->swizzle()) {
         swizzle_ops.emplace_back(swizzle->f, item, tree, current_resource());
     }
@@ -426,15 +427,9 @@ usize item_get_length (const Reference& item) {
         return l;
     }
     else if (auto elems = desc->elems()) {
-        usize r = 0;
-        for (uint i = 0; i < elems->n_elems; i++) {
-            auto acr = elems->elem(i)->acr();
-            if (acr->attr_flags & ATTR_INHERIT) {
-                r += item_get_length(item.chain(acr));
-            }
-            else r += 1;
-        }
-        return r;
+         // We could support inheritance on elems if we wanted, but it's too
+         // much work for too little gain.
+        return elems->n_elems;
     }
     else if (auto acr = desc->delegate_acr()) {
         return item_get_length(item.chain(acr));
@@ -463,13 +458,12 @@ void item_set_length (const Reference& item, usize l) {
         }
     }
     else if (auto elems = desc->elems()) {
-         // TODO: process inheritance
         usize min = elems->n_elems;
         usize max = elems->n_elems;
          // Scan for optional elems starting from the end.
         for (usize i = elems->n_elems; i > 0; i--) {
             auto acr = elems->elem(i-1)->acr();
-            if (acr->attr_flags & ATTR_OPTIONAL) min += 1;
+            if (acr->attr_flags & ATTR_OPTIONAL) min -= 1;
             else break;
         }
         if (l >= min && l <= max) return;
@@ -482,7 +476,6 @@ void item_set_length (const Reference& item, usize l) {
 }
 
 Reference item_maybe_elem (const Reference& item, usize index) {
-     // TODO: process inheritance
     auto desc = DescriptionPrivate::get(item.type());
     if (desc->accepts_array()) {
         if (auto elems = desc->elems()) {
@@ -496,7 +489,7 @@ Reference item_maybe_elem (const Reference& item, usize index) {
         else return Reference();
     }
     else if (auto acr = desc->delegate_acr()) {
-        return item_elem(item.chain(acr), index);
+        return item_maybe_elem(item.chain(acr), index);
     }
     else throw X::NoElems(item);
 }
