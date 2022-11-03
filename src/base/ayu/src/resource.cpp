@@ -667,6 +667,7 @@ AYU_DESCRIBE(ayu::Resource,
 )
 
 AYU_DESCRIBE(ayu::X::InvalidResourceState,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::InvalidResourceState::tried),
         elem(&X::InvalidResourceState::state),
@@ -674,18 +675,21 @@ AYU_DESCRIBE(ayu::X::InvalidResourceState,
     )
 )
 AYU_DESCRIBE(ayu::X::UnloadWouldBreak,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::UnloadWouldBreak::from),
         elem(&X::UnloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::ReloadWouldBreak,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::ReloadWouldBreak::from),
         elem(&X::ReloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::RemoveSourceFailed::res),
         elem(value_func<String>(
@@ -696,27 +700,34 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
     )
 )
 AYU_DESCRIBE(ayu::X::InvalidResourceName,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::InvalidResourceName::name))
 )
 AYU_DESCRIBE(ayu::X::UnresolvedResourceName,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::UnresolvedResourceName::name))
 )
 AYU_DESCRIBE(ayu::X::ResourceNameOutsideRoot,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::ResourceNameOutsideRoot::name))
 )
 AYU_DESCRIBE(ayu::X::ResourceHandlerConflict,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::ResourceHandlerConflict::res),
         elem(&X::ResourceHandlerConflict::priority)
     )
 )
 AYU_DESCRIBE(ayu::X::ResourceHandlerCantLoad,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::ResourceHandlerCantLoad::res))
 )
 AYU_DESCRIBE(ayu::X::ResourceHandlerCantSave,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::ResourceHandlerCantSave::res))
 )
 AYU_DESCRIBE(ayu::X::ResourceHandlerCantRemoveSource,
+    delegate(base<ayu::X::Error>()),
     elems(elem(&X::ResourceHandlerCantRemoveSource::res))
 )
 

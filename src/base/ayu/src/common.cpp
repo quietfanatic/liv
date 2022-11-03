@@ -36,8 +36,12 @@ namespace X {
                 String s = "[" + t.name() + ' ';
                 {
                     DiagnosticSerialization ds;
-                     // TODO: this is INCORRECT and will BREAK without downcast
-                    s += item_to_string(Reference(t, (Mu*)this), COMPACT);
+                    if (auto derived = Reference(this).try_downcast_to(t)) {
+                        s += item_to_string(derived, COMPACT);
+                    }
+                    else {
+                        s += "?(Could not downcast error data)";
+                    }
                 }
                 s += ']';
                 mess_cache = s;
@@ -67,17 +71,22 @@ namespace in {
 
 } using namespace ayu;
 
+AYU_DESCRIBE_0(ayu::X::Error)
+
 AYU_DESCRIBE(ayu::X::GenericError,
+    delegate(base<ayu::X::Error>()),
     elems( elem(&X::GenericError::mess) )
 )
  // TODO: Use attrs instead of elems
 AYU_DESCRIBE(ayu::X::OpenFailed,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::OpenFailed::filename),
         elem(&X::OpenFailed::errnum)
     )
 )
 AYU_DESCRIBE(ayu::X::CloseFailed,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::CloseFailed::filename),
         elem(&X::CloseFailed::errnum)

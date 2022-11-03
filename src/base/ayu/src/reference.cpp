@@ -200,8 +200,10 @@ AYU_DESCRIBE(ayu::Reference,
 )
 
 AYU_DESCRIBE(ayu::X::WriteReadonlyReference,
+    delegate(base<ayu::X::Error>()),
     elems( elem(&X::WriteReadonlyReference::ref) )
 )
 AYU_DESCRIBE(ayu::X::UnaddressableReference,
+    delegate(base<ayu::X::Error>()),
     elems( elem(&X::UnaddressableReference::ref) )
 )

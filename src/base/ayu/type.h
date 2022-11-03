@@ -52,15 +52,12 @@ struct Type {
 
      // Cast from derived class to base class.  Does a depth-first search
      // through the derived class's description looking for accessors like:
-     // accessors in the derived class's description:
-     //  - delegate(..., inherit)
+     //  - delegate(...)
      //  - attr("name", ..., inherit)
      //  - elem(..., inherit)
-     // and recurse through those accessors.  Note that the base<>() accessor is
-     // not special, and will only be followed if it has the inherit flag, like
-     // any other accessor.  Note also that only information provided through
-     // AYU_DESCRIBE will be used; C++'s native inheritance system has no
-     // influence.
+     // and recurse through those accessors.  Note also only information
+     // provided through AYU_DESCRIBE will be used; C++'s native inheritance
+     // system has no influence.
      //
      // try_upcast_to will return null if the requested base class was not found
      // in the derived class's inheritance hierarchy, or if the address of the

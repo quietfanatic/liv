@@ -417,6 +417,7 @@ Tree tree_from_file (Str filename) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::X::ParseError,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::ParseError::mess),
         elem(&X::ParseError::filename),

@@ -169,6 +169,26 @@ struct Reference {
         });
     }
 
+     // Shortcuts for casting functions from type.h
+    Reference try_upcast_to (Type t) {
+        return Reference(t, aot.type(*host).try_upcast_to(t, address()));
+    }
+    Reference upcast_to (Type t) {
+        return Reference(t, aot.type(*host).upcast_to(t, require_address()));
+    }
+    Reference try_downcast_to (Type t) {
+        return Reference(t, aot.type(*host).try_downcast_to(t, address()));
+    }
+    Reference downcast_to (Type t) {
+        return Reference(t, aot.type(*host).downcast_to(t, require_address()));
+    }
+    Reference try_cast_to (Type t) {
+        return Reference(t, aot.type(*host).try_cast_to(t, address()));
+    }
+    Reference cast_to (Type t) {
+        return Reference(t, aot.type(*host).cast_to(t, require_address()));
+    }
+
      // Shortcuts for serialize functions
     Tree to_tree () const;
     void from_tree (Tree t) const;
