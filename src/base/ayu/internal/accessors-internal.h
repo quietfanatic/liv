@@ -79,11 +79,13 @@ struct Accessor;
  // instantiations it results in massive code size bloating.
 struct AccessorVT {
     static Mu* default_address (const Accessor*, Mu&) { return null; }
+    static void default_destroy (Accessor*) { }
     Type(* type )(const Accessor*, const Mu&) = null;
     void(* access )(const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>) = null;
     Mu*(* address )(const Accessor*, Mu&) = &default_address;
-     // virtual ~AccessorVT();
-    void(* destroy_this )(Accessor*) = [](Accessor*){ };
+    Mu*(* inverse_address )(const Accessor*, Mu&) = null;
+     // Plays role of virtual ~Accessor();
+    void(* destroy_this )(Accessor*) = &default_destroy;
 };
 
  // The base class for all accessors.  Try to keep this small.
@@ -123,6 +125,9 @@ struct Accessor {
         access(ACR_MODIFY, from, cb);
     }
     Mu* address (Mu& from) const { return vt->address(this, from); }
+    Mu* inverse_address (Mu& to) const {
+        return vt->inverse_address(this, to);
+    }
 
     void inc () const {
         if (ref_count != uint16(-1)) {
@@ -285,7 +290,13 @@ struct BaseAcr2 : Accessor {
         To& to = reinterpret_cast<From&>(from);
         return &reinterpret_cast<Mu&>(to);
     }
-    static constexpr AccessorVT _vt = {&_type, &_access, &_address};
+    static Mu* _inverse_address (const Accessor*, Mu& to) {
+        From& from = static_cast<From&>(reinterpret_cast<To&>(to));
+        return &reinterpret_cast<Mu&>(from);
+    }
+    static constexpr AccessorVT _vt = {
+        &_type, &_access, &_address, &_inverse_address
+    };
     explicit constexpr BaseAcr2 (uint8 flags = 0) : Accessor(&_vt, flags) { }
 };
 
@@ -295,8 +306,11 @@ struct MemberAcr0 : Accessor {
     static Type _type (const Accessor*, const Mu&);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
+    static Mu* _inverse_address (const Accessor*, Mu&);
      // TODO: move to .cpp?
-    static constexpr AccessorVT _vt = {&_type, &_access, &_address};
+    static constexpr AccessorVT _vt = {
+        &_type, &_access, &_address, &_inverse_address
+    };
     using Accessor::Accessor;
 };
 template <class From, class To>
@@ -597,7 +611,7 @@ struct VariableAcr1 : Accessor {
      //  invalidating value.
     static void _destroy_this (Accessor*);
     static constexpr AccessorVT _vt = {
-        &_type, &_access, &AccessorVT::default_address, &_destroy_this
+        &_type, &_access, &AccessorVT::default_address, null, &_destroy_this
     };
     using Accessor::Accessor;
 };
@@ -636,7 +650,7 @@ struct ConstantAcr1 : Accessor {
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static void _destroy_this (Accessor*);
     static constexpr AccessorVT _vt = {
-            &_type, &_access, &AccessorVT::default_address, &_destroy_this
+        &_type, &_access, &AccessorVT::default_address, null, &_destroy_this
     };
     using Accessor::Accessor;
 };

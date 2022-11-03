@@ -50,8 +50,35 @@ struct Type {
      // For now, all these do is throw an exception if the type doesn't match.
      // Eventually we will implement base conversion.
 
-     // Cast from derived class to base class.  Will throw X::CannotCoerce if
-     // the requested Type is not a base of this Type.
+     // Cast from derived class to base class.  Does a depth-first search
+     // through the derived class's description looking for accessors like:
+     // accessors in the derived class's description:
+     //  - delegate(..., inherit)
+     //  - attr("name", ..., inherit)
+     //  - elem(..., inherit)
+     // and recurse through those accessors.  Note that the base<>() accessor is
+     // not special, and will only be followed if it has the inherit flag, like
+     // any other accessor.  Note also that only information provided through
+     // AYU_DESCRIBE will be used; C++'s native inheritance system has no
+     // influence.
+     //
+     // try_upcast_to will return null if the requested base class was not found
+     // in the derived class's inheritance hierarchy, or if the address of the
+     // base class can't be retrieved (goes through value_funcs or some such).
+     // upcast_to will throw X::CannotCoerce (unless given null, in which case
+     // it will return null).
+    Mu* try_upcast_to (Type, Mu*) const;
+    const Mu* try_upcast_to (Type t, const Mu* p) const {
+        return (const Mu*)try_upcast_to(t, (Mu*)p);
+    }
+    template <class T>
+    T* try_upcast_to (Mu* p) const {
+        return (T*)try_upcast_to(Type::CppType<T>(), p);
+    }
+    template <class T>
+    const T* try_upcast_to (const Mu* p) const {
+        return (const T*)try_upcast_to(Type::CppType<T>(), (Mu*)p);
+    }
     Mu* upcast_to (Type, Mu*) const;
     const Mu* upcast_to (Type t, const Mu* p) const {
         return (const Mu*)upcast_to(t, (Mu*)p);
@@ -65,10 +92,28 @@ struct Type {
         return (const T*)upcast_to(Type::CppType<T>(), (Mu*)p);
     }
 
-     // Cast from base class to derived class.  Will throw X::CannotCoerce if
-     // the requested Type is not a base of this Type.  As with static_cast,
-     // this cannot check that the pointed-to data really is the derived class,
-     // and if it isn't, incorrect execution may occur.
+     // Cast from base class to derived class.  See upcast_to for more details.
+     //
+     // One difference from upcast_to is that while upcast_to can follow any
+     // accessors with the "address" operation, downcast_to can only follow
+     // accessors with the "inverse_address" operation, namely base<>() and
+     // member<>().
+     //
+     // As with C++'s static_cast, this cannot check that the pointed-to data
+     // really is the derived class, and if it isn't, incorrect execution
+     // may occur.
+    Mu* try_downcast_to (Type, Mu*) const;
+    const Mu* try_downcast_to (Type t, const Mu* p) const {
+        return (const Mu*)try_downcast_to(t, (Mu*)p);
+    }
+    template <class T>
+    T* try_downcast_to (Mu* p) const {
+        return (T*)try_downcast_to(Type::CppType<T>(), p);
+    }
+    template <class T>
+    const T* try_downcast_to (const Mu* p) const {
+        return (const T*)try_downcast_to(Type::CppType<T>(), (Mu*)p);
+    }
     Mu* downcast_to (Type, Mu*) const;
     const Mu* downcast_to (Type t, const Mu* p) const {
         return (const Mu*)downcast_to(t, (Mu*)p);
@@ -83,6 +128,18 @@ struct Type {
     }
 
      // Try upcast, then downcast.
+    Mu* try_cast_to (Type, Mu*) const;
+    const Mu* try_cast_to (Type t, const Mu* p) const {
+        return (const Mu*)try_cast_to(t, (Mu*)p);
+    }
+    template <class T>
+    T* try_cast_to (Mu* p) const {
+        return (T*)try_cast_to(Type::CppType<T>(), p);
+    }
+    template <class T>
+    const T* try_cast_to (const Mu* p) const {
+        return (const T*)try_cast_to(Type::CppType<T>(), (Mu*)p);
+    }
     Mu* cast_to (Type, Mu*) const;
     const Mu* cast_to (Type t, const Mu* p) const {
         return (const Mu*)cast_to(t, (Mu*)p);

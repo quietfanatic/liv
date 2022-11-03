@@ -16,6 +16,15 @@ Mu* MemberAcr0::_address (const Accessor* acr, Mu& from) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
     return &(from.*(self->mp));
 }
+Mu* MemberAcr0::_inverse_address (const Accessor* acr, Mu& to) {
+    auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
+     // Figure out how much the pointer-to-member changes the address, and
+     // subtract that amount instead of adding it.
+     // I'm sure this breaks all sorts of rules but it works (crossed fingers).
+    char* to_address = reinterpret_cast<char*>(&to);
+    isize offset = reinterpret_cast<char*>(&(to.*(self->mp))) - to_address;
+    return reinterpret_cast<Mu*>(to_address - offset);
+}
 
 Type RefFuncAcr0::_type (const Accessor* acr, const Mu&) {
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);

@@ -64,7 +64,9 @@ struct ChainAcr : Accessor {
         auto self = static_cast<const ChainAcr*>(acr);
         self->a->dec(); self->b->dec();
     }
-    static constexpr AccessorVT _vt = {&_type, &_access, &_address, &_destroy};
+    static constexpr AccessorVT _vt = {
+        &_type, &_access, &_address, null, &_destroy
+    };
     explicit ChainAcr (const Accessor* a, const Accessor* b) :
         Accessor(
             &_vt,
@@ -98,7 +100,9 @@ struct AttrFuncAcr : Accessor {
         auto self = static_cast<const AttrFuncAcr*>(acr);
         self->~AttrFuncAcr();
     }
-    static constexpr AccessorVT _vt = {&_type, &_access, &_address, &_destroy};
+    static constexpr AccessorVT _vt = {
+        &_type, &_access, &_address, null, &_destroy
+    };
     AttrFuncAcr (Reference(* fp )(Mu&, Str), Str k) : Accessor(&_vt), fp(fp), key(k) { }
 };
 
