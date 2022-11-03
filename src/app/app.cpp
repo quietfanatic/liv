@@ -82,10 +82,9 @@ static void handle_event (App& self, SDL_Event* event) {
                     self, event->motion.windowID
                 );
                 if (current_book) {
-                     // TODO: make book coordinates top-down
                     current_book->drag(geo::Vec(
                         event->motion.xrel,
-                        -event->motion.yrel
+                        event->motion.yrel
                     ));
                 }
             }

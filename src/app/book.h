@@ -33,7 +33,6 @@ struct Book {
 
     ///// Layout decision logic
     AutoZoomMode auto_zoom_mode = FIT;
-     // TODO: MAKE THESE ACTUALLY TOP-RIGHT ORIGIN
      // Controls alignment of the image when it's smaller than the window.
      // (0, 0) means the image's top-left corner is in the top-left corner of
      // the window.  (1, 1) means the image's bottom-right corner is in the
@@ -55,7 +54,9 @@ struct Book {
     bool manual_align = false;
      // Current zoom level.
     float zoom = 1;
-    geo::Vec offset;  // Pixels, top-left origin TODO
+     // In pixels, top-left origin
+     // (0, 0) means image's top-left corner is in window's top-left corner
+    geo::Vec offset;
 
     ///// Controls
      // Clamps to valid page numbers

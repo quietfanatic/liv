@@ -15,12 +15,11 @@ const ivec2 corners [4] = ivec2[4](
 
 void main () {
     gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
-    gl_Position.y = u_screen_rect[corners[gl_VertexID].y];
+     // Flip vertically
+    gl_Position.y = -u_screen_rect[corners[gl_VertexID].y];
     gl_Position.zw = vec2(0, 1);
     v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
     v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
-     // Flip vertically
-    v_tex_coords.y = textureSize(u_tex).y - v_tex_coords.y;
 }"
 
 &fragment_source:
