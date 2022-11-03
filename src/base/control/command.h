@@ -77,7 +77,6 @@ struct Statement {
      // Run the command
     void operator() () const;
 
-     // Check if valid
     explicit operator bool () const { return !!command; }
 };
 

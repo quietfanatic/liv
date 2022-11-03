@@ -51,17 +51,19 @@ using Str = std::string_view;
  // Ayu works natively with UTF-8, but can convert to and from UTF-16.
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
- // Dunno why the standard library doesn't have this
-inline String operator + (Str a, const String& b) { return String(a) + b; }
-inline String operator + (const String& a, Str b) { return a + String(b); }
 
 using Array = std::vector<Tree>;
 using Pair = std::pair<String, Tree>;
 using Object = std::vector<Pair>;
 
+ // Dunno why the standard library doesn't have this
+inline String operator + (Str a, const String& b) { return String(a) + b; }
+inline String operator + (const String& a, Str b) { return a + String(b); }
+
+///// CALLBACKS
+
  // A super lightweight callback class with reference semantics (std::function
  // has value semantics and can be copied and moved, so it's way bigger.)
- // TODO: We should probably be able to make this movable though.
 template <class> struct CallbackV;
 template <class Ret, class... Args>
 struct CallbackV<Ret(Args...)> {
@@ -70,6 +72,7 @@ struct CallbackV<Ret(Args...)> {
     template <class F, std::enable_if_t<
         std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>, bool
     > = true>
+    [[gnu::always_inline]]
     constexpr CallbackV (const F& f) :
         wrapper([](const void* f, Args&&... args)->Ret{
             return (*reinterpret_cast<const F*>(f))(std::forward<Args>(args)...);
@@ -78,6 +81,7 @@ struct CallbackV<Ret(Args...)> {
     { }
      // Looks like there's no way to avoid an extra copy of by-value args.
      // (std::function does it too)
+    [[gnu::always_inline]]
     Ret operator () (Args... args) const {
         return wrapper(f, std::forward<Args>(args)...);
     }
