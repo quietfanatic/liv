@@ -11,9 +11,10 @@ namespace glow {
 
 FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
     static const bool init [[maybe_unused]] = []{
-         // TODO: more formats
-        auto flags = IMG_INIT_JPG | IMG_INIT_PNG;
-        AA(IMG_Init(flags) == flags);
+         // TODO: Get a newer version of SDL_image that supports avif
+        auto flags = IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF
+                   | IMG_INIT_WEBP;
+        IMG_Init(flags);
         return true;
     }();
 #ifdef GLOW_PROFILING
@@ -68,6 +69,7 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
         }
     }
      // Detect greyscale images and unused alpha channels
+     // TODO: Uh-oh, I think I've found a false positive
     auto pixels = reinterpret_cast<uint8*>(surf->pixels);
     if (surf->format->format == SDL_PIXELFORMAT_RGB24) {
         bool greyscale = true;
