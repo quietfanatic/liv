@@ -16,7 +16,7 @@ App::~App () { }
 static void add_book (App& self, std::unique_ptr<Book>&& b) {
     auto& book = self.books.emplace_back(std::move(b));
     self.books_by_window_id.emplace(
-        AS(SDL_GetWindowID(book->window.sdl_window)),
+        AS(SDL_GetWindowID(book->sdl_window)),
         &*book
     );
 }
@@ -166,7 +166,7 @@ static tap::TestSet tests ("app/app", []{
             ayu::file_resource_root() + "/base/glow/test/image2.png"sv
         });
     }, "App::open_files");
-    auto window_id = AS(SDL_GetWindowID(app.books[0]->window.sdl_window));
+    auto window_id = AS(SDL_GetWindowID(app.books[0]->sdl_window));
 
     is(app.books[0]->current_page_no, 1, "Book starts on page 1");
 

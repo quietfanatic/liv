@@ -1,6 +1,7 @@
 #include "book.h"
 
 #include <filesystem>
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include "../base/geo/scalar.h"
 #include "../base/glow/gl.h"
@@ -28,8 +29,7 @@ static void update_title (Book& self) {
         }
         title += self.get_page(self.current_page_no)->filename;
     }
-    self.window.title = std::move(title);
-    self.window.update();
+    SDL_SetWindowTitle(self.sdl_window, title.c_str());
 }
 
 static void load_page (Book& self, Page* page) {
@@ -60,15 +60,25 @@ Book::Book (App& app, const std::vector<String>& filenames) :
     auto_zoom_mode(app.settings->page.auto_zoom_mode),
     small_align(app.settings->page.small_align),
     large_align(app.settings->page.large_align),
-    interpolation_mode(app.settings->page.interpolation_mode),
-    window{
-        .title = "Little Image Viewer",
-        .size = app.settings->window.size,
-        .resizable = true,
-        .hidden = app.hidden
-    }
+    interpolation_mode(app.settings->page.interpolation_mode)
 {
-    window.open();
+    AS(!SDL_InitSubSystem(SDL_INIT_VIDEO));
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    sdl_window = AS(SDL_CreateWindow(
+        "Little Image Viewer",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        app.settings->window.size.x,
+        app.settings->window.size.y,
+        SDL_WINDOW_OPENGL | (app.hidden ? SDL_WINDOW_HIDDEN : 0)
+    ));
+    SDL_SetWindowResizable(sdl_window, SDL_TRUE);
+    gl_context = AS(SDL_GL_CreateContext(sdl_window));
+    DA(!SDL_GL_SetSwapInterval(1));
+
     if (app.settings->window.fullscreen) {
         set_fullscreen(true);
     }
@@ -78,6 +88,7 @@ Book::Book (App& app, const std::vector<String>& filenames) :
         pages.emplace_back(std::make_unique<Page>(filename));
     }
     update_title(*this);
+    need_draw = true;
 }
 Book::~Book () { }
 
@@ -163,13 +174,13 @@ void Book::zoom_multiply (float factor) {
 }
 
 bool Book::is_fullscreen () {
-    auto flags = AS(SDL_GetWindowFlags(window.sdl_window));
+    auto flags = AS(SDL_GetWindowFlags(sdl_window));
     return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
 }
 
 void Book::set_fullscreen (bool fs) {
     AS(!SDL_SetWindowFullscreen(
-        window.sdl_window,
+        sdl_window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
     ));
     need_draw = true;
@@ -182,7 +193,7 @@ bool Book::draw_if_needed () {
     need_draw = false;
      // TODO: Currently we have a different context for each window, would it
      // be better to share a context between all windows?
-    SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
+    SDL_GL_MakeCurrent(sdl_window, gl_context);
      // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -190,35 +201,36 @@ bool Book::draw_if_needed () {
         load_page(*this, page);
         page->last_viewed_at = uni::now();
          // Determine layout
+        Vec window_size = get_window_size();
         if (!manual_align) {
             if (!manual_zoom) {
                 switch (auto_zoom_mode) {
                     case FIT: {
                          // slope = 1 / aspect ratio
-                        if (slope(Vec(page->size)) > slope(Vec(window.size))) {
-                            zoom = float(window.size.y) / page->size.y;
+                        if (slope(Vec(page->size)) > slope(window_size)) {
+                            zoom = window_size.y / page->size.y;
                         }
                         else {
-                            zoom = float(window.size.x) / page->size.x;
+                            zoom = window_size.x / page->size.x;
                         }
                         zoom = clamp_zoom(zoom);
                         break;
                     }
                     case FIT_WIDTH: {
-                        zoom = clamp_zoom(float(window.size.x) / page->size.x);
+                        zoom = clamp_zoom(window_size.x / page->size.x);
                         break;
                     }
                     case FIT_HEIGHT: {
-                        zoom = clamp_zoom(float(window.size.y) / page->size.y);
+                        zoom = clamp_zoom(window_size.y / page->size.y);
                         break;
                     }
                     case FILL: {
                          // slope = 1 / aspect ratio
-                        if (slope(Vec(page->size)) > slope(Vec(window.size))) {
-                            zoom = float(window.size.x) / page->size.x;
+                        if (slope(Vec(page->size)) > slope(window_size)) {
+                            zoom = float(window_size.x) / page->size.x;
                         }
                         else {
-                            zoom = float(window.size.y) / page->size.y;
+                            zoom = float(window_size.y) / page->size.y;
                         }
                         zoom = clamp_zoom(zoom);
                         break;
@@ -230,17 +242,17 @@ bool Book::draw_if_needed () {
                 }
             }
              // Auto align
-            Vec range = window.size - (page->size * zoom); // Can be negative
+            Vec range = window_size - (page->size * zoom); // Can be negative
             offset.x = range.x * (range.x > 0 ? small_align.x : large_align.x);
             offset.y = range.y * (range.y > 0 ? small_align.y : large_align.y);
         }
         Rect page_position = {offset, offset + page->size * zoom};
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
-        Rect screen_rect = page_position / Vec(window.size) * float(2) - Vec(1, 1);
+        Rect screen_rect = page_position / Vec(window_size) * float(2) - Vec(1, 1);
          // Draw
         page->draw(interpolation_mode, screen_rect);
     }
-    SDL_GL_SwapWindow(window.sdl_window);
+    SDL_GL_SwapWindow(sdl_window);
     return true;
 }
 
@@ -290,8 +302,14 @@ bool Book::idle_processing () {
     return false;
 }
 
-void Book::window_size_changed (IVec new_size) {
-    new_size = new_size;
+IVec Book::get_window_size () {
+    int w, h;
+    SDL_GL_GetDrawableSize(sdl_window, &w, &h);
+    AA(w > 0 && h > 0);
+    return {w, h};
+}
+
+void Book::window_size_changed (IVec) {
     need_draw = true;
 }
 
@@ -349,7 +367,7 @@ static tap::TestSet tests ("app/book", []{
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(img[{0, 60}], glow::RGBA8(0x00000000), "auto_zoom_mode = original");
+    is(img[{0, 60}], glow::RGBA8(0x000000ff), "auto_zoom_mode = original");
 
     done_testing();
 });

@@ -4,9 +4,10 @@
 
 #include <memory>
 #include <vector>
-#include "../base/wind/window.h"
 #include "../base/uni/common.h"
 #include "settings.h"
+
+struct SDL_Window;
 
 namespace app {
 struct App;
@@ -81,15 +82,17 @@ struct Book {
 
 
     ///// Internal stuff
-    wind::Window window;
+    SDL_Window* sdl_window = null;
+    void* gl_context = null;
     bool need_draw = true;
-
     int64 estimated_page_memory = 0;
      // Handles layout logic.  Returns true if drawing was actually done.
     bool draw_if_needed ();
      // Preload images perhaps
      // Returns true if any processing was actually done
     bool idle_processing ();
+
+    geo::IVec get_window_size ();
 
     void window_size_changed (geo::IVec new_size);
 };
