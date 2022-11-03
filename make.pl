@@ -9,6 +9,7 @@ use File::Copy;
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
+    -fstrict-aliasing
     -Wall -Wextra
     -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
@@ -22,15 +23,17 @@ my @link_opts = qw(
 
 my %configs = (
     deb => {
-        compile_opts => [qw(-ggdb)],
+        compile_opts => [qw(-finline-small-functions -ggdb)],
         strip => 0,
     },
     opt => {
-        compile_opts => [qw(-Os -DNDEBUG)],
+        compile_opts => [qw(-Os -DNDEBUG -flto)],
+        link_opts => [qw(-flto)],
         strip => 1,
     },
     rel => {
-        compile_opts => [qw(-Os -DNDEBUG -DTAP_DISABLE_TESTS)],
+        compile_opts => [qw(-Os -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
+        link_opts => [qw(-flto)],
         strip => 1,
     },
 );
@@ -196,11 +199,11 @@ for my $cfg (keys %configs) {
     my $out_program = "out/$cfg/$program";
     if ($configs{$cfg}{strip}) {
         my $tmp_program = "tmp/$cfg/$program";
-        link_rule($tmp_program, [@objects], @link_opts);
+        link_rule($tmp_program, [@objects], @link_opts, @{$configs{$cfg}{link_opts}});
         strip_rule($out_program, $tmp_program);
     }
     else {
-        link_rule($out_program, [@objects], @link_opts);
+        link_rule($out_program, [@objects], @link_opts, @{$configs{$cfg}{link_opts}});
     }
     my @out_dlls;
     for (keys %dlls) {
