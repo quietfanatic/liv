@@ -156,7 +156,7 @@ AYU_DESCRIBE(glow::Program,
 AYU_DESCRIBE(glow::X::ShaderCompileFailed,
     delegate(base<ayu::X::Error>()),
     elems(
-        elem(&X::ShaderCompileFailed::shader),
+        elem(&X::ShaderCompileFailed::path),
         elem(&X::ShaderCompileFailed::info_log)
     )
 )
@@ -164,7 +164,7 @@ AYU_DESCRIBE(glow::X::ShaderCompileFailed,
 AYU_DESCRIBE(glow::X::ProgramLinkFailed,
     delegate(base<ayu::X::Error>()),
     elems(
-        elem(&X::ProgramLinkFailed::program),
+        elem(&X::ProgramLinkFailed::path),
         elem(&X::ProgramLinkFailed::info_log)
     )
 )

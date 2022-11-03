@@ -5,6 +5,7 @@
 
 #include "internal/accessors-internal.h"
 #include "dynamic.h"
+#include "path.h"
 
 namespace ayu {
 
@@ -246,17 +247,16 @@ inline bool operator != (const Reference& a, const Reference& b) {
 }
 
 namespace X {
-     // TODO: change to contain Path for safety
      // Tried to write to a readonly reference.
     struct WriteReadonlyReference : LogicError {
-        Reference ref;
-        WriteReadonlyReference (const Reference& r) : ref(r) { }
+        Path path;
+        WriteReadonlyReference (const Reference& r);
     };
      // Used the reference in a context where its address was required, but it
      // has no address.
     struct UnaddressableReference : LogicError {
-        Reference ref;
-        UnaddressableReference (const Reference& r) : ref(r) { }
+        Path path;
+        UnaddressableReference (const Reference& r);
     };
 }
 
@@ -283,7 +283,7 @@ namespace std {
 }
 
  // Break cyclic dependency
- // TODO: this is no longer necessary
+ // TODO: Check if this is still necessary
 #include "serialize.h"
 namespace ayu {
 
@@ -298,4 +298,13 @@ inline void Reference::set_length (usize l) const { item_set_length(*this, l); }
 inline Reference Reference::maybe_elem (usize index) const { return item_maybe_elem(*this, index); }
 inline Reference Reference::elem (usize index) const { return item_elem(*this, index); }
 
+namespace X {
+    inline WriteReadonlyReference::WriteReadonlyReference (const Reference& r) :
+        path(reference_to_path(r))
+    { }
+    inline UnaddressableReference::UnaddressableReference (const Reference& r) :
+        path(reference_to_path(r))
+    { }
 }
+
+} // namespace ayu

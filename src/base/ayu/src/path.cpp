@@ -2,7 +2,6 @@
 
 #include "../describe.h"
 #include "../reference.h"
-#include "../serialize.h"
 #include "tree-private.h"
 
 namespace ayu {
