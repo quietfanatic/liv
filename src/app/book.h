@@ -63,7 +63,7 @@ struct Book {
      // Clamps to valid page numbers
     void set_page (isize no);
      // Increment current page by 1
-     // TODO: Increments by two if viewing 2 pages (NYI)
+     // TODO: Increment by two if viewing 2 pages (NYI)
     void next () { set_page(current_page_no + 1); }
     void prev () { set_page(current_page_no - 1); }
      // Add to current page (stopping at first/last page)

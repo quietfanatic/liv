@@ -69,14 +69,17 @@ static void handle_event (App& self, SDL_Event* event) {
         }
         case SDL_KEYDOWN:
         case SDL_KEYUP:
+            SDL_ShowCursor(SDL_DISABLE);
             current_book = book_with_window_id(self, event->key.windowID);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP: {
+            SDL_ShowCursor(SDL_ENABLE);
             current_book = book_with_window_id(self, event->button.windowID);
             break;
         }
         case SDL_MOUSEMOTION: {
+            SDL_ShowCursor(SDL_ENABLE);
             if (event->motion.state & SDL_BUTTON_RMASK) {
                 current_book = book_with_window_id(
                     self, event->motion.windowID
@@ -90,6 +93,7 @@ static void handle_event (App& self, SDL_Event* event) {
             }
             break;
         }
+         // TODO: Support wheel
         default: break;
     }
     for (auto& [input, action] : self.settings->mappings) {
