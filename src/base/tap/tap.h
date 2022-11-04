@@ -94,6 +94,7 @@ void done_testing ();
 
  // Run a test.  If succeeded is true, the test is successful, otherwise it
  //  is a failure.
+ // TODO: take string_view
 bool ok (bool succeeded, const std::string& name = "");
  // The try_* versions of testing functions fail if the code throws an exception.
  //  Otherwise, they behave like the non-try versions with the returned result.

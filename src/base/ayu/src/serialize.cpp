@@ -6,6 +6,7 @@
 #include "../resource.h"
 #include "tree-private.h"
 #include "describe-private.h"
+#include "resource-private.h"
 
 using namespace std::literals;
 

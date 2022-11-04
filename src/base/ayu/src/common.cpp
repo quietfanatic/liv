@@ -77,6 +77,9 @@ AYU_DESCRIBE(ayu::X::GenericError,
     delegate(base<ayu::X::Error>()),
     elems( elem(&X::GenericError::mess) )
 )
+AYU_DESCRIBE(ayu::X::UnimplementedError,
+    delegate(base<ayu::X::GenericError>())
+)
  // TODO: Use attrs instead of elems
 AYU_DESCRIBE(ayu::X::OpenFailed,
     delegate(base<ayu::X::Error>()),

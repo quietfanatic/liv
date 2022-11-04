@@ -314,6 +314,7 @@ AYU_DESCRIBE_BEGIN_NAME(T, name) \
 AYU_DESCRIBE_END(T)
 
  // The only way to make an empty description work
+ // TODO: use __VA_OPT__ instead
 #define AYU_DESCRIBE_0(T) \
 namespace ayu_desc { \
 template <> \

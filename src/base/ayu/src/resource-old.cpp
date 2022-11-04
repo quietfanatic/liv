@@ -9,9 +9,7 @@
 #include "../parse.h"
 #include "../print.h"
 #include "../reference.h"
-#include "../resource-name.h"
 #include "../serialize.h"
-#include "resource-private.h"
 
 using namespace std::literals;
 
@@ -27,19 +25,80 @@ namespace in {
         ResourceState state = UNLOADED;
     };
 
-} using namespace in;
+    struct DefaultResourceHandler : ResourceHandler {
+        bool ResourceHandler_can_handle (Resource) override { return true; }
+        void ResourceHandler_load (Resource res) override {
+            String filename = resource_filename(res.data->name);
+            item_from_tree(&res.data->value, tree_from_file(filename));
+        }
+        std::function<void()> ResourceHandler_save (Resource res) override {
+            std::string filename = resource_filename(res.data->name);
+            std::string contents = item_to_string(&res.data->value);
+            return [contents{std::move(contents)}, filename{std::move(filename)}]{
+                string_to_file(contents, filename);
+            };
+        }
+        void ResourceHandler_remove_source (Resource res) override {
+            auto filename = resource_filename(res.data->name);
+            if (remove_utf8(filename.c_str()) != 0) {
+                if (errno != ENOENT) {
+                    throw X::RemoveSourceFailed(res, errno);
+                }
+            }
+        }
+        DefaultResourceHandler () : ResourceHandler(false) { }
+    };
 
- // Hella temporary
-void set_file_resource_root (Str root) {
-    universe().default_scheme.folder = root;
-}
-Str file_resource_root () {
-    return universe().default_scheme.folder;
-}
-String resource_filename (Str name) {
-    auto scheme = &universe().default_scheme;
-    return scheme->get_file(name);
-}
+    struct Universe {
+        std::unordered_map<Str, ResourceData*> resources;
+        String file_resource_root;
+        Resource current_resource;
+        DefaultResourceHandler default_handler;
+        std::vector<ResourceHandler*> handlers;
+    };
+    Universe& universe () {
+        static Universe r;
+        return r;
+    }
+    Reference universe_ref () {
+        return &universe();
+    }
+
+    PushCurrentResource::PushCurrentResource (Resource res) :
+        old_current(universe().current_resource)
+    {
+        universe().current_resource = res;
+    }
+    PushCurrentResource::~PushCurrentResource () {
+        universe().current_resource = old_current;
+    }
+
+    static ResourceHandler* select_handler (Resource res) {
+        auto& u = universe();
+        std::vector<ResourceHandler*> hs;
+        for (auto handler : u.handlers) {
+            if (handler->ResourceHandler_can_handle(res)) {
+                hs.push_back(handler);
+            }
+        }
+        if (hs.empty()) return &u.default_handler;
+        else {
+            ResourceHandler* selected = hs[0];
+            double selected_pri = hs[0]->ResourceHandler_priority();
+            for (usize i = 1; i < hs.size(); i++) {
+                double pri = hs[i]->ResourceHandler_priority();
+                if (pri > selected_pri) {
+                    selected = hs[i];
+                    selected_pri = pri;
+                }
+                else if (pri == selected_pri) selected = null;
+            }
+            if (selected) return selected;
+            else throw X::ResourceHandlerConflict(res, selected_pri);
+        }
+    }
+
+} using namespace in;
 
 Str show_ResourceState (ResourceState state) {
     switch (state) {
@@ -62,14 +121,14 @@ Str show_ResourceState (ResourceState state) {
 ///// RESOURCES
 
 Resource::Resource (Str name) {
-    String absolute = resolve(name);
+    String resolved = resolve_resource_name(name);
     auto& resources = universe().resources;
-    auto iter = resources.find(absolute);
+    auto iter = resources.find(resolved);
     if (iter != resources.end()) {
         data = iter->second;
     }
     else {
-        data = new ResourceData{std::move(absolute)};
+        data = new ResourceData{std::move(resolved)};
          // Be careful about storing the right Str (std::string_view)
         resources.emplace(data->name, data);
     }
@@ -131,10 +190,8 @@ void load (const std::vector<Resource>& reses) {
         }
         for (auto res : rs) {
             PushCurrentResource p (res);
-             // TODO: Support schemes
-            auto scheme = &universe().default_scheme;
-            String filename = scheme->get_file(res.data->name);
-            item_from_tree(&res.data->value, tree_from_file(filename));
+            auto handler = select_handler(res);
+            handler->ResourceHandler_load(res);
         }
         for (auto res : rs) {
             res.data->state = LOADED;
@@ -167,6 +224,9 @@ void rename (Resource old_res, Resource new_res) {
     new_res.data->value = std::move(old_res.data->value);
     new_res.data->state = LOADED;
     old_res.data->state = UNLOADED;
+    PushCurrentResource p (new_res);
+    auto handler = select_handler(new_res);
+    handler->ResourceHandler_after_rename(old_res, new_res);
 }
 
 void save (Resource res) {
@@ -187,13 +247,8 @@ void save (const std::vector<Resource>& reses) {
         std::vector<std::function<void()>> committers (reses.size());
         for (usize i = 0; i < reses.size(); i++) {
             PushCurrentResource p (reses[i]);
-             // TODO: support schemes
-            auto scheme = &universe().default_scheme;
-            String filename = scheme->get_file(reses[i].data->name);
-            auto contents = tree_to_string(item_to_tree(&reses[i].data->value));
-            committers[i] = [contents{std::move(contents)}, filename{std::move(filename)}]{
-                string_to_file(contents, filename);
-            };
+            auto handler = select_handler(reses[i]);
+            committers[i] = handler->ResourceHandler_save(reses[i]);
         }
         for (auto res : reses) {
             res.data->state = SAVE_COMMITTING;
@@ -336,10 +391,8 @@ void reload (const std::vector<Resource>& reses) {
          // Construct step
         for (auto res : reses) {
             PushCurrentResource p (res);
-             // TODO: support schemes
-            auto scheme = &universe().default_scheme;
-            String filename = scheme->get_file(res.data->name);
-            item_from_tree(&res.data->value, tree_from_file(filename));
+            auto handler = select_handler(res);
+            handler->ResourceHandler_load(res);
         }
         for (auto res : reses) {
             res.data->state = RELOAD_VERIFYING;
@@ -438,10 +491,8 @@ void reload (const std::vector<Resource>& reses) {
 
 void remove_source (Resource res) {
     PushCurrentResource p (res);
-     // TODO: support schemes
-    auto scheme = &universe().default_scheme;
-    String filename = scheme->get_file(res.data->name);
-    remove_utf8(filename.c_str());
+    auto handler = select_handler(res);
+    handler->ResourceHandler_remove_source(res);
 }
 
 Resource current_resource () {
@@ -457,16 +508,131 @@ std::vector<Resource> loaded_resources () {
     return r;
 }
 
-///// INTERNALS
+///// NAME MANAGEMENT
 
-namespace in {
+Str file_resource_root () {
+    return universe().file_resource_root;
+}
+void set_file_resource_root (Str root) {
+    universe().file_resource_root = String(root);
+}
+void set_file_resource_root_from_exe (char* argv0) {
+    Str exe = argv0;
+    usize pos = exe.rfind('/');
+    usize pos2 = exe.rfind('\\');
+    if (pos != Str::npos && pos2 != Str::npos) {
+        throw X::GenericError("argv[0] contains both / and \\, I am confused.");
+    }
+    if (pos == Str::npos) pos = pos2;
+    if (pos == Str::npos) {
+        throw X::GenericError("Can't find the executable location based on argv[0] (scanning PATH is NYI).  argv[0]: "s + exe);
+    }
+    set_file_resource_root(exe.substr(0, pos));
+}
 
-Universe& universe () {
-    static Universe r;
+static void split_name_to (std::vector<Str>& segments, Str name) {
+    usize start = 0;
+    usize i;
+    for (i = 0; i < name.size(); i++) {
+        if (name[i] == '/') {
+            if (i != start) {
+                segments.push_back(name.substr(start, i - start));
+            }
+            start = i+1;
+        }
+    }
+     // If name ends with /, will push an empty segment
+    segments.push_back(name.substr(start, i - start));
+}
+
+static String join_name (const std::vector<Str>& segments) {
+    String r;
+    for (auto seg : segments) {
+        r += "/"s + seg;
+    }
     return r;
 }
 
-} using namespace in;
+String resolve_resource_name (Str name, Str base) {
+     // Validate
+    for (auto c : name)
+    if (c == ':' || c == '?' || c == '#') {
+        throw X::InvalidResourceName(String(name));
+    }
+     // Resolve base first
+    if (!base.empty()) {
+        base = resolve_resource_name(base);
+    }
+    else {
+        auto cur = current_resource();
+        if (cur) base = cur.name();
+    }
+     // Empty name refers to base (or current_resource)
+    if (name.empty()) {
+        if (base.empty()) throw X::UnresolvedResourceName(String(name));
+        else return String(base);
+    }
+     // Concatenate
+    std::vector<Str> segments;
+    if (name[0] != '/') {
+        split_name_to(segments, base);
+        segments.pop_back();  // Make relative to base's directory, not base itself
+    }
+    split_name_to(segments, name);
+     // Normalize
+    std::vector<Str> normalized;
+    bool outside_root = false;
+    for (auto seg : segments) {
+        if (seg == "."sv) continue;
+        else if (seg == ".."sv) {
+            if (normalized.empty()) outside_root = true;
+            else normalized.pop_back();
+        }
+        else normalized.push_back(seg);
+    }
+    String r = join_name(normalized);
+    if (outside_root) throw X::ResourceNameOutsideRoot(std::move(r));
+    return r;
+}
+
+String resource_filename (Str name) {
+    auto& root = universe().file_resource_root;
+    if (root.empty()) {
+        throw X::GenericError("Cannot get resource filenames until set_file_resource_root is called");
+    }
+    return root + resolve_resource_name(name);
+}
+
+///// RESOURCE HANDLERS
+
+void ResourceHandler::ResourceHandler_load (Resource res) {
+    throw X::ResourceHandlerCantLoad(res);
+}
+std::function<void()> ResourceHandler::ResourceHandler_save (Resource res) {
+    throw X::ResourceHandlerCantSave(res);
+}
+void ResourceHandler::ResourceHandler_remove_source (Resource res) {
+    throw X::ResourceHandlerCantRemoveSource(res);
+}
+void ResourceHandler::ResourceHandler_after_rename (Resource, Resource) { }
+
+void ResourceHandler::activate () {
+    auto& handlers = universe().handlers;
+    for (auto handler : handlers) {
+        if (handler == this) return;
+    }
+    handlers.push_back(this);
+}
+void ResourceHandler::deactivate () {
+    auto& handlers = universe().handlers;
+    for (auto it = handlers.begin(); it != handlers.end(); it++) {
+        if (*it == this) {
+            handlers.erase(it);
+            return;
+        }
+    }
+}
+
 } using namespace ayu;
 
 ///// DESCRIPTIONS
@@ -532,6 +698,37 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
             }
         ))
     )
+)
+AYU_DESCRIBE(ayu::X::InvalidResourceName,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::InvalidResourceName::name))
+)
+AYU_DESCRIBE(ayu::X::UnresolvedResourceName,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::UnresolvedResourceName::name))
+)
+AYU_DESCRIBE(ayu::X::ResourceNameOutsideRoot,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::ResourceNameOutsideRoot::name))
+)
+AYU_DESCRIBE(ayu::X::ResourceHandlerConflict,
+    delegate(base<ayu::X::Error>()),
+    elems(
+        elem(&X::ResourceHandlerConflict::res),
+        elem(&X::ResourceHandlerConflict::priority)
+    )
+)
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantLoad,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::ResourceHandlerCantLoad::res))
+)
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantSave,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::ResourceHandlerCantSave::res))
+)
+AYU_DESCRIBE(ayu::X::ResourceHandlerCantRemoveSource,
+    delegate(base<ayu::X::Error>()),
+    elems(elem(&X::ResourceHandlerCantRemoveSource::res))
 )
 
 ///// TESTS
@@ -644,7 +841,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     is(
         unicode2["self_pointer"][1].get_as<std::string*>(),
         unicode2["val"][1].address_as<std::string>(),
-        "Loading pointer with \"#\" for own file worked."
+        "Loading pointer with \"\" for own file worked."
     );
     throws<X::UnloadWouldBreak>([&]{
         unload(input);

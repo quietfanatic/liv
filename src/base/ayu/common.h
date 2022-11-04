@@ -114,6 +114,10 @@ namespace X {
         String mess;
         GenericError (String&& m) : mess(m) { }
     };
+     // Triggered an unimplemented code path
+    struct UnimplementedError : GenericError {
+        using GenericError::GenericError;
+    };
      // Errors that only occur in debug builds
     struct DebugError : Error { };
      // General IO-related problem

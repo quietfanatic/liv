@@ -157,6 +157,14 @@ constexpr Acr constexpr_acr (const Acr& a) {
  // an identity accessor for each type?  Is there a way to do it without taking
  // an extra word or requiring an extra refcounted accessor?
  // TODO: Move to reference.h or equivalent internal header
+ // TODO: Yeah just replace this with a per-type identity accessor, it's not
+ // the complexity.  And it's probably faster just to do virtual calls than to
+ // go through a switch statement and then maybe virtual call.  It'll cost six
+ // extra words per type but that's better than this mess.  Wait!  Oh shoot...
+ // if the identity accessor is embedded in the type's description then its this
+ // pointer is a constant offset away from the description's offset...which
+ // we can share the same vt for all types, which means only one extra word per
+ // type.  Definitely worth it.
 struct AccessorOrType {
     enum AccessorForm {
          // TODO: do we need CE_ACR?

@@ -50,6 +50,7 @@ void throw_on_glGetError (
 } using namespace glow;
 
 AYU_DESCRIBE(glow::X::GLError,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::GLError::error_code),
         elem(&X::GLError::gl_function),

@@ -259,6 +259,7 @@ AYU_DESCRIBE(ayu::Type,
     ))
 )
 
+ // TODO: delegate(base<ayu::X::Error>())
 AYU_DESCRIBE(ayu::X::UnknownType,
     elems(elem(value_func<std::string>(
         [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }

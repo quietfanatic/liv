@@ -122,6 +122,7 @@ my @modules = qw(
     base/ayu/src/print
     base/ayu/src/reference
     base/ayu/src/resource
+    base/ayu/src/resource-name
     base/ayu/src/serialize
     base/ayu/src/tree
     base/ayu/src/type

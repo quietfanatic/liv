@@ -12,7 +12,6 @@ struct Description;
 struct PathData;
 void delete_PathData (PathData*);
 struct ResourceData;
-struct UniverseData;
 struct TreeData;
 void delete_TreeData (TreeData*);
 

@@ -24,6 +24,7 @@
 #include "internal/common-internal.h"
 #include "path.h"
 #include "reference.h"
+#include "resource-name.h"
 
 namespace ayu {
 
@@ -212,100 +213,6 @@ Resource current_resource ();
  // Returns a list of all resources with state != UNLOADED.
 std::vector<Resource> loaded_resources ();
 
-///// RESOURCE NAME MANAGEMENT
-
- // The root directory to which file resources are relative.  You have to set
- // this before loading any resources.  Changing this changes the meaning of
- // file resource names, but the names of existing Resource objects will not
- // be updated, so they will refer to different physical files.  This cannot be
- // changed if any file resources are LOADED or LOADING.  The given filename is
- // interpreted as a directory; a trailing slash will be ignored.  Although
- // resource names are validated before being combined with this filename, this
- // filename itself will not be processed in any way.
-Str file_resource_root ();
-void set_file_resource_root (Str directory);
- // Set the file resource root using argv[0], so that absolute resources names
- // are relative to the directory containing the program.  This is not perfect;
- // the parent process can spoof argv[0] if it wants, but there's no portable
- // way to prevent that.
- // TODO: Scanning PATH is not implemented.  On some systems, the program may
- // fail if called from PATH.
-void set_file_resource_root_from_exe (char* argv0);
-
- // If given name is absolute, returns it unchanged.  If it's relative, makes it
- // absolute by considering it relative to base.  If base is not given, uses
- // current_resource() as the base, and if current_resource() is not defined,
- // throws X::UnresolvedResourceName.  This also replaces // and /./ with /, and
- // collapses a/b/../c to a/c.  If the resulting name starts with /.., will
- // throw X::ResourceNameOutsideRoot.  If name (or base) has invalid characters
- // in it, throws X::InvalidResourceName.  If name is empty, returns base (or
- // current_resource()).
- // The part of base after the last / will be removed.
- //     resolve_resource_name("foo", "a/b/c") == "a/b/foo"
- //     resolve_resource_name("foo", "a/b/c/") == "a/b/c/foo"
- // TODO: Should this be internal?
-String resolve_resource_name (Str name, Str base = Str());
-
- // Converts a resource name to a filename using file_resource_root.
-String resource_filename (Str name);
-
-///// RESOURCE HANDLERS
-
- // Create one of these on the top level to register a resource handler.  If a
- // resource matches this handler, its methods will be used to load, save, etc.
- // the resource.  If no handler matches a resource, it will be treated as an
- // ayu data language file.  The type managed by the header has to have a
- // AYU_DESCRIBE declaration for ayu::Type to work, but it doesn't have to
- // have any actual descriptors in the description.
-struct ResourceHandler {
-     // Given a resource name, returns whether this handler can handle the
-     // resource.  As an example, you can check if the name ends in .png, and
-     // if it does, load it as an image object.  If you're daring, you can also
-     // read the file and check its magic number, though of course that won't
-     // work if the file doesn't exist yet.
-    virtual bool ResourceHandler_can_handle (Resource) = 0;
-
-     // If multiple ResourceHandlers match the same name, the one with higher
-     // priority will be used.  If any have equal priority, an
-     // X::ResourceHandlerConflict will be thrown.
-    virtual double ResourceHandler_priority () { return 0; }
-
-     // Will be called in load() and reload() to construct the value of the
-     // resource.  The resource's state will be LOAD_CONSTRUCTING.  The default
-     // implementation throws X::ResourceHandlerCantLoad
-    virtual void ResourceHandler_load (Resource);
-     // Will be called in save() to save the resource.  First do as much
-     // processing that can throw exceptions as possible, then return a
-     // function that commits the result.  For example, serialize to a string,
-     // then return a function that writes that string to a file.  The
-     // resource's state will be SAVE_VERIFYING during this call, and
-     // SAVE_COMMITTING during the callback.  The default implementation throws
-     // X::ResourceHandlerCantSave
-    virtual std::function<void()> ResourceHandler_save (Resource);
-     // Will be called in remove_source() to delete the source.  The default
-     // implementation throws X::ResourceHandlerCantRemoveSource
-    virtual void ResourceHandler_remove_source (Resource);
-     // Will be called in rename() after moving the value from the old resource
-     // to the new one.  It's not recommended to do anything in this beside
-     // update filenames or Resource objects.  The from resource's state will
-     // be UNLOADED and to's state will be LOADED.  The default implementation
-     // does nothing.
-    virtual void ResourceHandler_after_rename (Resource from, Resource to);
-
-     // Be default, becomes active on construction.
-    ResourceHandler(bool auto_activate = true) {
-        if (auto_activate) activate();
-    }
-    ~ResourceHandler() {
-        deactivate();
-    }
-
-     // These are called in the constructor (by default) and destructor, so you
-     // don't have to call them yourself.
-    void activate ();
-    void deactivate ();
-};
-
 ///// ERRORS
 
 namespace X {
@@ -338,58 +245,6 @@ namespace X {
         Resource res;
         int errnum; // errno
         RemoveSourceFailed (Resource r, int e) : res(r), errnum(e) { }
-    };
-     // Resource name contains invalid characters or something
-    struct InvalidResourceName : ResourceError {
-        String name;
-        InvalidResourceName (String&& name) : name(std::move(name)) { }
-    };
-     // Resource name couldn't be resolved to a filename, such as if a
-     // relative path was given but there's no current_resource().
-    struct UnresolvedResourceName : ResourceError {
-        String name;
-        UnresolvedResourceName (String&& name) : name(std::move(name)) { }
-    };
-     // Resource name has too many /../s and would have left the resource root.
-    struct ResourceNameOutsideRoot : ResourceError {
-        String name;
-        ResourceNameOutsideRoot (String&& name) : name(std::move(name)) { }
-    };
-     // Multiple resource handlers tried to handle the same resource with the
-     // same priority.
-    struct ResourceHandlerConflict : ResourceError {
-        Resource res;
-        double priority;
-        ResourceHandlerConflict (Resource r, double p) : res(r), priority(p) { }
-    };
-     // Tried to load through a resource handler that's incapable of loading.
-    struct ResourceHandlerCantLoad : ResourceError {
-        Resource res;
-        ResourceHandlerCantLoad (Resource r) : res(r) { }
-    };
-     // Tried to save through a resource handler that's incapable of saving.
-    struct ResourceHandlerCantSave : ResourceError {
-        Resource res;
-        ResourceHandlerCantSave (Resource r) : res(r) { }
-    };
-     // Tried to remove_source through a resource handler that can't do that.
-    struct ResourceHandlerCantRemoveSource : ResourceError {
-        Resource res;
-        ResourceHandlerCantRemoveSource (Resource r) : res(r) { }
-    };
-}
-
-///// INTERNALS
-
-namespace in {
-     // TODO: make this function non-internal in case you want to scan the
-     // entire universe for some reason.
-    Reference universe_ref ();
-    struct PushCurrentResource {
-        Resource old_current;
-        PushCurrentResource (Resource);
-        ~PushCurrentResource ();
-        PushCurrentResource (const PushCurrentResource&) = delete;
     };
 }
 
