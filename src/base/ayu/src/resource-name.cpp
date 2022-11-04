@@ -181,6 +181,8 @@ static tap::TestSet tests ("base/ayu/resource-name", []{
     tc("foo/../bar", "bar");
     tc("../bar", "../bar");
     tc("foo/../../bar", "../bar");
+    todo(1, "/.. doesn't work properly yet");
+    tc("foo/bar/..", "foo/");
     throws<X::InvalidResourceName>([]{
         canonicalize("");
     }, "empty string is not valid resource name");

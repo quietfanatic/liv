@@ -17,8 +17,9 @@ namespace ayu {
  //   - Replaces foo//bar with foo/bar
  //   - Replaces foo/./bar with foo/bar
  //   - Replaces foo/../bar with bar
- // Throws X::InvalidResourceName if there are any invalid characters,
- // or if the path tries to escape the root (such as by starting with /..).
+ // Throws X::InvalidResourceName if there are any invalid characters or the
+ // string is empty.  Throws X::ResourceNameOutsideRoot if the path tries to
+ // escape the root (such as by starting with /..).
 String canonicalize (Str name);
 
 bool is_absolute (Str name);
