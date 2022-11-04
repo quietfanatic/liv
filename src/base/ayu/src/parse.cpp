@@ -73,7 +73,7 @@ struct Parser {
     }
 
     void skip_comment () {
-        p++;  // for the #
+        p += 2;  // for two /s
         for (;;) switch (look()) {
             case EOF: return;
             case '\n': p++; return;
@@ -83,15 +83,25 @@ struct Parser {
     void skip_ws () {
         for (;;) switch (look()) {
             case ANY_WS: p++; break;
-            case '#': skip_comment(); break;
+            case '/': {
+                if (end - p > 1 && p[1] == '/') {
+                    skip_comment();
+                }
+                break;
+            }
             default: return;
         }
     }
     void skip_commas () {
         for (;;) switch (look()) {
-            case ANY_WS: p++; break;
-            case '#': skip_comment(); break;
+            case ANY_WS:
             case ',': p++; break;
+            case '/': {
+                if (end - p > 1 && p[1] == '/') {
+                    skip_comment();
+                }
+                break;
+            }
             default: return;
         }
     }
@@ -339,8 +349,7 @@ struct Parser {
     Tree parse_term () {
         switch (look()) {
             case EOF: throw error("Expected term but ran into end of document");
-            case ANY_LETTER:
-            case '_': {
+            case ANY_WORD_STARTER: {
                 String word = got_word();
                 if (word == "null") return Tree(null);
                 else if (word == "true") return Tree(true);
@@ -372,12 +381,9 @@ struct Parser {
     Tree parse () {
         skip_ws();
         Tree r = parse_term();
-        for (;;) switch (look()) {
-            case EOF: return r;
-            case ANY_WS: p++; continue;
-            case '#': skip_comment(); continue;
-            default: throw error("Extra stuff at end of document");
-        }
+        skip_ws();
+        if (p != end) throw error("Extra stuff at end of document");
+        return r;
     }
 };
 
@@ -496,6 +502,9 @@ static tap::TestSet tests ("base/ayu/parse", []{
     t("[&foo:1 *foo]", Tree(Array{Tree(1)}));
     t("{&key asdf:*key}", Tree(Object{Pair{"asdf", Tree("asdf")}}));
     t("{&borp:\"bump\" *borp:*borp}", Tree(Object{Pair{"bump", Tree("bump")}}));
+    t("3 //4", Tree(3));
+    t("#", Tree("#"));
+    t("#foo", Tree("#foo"));
     f("{&borp:44 *borp:*borp}");
     f("&foo");
     f("&foo:1");

@@ -28,6 +28,10 @@
     case '/': case '<': case '>': case '?': case '@': case '^': \
     case '_': case '~': case '#': case '&': case '*': case '='
 
+#define ANY_WORD_STARTER \
+         ANY_LETTER: \
+    case '_': case '#'
+
 #define ANY_INVALID_NUMBER_ENDER \
          'A': case 'B': case 'C': case 'D':           case 'F': case 'G': \
     case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': \

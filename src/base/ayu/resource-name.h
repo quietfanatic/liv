@@ -38,6 +38,9 @@ inline bool is_relative (Str name) { return !is_absolute(name); }
  // If base is unspecified, uses the current resource's name.  If there is no
  // current resource (and name is not already absolute) throws
  // X::UnresolvedResourceName
+ //
+ // The resource name "#" will be replaced with the name of the current
+ // resource.  If there is no current resource, throws X::UnresolveResourceName.
 String resolve (Str name, Str base = Str());
 
 ///// RESOURCE SCHEMES

@@ -71,8 +71,8 @@ Some of these escape sequences may be obscure or useless, but they're included
 for compatibility with JSON.
 
 A string does not have to be quoted if it starts with a letter or underscore
-(`_`), is not one of the words `null`, `true`, or `false`, and only contains
-the following:
+(`_`) or hash (`#`), is not one of the words `null`, `true`, or `false`, and
+only contains the following:
 - letters, numbers, or underscores
 - Any of these symbols: `!`, `$`, `%`, `+`, `-`, `.`, `/`, `<`, `>`, `?`, `@`,
   `^`, `_`, `~`, `#`, `&`, `*`, `=`, `;`
@@ -109,9 +109,9 @@ be quoted, just as with strings.
 
 ##### Comments
 
-Comments start with a hash (`#`) and continue to the end of the line.  There are
-no multi-line comments.  Readers must not allow comments to change the sematics
-of the document.
+Comments start with `//` and continue to the end of the line.  There are no
+multi-line comments, but you can fake them with a string in an unused shortcut.
+Readers must not allow comments to change the sematics of the document.
 
 ##### Shortcuts
 
@@ -125,7 +125,7 @@ beginning of a file.)
 [1 &a 2 3] # Equivalent to [1 2 3]
 [1 &a:2 3] # Equivalent to [1 3]
 ```
-Shortcutss can be used later with an asterisk (`\*`) followed by a string.
+Shortcuts can be used later with an asterisk (`\*`) followed by a string.
 Whatever item the shortcut was declared with earlier will be used in its
 place.  Shortcuts can be used as the keys in objects if they refer to strings.
 Shortcuts are a syntax only; they are semantically invisible and cannot be

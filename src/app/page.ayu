@@ -92,7 +92,7 @@ void main () {
 
 [ayu::Document {
     program: [app::PageProgram {
-        shaders: [["#" vertex 1] ["#" fragment 1]]
+        shaders: [[# vertex 1] [# fragment 1]]
     }]
     vertex: [glow::Shader {
         type: GL_VERTEX_SHADER

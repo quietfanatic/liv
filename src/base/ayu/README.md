@@ -17,7 +17,7 @@ The AYU data language is similar to JSON but with the following differences:
  - Commas are not required.
  - Quotes are not required around strings that don't contain whitespace or
    syntactic characters, excepting `null`, `true`, and `false`.
- - Comments are allowed starting with `#` and going to the end of the line.
+ - Comments are allowed starting with `//` and going to the end of the line.
  - There are shortcuts (like backreferences in YAML).  Preceding an item with
    &name will allow a copy of the same item to be inserted later with `*name`.
    Using `&name` followed by a `:` and then an item will declare a shortcut to

@@ -12,7 +12,7 @@
     }]
     texture: [glow::ImageTexture {
         target: GL_TEXTURE_2D
-        image: ["#" image 1]
+        image: [# image 1]
         filter: GL_LINEAR
     }]
 }]
