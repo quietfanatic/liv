@@ -444,6 +444,16 @@ void remove_source (Resource res) {
     remove_utf8(filename.c_str());
 }
 
+bool source_exists (Resource res) {
+    auto scheme = &universe().default_scheme;
+    String filename = scheme->get_file(res.data->name);
+    if (std::FILE* f = fopen_utf8(filename.c_str())) {
+        fclose(f);
+        return true;
+    }
+    else return false;
+}
+
 Resource current_resource () {
     return universe().current_resource;
 }
@@ -590,7 +600,9 @@ static tap::TestSet tests ("base/ayu/resource", []{
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
         "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _next_id:0}]"
     ), "Resource was saved with correct contents");
+    ok(source_exists(output), "source_exists returns true before deletion");
     doesnt_throw([&]{ remove_source(output); }, "remove_source");
+    ok(!source_exists(output), "source_exists returns false after deletion");
     throws<X::OpenFailed>([&]{
         tree_from_file(resource_filename(output.name()));
     }, "Can't open file after calling remove_source");

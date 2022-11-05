@@ -26,7 +26,7 @@ String from_utf16 (Str16);
 ///// UTF-8 IO FUNCTIONS
 
  // fopen but UTF-8 even on Windows
-std::FILE* fopen_utf8 (const char* filename, const char* mode);
+std::FILE* fopen_utf8 (const char* filename, const char* mode = "rb");
 
  // Print UTF-8 formatted text to a file.  Might not fuse starting or trailing
  // umatched UTF-8 bytes between calls.

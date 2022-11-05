@@ -208,6 +208,11 @@ void reload (const std::vector<Resource>&);
  // resource should fail after this.
 void remove_source (Resource);
 
+ // Returns true if the given resource's file exists on disk.  Does a pretty
+ // basic test: it tries to open the file, and returns true if it can or false
+ // if it can't.
+bool source_exists (Resource);
+
  // Returns the resource currently being processed, if any.
 Resource current_resource ();
 
