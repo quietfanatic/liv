@@ -7,8 +7,10 @@
 
 int main (int argc, char** argv) {
     char* base = AS(SDL_GetBasePath());
-    ayu::set_file_resource_root(String(base) + "res");
+    String exe_folder = base;
     SDL_free(base);
+     // TODO: use ResourceScheme once it's implemented
+    ayu::set_file_resource_root(exe_folder + "res");
 
     tap::allow_testing(argc, argv);
 

@@ -1,0 +1,105 @@
+// This is the settings file for liv.
+
+[app::Settings {
+
+ // Settings for how pages are viewed
+page: {
+     // Options:
+     //   fit = Make sure page fits entirely within window
+     //   fit_width = Match page's width to window's width
+     //   fit_height = Match page's height to window's height
+     //   fill = Make sure window is filled entirly by page
+     //   original = View page at original pixel resolution
+    auto_zoom_mode: fit
+     // true = When turning pages, apply auto zoom
+     // false = When turning pages, keep same zoom and offset as last page
+    reset_zoom_on_page_turn: true
+     // Maximum allowed zoom factor
+    max_zoom: 32
+     // Minimum zoom factor is such that the page can't be any smaller than
+     // this in pixels (in its largest dimension)
+    min_page_size: 16
+     // When page is smaller than window, use this to align the page within
+     // the window.  Examples:
+     //   [0 0] = put page's top-left corner in window's top-left corner
+     //   [1 1] = page's bottom-right corner in window's bottom-right corner
+     //   [1 0] = put page's top-right corner in window's top-right corner
+     //   [0.5 0.5] = put page's center in window's center
+    small_align: [0.5 0.5]
+     // Like small_align, but applies when the page is larger than the window.
+     // If the page is larger than the window in one dimension and smaller in
+     // the other dimension, it will use small_align for the smaller dimension
+     // and large_align for the larger.
+    large_align: [0 0]
+     // Pixel interpolation mode.  Options:
+     //   nearest = nearest-neighbor (lowest quality)
+     //   linear = bilinear interpolation
+     //   cubic = bicubic hermetic spline (highest quality)
+    interpolation_mode: cubic
+     // Page viewing mode.  Options:
+     //   single: View one page at a time
+     //   double: View two pages at a time
+    spread_mode: single
+}
+ // Options for initial window properties
+window: {
+     // Initial window size in pixels
+    size: [720 720]
+     // Initial fullscreen state of the window
+    fullscreen: false
+}
+ // Options regarding memory usage
+memory: {
+     // Load this many pages ahead of the current page
+    preload_ahead: 1
+     // Load this many pages behind the current page
+    preload_behind: 1
+     // Start unloading pages when their cumulative texture memory exceeds this
+     // amount.  This is an estimate; actual video memory usage may vary.  The
+     // current page and pages in the preloading window will never be unloaded.
+    page_cache_mb: 200
+}
+ // Key and mouse bindings
+mappings: [
+     // Go to next page(s)
+    [[right] [next]]
+     // Go to previous page(s)
+    [[left] [prev]]
+     // Skip ahead 20 pages
+    [[shift right] [seek 20]]
+     // Rewind 20 pages
+    [[shift left] [seek -20]]
+     // Toggle fullscreen mode
+    [[f11] [fullscreen]]
+     // Set auto zoom mode
+    [[f] [auto_zoom_mode fit]]
+    [[h] [auto_zoom_mode fit_width]]
+    [[v] [auto_zoom_mode fit_height]]
+    [[shift f] [auto_zoom_mode fill]]
+    [[o] [auto_zoom_mode original]]
+     // Align page to top of window
+    [[shift w] [align [+nan 0] [+nan 0]]]
+     // Align page to left of window
+    [[shift a] [align [0 +nan] [0 +nan]]]
+     // Align page to bottom of window
+    [[shift s] [align [+nan 1] [+nan 1]]]
+     // Align page to right of window
+    [[shift d] [align [1 +nan] [1 +nan]]]
+     // Center page within window
+    [[shift c] [align [0.5 0.5] [0.5 0.5]]]
+     // Zoom in by √2
+    [["="] [zoom_multiply 1.4142135623731]]
+     // Zoom out by √2
+    [["-"] [zoom_multiply 0.707106781186547]]
+     // Set interpolation mode
+    [[ctrl 1] [interpolation_mode nearest]]
+    [[ctrl 2] [interpolation_mode linear]]
+    [[ctrl 3] [interpolation_mode cubic]]
+     // Reset all page view parameters to default
+    [[r] [reset_page]]
+     // Quitting
+    [[escape] [leave_fullscreen_or_quit]]
+    [[ctrl q] [quit]]
+]
+
+}]
