@@ -691,7 +691,7 @@ AYU_DESCRIBE(ayu::X::UnresolvedReference,
 #include "../../tap/tap.h"
 #include "../describe-standard.h"
 
- // Putting these in a test namespace so their descibed names don't conflict
+ // Putting these in a test namespace so their described names don't conflict
 namespace ayu::test {
     struct ToTreeTest {
         int value;

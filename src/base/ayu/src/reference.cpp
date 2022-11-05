@@ -137,9 +137,9 @@ Mu* Reference::require_address () const {
     else throw X::UnaddressableReference(*this);
 }
 
-Reference Reference::chain (const Accessor* acr) const {
-    if (auto a = address()) return Reference(a, acr);
-    else return Reference(host, new ChainAcr(aot.as_acr(), acr));
+Reference Reference::chain (const Accessor* o_acr) const {
+    if (auto a = address()) return Reference(a, o_acr);
+    else return Reference(host, new ChainAcr(acr, o_acr));
 }
 
 Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
@@ -156,7 +156,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) throw X::AttrNotFound(*this, k);
         });
-        return Reference(host, new ChainAcr(aot.as_acr(), new AttrFuncAcr(f, k)));
+        return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, k)));
     }
 }
 
@@ -171,7 +171,7 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
             Reference ref = f(const_cast<Mu&>(v), i);
             if (!ref) throw X::ElemNotFound(*this, i);
         });
-        return Reference(host, new ChainAcr(aot.as_acr(), new ElemFuncAcr(f, i)));
+        return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
     }
 }
 
@@ -192,7 +192,7 @@ AYU_DESCRIBE(ayu::Reference,
         if (!v) return Tree(null);
         else {
              // Taking address of rvalue should be fine here but compiler
-             //  complains about it.
+             // still complains about it.
             Path p = reference_to_path(v);
             return item_to_tree(&p);
         }

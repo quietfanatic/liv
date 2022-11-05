@@ -6,7 +6,8 @@
  //     - a state, which is usually UNLOADED or LOADED.
  // Resources can be loaded, reloaded, unloaded, and saved.
  //
- // Resource names may not contain :, ?, or # (these are reserved for URIs)
+ // Resource names may not contain :, ?, or # (these are reserved for URIs),
+ // or any characters that are invalid for Windows filenames.
  //
  // Resources can have no name, in which case they are anonymous.  Anonymous
  // resources cannot be reloaded or saved, but they can be unloaded.  Anonymous

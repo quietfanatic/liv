@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "internal/accessors-internal.h"
+#include "internal/describe-internal.h"
 #include "dynamic.h"
 #include "path.h"
 
@@ -18,50 +19,48 @@ namespace ayu {
  // This Reference object itself is immutable once created.
 struct Reference {
     Mu* const host;
-    const in::AccessorOrType aot;
+    const in::Accessor* const acr;
 
      // The empty value will cause null derefs if you do anything with it.
-    constexpr Reference () : host(null), aot(null) { }
+    constexpr Reference () : host(null), acr(null) { }
      // Construct from internal data.  Does not take ownership (host is a
-     // reference-like pointer and aot is refcounted).
-    Reference (Mu* h, const in::Accessor* a) : host(h), aot(a) { }
+     // reference-like pointer and acr is refcounted).
+    Reference (Mu* h, const in::Accessor* a) : host(h), acr(a) {
+        if (acr) acr->inc();
+    }
      // Construct from type and abstract pointer.  Used by serialize.
-    Reference (Type t, Mu* p) : host(p), aot(t) { }
+    Reference (Type t, Mu* p) : Reference(p, &t.desc->identity_acr) { }
      // Construct from a pointer.
     template <class T>
-    Reference (T* p) :
-        host(reinterpret_cast<Mu*>(p)),
-        aot(Type::CppType<T>())
-    { }
+    Reference (T* p) : Reference(
+        reinterpret_cast<Mu*>(p),
+        &Type::CppType<T>().desc->identity_acr
+    ) { }
      // Construct from a const pointer.  Makes a readonly reference.
     template <class T>
-    Reference (const T* p) :
-        host(reinterpret_cast<Mu*>(const_cast<T*>(p))),
-        aot(Type::CppType<T>(), true)
-    { }
+    Reference (const T* p) : Reference(
+        reinterpret_cast<Mu*>(const_cast<T*>(p)),
+        &Type::CppType<T>().desc->readonly_identity_acr
+    ) { }
      // Construct from a Dynamic.
      // TODO: construct readonly Reference from const Dynamic?
-    Reference (Dynamic& d) : host(d.data), aot(d.type) { }
+    Reference (Dynamic& d) : Reference(d.data, &d.type.desc->identity_acr) { }
      // For use in attr_func and elem_func.
     template <class From, class Acr,
         std::enable_if_t<
             std::is_same_v<typename Acr::AccessorFromType, From>, bool
         > = true
     >
-    Reference (From& h, Acr&& a) :
-        host(reinterpret_cast<Mu*>(&h)),
-        aot(static_cast<const in::Accessor*>(new Acr(a)))
-    { }
+    Reference (From& h, Acr&& a) : Reference(
+        reinterpret_cast<Mu*>(&h), new Acr(a)
+    ) { }
      // Copy and move construction and assignment
-    Reference (const Reference& o) :
-        host(o.host),
-        aot(o.aot)
-    { }
+    Reference (const Reference& o) : Reference(o.host, o.acr) { }
     Reference (Reference&& o) :
-        host(o.host),
-        aot(std::move(const_cast<in::AccessorOrType&>(o.aot)))
+        host(o.host), acr(o.acr)
     {
         const_cast<Mu*&>(o.host) = null;
+        const_cast<const in::Accessor*&>(o.acr) = null;
     }
     Reference& operator = (const Reference& o) {
         this->~Reference();
@@ -78,17 +77,17 @@ struct Reference {
      // still has a type, and calling type() or address() may be valid
      // depending on the accessor type.  An empty Reference has no type and
      // no operations on it are valid (besides these of course).
-    bool empty () const { assert(!!host == !!aot); return !aot; }
+    bool empty () const { assert(!!host == !!acr); return !acr; }
     explicit operator bool () const { return host; }
      // Writing to this reference throws if this is true
-    bool readonly () const { return aot.readonly(); }
+    bool readonly () const { return acr->accessor_flags & in::ACR_READONLY; }
      // Throws X::WriteReadonlyReference if readonly()
     void require_writable () const;
      // Get type of referred-to item
-    Type type () const { return aot.type(*host); }
+    Type type () const { return acr->type(*host); }
 
      // Returns null if this reference is not addressable.
-    Mu* address () const { return aot.address(*host); }
+    Mu* address () const { return acr->address(*host); }
      // Can throw X::CannotCoerce, even if the result is null.
     Mu* address_as (Type t) const { return type().cast_to(t, address()); } 
     template <class T>
@@ -172,22 +171,22 @@ struct Reference {
 
      // Shortcuts for casting functions from type.h
     Reference try_upcast_to (Type t) {
-        return Reference(t, aot.type(*host).try_upcast_to(t, address()));
+        return Reference(t, acr->type(*host).try_upcast_to(t, address()));
     }
     Reference upcast_to (Type t) {
-        return Reference(t, aot.type(*host).upcast_to(t, require_address()));
+        return Reference(t, acr->type(*host).upcast_to(t, require_address()));
     }
     Reference try_downcast_to (Type t) {
-        return Reference(t, aot.type(*host).try_downcast_to(t, address()));
+        return Reference(t, acr->type(*host).try_downcast_to(t, address()));
     }
     Reference downcast_to (Type t) {
-        return Reference(t, aot.type(*host).downcast_to(t, require_address()));
+        return Reference(t, acr->type(*host).downcast_to(t, require_address()));
     }
     Reference try_cast_to (Type t) {
-        return Reference(t, aot.type(*host).try_cast_to(t, address()));
+        return Reference(t, acr->type(*host).try_cast_to(t, address()));
     }
     Reference cast_to (Type t) {
-        return Reference(t, aot.type(*host).cast_to(t, require_address()));
+        return Reference(t, acr->type(*host).cast_to(t, require_address()));
     }
 
      // Shortcuts for serialize functions
@@ -212,7 +211,7 @@ struct Reference {
      // Kinda internal, TODO move to internal namespace
     void access (in::AccessOp op, Callback<void(Mu&)> cb) const {
         if (op != in::ACR_READ) require_writable();
-        aot.access(op, *host, cb);
+        acr->access(op, *host, cb);
     }
 
      // Syntax sugar.
@@ -225,6 +224,8 @@ struct Reference {
         require_writable();
         return require_address_as<T>();
     }
+
+    ~Reference () { if (acr) acr->dec(); }
 };
 
  // Reference comparison is best-effort.  References compare equal if:
@@ -235,8 +236,9 @@ struct Reference {
  // elem_func will not be comparable, and thus cannot be serialized.  Those
  // references are likely to be very inefficient anyway, so try not to create
  // them.
+ // TODO: Should this return false if only one Reference is readonly?
 inline bool operator == (const Reference& a, const Reference& b) {
-    if (a.host == b.host && a.aot == b.aot) return true;
+    if (a.host == b.host && a.acr == b.acr) return true;
     if (!a || !b) return false;
     if (a.type() != b.type()) return false;
     auto aa = a.address();
@@ -276,7 +278,7 @@ namespace std {
             );
             else return ayu::in::hash_combine(
                 hash<void*>()((void*)r.host),
-                hash<void*>()((void*)r.aot.data)
+                hash<void*>()((void*)r.acr)
             );
         }
     };
