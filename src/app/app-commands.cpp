@@ -9,6 +9,15 @@ using namespace geo;
 
 namespace app::command {
 
+///// APP COMMANDS
+
+static void quit_ () {
+    if (current_app) current_app->stop();
+}
+Command quit (quit_, "quit", "Quit application");
+
+///// BOOK COMMANDS
+
 static void next_ () {
     if (current_book) current_book->next();
 }
@@ -23,6 +32,8 @@ static void seek_ (isize count) {
     if (current_book) current_book->seek(count);
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
+
+///// PAGE COMMANDS
 
 static void auto_zoom_mode_ (AutoZoomMode mode) {
     if (current_book) {
@@ -50,7 +61,13 @@ static void zoom_multiply_ (float factor) {
 }
 Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
 
- // TODO: move logic to Book
+static void reset_page_ () {
+    if (current_book) current_book->reset_page();
+}
+Command reset_page (reset_page_, "reset_page", "Reset page view parameters to default");
+
+///// WINDOW COMMANDS
+
 static void fullscreen_ () {
     if (current_book) {
         current_book->set_fullscreen(!current_book->is_fullscreen());
@@ -69,10 +86,5 @@ static void leave_fullscreen_or_quit_ () {
 Command leave_fullscreen_or_quit (
     leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
 );
-
-static void quit_ () {
-    if (current_app) current_app->stop();
-}
-Command quit (quit_, "quit", "Quit application");
 
 } // namespace app::command

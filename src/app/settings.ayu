@@ -88,6 +88,8 @@
         [[ctrl 1] [interpolation_mode nearest]]
         [[ctrl 2] [interpolation_mode linear]]
         [[ctrl 3] [interpolation_mode cubic]]
+         // Reset all page view parameters to default
+        [[r] [reset_page]]
          // Quitting
         [[escape] [leave_fullscreen_or_quit]]
         [[ctrl q] [quit]]

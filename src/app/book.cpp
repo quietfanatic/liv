@@ -130,7 +130,7 @@ void Book::set_page (isize no) {
     current_page_no = clamp_page_no(no);
     if (app.settings->page.reset_zoom_on_page_turn) {
         manual_zoom = false;
-        manual_align = false;
+        manual_offset = false;
     }
     need_draw = true;
 }
@@ -140,13 +140,14 @@ void Book::set_align (Vec small, Vec large) {
     if (defined(small.y)) small_align.y = small.y;
     if (defined(large.x)) large_align.x = large.x;
     if (defined(large.y)) large_align.y = large.y;
-    if (!manual_align) need_draw = true;
+    manual_offset = false;
+    need_draw = true;
 }
 
 void Book::set_auto_zoom_mode (AutoZoomMode mode) {
     auto_zoom_mode = mode;
     manual_zoom = false;
-    manual_align = false;
+    manual_offset = false;
     need_draw = true;
 }
 
@@ -156,7 +157,7 @@ void Book::set_interpolation_mode (InterpolationMode mode) {
 }
 
 void Book::drag (Vec amount) {
-    manual_align = true;
+    manual_offset = true;
     offset += amount;
     need_draw = true;
 }
@@ -164,7 +165,7 @@ void Book::drag (Vec amount) {
 void Book::zoom_multiply (float factor) {
     if (Page* page = get_page(current_page_no)) {
         manual_zoom = true;
-        if (manual_align) {
+        if (manual_offset) {
              // Hacky way to zoom from center
              // TODO: zoom from center of window, not center of page
             offset += page->size * zoom / 2;
@@ -176,6 +177,16 @@ void Book::zoom_multiply (float factor) {
         }
         need_draw = true;
     }
+}
+
+void Book::reset_page () {
+    auto_zoom_mode = app.settings->page.auto_zoom_mode;
+    small_align = app.settings->page.small_align;
+    large_align = app.settings->page.large_align;
+    interpolation_mode = app.settings->page.interpolation_mode;
+    manual_zoom = false;
+    manual_offset = false;
+    need_draw = true;
 }
 
 bool Book::is_fullscreen () {
@@ -207,7 +218,7 @@ bool Book::draw_if_needed () {
         page->last_viewed_at = uni::now();
          // Determine layout
         Vec window_size = get_window_size();
-        if (!manual_align) {
+        if (!manual_offset) {
             if (!manual_zoom) {
                 switch (auto_zoom_mode) {
                     case FIT: {

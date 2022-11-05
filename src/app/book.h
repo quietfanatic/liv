@@ -54,7 +54,7 @@ struct Book {
      // Zoom has been manually changed, so ignore auto_zoom
     bool manual_zoom = false;
      // Offset has been manually changed, so ignore auto_zoom and aligns.
-    bool manual_align = false;
+    bool manual_offset = false;
      // Current zoom level.
     float zoom = 1;
      // In pixels, top-left origin
@@ -79,9 +79,11 @@ struct Book {
 
     void zoom_multiply (float factor);
 
+     // Reset offset, zoom, interpolation to default
+    void reset_page ();
+
     bool is_fullscreen ();
     void set_fullscreen (bool);
-
 
     ///// Internal stuff
     SDL_Window* sdl_window = null;
