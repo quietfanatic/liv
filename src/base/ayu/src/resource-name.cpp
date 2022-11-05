@@ -142,20 +142,23 @@ void ResourceScheme::deactivate () const {
 
 ///// AYU DESCRIPTIONS
 
+AYU_DESCRIBE(ayu::X::ResourceNameError,
+    delegate(base<X::Error>())
+)
 AYU_DESCRIBE(ayu::X::InvalidResourceName,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceNameError>()),
     elems(elem(&X::InvalidResourceName::name))
 )
 AYU_DESCRIBE(ayu::X::UnresolvedResourceName,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceNameError>()),
     elems(elem(&X::UnresolvedResourceName::name))
 )
 AYU_DESCRIBE(ayu::X::ResourceNameOutsideRoot,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceNameError>()),
     elems(elem(&X::ResourceNameOutsideRoot::name))
 )
 AYU_DESCRIBE(ayu::X::DuplicateResourceScheme,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceNameError>()),
     elems(
         elem(&X::DuplicateResourceScheme::scheme)
     )

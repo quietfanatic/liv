@@ -607,76 +607,80 @@ namespace X {
 
 } using namespace ayu;
 
+AYU_DESCRIBE(ayu::X::SerError,
+    delegate(base<X::Error>())
+)
+
 AYU_DESCRIBE(ayu::X::CannotToTree,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::CannotToTree::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::CannotFromTree,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::CannotFromTree::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::InvalidForm,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::InvalidForm::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::NoNameForValue,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::NoNameForValue::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::NoValueForName,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems(
         elem(&X::NoValueForName::path_to_item),
         elem(&X::NoValueForName::tree)
     )
 )
 AYU_DESCRIBE(ayu::X::MissingAttr,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems(
         elem(&X::MissingAttr::path_to_item),
         elem(&X::MissingAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::UnwantedAttr,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems(
         elem(&X::UnwantedAttr::path_to_item),
         elem(&X::UnwantedAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::WrongLength,
-    delegate(base<ayu::X::Error>()),
-    elems(
-        elem(&X::WrongLength::path_to_item),
-        elem(&X::WrongLength::min),
-        elem(&X::WrongLength::max),
-        elem(&X::WrongLength::got)
+    delegate(base<X::SerError>()),
+    attrs(
+        attr("location", &X::WrongLength::path_to_item),
+        attr("min", &X::WrongLength::min),
+        attr("max", &X::WrongLength::max),
+        attr("got", &X::WrongLength::got)
     )
 )
 AYU_DESCRIBE(ayu::X::NoAttrs,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::NoAttrs::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::NoElems,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems( elem(&X::NoElems::path_to_item) )
 )
 AYU_DESCRIBE(ayu::X::AttrNotFound,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems(
         elem(&X::AttrNotFound::path_to_item),
         elem(&X::AttrNotFound::key)
     )
 )
 AYU_DESCRIBE(ayu::X::ElemNotFound,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::SerError>()),
     elems(
         elem(&X::ElemNotFound::path_to_item),
         elem(&X::ElemNotFound::index)
     )
 )
 AYU_DESCRIBE(ayu::X::UnresolvedReference,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::LogicError>()),
     elems( elem(&X::UnresolvedReference::type) )
 )
 

@@ -58,20 +58,23 @@ struct Document {
 };
 
 namespace X {
+     // General category of errors coming from ayu::Document
+     // TODO: Add a Path to this
+    struct DocumentError : LogicError { };
      // Tried to create a document item with an illegal name.
-    struct DocumentInvalidName : LogicError {
+    struct DocumentInvalidName : DocumentError {
         String name;
         DocumentInvalidName (const String& n) : name(n) { }
     };
      // Tried to create a document item with a name that's already in use in
      // this document.
-    struct DocumentDuplicateName : LogicError {
+    struct DocumentDuplicateName : DocumentError {
         String name;
         DocumentDuplicateName (const String& n) : name(n) { }
     };
      // Tried to delete a document item, but the wrong type was given during
      // deletion.
-    struct DocumentDeleteWrongType : LogicError {
+    struct DocumentDeleteWrongType : DocumentError {
         Type existing;
         Type deleted_as;
         DocumentDeleteWrongType (Type e, Type d) :
@@ -83,7 +86,7 @@ namespace X {
     struct DocumentDeleteNotOwned : DebugError { };
      // Tried to delete a document item by name, but the given name isn't in
      // this document.
-    struct DocumentDeleteMissing : LogicError {
+    struct DocumentDeleteMissing : DocumentError {
         String name;
         DocumentDeleteMissing (const String& n) : name(n) { }
     };

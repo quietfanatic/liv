@@ -500,8 +500,11 @@ AYU_DESCRIBE(ayu::Resource,
     ))
 )
 
+AYU_DESCRIBE(ayu::X::ResourceError,
+    delegate(base<X::Error>())
+)
 AYU_DESCRIBE(ayu::X::InvalidResourceState,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceError>()),
     elems(
         elem(&X::InvalidResourceState::tried),
         elem(&X::InvalidResourceState::state),
@@ -509,21 +512,21 @@ AYU_DESCRIBE(ayu::X::InvalidResourceState,
     )
 )
 AYU_DESCRIBE(ayu::X::UnloadWouldBreak,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceError>()),
     elems(
         elem(&X::UnloadWouldBreak::from),
         elem(&X::UnloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::ReloadWouldBreak,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceError>()),
     elems(
         elem(&X::ReloadWouldBreak::from),
         elem(&X::ReloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<X::ResourceError>()),
     elems(
         elem(&X::RemoveSourceFailed::res),
         elem(value_func<String>(

@@ -259,30 +259,39 @@ AYU_DESCRIBE(ayu::Type,
     ))
 )
 
- // TODO: delegate(base<ayu::X::Error>())
+AYU_DESCRIBE(ayu::X::TypeError,
+    delegate(base<X::LogicError>())
+)
+
 AYU_DESCRIBE(ayu::X::UnknownType,
+    delegate(base<X::TypeError>()),
     elems(elem(value_func<std::string>(
         [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }
     )))
 )
 
 AYU_DESCRIBE(ayu::X::TypeNotFound,
+    delegate(base<X::TypeError>()),
     elems(elem(&X::TypeNotFound::name))
 )
 
 AYU_DESCRIBE(ayu::X::WrongType,
+    delegate(base<X::TypeError>()),
     elems(
         elem(&X::WrongType::expected),
         elem(&X::WrongType::got)
     )
 )
 AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
+    delegate(base<X::TypeError>()),
     elems( elem(&X::CannotDefaultConstruct::type) )
 )
 AYU_DESCRIBE(ayu::X::CannotDestruct,
+    delegate(base<X::TypeError>()),
     elems( elem(&X::CannotDestruct::type) )
 )
 AYU_DESCRIBE(ayu::X::CannotCoerce,
+    delegate(base<X::TypeError>()),
     elems(
         elem(&X::CannotCoerce::from),
         elem(&X::CannotCoerce::to)

@@ -94,10 +94,10 @@ namespace X {
         CommandNotFound(Str n) : name(n) { }
     };
     struct StatementWrongArgsType : ayu::X::Error {
-        ayu::Type got;
         ayu::Type expected;
-        StatementWrongArgsType(ayu::Type g, ayu::Type e) :
-            got(g), expected(e)
+        ayu::Type got;
+        StatementWrongArgsType(ayu::Type e, ayu::Type g) :
+            expected(e), got(g)
         { }
     };
 }

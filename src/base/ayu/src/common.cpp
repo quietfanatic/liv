@@ -73,25 +73,33 @@ namespace in {
 
 AYU_DESCRIBE_0(ayu::X::Error)
 
+AYU_DESCRIBE(ayu::X::LogicError,
+    delegate(base<ayu::X::Error>())
+)
+
 AYU_DESCRIBE(ayu::X::GenericError,
-    delegate(base<ayu::X::Error>()),
+    delegate(base<ayu::X::LogicError>()),
     elems( elem(&X::GenericError::mess) )
 )
 AYU_DESCRIBE(ayu::X::UnimplementedError,
     delegate(base<ayu::X::GenericError>())
 )
- // TODO: Use attrs instead of elems
-AYU_DESCRIBE(ayu::X::OpenFailed,
+AYU_DESCRIBE(ayu::X::DebugError,
+    delegate(base<ayu::X::Error>())
+)
+AYU_DESCRIBE(ayu::X::IOError,
     delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::OpenFailed::filename),
         elem(&X::OpenFailed::errnum)
     )
 )
+AYU_DESCRIBE(ayu::X::OpenFailed,
+    delegate(base<ayu::X::IOError>())
+)
+AYU_DESCRIBE(ayu::X::ReadFailed,
+    delegate(base<ayu::X::IOError>())
+)
 AYU_DESCRIBE(ayu::X::CloseFailed,
-    delegate(base<ayu::X::Error>()),
-    elems(
-        elem(&X::CloseFailed::filename),
-        elem(&X::CloseFailed::errnum)
-    )
+    delegate(base<ayu::X::IOError>())
 )

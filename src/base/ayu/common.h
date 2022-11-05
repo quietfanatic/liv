@@ -119,6 +119,7 @@ namespace X {
         using GenericError::GenericError;
     };
      // Errors that only occur in debug builds
+     // TODO: remove this
     struct DebugError : Error { };
      // General IO-related problem
     struct IOError : Error {
@@ -138,7 +139,6 @@ namespace X {
     struct CloseFailed : IOError {
         using IOError::IOError;
     };
-
 }
 
 } // namespace ayu
