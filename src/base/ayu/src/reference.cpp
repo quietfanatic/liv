@@ -184,26 +184,26 @@ AYU_DESCRIBE(ayu::Reference,
         v = Reference();
     }),
     swizzle([](Reference& v, const Tree& t){
-        Path p;
-        item_from_tree(&p, t);
-        v = reference_from_path(p);
+        Location loc;
+        item_from_tree(&loc, t);
+        v = reference_from_location(loc);
     }),
     to_tree([](const Reference& v){
         if (!v) return Tree(null);
         else {
-             // Taking address of rvalue should be fine here but compiler
-             // still complains about it.
-            Path p = reference_to_path(v);
-            return item_to_tree(&p);
+             // Taking address of rvalue should be fine here but the compiler
+             // will still complain about it.
+            Location loc = reference_to_location(v);
+            return item_to_tree(&loc);
         }
     })
 )
 
 AYU_DESCRIBE(ayu::X::WriteReadonlyReference,
     delegate(base<X::LogicError>()),
-    elems( elem(&X::WriteReadonlyReference::path) )
+    elems( elem(&X::WriteReadonlyReference::location) )
 )
 AYU_DESCRIBE(ayu::X::UnaddressableReference,
     delegate(base<X::LogicError>()),
-    elems( elem(&X::UnaddressableReference::path) )
+    elems( elem(&X::UnaddressableReference::location) )
 )

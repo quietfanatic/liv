@@ -6,7 +6,7 @@
 #include "internal/accessors-internal.h"
 #include "internal/describe-internal.h"
 #include "dynamic.h"
-#include "path.h"
+#include "location.h"
 
 namespace ayu {
 
@@ -251,13 +251,13 @@ inline bool operator != (const Reference& a, const Reference& b) {
 namespace X {
      // Tried to write to a readonly reference.
     struct WriteReadonlyReference : LogicError {
-        Path path;
+        Location location;
         WriteReadonlyReference (const Reference& r);
     };
      // Used the reference in a context where its address was required, but it
      // has no address.
     struct UnaddressableReference : LogicError {
-        Path path;
+        Location location;
         UnaddressableReference (const Reference& r);
     };
 }
@@ -302,10 +302,10 @@ inline Reference Reference::elem (usize index) const { return item_elem(*this, i
 
 namespace X {
     inline WriteReadonlyReference::WriteReadonlyReference (const Reference& r) :
-        path(reference_to_path(r))
+        location(reference_to_location(r))
     { }
     inline UnaddressableReference::UnaddressableReference (const Reference& r) :
-        path(reference_to_path(r))
+        location(reference_to_location(r))
     { }
 }
 

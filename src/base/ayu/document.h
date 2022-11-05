@@ -59,7 +59,7 @@ struct Document {
 
 namespace X {
      // General category of errors coming from ayu::Document
-     // TODO: Add a Path to this
+     // TODO: Add a Location to this
     struct DocumentError : LogicError { };
      // Tried to create a document item with an illegal name.
     struct DocumentInvalidName : DocumentError {

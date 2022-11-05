@@ -117,8 +117,8 @@ my @modules = qw(
     base/ayu/src/compat
     base/ayu/src/document
     base/ayu/src/dynamic
+    base/ayu/src/location
     base/ayu/src/parse
-    base/ayu/src/path
     base/ayu/src/print
     base/ayu/src/reference
     base/ayu/src/resource

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "../ayu/path.h"
+#include "../ayu/location.h"
 #include "../ayu/serialize.h"
 
 namespace glow {
@@ -41,17 +41,17 @@ struct Program {
 
 namespace X {
     struct ShaderCompileFailed : GlowError {
-        ayu::Path path;
+        ayu::Location location;
         std::string info_log;
         ShaderCompileFailed (Shader* s, std::string&& l) :
-            path(ayu::reference_to_path(s)), info_log(l)
+            location(ayu::reference_to_location(s)), info_log(l)
         { }
     };
     struct ProgramLinkFailed : GlowError {
-        ayu::Path path;
+        ayu::Location location;
         std::string info_log;
         ProgramLinkFailed (Program* p, std::string&& l) :
-            path(ayu::reference_to_path(p)), info_log(l)
+            location(ayu::reference_to_location(p)), info_log(l)
         { }
     };
 }

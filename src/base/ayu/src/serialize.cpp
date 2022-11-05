@@ -502,37 +502,50 @@ Reference item_elem (const Reference& item, usize index) {
 
 ///// REFERENCES AND PATHS
 
-static std::unordered_map<Reference, Path> path_cache;
-static usize keep_path_count = 0;
-
-KeepPathCache::KeepPathCache () {
-    keep_path_count++;
+Reference reference_from_location (Location loc) {
+    if (auto parent = loc.parent()) {
+        if (auto key = loc.key()) {
+            return reference_from_location(*parent).attr(*key);
+        }
+        else if (auto index = loc.index()) {
+            return reference_from_location(*parent).elem(*index);
+        }
+        else AYU_INTERNAL_UGUU();
+    }
+    else return universe_ref();
 }
-KeepPathCache::~KeepPathCache () {
-    if (!--keep_path_count) {
-        path_cache.clear();
+
+static std::unordered_map<Reference, Location> location_cache;
+static usize keep_location_count = 0;
+
+KeepLocationCache::KeepLocationCache () {
+    keep_location_count++;
+}
+KeepLocationCache::~KeepLocationCache () {
+    if (!--keep_location_count) {
+        location_cache.clear();
     }
 }
 
-Path reference_to_path (const Reference& ref) {
-    KeepPathCache keep;
-    if (path_cache.empty()) {
+Location reference_to_location (const Reference& ref) {
+    KeepLocationCache keep;
+    if (location_cache.empty()) {
         recursive_scan(
-            universe_ref(), Path(),
-            [](const Reference& ref, Path path){
-                path_cache.emplace(ref, path);
+            universe_ref(), Location(),
+            [](const Reference& ref, Location loc){
+                location_cache.emplace(ref, loc);
             }
         );
     }
-    auto it = path_cache.find(ref);
-    if (it != path_cache.end()) return it->second;
+    auto it = location_cache.find(ref);
+    if (it != location_cache.end()) return it->second;
     else throw X::UnresolvedReference(ref);
 }
 
 String show_reference (const Reference& ref) {
     try {
-        Path p = reference_to_path(ref);
-        return item_to_string(&p);
+        Location loc = reference_to_location(ref);
+        return item_to_string(&loc);
     }
     catch (std::exception& e) {
         return "(An error occurred while showing this reference: "s + e.what() + ")"s;
@@ -540,47 +553,34 @@ String show_reference (const Reference& ref) {
 }
 
 void recursive_scan (
-    const Reference& item, Path path,
-    Callback<void(const Reference&, Path)> cb
+    const Reference& item, Location loc,
+    Callback<void(const Reference&, Location)> cb
 ) {
     if (!item) return;
-    cb(item, path);
+    cb(item, loc);
 
     auto desc = DescriptionPrivate::get(item.type());
     switch (desc->preference()) {
         case OBJECT: {
             for (auto& k : item_get_keys(item)) {
-                recursive_scan(item_attr(item, k), Path(path, k), cb);
+                recursive_scan(item_attr(item, k), Location(loc, k), cb);
             }
             return;
         }
         case ARRAY: {
             usize l = item_get_length(item);
             for (usize i = 0; i < l; i++) {
-                recursive_scan(item_elem(item, i), Path(path, i), cb);
+                recursive_scan(item_elem(item, i), Location(loc, i), cb);
             }
             return;
         }
         default: {
             if (auto acr = desc->delegate_acr()) {
-                recursive_scan(item.chain(acr), path, cb);
+                recursive_scan(item.chain(acr), loc, cb);
             }
             return;
         }
     }
-}
-
-Reference reference_from_path (Path path) {
-    if (auto parent = path.parent()) {
-        if (auto key = path.key()) {
-            return reference_from_path(*parent).attr(*key);
-        }
-        else if (auto index = path.index()) {
-            return reference_from_path(*parent).elem(*index);
-        }
-        else AYU_INTERNAL_UGUU();
-    }
-    else return universe_ref();
 }
 
 ///// DIAGNOSTIC HELP
@@ -597,10 +597,10 @@ DiagnosticSerialization::~DiagnosticSerialization () {
 namespace X {
     SerError::SerError (const Reference& item) {
         try {
-            path_to_item = reference_to_path(item);
+            location = reference_to_location(item);
         }
         catch (std::exception& e) {
-            path_to_item = Path(Path(), "(Error occurred while serializing path to item: "s + e.what() + ")");
+            location = Location(Location(), "?(Error occurred while serializing location of item: "s + e.what() + ")");
         }
     }
 }
@@ -613,45 +613,45 @@ AYU_DESCRIBE(ayu::X::SerError,
 
 AYU_DESCRIBE(ayu::X::CannotToTree,
     delegate(base<X::SerError>()),
-    elems( elem(&X::CannotToTree::path_to_item) )
+    elems( elem(&X::CannotToTree::location) )
 )
 AYU_DESCRIBE(ayu::X::CannotFromTree,
     delegate(base<X::SerError>()),
-    elems( elem(&X::CannotFromTree::path_to_item) )
+    elems( elem(&X::CannotFromTree::location) )
 )
 AYU_DESCRIBE(ayu::X::InvalidForm,
     delegate(base<X::SerError>()),
-    elems( elem(&X::InvalidForm::path_to_item) )
+    elems( elem(&X::InvalidForm::location) )
 )
 AYU_DESCRIBE(ayu::X::NoNameForValue,
     delegate(base<X::SerError>()),
-    elems( elem(&X::NoNameForValue::path_to_item) )
+    elems( elem(&X::NoNameForValue::location) )
 )
 AYU_DESCRIBE(ayu::X::NoValueForName,
     delegate(base<X::SerError>()),
     elems(
-        elem(&X::NoValueForName::path_to_item),
+        elem(&X::NoValueForName::location),
         elem(&X::NoValueForName::tree)
     )
 )
 AYU_DESCRIBE(ayu::X::MissingAttr,
     delegate(base<X::SerError>()),
     elems(
-        elem(&X::MissingAttr::path_to_item),
+        elem(&X::MissingAttr::location),
         elem(&X::MissingAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::UnwantedAttr,
     delegate(base<X::SerError>()),
     elems(
-        elem(&X::UnwantedAttr::path_to_item),
+        elem(&X::UnwantedAttr::location),
         elem(&X::UnwantedAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::WrongLength,
     delegate(base<X::SerError>()),
     attrs(
-        attr("location", &X::WrongLength::path_to_item),
+        attr("location", &X::WrongLength::location),
         attr("min", &X::WrongLength::min),
         attr("max", &X::WrongLength::max),
         attr("got", &X::WrongLength::got)
@@ -659,23 +659,23 @@ AYU_DESCRIBE(ayu::X::WrongLength,
 )
 AYU_DESCRIBE(ayu::X::NoAttrs,
     delegate(base<X::SerError>()),
-    elems( elem(&X::NoAttrs::path_to_item) )
+    elems( elem(&X::NoAttrs::location) )
 )
 AYU_DESCRIBE(ayu::X::NoElems,
     delegate(base<X::SerError>()),
-    elems( elem(&X::NoElems::path_to_item) )
+    elems( elem(&X::NoElems::location) )
 )
 AYU_DESCRIBE(ayu::X::AttrNotFound,
     delegate(base<X::SerError>()),
     elems(
-        elem(&X::AttrNotFound::path_to_item),
+        elem(&X::AttrNotFound::location),
         elem(&X::AttrNotFound::key)
     )
 )
 AYU_DESCRIBE(ayu::X::ElemNotFound,
     delegate(base<X::SerError>()),
     elems(
-        elem(&X::ElemNotFound::path_to_item),
+        elem(&X::ElemNotFound::location),
         elem(&X::ElemNotFound::index)
     )
 )

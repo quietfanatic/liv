@@ -9,8 +9,8 @@ namespace ayu::in {
  // Predeclare some private classes
 struct DocumentData;
 struct Description;
-struct PathData;
-void delete_PathData (PathData*);
+struct LocationData;
+void delete_LocationData (LocationData*);
 struct ResourceData;
 struct TreeData;
 void delete_TreeData (TreeData*);

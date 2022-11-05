@@ -38,7 +38,7 @@ struct Mu;
  // Defined elsewhere
 struct Document;
 struct Dynamic;
-struct Path;
+struct Location;
 struct Reference;
 struct Resource;
 struct Tree;

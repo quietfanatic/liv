@@ -23,7 +23,7 @@
 #pragma once
 
 #include "internal/common-internal.h"
-#include "path.h"
+#include "location.h"
 #include "reference.h"
 #include "resource-name.h"
 
@@ -230,16 +230,20 @@ namespace X {
      // Tried to unload a resource, but there's still a reference somewhere
      // referencing an item inside it.
     struct UnloadWouldBreak : ResourceError {
-        Path from;
-        Path to;
-        UnloadWouldBreak (const Path& f, const Path& t) : from(f), to(t) { }
+        Location from;
+        Location to;
+        UnloadWouldBreak (const Location& f, const Location& t) :
+            from(f), to(t)
+        { }
     };
      // Tried to reload a resource, but was unable to update a reference
      // somewhere.
     struct ReloadWouldBreak : ResourceError {
-        Path from;
-        Path to;
-        ReloadWouldBreak (const Path& f, const Path& t) : from(f), to(t) { }
+        Location from;
+        Location to;
+        ReloadWouldBreak (const Location& f, const Location& t) :
+            from(f), to(t)
+        { }
     };
      // Failed to delete a resource's source file.
     struct RemoveSourceFailed : ResourceError {

@@ -5,7 +5,7 @@
 #pragma once
 
 #include "common.h"
-#include "path.h"
+#include "location.h"
 #include "print.h"
 #include "tree.h"
 #include "type.h"
@@ -50,37 +50,37 @@ Reference item_maybe_elem (const Reference&, usize);
 Reference item_elem (const Reference&, usize);
 
 ///// PATH OPERATIONS
- // Convert a path to a reference.  This will not have to do any scanning,
- // so it should be fairly quick.
-Reference reference_from_path (Path);
+ // Convert a Location to a Reference.  This will not have to do any scanning,
+ // so it should be fairly quick.  Well, quicker than reference_to_location.
+Reference reference_from_location (Location);
 
- // Convert a reference to a path.  This will be slow by itself, since it must
- // scan all loaded resources.  If a KeepPathCache object is alive, the first
- // call to reference_to_path will build a mapping References to Paths, and
- // subsequent calls to reference_to_path will be very fast.
-Path reference_to_path (const Reference&);
+ // Convert a Reference to a Location.  This will be slow by itself, since it
+ // must scan all loaded resources.  If a KeepLocationCache object is alive, the
+ // first call to reference_to_location will build a map of References to
+ // Locations, and subsequent calls to reference_to_location will be very fast.
+Location reference_to_location (const Reference&);
 
- // While this is alive, a cache mapping references to paths will be kept,
- // making reference_to_path faster.  Do not modify any resource data while
- // keeping the path cache, since there is no way for the cache to stay
+ // While this is alive, a cache mapping references to locations will be kept,
+ // making reference_to_location faster.  Do not modify any resource data while
+ // keeping the location cache, since there is no way for the cache to stay
  // up-to-date.
-struct KeepPathCache {
-    KeepPathCache ();
-    ~KeepPathCache ();
+struct KeepLocationCache {
+    KeepLocationCache ();
+    ~KeepLocationCache ();
 };
 
- // This is used by reference_to_path and KeepPathCache.  You shouldn't have to
- // use this directly, but you can if you want.  This will scan the given
- // reference and call the callback for every item in it.
- //   - item: The Reference to scan.
- //   - base: A path corresponding to item
+ // This is used by reference_to_location and KeepLocationCache.  You shouldn't
+ // have to use this directly, but you can if you want.  This will scan the
+ // given reference and call the callback for every item in it.
+ //   - base_item: The Reference to scan.
+ //   - base_location: The location of base_item
  //   - cb: A callback called with:
  //       1. A reference to the currently scanned item
- //       2. A path to the currently scanned item
+ //       2. The location of the currently scanned item
 void recursive_scan (
-    const Reference& item,
-    Path base,
-    Callback<void(const Reference&, Path)> cb
+    const Reference& base_item,
+    Location base_location,
+    Callback<void(const Reference&, Location)> cb
 );
 
 ///// DIAGNOSTICS HELP
@@ -102,7 +102,7 @@ struct DiagnosticSerialization {
 namespace ayu::X {
      // Generic serialization error
     struct SerError : LogicError {
-        Path path_to_item;
+        Location location;
         SerError (const Reference& item);
     };
      // Tried to call to_tree on a type that doesn't support to_tree

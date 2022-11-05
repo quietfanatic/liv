@@ -243,24 +243,24 @@ void unload (const std::vector<Resource>& reses) {
          // If we're unloading everything, no need to do any scanning.
         if (!others.empty()) {
              // First build set of references to things being unloaded
-            std::unordered_map<Reference, Path> ref_set;
+            std::unordered_map<Reference, Location> ref_set;
             for (auto res : rs) {
                 recursive_scan(
-                    res.data->value, Path(Path(), res.data->name),
-                    [&](const Reference& ref, Path path) {
-                        ref_set.emplace(ref, path);
+                    res.data->value, Location(Location(), res.data->name),
+                    [&](const Reference& ref, Location loc) {
+                        ref_set.emplace(ref, loc);
                     }
                 );
             }
              // Then check if any other resources contain references in that set
             for (auto other : others) {
-                recursive_scan(other.data->value, Path(Path(), other.data->name),
-                    [&](Reference ref_ref, Path path) {
+                recursive_scan(other.data->value, Location(Location(), other.data->name),
+                    [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = ref_set.find(ref);
                         if (iter != ref_set.end()) {
-                            throw X::UnloadWouldBreak(path, iter->second);
+                            throw X::UnloadWouldBreak(loc, iter->second);
                         }
                     }
                 );
@@ -356,32 +356,32 @@ void reload (const std::vector<Resource>& reses) {
         }
          // If we're reloading everything, no need to do any scanning.
         if (!others.empty()) {
-             // First build mapping of old refs to paths
-            std::unordered_map<Reference, Path> old_refs;
+             // First build mapping of old refs to locationss
+            std::unordered_map<Reference, Location> old_refs;
             for (auto res : reses) {
                 recursive_scan(
-                    res.data->old_value, Path(Path(), res.data->name),
-                    [&](const Reference& ref, Path path) {
-                        old_refs.emplace(ref, path);
+                    res.data->old_value, Location(Location(), res.data->name),
+                    [&](const Reference& ref, Location loc) {
+                        old_refs.emplace(ref, loc);
                     }
                 );
             }
              // Then build set of ref-refs to update.
             for (auto other : others) {
-                recursive_scan(other.data->value, Path(Path(), other.data->name),
-                    [&](Reference ref_ref, Path path) {
+                recursive_scan(other.data->value, Location(Location(), other.data->name),
+                    [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = old_refs.find(ref);
                         if (iter == old_refs.end()) return;
                         try {
-                             // reference_from_path will use new resource value
-                            Reference new_ref = reference_from_path(iter->second);
+                             // reference_from_location will use new resource value
+                            Reference new_ref = reference_from_location(iter->second);
                             updates.emplace(ref_ref, new_ref);
                         }
                         catch (X::Error&) {
-                             // I think it's okay to throw away the error info
-                            throw X::ReloadWouldBreak(path, iter->second);
+                             // It's probably okay to throw away the error info
+                            throw X::ReloadWouldBreak(loc, iter->second);
                         }
                     }
                 );
@@ -484,7 +484,7 @@ AYU_DESCRIBE(ayu::in::Universe,
     attr_func([](Universe&, Str key){
          // Resources always have to be Dynamic, so go ahead and reference the
          //  Dynamic's value instead of the Dynamic object itself (saves a 1
-         //  in paths)
+         //  in locations)
         return Reference(Resource(key).value());
     })
 )
@@ -595,30 +595,30 @@ static tap::TestSet tests ("base/ayu/resource", []{
         tree_from_file(resource_filename(output.name()));
     }, "Can't open file after calling remove_source");
     doesnt_throw([&]{ remove_source(output); }, "Can call remove_source twice");
-    Path path;
+    Location loc;
     doesnt_throw([&]{
-        item_from_string(&path, "[\"" + input.name() + "\" bar 1]");
-    }, "Can read path from tree");
+        item_from_string(&loc, "[\"" + input.name() + "\" bar 1]");
+    }, "Can read location from tree");
     Reference ref;
     doesnt_throw([&]{
-        ref = reference_from_path(path);
-    }, "reference_from_path");
+        ref = reference_from_location(loc);
+    }, "reference_from_location");
     doesnt_throw([&]{
-        is(ref.get_as<std::string>(), "qux", "reference_from_path got correct item");
+        is(ref.get_as<std::string>(), "qux", "reference_from_location got correct item");
     });
     doc = &output.value().as<ayu::Document>();
     ref = output["asdf"][1].address_as<int32>();
     doesnt_throw([&]{
-        path = reference_to_path(ref);
+        loc = reference_to_location(ref);
     });
-    is(item_to_tree(&path), tree_from_string("[\"" + output.name() + "\" asdf 1]"), "reference_to_path works");
+    is(item_to_tree(&loc), tree_from_string("[\"" + output.name() + "\" asdf 1]"), "reference_to_location works");
     doc->new_<Reference>(output["bar"][1]);
     doesnt_throw([&]{ save(output); }, "save with reference");
     doc->new_<int32*>(output["asdf"][1]);
     doesnt_throw([&]{ save(output); }, "save with pointer");
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
         "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference [\"" + output.name() + "\" bar 1]] _1:[int32* [\"" + output.name() + "\" asdf 1]] _next_id:2}]"
-    ), "File was saved with correct reference as path");
+    ), "File was saved with correct reference as location");
     throws<X::OpenFailed>([&]{
         load(badinput);
     }, "Can't load file with incorrect reference in it");
