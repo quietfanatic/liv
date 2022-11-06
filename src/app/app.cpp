@@ -10,14 +10,9 @@ namespace fs = std::filesystem;
 
 namespace app {
 
-App::App () {
-     // PLEASE implement resource schemes soon
-    String settings_file = ayu::resource_filename("/app/settings.ayu");
-    if (!fs::exists(settings_file)) {
-        fs::copy(ayu::resource_filename("/app/settings-default.ayu"), settings_file);
-    }
-    settings = ayu::Resource("/app/settings.ayu").ref();
-}
+App::App () :
+    settings(ayu::Resource("/app/settings.ayu").ref())
+{ }
 
 App::~App () { }
 

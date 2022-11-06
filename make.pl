@@ -146,7 +146,7 @@ my %opts = (
 
 my @resources = qw(
     app/page.ayu
-    app/settings-default.ayu
+    app/settings.ayu
     base/ayu/src/test/*
     base/glow/test/*
     base/glow/texture-program.ayu

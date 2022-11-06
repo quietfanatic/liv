@@ -34,12 +34,12 @@ page: {
      // Pixel interpolation mode.  Options:
      //   nearest = nearest-neighbor (lowest quality)
      //   linear = bilinear interpolation
-     //   cubic = bicubic hermetic spline (highest quality)
-    interpolation_mode: cubic
+     //   cubic = bicubic hermetic spline
+     //   cubic_nohalo = cubic but clamped to prevent haloing (highest quality)
+    interpolation_mode: cubic_nohalo
      // Page viewing mode.  Options:
      //   single: View one page at a time
      //   double: View two pages at a time
-    spread_mode: single
 }
  // Options for initial window properties
 window: {
@@ -95,6 +95,7 @@ mappings: [
     [[ctrl 1] [interpolation_mode nearest]]
     [[ctrl 2] [interpolation_mode linear]]
     [[ctrl 3] [interpolation_mode cubic]]
+    [[ctrl 4] [interpolation_mode cubic_nohalo]]
      // Reset all page view parameters to default
     [[r] [reset_page]]
      // Quitting
