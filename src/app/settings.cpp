@@ -21,7 +21,8 @@ AYU_DESCRIBE(app::InterpolationMode,
     values(
         value("nearest", NEAREST),
         value("linear", LINEAR),
-        value("cubic", CUBIC)
+        value("cubic", CUBIC),
+        value("cubic_nohalo", CUBIC_NOHALO)
     )
 )
 

@@ -35,7 +35,7 @@ page: {
      //   nearest = nearest-neighbor (lowest quality)
      //   linear = bilinear interpolation
      //   cubic = bicubic hermetic spline
-     //   cubic_nohalo = cubic but clamped to prevent haloing (highest quality)
+     //   cubic_nohalo = cubic but clamped to reduce haloing (highest quality)
     interpolation_mode: cubic_nohalo
      // Page viewing mode.  Options:
      //   single: View one page at a time

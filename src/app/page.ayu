@@ -30,6 +30,11 @@ uniform int u_interpolation_mode;
 in vec2 v_tex_coords;
 out vec4 color;
 
+const int NEAREST = 0;
+const int LINEAR = 1;
+const int CUBIC = 2;
+const int CUBIC_NOHALO = 3;
+
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
  // https://en.wikipedia.org/wiki/Bicubic_interpolation
@@ -45,15 +50,16 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 
 void main () {
     switch (u_interpolation_mode) {
-        case 0: {  // nearest
+        case NEAREST: {
             color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));
             break;
         }
-        case 1: {  // linear
+        case LINEAR: {
             color = texture(u_tex, v_tex_coords);
             break;
         }
-        case 2: {  // cubic
+        case CUBIC:
+        case CUBIC_NOHALO: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
@@ -85,6 +91,15 @@ void main () {
             vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
             vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
             color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
+             // TODO: Ideally we would adjust the derivative at s[1-2][1-2] to
+             // prevent haloing instead of just clamping the final result, but
+             // I don't know how to make that happen.
+            if (u_interpolation_mode == CUBIC_NOHALO) {
+                color = clamp(color,
+                    min(min(s11, s12), min(s21, s22)),
+                    max(max(s11, s12), max(s21, s22))
+                );
+            }
             break;
         }
     }
