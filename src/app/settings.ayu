@@ -34,9 +34,13 @@ page: {
      // Pixel interpolation mode.  Options:
      //   nearest = nearest-neighbor (lowest quality)
      //   linear = bilinear interpolation
+     //   weighted_average = smoothing filter for downscaling.
      //   cubic = bicubic hermetic spline
-     //   cubic_nohalo = cubic but clamped to reduce haloing (highest quality)
-    interpolation_mode: cubic_nohalo
+     //   smart_cubic = cubic with a few adjustments (highest quality)
+     // The smart_cubic mode is like cubic, but it clamps the output color to
+     // reduce haloing.  In addition, if the image is being downscaled, it
+     // gradually transitions to weighted_average.
+    interpolation_mode: smart_cubic
      // Page viewing mode.  Options:
      //   single: View one page at a time
      //   double: View two pages at a time
@@ -95,7 +99,8 @@ mappings: [
     [[ctrl 1] [interpolation_mode nearest]]
     [[ctrl 2] [interpolation_mode linear]]
     [[ctrl 3] [interpolation_mode cubic]]
-    [[ctrl 4] [interpolation_mode cubic_nohalo]]
+    [[ctrl 4] [interpolation_mode smart_cubic]]
+    [[ctrl 9] [interpolation_mode weighted_average]]
      // Reset all page view parameters to default
     [[r] [reset_page]]
      // Quitting

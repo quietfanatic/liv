@@ -32,6 +32,7 @@ struct PageProgram : Program {
     int u_screen_rect = -1;
     int u_tex_rect = -1;
     int u_interpolation_mode = -1;
+    int u_zoom = -1;
 
     void Program_after_link () override {
         u_screen_rect = glGetUniformLocation(id, "u_screen_rect");
@@ -39,15 +40,18 @@ struct PageProgram : Program {
         int u_tex = glGetUniformLocation(id, "u_tex");
         glUniform1i(u_tex, 0);
         u_interpolation_mode = glGetUniformLocation(id, "u_interpolation_mode");
+        u_zoom = glGetUniformLocation(id, "u_zoom");
         DA(u_screen_rect != -1);
         DA(u_tex_rect != -1);
         DA(u_tex != -1);
         DA(u_interpolation_mode != -1);
+        DA(u_zoom != -1);
     }
 };
 
 void Page::draw (
     InterpolationMode interpolation_mode,
+    float zoom,
     const Rect& screen_rect,
     const Rect& tex_rect
 ) {
@@ -66,6 +70,7 @@ void Page::draw (
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
     glUniform1i(program->u_interpolation_mode, interpolation_mode);
+    glUniform1f(program->u_zoom, zoom);
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
@@ -103,7 +108,7 @@ static tap::TestSet tests ("app/page", []{
     glClear(GL_COLOR_BUFFER_BIT);
 
     doesnt_throw([&]{
-        page.draw(LINEAR, Rect(-.5, -.5, .5, .5));
+        page.draw(LINEAR, 1, Rect(-.5, -.5, .5, .5));
     }, "Page::draw");
 
     Image expected (test_size);

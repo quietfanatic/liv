@@ -27,13 +27,15 @@ void main () {
 
 uniform sampler2DRect u_tex;
 uniform int u_interpolation_mode;
+uniform float u_zoom;
 in vec2 v_tex_coords;
 out vec4 color;
 
 const int NEAREST = 0;
 const int LINEAR = 1;
-const int CUBIC = 2;
-const int CUBIC_NOHALO = 3;
+const int WEIGHTED_AVERAGE = 2;
+const int CUBIC = 3;
+const int SMART_CUBIC = 4;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -48,6 +50,40 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
     return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2;
 }
 
+ // t   | wa  | wb  | wc  | wd
+ // ----+-----+-----+-----+----
+ // 0   | 1/4 | 1/2 | 1/4 | 0
+ // 0.5 | 1/8 | 3/8 | 3/8 | 1/8
+ // 1   | 0   | 1/4 | 1/2 | 1/4
+vec4 weighted_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
+    float wa = 1 - t;
+    float wb = 2 - t;
+    float wc = 1 + t;
+    float wd = t;
+    return (a*wa + b*wb + c*wc + d*wd) / 4;
+}
+
+vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
+    switch (u_interpolation_mode) {
+        case CUBIC: return cubic_hermite(a, b, c, d, t);
+        case WEIGHTED_AVERAGE: return weighted_average(a, b, c, d, t);
+        case SMART_CUBIC: {
+            if (u_zoom >= 1) {
+                return cubic_hermite(a, b, c, d, t);
+            }
+            else if (u_zoom <= 0.5) {
+                return weighted_average(a, b, c, d, t);
+            }
+            else {
+                vec4 cubic = cubic_hermite(a, b, c, d, t);
+                vec4 average = weighted_average(a, b, c, d, t);
+                float zt = u_zoom * 2 - 1;
+                return average * (1-zt) + cubic * zt;
+            }
+        }
+    }
+}
+
 void main () {
     switch (u_interpolation_mode) {
         case NEAREST: {
@@ -59,7 +95,8 @@ void main () {
             break;
         }
         case CUBIC:
-        case CUBIC_NOHALO: {
+        case SMART_CUBIC:
+        case WEIGHTED_AVERAGE: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
@@ -86,15 +123,15 @@ void main () {
             vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
             vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
             vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
-            vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
-            vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
-            vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
-            vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
-            color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
+            vec4 r0 = cubic_or_average(s00, s10, s20, s30, frac_coords.x);
+            vec4 r1 = cubic_or_average(s01, s11, s21, s31, frac_coords.x);
+            vec4 r2 = cubic_or_average(s02, s12, s22, s32, frac_coords.x);
+            vec4 r3 = cubic_or_average(s03, s13, s23, s33, frac_coords.x);
+            color = cubic_or_average(r0, r1, r2, r3, frac_coords.y);
              // TODO: Ideally we would adjust the derivative at s[1-2][1-2] to
              // prevent haloing instead of just clamping the final result, but
              // I don't know how to make that happen.
-            if (u_interpolation_mode == CUBIC_NOHALO) {
+            if (u_interpolation_mode == SMART_CUBIC) {
                 color = clamp(color,
                     min(min(s11, s12), min(s21, s22)),
                     max(max(s11, s12), max(s21, s22))

@@ -266,7 +266,7 @@ bool Book::draw_if_needed () {
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = page_position / Vec(window_size) * float(2) - Vec(1, 1);
          // Draw
-        page->draw(interpolation_mode, screen_rect);
+        page->draw(interpolation_mode, zoom, screen_rect);
     }
     update_title(*this);
     SDL_GL_SwapWindow(sdl_window);

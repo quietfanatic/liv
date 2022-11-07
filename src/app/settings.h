@@ -18,8 +18,9 @@ enum AutoZoomMode : uint8 {
 enum InterpolationMode : uint8 {
     NEAREST,
     LINEAR,
+    WEIGHTED_AVERAGE,
     CUBIC,
-    CUBIC_NOHALO
+    SMART_CUBIC
 };
 
 struct Mapping {
@@ -35,7 +36,7 @@ struct Settings {
         bool reset_zoom_on_page_turn = true;
         geo::Vec small_align = {0.5, 0.5};
         geo::Vec large_align = {0.5, 0.5};
-        InterpolationMode interpolation_mode = CUBIC_NOHALO;
+        InterpolationMode interpolation_mode = SMART_CUBIC;
     } page;
     struct Window {
         geo::IVec size = {720, 720};

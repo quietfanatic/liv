@@ -26,6 +26,7 @@ struct Page {
 
     void draw (
         InterpolationMode interpolation_mode,
+        float zoom,
         const geo::Rect& screen_rect,
         const geo::Rect& tex_rect = geo::NAN // defaults to whole page
     );
