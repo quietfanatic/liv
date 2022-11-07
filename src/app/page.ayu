@@ -33,7 +33,7 @@ out vec4 color;
 
 const int NEAREST = 0;
 const int LINEAR = 1;
-const int WEIGHTED_AVERAGE = 2;
+const int SMOOTHED = 2;
 const int CUBIC = 3;
 const int SMART_CUBIC = 4;
 
@@ -66,7 +66,7 @@ vec4 weighted_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
     switch (u_interpolation_mode) {
         case CUBIC: return cubic_hermite(a, b, c, d, t);
-        case WEIGHTED_AVERAGE: return weighted_average(a, b, c, d, t);
+        case SMOOTHED: return weighted_average(a, b, c, d, t);
         case SMART_CUBIC: {
             if (u_zoom >= 1) {
                 return cubic_hermite(a, b, c, d, t);
@@ -94,9 +94,9 @@ void main () {
             color = texture(u_tex, v_tex_coords);
             break;
         }
+        case SMOOTHED:
         case CUBIC:
-        case SMART_CUBIC:
-        case WEIGHTED_AVERAGE: {
+        case SMART_CUBIC: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
@@ -128,9 +128,13 @@ void main () {
             vec4 r2 = cubic_or_average(s02, s12, s22, s32, frac_coords.x);
             vec4 r3 = cubic_or_average(s03, s13, s23, s33, frac_coords.x);
             color = cubic_or_average(r0, r1, r2, r3, frac_coords.y);
-             // TODO: Ideally we would adjust the derivative at s[1-2][1-2] to
-             // prevent haloing instead of just clamping the final result, but
-             // I don't know how to make that happen.
+             // Clamp output to prevent haloing.
+             // Ideally we would adjust the derivative at s[1-2][1-2] to prevent
+             // haloing, AKA monotonic cubic interpolation, but that looks
+             // really complicated and expensive.  So we're clamping the output
+             // instead.  It doesn't always preserve the first derivative, but
+             // when it doesn't, it's when the image had a sharp edge anyway, so
+             // it looks fine.
             if (u_interpolation_mode == SMART_CUBIC) {
                 color = clamp(color,
                     min(min(s11, s12), min(s21, s22)),

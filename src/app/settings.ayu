@@ -30,20 +30,17 @@ page: {
      // If the page is larger than the window in one dimension and smaller in
      // the other dimension, it will use small_align for the smaller dimension
      // and large_align for the larger.
-    large_align: [0 0]
-     // Pixel interpolation mode.  Options:
-     //   nearest = nearest-neighbor (lowest quality)
-     //   linear = bilinear interpolation
-     //   smoothed = smoothing filter for downscaling.
-     //   cubic = bicubic hermetic spline
-     //   smart_cubic = cubic with a few adjustments (highest quality)
-     // The smart_cubic mode is like cubic, but it clamps the output color to
-     // reduce haloing.  In addition, if the image is being downscaled, it
-     // gradually transitions to smoothed to reduce information loss.
+    large_align: [0.5 0.5]
+     // Pixel interpolation mode.  Options (in rough order of processing cost):
+     //   nearest = 1-sample nearest-neighbor (lowest quality)
+     //   linear = 4-sample bilinear interpolation
+     //   smoothed = 16-sample smoothing filter for downscaling.
+     //   cubic = 16-sample bicubic hermetic spline
+     //   smart_cubic = cubic with some adjustments (highest quality)
+     // The smart_cubic mode is like cubic, but it clamps the output value to
+     // prevent halo artifacts.  In addition, if the image is being downscaled,
+     // it gradually transitions to smoothed to reduce aliasing.
     interpolation_mode: smart_cubic
-     // Page viewing mode.  Options:
-     //   single: View one page at a time
-     //   double: View two pages at a time
 }
  // Options for initial window properties
 window: {
