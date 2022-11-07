@@ -18,7 +18,7 @@ enum AutoZoomMode : uint8 {
 enum InterpolationMode : uint8 {
     NEAREST,
     LINEAR,
-    WEIGHTED_AVERAGE,
+    SMOOTHED,
     CUBIC,
     SMART_CUBIC
 };
