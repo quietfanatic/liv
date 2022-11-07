@@ -26,16 +26,16 @@ convenient place eventually.
 
 ### ROADMAP
 
-[x] Dragging and zooming
-[x] Nice filtering
-[ ] View two pages side-by-side
-[ ] Folder support
-[ ] Better settings management
-[ ] Customizable mouse controls
-[ ] Support avif images (possibly switch to SAIL for image loading)
-[ ] Official Windows (mingw) support
-[ ] Off-thread image loading
-[ ] Simple animation
+- [x] Dragging and zooming
+- [x] Nice filtering
+- [ ] View two pages side-by-side
+- [ ] Folder support
+- [ ] Better settings management
+- [ ] Customizable mouse controls
+- [ ] Support avif images (maybe switch to SAIL)
+- [ ] Official Windows (mingw) support
+- [ ] Off-thread image loading
+- [ ] Simple animation
 
 ### KNOWN BUGS
 
