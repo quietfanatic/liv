@@ -7,7 +7,7 @@
 namespace wind {
 
  // An active loop using SDL.  The default on_step calls poll_events.
-struct Loop {
+struct ActiveLoop {
      // Desired framerate.
     double fps = 60;
      // If lag is less than this amount in frames, slow down instead of dropping

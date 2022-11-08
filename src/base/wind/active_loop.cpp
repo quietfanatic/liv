@@ -1,4 +1,4 @@
-#include "loop.h"
+#include "active_loop.h"
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_timer.h>
@@ -7,7 +7,7 @@
 
 namespace wind {
 
-static void default_on_step (Loop& self) {
+static void default_on_step (ActiveLoop& self) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -19,7 +19,7 @@ static void default_on_step (Loop& self) {
     }
 }
 
-void Loop::start () {
+void ActiveLoop::start () {
     double lag = 0;
     uint32 last_ticks = SDL_GetTicks();
     while (!stop_requested) {
@@ -52,16 +52,16 @@ void Loop::start () {
     }
 }
 
-void Loop::stop () {
+void ActiveLoop::stop () {
     stop_requested = true;
 }
 
 } using namespace wind;
 
-AYU_DESCRIBE(wind::Loop,
+AYU_DESCRIBE(wind::ActiveLoop,
     attrs(
-        attr("fps", &Loop::fps, optional),
-        attr("min_lag_tolerance", &Loop::min_lag_tolerance, optional),
-        attr("max_lag_tolerance", &Loop::max_lag_tolerance, optional)
+        attr("fps", &ActiveLoop::fps, optional),
+        attr("min_lag_tolerance", &ActiveLoop::min_lag_tolerance, optional),
+        attr("max_lag_tolerance", &ActiveLoop::max_lag_tolerance, optional)
     )
 )

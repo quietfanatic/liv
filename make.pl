@@ -137,7 +137,6 @@ my @modules = qw(
     base/glow/test-environment
     base/glow/texture-program
     base/uni/common
-    base/wind/loop
     base/wind/window
 );
 my %opts = (
