@@ -10,42 +10,13 @@ namespace fs = std::filesystem;
 
 namespace app {
 
-App::App () :
-    settings(ayu::Resource("/app/settings.ayu").ref())
-{ }
-
-App::~App () { }
-
-static void add_book (App& self, std::unique_ptr<Book>&& b) {
-    auto& book = self.books.emplace_back(std::move(b));
-    self.books_by_window_id.emplace(
-        AS(SDL_GetWindowID(book->sdl_window)),
-        &*book
-    );
-}
-
 static Book* book_with_window_id (App& self, uint32 id) {
     auto iter = self.books_by_window_id.find(id);
     AA(iter != self.books_by_window_id.end());
     return &*iter->second;
 }
 
-void App::open_files (const std::vector<String>& files) {
-    add_book(*this, std::make_unique<Book>(*this, files));
-}
-
-void App::close_book (Book* book) {
-    AA(book);
-    for (auto iter = books.begin(); iter != books.end(); iter++) {
-        if (&**iter == book) {
-            books.erase(iter);
-            return;
-        }
-    }
-    AA(false);
-}
-
-static void handle_event (App& self, SDL_Event* event) {
+static void on_event (App& self, SDL_Event* event) {
     current_app = &self;
     switch (event->type) {
         case SDL_QUIT: self.stop(); break;
@@ -105,49 +76,64 @@ static void handle_event (App& self, SDL_Event* event) {
     current_app = null;
 }
 
-void App::run () {
-    stop_requested = false;
-    for (;;) {
-        SDL_Event event;
-        SDL_PumpEvents();
-        if (SDL_HasEvents(SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-             // Handle an event if we have it.
-            SDL_PollEvent(&event);
-            handle_event(*this, &event);
-            if (stop_requested) goto stopped;
-        }
-        else {
-             // No more events?  Draw or do some backgroud processing
-            bool did_stuff = false;
-            for (auto& book : books) {
-                if (book->draw_if_needed()) {
-                    did_stuff = true;
-                }
-            }
-            if (!did_stuff) {
-                for (auto& book : books) {
-                     // This prioritizes earlier-numbered books.  Probably
-                     // doesn't matter though, since idle processing generally
-                     // happens in response to user input, and the user is
-                     // probably only interacting with one book.  And currently
-                     // we only have one book per process anyway.
-                    if (book->idle_processing()) {
-                        did_stuff = true;
-                        break;
-                    }
-                }
-            }
-            if (!did_stuff) {
-                 // No events and nothing to do, so go to sleep
-                SDL_WaitEvent(null);
-            }
+static bool on_idle (App& self) {
+     // No more events?  Draw or do some background processing
+    bool did_stuff = false;
+    for (auto& book : self.books) {
+        if (book->draw_if_needed()) {
+            did_stuff = true;
         }
     }
-    stopped:;
+    if (did_stuff) return true;
+    for (auto& book : self.books) {
+         // This prioritizes earlier-numbered books.  Probably
+         // doesn't matter though, since idle processing generally
+         // happens in response to user input, and the user is
+         // probably only interacting with one book.  And currently
+         // we only have one book per process anyway.
+        if (book->idle_processing()) return true;
+    }
+    return false;
+}
+
+App::App () :
+    settings(ayu::Resource("/app/settings.ayu").ref())
+{
+    loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
+    loop.on_idle = [this](){ return on_idle(*this); };
+}
+
+App::~App () { }
+
+static void add_book (App& self, std::unique_ptr<Book>&& b) {
+    auto& book = self.books.emplace_back(std::move(b));
+    self.books_by_window_id.emplace(
+        AS(SDL_GetWindowID(book->sdl_window)),
+        &*book
+    );
+}
+
+void App::open_files (const std::vector<String>& files) {
+    add_book(*this, std::make_unique<Book>(*this, files));
+}
+
+void App::close_book (Book* book) {
+    AA(book);
+    for (auto iter = books.begin(); iter != books.end(); iter++) {
+        if (&**iter == book) {
+            books.erase(iter);
+            return;
+        }
+    }
+    AA(false);
+}
+
+void App::run () {
+    loop.start();
 }
 
 void App::stop () {
-    stop_requested = true;
+    loop.stop();
 }
 
 App* current_app = null;
