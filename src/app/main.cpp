@@ -6,6 +6,7 @@
 #include "app.h"
 
 int main (int argc, char** argv) {
+     // TODO: Don't disable screensaver
     char* base = AS(SDL_GetBasePath());
     String exe_folder = base;
     SDL_free(base);
