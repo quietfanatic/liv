@@ -8,13 +8,8 @@ namespace glow {
 
 TestEnvironment::TestEnvironment (geo::IVec size) :
     size(size),
-    window{
-        .title = "Test window",
-        .size = size,
-        .hidden = true
-    }
+    window("Test window", size)
 {
-    window.open();
     glow::init();
 }
 

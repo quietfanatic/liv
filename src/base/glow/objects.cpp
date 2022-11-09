@@ -6,6 +6,7 @@
 namespace glow {
 
 Texture::Texture (uint target) : target(target) {
+    init();
     if (target) {
         glGenTextures(1, &const_cast<uint&>(id));
         glBindTexture(target, id);

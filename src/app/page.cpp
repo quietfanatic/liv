@@ -90,14 +90,13 @@ AYU_DESCRIBE(app::PageProgram,
 static tap::TestSet tests ("app/page", []{
     using namespace tap;
     IVec test_size = {120, 120};
-    wind::Window window {
-        .title = "base/glow/texture test window",
-        .size = test_size,  // TODO: enforce window size!
-         // Window being the wrong size due to OS restrictions screws up this test
-        .hidden = true
-    };
-    window.open();
-    init();
+    wind::Window window (
+        "base/glow/texture test window",
+         // TODO: enfore window size!  Window being the wrong size due to OS
+         // restrictions screws up this test
+        test_size
+    );
+    glow::init();
 
     Page page (ayu::file_resource_root() + "/base/glow/test/image.png");
     is(page.size, IVec(0, 0), "Page isn't loaded yet");

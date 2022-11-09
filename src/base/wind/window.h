@@ -1,37 +1,26 @@
 #pragma once
 
-#include <functional>
 #include "../geo/vec.h"
 #include "../uni/common.h"
 
 struct SDL_Window;
 
 namespace wind {
-using namespace geo;
 
+ // A thin wrapper around an SDL_Window.  Calls SDL_CreateWindow on construction
+ // and SDL_DestroyWindow on destruction.
 struct Window {
-     // Window title
-    String title;
-     // Width and height in...pixels?
-     // TODO: investigate what happens in HiDPI
-    IVec size = {640, 480};
-     // Allow window to be resized by user.  width and height will be updated.
-    bool resizable = false;
-     // Window will exist but will not be visible.  Useful for testing.
-    bool hidden = false;
-
     SDL_Window* sdl_window = null;
     void* gl_context = null;
-
-     // Updates window parameters
-    void update ();
-
-     // Creates window and makes it visible
-    void open ();
-     // Closes window
-    void close ();
-
+     // By default the window is hidden and OpenGL-enabled.
+    Window();
+     // Arguments passed to SDL_CreateWindow
+    Window (const char* title, int x, int y, int w, int h, uint32 flags);
+     // Slightly shorter version
+    Window (const char* title, geo::IVec size);
     ~Window();
+     // Coerce
+    operator SDL_Window* () const { return sdl_window; }
 };
 
 } // namespace wind

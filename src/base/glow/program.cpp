@@ -5,9 +5,12 @@
 
 namespace glow {
 
-Shader::Shader (uint type) :
-    id(type ? glCreateShader(type) : 0)
-{ }
+Shader::Shader (uint type) : id(0) {
+    if (type) {
+        init();
+        const_cast<uint&>(id) = glCreateShader(type);
+    }
+}
 
 Shader::~Shader () {
     if (id) glDeleteShader(id);
@@ -27,7 +30,10 @@ void Shader::compile () {
 
 static Program* current_program = null;
 
-Program::Program () : id(glCreateProgram()) { }
+Program::Program () {
+    init();
+    const_cast<uint&>(id) = glCreateProgram();
+}
 
 Program::~Program () {
     if (id) glDeleteProgram(id);
@@ -181,12 +187,7 @@ static tap::TestSet tests ("base/glow/program", []{
     using namespace tap;
     using namespace geo;
     IVec test_size = {120, 120};
-    wind::Window window {
-        .title = "base/glow/program test window",
-        .size = test_size,
-        .hidden = true
-    };
-    window.open();
+    wind::Window window ("base/glow/program test window", test_size);
     glow::init();
 
     Program* program;

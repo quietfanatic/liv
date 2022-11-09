@@ -15,6 +15,12 @@ static void default_on_step (ActiveLoop& self) {
                 self.stop();
                 break;
             }
+            case SDL_KEYDOWN: {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    self.stop();
+                }
+                break;
+            }
         }
     }
 }
