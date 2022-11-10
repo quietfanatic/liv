@@ -36,14 +36,19 @@ struct ResourceScheme {
     virtual String get_file (const IRI&) const { return ""; }
      // TODO: Non-file resource schemes
 
-    ResourceScheme (Str scheme_name, bool auto_activate = true) :
+    explicit ResourceScheme (Str scheme_name, bool auto_activate = true) :
         scheme_name(scheme_name)
     {
         if (auto_activate) activate();
     }
 
+    ResourceScheme (const ResourceScheme&) = delete;
+    ResourceScheme (ResourceScheme&& o) = delete;
+    ResourceScheme& operator = (const ResourceScheme&) = delete;
+    ResourceScheme& operator = (ResourceScheme&&) = delete;
+
     virtual ~ResourceScheme () {
-        deactivate();
+        if (!scheme_name.empty()) deactivate();
     }
 
      // These are called in the constructor (by default) and destructor, so you

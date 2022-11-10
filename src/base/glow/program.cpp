@@ -192,7 +192,7 @@ static tap::TestSet tests ("base/glow/program", []{
 
     Program* program;
     doesnt_throw([&]{
-        program = ayu::Resource("res:/base/glow/test/test-program.ayu")["program"][1];
+        program = ayu::Resource("test:/test-program.ayu")["program"][1];
     }, "Can load program from ayu document");
     program->use();
     int u_screen_rect = glGetUniformLocation(*program, "u_screen_rect");

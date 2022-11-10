@@ -12,7 +12,7 @@ namespace in {
     struct Universe {
         std::unordered_map<Str, ResourceData*> resources;
         Resource current_resource;
-        std::unordered_map<Str, const ResourceScheme*> schemes;
+        std::unordered_map<String, const ResourceScheme*> schemes;
         FileResourceScheme default_scheme {"file", "/", false};
         const ResourceScheme* require_scheme (Str scheme) {
             if (schemes.empty()) {
@@ -20,7 +20,7 @@ namespace in {
                 else throw X::UnknownResourceScheme(String(scheme));
             }
             else {
-                auto iter = schemes.find(scheme);
+                auto iter = schemes.find(String(scheme));
                 if (iter != schemes.end()) return iter->second;
                 else throw X::UnknownResourceScheme(String(scheme));
             }

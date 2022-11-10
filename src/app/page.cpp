@@ -97,8 +97,8 @@ static tap::TestSet tests ("app/page", []{
 
     IVec test_size = {120, 120};
     wind::Window window (
-        "base/glow/texture test window",
-         // TODO: enfore window size!  Window being the wrong size due to OS
+        "Test window",
+         // TODO: enforce window size!  Window being the wrong size due to OS
          // restrictions screws up this test
         test_size
     );

@@ -89,6 +89,8 @@ struct Resource {
     Resource (IRI&& name);
      // Takes an IRI reference relative to the current resource if there is one.
     Resource (Str name);
+     // Doesn't autoconvert for some reason
+    Resource (const char* name) : Resource(Str(name)) { }
      // Creates the resource already loaded with the given data, without reading
      // from disk.  Will throw if a resource with this name is already loaded.
     Resource (IRI name, Dynamic&& value);
@@ -209,6 +211,9 @@ void remove_source (Resource);
  // basic test: it tries to open the file, and returns true if it can or false
  // if it can't.
 bool source_exists (Resource);
+
+ // Get the filename of the file backing this resource, if it has one.
+String resource_filename (Resource);
 
  // Returns the resource currently being processed, if any.
 Resource current_resource ();
