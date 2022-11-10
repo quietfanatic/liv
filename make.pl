@@ -136,6 +136,7 @@ my @modules = qw(
     base/glow/program
     base/glow/test-environment
     base/glow/texture-program
+    base/iri/iri.draft
     base/uni/common
     base/wind/passive_loop
     base/wind/window

@@ -388,7 +388,7 @@ std::string Show<T>::show (const T& v) {
         return "\"" + v + "\"";
     }
     else if constexpr (std::is_same_v<T, std::string_view>) {
-        return "\"" + v + "\"";
+        return "\"" + std::string(v) + "\"";
     }
     else if constexpr (std::is_same_v<T, std::nullptr_t>) {
         return "nullptr";
