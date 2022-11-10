@@ -6,8 +6,7 @@
  //     - a state, which is usually UNLOADED or LOADED.
  // Resources can be loaded, reloaded, unloaded, and saved.
  //
- // Resource names may not contain :, ?, or # (these are reserved for URIs),
- // or any characters that are invalid for Windows filenames.
+ // Resource names are an IRI.
  //
  // Resources can have no name, in which case they are anonymous.  Anonymous
  // resources cannot be reloaded or saved, but they can be unloaded.  Anonymous
@@ -22,12 +21,13 @@
 
 #pragma once
 
+#include "../iri/iri.h"
 #include "internal/common-internal.h"
 #include "location.h"
 #include "reference.h"
-#include "resource-name.h"
 
 namespace ayu {
+using iri::IRI;
 
 ///// RESOURCES
 
@@ -84,24 +84,21 @@ struct Resource {
     in::ResourceData* data;
 
     constexpr Resource (in::ResourceData* d = null) : data(d) { }
-     // Refers to the resource with this name, but does not load it yet.  If
-     // name is empty, gets the current resource if there is one, otherwise
-     // throws InvalidResourceName.
-     // TODO: Change current resource name to something like "$" or "_"
+     // Refers to the resource with this name, but does not load it yet.
+    Resource (const IRI& name);
+    Resource (IRI&& name);
+     // Takes an IRI reference relative to the current resource if there is one.
     Resource (Str name);
-     // TODO: remove these, I think they're useless
-    Resource (const char* name) : Resource(Str(name)) { }
-    Resource (const String& name) : Resource(Str(name)) { }
      // Creates the resource already loaded with the given data, without reading
      // from disk.  Will throw if a resource with this name is already loaded.
-    Resource (Str name, Dynamic&& value);
+    Resource (IRI name, Dynamic&& value);
      // Creates an anonymous resource with no value
     Resource (Null);
      // Creates an anonymous resource with the given value
     Resource (Null, Dynamic&& value);
 
-     // Returns the name in absolute form.
-    Str name () const;
+     // Returns the resource's name as an IRI
+    const IRI& name () const;
      // See enum ResourceState
     ResourceState state () const;
 

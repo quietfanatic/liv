@@ -9,7 +9,7 @@
 #include "../parse.h"
 #include "../print.h"
 #include "../reference.h"
-#include "../resource-name.h"
+#include "../resource-scheme.h"
 #include "../serialize.h"
 #include "resource-private.h"
 
@@ -21,25 +21,13 @@ namespace ayu {
 namespace in {
 
     struct ResourceData {
-        String name;
+        IRI name;
         Dynamic value {};
         Dynamic old_value {};  // Used when reloading
         ResourceState state = UNLOADED;
     };
 
 } using namespace in;
-
- // Hella temporary
-void set_file_resource_root (Str root) {
-    universe().default_scheme.folder = root;
-}
-Str file_resource_root () {
-    return universe().default_scheme.folder;
-}
-String resource_filename (Str name) {
-    auto scheme = &universe().default_scheme;
-    return scheme->get_file(name);
-}
 
 Str show_ResourceState (ResourceState state) {
     switch (state) {
@@ -61,27 +49,54 @@ Str show_ResourceState (ResourceState state) {
 
 ///// RESOURCES
 
-Resource::Resource (Str name) {
-    String absolute = resolve(name);
+ // These are separate because it's not known at call time whether we will need
+ // to copy or not, so we can't leave the decision to the caller.
+Resource::Resource (const IRI& name) {
+    if (!name) {
+        throw X::InvalidResourceName(String(name.possibly_invalid_spec()));
+    }
     auto& resources = universe().resources;
-    auto iter = resources.find(absolute);
+    auto iter = resources.find(name.spec());
     if (iter != resources.end()) {
         data = iter->second;
     }
     else {
-        data = new ResourceData{std::move(absolute)};
+        data = new ResourceData{name};
          // Be careful about storing the right Str (std::string_view)
-        resources.emplace(data->name, data);
+        resources.emplace(data->name.spec(), data);
     }
 }
-Resource::Resource (Str name, Dynamic&& value) :
-    Resource(name)
+Resource::Resource (IRI&& name) {
+    if (!name) {
+        throw X::InvalidResourceName(String(name.possibly_invalid_spec()));
+    }
+    auto& resources = universe().resources;
+    auto iter = resources.find(name.spec());
+    if (iter != resources.end()) {
+        data = iter->second;
+    }
+    else {
+        data = new ResourceData{std::move(name)};
+         // Be careful about storing the right Str (std::string_view)
+        resources.emplace(data->name.spec(), data);
+    }
+}
+Resource::Resource (Str ref) {
+    if (auto res = current_resource()) {
+        if (ref == "#") new (this) Resource(res.data->name);
+        else new (this) Resource (IRI(ref, res.data->name));
+    }
+    else new (this) Resource(IRI(ref));
+}
+
+Resource::Resource (IRI name, Dynamic&& value) :
+    Resource(std::move(name))
 {
     if (data->state == UNLOADED) data->value = std::move(value);
     else throw X::InvalidResourceState("construct", *this);
 }
 
-Str Resource::name () const { return data->name; }
+const IRI& Resource::name () const { return data->name; }
 ResourceState Resource::state () const { return data->state; }
 
 Dynamic& Resource::value () const {
@@ -131,8 +146,7 @@ void load (const std::vector<Resource>& reses) {
         }
         for (auto res : rs) {
             PushCurrentResource p (res);
-             // TODO: Support schemes
-            auto scheme = &universe().default_scheme;
+            auto scheme = universe().scheme_for_iri(res.data->name);
             String filename = scheme->get_file(res.data->name);
             item_from_tree(&res.data->value, tree_from_file(filename));
         }
@@ -187,8 +201,7 @@ void save (const std::vector<Resource>& reses) {
         std::vector<std::function<void()>> committers (reses.size());
         for (usize i = 0; i < reses.size(); i++) {
             PushCurrentResource p (reses[i]);
-             // TODO: support schemes
-            auto scheme = &universe().default_scheme;
+            auto scheme = universe().scheme_for_iri(reses[i].data->name);
             String filename = scheme->get_file(reses[i].data->name);
             auto contents = tree_to_string(item_to_tree(&reses[i].data->value));
             committers[i] = [contents{std::move(contents)}, filename{std::move(filename)}]{
@@ -246,7 +259,7 @@ void unload (const std::vector<Resource>& reses) {
             std::unordered_map<Reference, Location> ref_set;
             for (auto res : rs) {
                 recursive_scan(
-                    res.data->value, Location(Location(), res.data->name),
+                    res.data->value, Location(Location(), res.data->name.spec()),
                     [&](const Reference& ref, Location loc) {
                         ref_set.emplace(ref, loc);
                     }
@@ -254,7 +267,7 @@ void unload (const std::vector<Resource>& reses) {
             }
              // Then check if any other resources contain references in that set
             for (auto other : others) {
-                recursive_scan(other.data->value, Location(Location(), other.data->name),
+                recursive_scan(other.data->value, Location(Location(), other.data->name.spec()),
                     [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
@@ -336,8 +349,7 @@ void reload (const std::vector<Resource>& reses) {
          // Construct step
         for (auto res : reses) {
             PushCurrentResource p (res);
-             // TODO: support schemes
-            auto scheme = &universe().default_scheme;
+            auto scheme = universe().scheme_for_iri(res.data->name);
             String filename = scheme->get_file(res.data->name);
             item_from_tree(&res.data->value, tree_from_file(filename));
         }
@@ -360,7 +372,7 @@ void reload (const std::vector<Resource>& reses) {
             std::unordered_map<Reference, Location> old_refs;
             for (auto res : reses) {
                 recursive_scan(
-                    res.data->old_value, Location(Location(), res.data->name),
+                    res.data->old_value, Location(Location(), res.data->name.spec()),
                     [&](const Reference& ref, Location loc) {
                         old_refs.emplace(ref, loc);
                     }
@@ -368,7 +380,7 @@ void reload (const std::vector<Resource>& reses) {
             }
              // Then build set of ref-refs to update.
             for (auto other : others) {
-                recursive_scan(other.data->value, Location(Location(), other.data->name),
+                recursive_scan(other.data->value, Location(Location(), other.data->name.spec()),
                     [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
@@ -436,16 +448,22 @@ void reload (const std::vector<Resource>& reses) {
     }
 }
 
+String resource_filename (Resource res) {
+    PushCurrentResource p (res);
+    auto scheme = universe().scheme_for_iri(res.data->name);
+    return scheme->get_file(res.data->name);
+}
+
 void remove_source (Resource res) {
     PushCurrentResource p (res);
-     // TODO: support schemes
-    auto scheme = &universe().default_scheme;
+    auto scheme = universe().scheme_for_iri(res.data->name);
     String filename = scheme->get_file(res.data->name);
     remove_utf8(filename.c_str());
 }
 
 bool source_exists (Resource res) {
-    auto scheme = &universe().default_scheme;
+    PushCurrentResource p (res);
+    auto scheme = universe().scheme_for_iri(res.data->name);
     String filename = scheme->get_file(res.data->name);
     if (std::FILE* f = fopen_utf8(filename.c_str())) {
         fclose(f);
@@ -500,9 +518,9 @@ AYU_DESCRIBE(ayu::in::Universe,
 )
 
 AYU_DESCRIBE(ayu::Resource,
-    delegate(mixed_funcs<String>(
-        [](const Resource& v){
-            return v.data->name;
+    delegate(const_ref_funcs<String>(
+        [](const Resource& v) -> const String& {
+            return v.data->name.spec();
         },
         [](Resource& v, const String& m){
             v = Resource(m);
@@ -555,15 +573,15 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
 
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
-     // Note: We're relying on the caller to set the file resource root!
-    Resource input ("/base/ayu/src/test/testfile.ayu");
-    Resource input2 ("/base/ayu/src/test/othertest.ayu");
-    Resource rec1 ("/base/ayu/src/test/rec1.ayu");
-    Resource rec2 ("/base/ayu/src/test/rec2.ayu");
-    Resource badinput ("/base/ayu/src/test/badref.ayu");
-    Resource output ("/base/ayu/src/test/test-output.ayu");
-    Resource unicode ("/base/ayu/src/test/ユニコード.ayu");
-    Resource unicode2 ("/base/ayu/src/test/ユニコード2.ayu");
+     // Note: We're relying on the caller to set the resource scheme!
+    Resource input ("res:/base/ayu/src/test/testfile.ayu");
+    Resource input2 ("res:/base/ayu/src/test/othertest.ayu");
+    Resource rec1 ("res:/base/ayu/src/test/rec1.ayu");
+    Resource rec2 ("res:/base/ayu/src/test/rec2.ayu");
+    Resource badinput ("res:/base/ayu/src/test/badref.ayu");
+    Resource output ("res:/base/ayu/src/test/test-output.ayu");
+    Resource unicode ("res:/base/ayu/src/test/ユニコード.ayu");
+    Resource unicode2 ("res:/base/ayu/src/test/ユニコード2.ayu");
 
     is(input.state(), UNLOADED, "Resources start out unloaded");
     doesnt_throw([&]{ load(input); }, "load");
@@ -609,7 +627,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{ remove_source(output); }, "Can call remove_source twice");
     Location loc;
     doesnt_throw([&]{
-        item_from_string(&loc, "[\"" + input.name() + "\" bar 1]");
+        item_from_string(&loc, "[\"" + input.name().spec() + "\" bar 1]");
     }, "Can read location from tree");
     Reference ref;
     doesnt_throw([&]{
@@ -623,13 +641,13 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{
         loc = reference_to_location(ref);
     });
-    is(item_to_tree(&loc), tree_from_string("[\"" + output.name() + "\" asdf 1]"), "reference_to_location works");
+    is(item_to_tree(&loc), tree_from_string("[\"" + output.name().spec() + "\" asdf 1]"), "reference_to_location works");
     doc->new_<Reference>(output["bar"][1]);
     doesnt_throw([&]{ save(output); }, "save with reference");
     doc->new_<int32*>(output["asdf"][1]);
     doesnt_throw([&]{ save(output); }, "save with pointer");
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
-        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference [\"" + output.name() + "\" bar 1]] _1:[int32* [\"" + output.name() + "\" asdf 1]] _next_id:2}]"
+        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference [\"" + output.name().spec() + "\" bar 1]] _1:[int32* [\"" + output.name().spec() + "\" asdf 1]] _next_id:2}]"
     ), "File was saved with correct reference as location");
     throws<X::OpenFailed>([&]{
         load(badinput);

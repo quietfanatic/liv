@@ -108,10 +108,7 @@ my @modules = qw(
     app/main
     app/page
     app/settings
-    base/control/command
-    base/control/command-builtins
-    base/control/input
-    base/geo/mat
+    base/ayu/describe-standard
     base/ayu/src/accessors
     base/ayu/src/common
     base/ayu/src/compat
@@ -122,12 +119,14 @@ my @modules = qw(
     base/ayu/src/print
     base/ayu/src/reference
     base/ayu/src/resource
-    base/ayu/src/resource-name
+    base/ayu/src/resource-scheme
     base/ayu/src/serialize
     base/ayu/src/tree
     base/ayu/src/type
-    base/ayu/describe-standard
-    base/tap/tap
+    base/control/command
+    base/control/command-builtins
+    base/control/input
+    base/geo/mat
     base/glow/common
     base/glow/file-texture
     base/glow/gl
@@ -136,7 +135,8 @@ my @modules = qw(
     base/glow/program
     base/glow/test-environment
     base/glow/texture-program
-    base/iri/iri.draft
+    base/iri/iri
+    base/tap/tap
     base/uni/common
     base/wind/passive_loop
     base/wind/window

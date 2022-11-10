@@ -97,7 +97,7 @@ static bool on_idle (App& self) {
 }
 
 App::App () :
-    settings(ayu::Resource("/app/settings.ayu").ref())
+    settings(ayu::Resource("res:/app/settings.ayu").ref())
 {
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
@@ -143,17 +143,23 @@ Book* current_book = null;
 
 #ifndef TAP_DISABLE_TESTS
 #include <cstring>
+#include <SDL2/SDL.h>
 #include "../base/tap/tap.h"
 #include "../base/glow/image.h"
 
 static tap::TestSet tests ("app/app", []{
     using namespace tap;
+
+    char* base = AS(SDL_GetBasePath());
+    String exe_folder = base;
+    SDL_free(base);
+
     App app;
     app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            ayu::file_resource_root() + "/base/glow/test/image.png"sv,
-            ayu::file_resource_root() + "/base/glow/test/image2.png"sv
+            exe_folder + "/res/base/glow/test/image.png"sv,
+            exe_folder + "/res/base/glow/test/image2.png"sv
         });
     }, "App::open_files");
     auto window_id = AS(SDL_GetWindowID(app.books[0]->window));

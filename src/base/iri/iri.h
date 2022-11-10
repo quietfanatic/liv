@@ -101,14 +101,7 @@ struct IRI {
      // base is provided, resolved ref as a IRI reference (AKA a relative IRI)
      // with base as its base. If base is not provided, ref must be an absolute
      // IRI with scheme included.
-    IRI (Str ref, const IRI& base = IRI());
-     // The above doesn't autoconvert for some reason
-    IRI (const char* ref, const IRI& base = IRI())
-        : IRI(Str(ref), base)
-    { }
-    IRI (const String& ref, const IRI& base = IRI())
-        : IRI(Str(ref), base)
-    { }
+    explicit IRI (Str ref, const IRI& base = IRI());
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
     IRI (
@@ -137,9 +130,6 @@ struct IRI {
      // Get full text of IRI even it is not valid.  This is only for diagnosing
      // what is wrong with the IRI.  Don't use it for anything important.
     const String& possibly_invalid_spec () const;
-
-     // Same as spec()
-    operator Str () const;
 
      // Steal the spec string, leaving this IRI empty.
     String move_spec ();

@@ -526,11 +526,6 @@ const String& IRI::possibly_invalid_spec () const {
     return spec_;
 }
 
-IRI::operator Str () const {
-    if (colon_) return spec_;
-    else return empty;
-}
-
 String IRI::move_spec () {
     if (colon_) return empty;
     String r = std::move(spec_);
@@ -707,7 +702,7 @@ static tap::TestSet tests ("base/iri/iri", []{
     ok(empty.is_empty(), "empty.is_empty()");
     ok(!empty, "!empty");
     for (uint32 i = 0; i < n_cases; i++) {
-        IRI iri (cases[i].i, cases[i].b);
+        IRI iri (cases[i].i, IRI(cases[i].b));
         is(iri.scheme(), cases[i].s,
             std::string(cases[i].i) + " ("
             + std::string(cases[i].b) + ") SCHEME = "

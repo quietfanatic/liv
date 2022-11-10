@@ -158,7 +158,11 @@ static tap::TestSet tests ("base/glow/file-texture", []{
 
     TestEnvironment env;
 
-    FileTexture tex (ayu::file_resource_root() + "/base/glow/test/image.png");
+    char* base = AS(SDL_GetBasePath());
+    String exe_folder = base;
+    SDL_free(base);
+
+    FileTexture tex (exe_folder + "/res/base/glow/test/image.png");
     auto size = tex.size();
     is(size, IVec{7, 5}, "Created texture has correct size");
 

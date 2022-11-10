@@ -58,7 +58,7 @@ void Page::draw (
     AA(texture && *texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = ayu::Resource("/app/page.ayu")["program"][1];
+    static PageProgram* program = ayu::Resource("res:/app/page.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -82,6 +82,7 @@ AYU_DESCRIBE(app::PageProgram,
 )
 
 #ifndef TAP_DISABLE_TESTS
+#include <SDL2/SDL.h>
 #include "../base/glow/image.h"
 #include "../base/ayu/serialize.h"
 #include "../base/tap/tap.h"
@@ -89,6 +90,11 @@ AYU_DESCRIBE(app::PageProgram,
 
 static tap::TestSet tests ("app/page", []{
     using namespace tap;
+
+    char* base = AS(SDL_GetBasePath());
+    String exe_folder = base;
+    SDL_free(base);
+
     IVec test_size = {120, 120};
     wind::Window window (
         "base/glow/texture test window",
@@ -98,7 +104,7 @@ static tap::TestSet tests ("app/page", []{
     );
     glow::init();
 
-    Page page (ayu::file_resource_root() + "/base/glow/test/image.png");
+    Page page (exe_folder + "/res/base/glow/test/image.png");
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");

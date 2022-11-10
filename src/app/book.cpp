@@ -323,6 +323,7 @@ void Book::window_size_changed (IVec size) {
 } using namespace app;
 
 #ifndef TAP_DISABLE_TESTS
+#include <SDL2/SDL.h>
 #include "../base/ayu/resource.h"
 #include "../base/glow/image.h"
 #include "../base/tap/tap.h"
@@ -330,14 +331,18 @@ void Book::window_size_changed (IVec size) {
 static tap::TestSet tests ("app/book", []{
     using namespace tap;
 
+    char* base = AS(SDL_GetBasePath());
+    String exe_folder = base;
+    SDL_free(base);
+
     IVec size = {120, 120};
 
     App app;
     app.hidden = true;
     app.settings->window.size = size;
     Book book (app, {
-        ayu::file_resource_root() + "/base/glow/test/image.png"sv,
-        ayu::file_resource_root() + "/base/glow/test/image2.png"sv
+        exe_folder + "/res/base/glow/test/image.png"sv,
+        exe_folder + "/res/base/glow/test/image2.png"sv
     });
 
     book.draw_if_needed();
