@@ -334,6 +334,7 @@ IRI::IRI (Str input, const IRI& base) :
             switch (input[i]) {
                 case IRI_UPPERCASE: case IRI_LOWERCASE:
                 case IRI_DIGIT: case IRI_SUBDELIM:
+                case IRI_UTF8_HIGH:
                 case '-': case '_': case '~': case ':': case '@':
                     spec_ += input[i++];
                     break;
@@ -402,6 +403,7 @@ IRI::IRI (Str input, const IRI& base) :
             switch (input[i]) {
                 case IRI_UPPERCASE: case IRI_LOWERCASE:
                 case IRI_DIGIT: case IRI_SUBDELIM:
+                case IRI_UTF8_HIGH:
                 case '-': case '_': case '~':
                 case ':': case '@': case '/':
                     spec_ += input[i++];
@@ -524,7 +526,7 @@ const String& IRI::possibly_invalid_spec () const {
     return spec_;
 }
 
-IRI::operator const String& () const {
+IRI::operator Str () const {
     if (colon_) return spec_;
     else return empty;
 }
@@ -690,6 +692,8 @@ constexpr TestCase cases [] = {
     {.i = "#bar", .b = "foo:", .s = "foo", .f = "bar"},
     {.i = "?bar", .b = "foo:?baz#qux", .s = "foo", .q = "bar"},
     {.i = "#bar", .b = "foo:?baz#qux", .s = "foo", .q = "baz", .f = "bar"},
+    {.i = "foo:/ユニコード", .s = "foo", .p = "/ユニコード"},
+    {.i = "foo://ユ/ニ?コー#ド", .s = "foo", .a = "ユ", .p = "/ニ", .q = "コー", .f = "ド"},
 };
 constexpr auto n_cases = sizeof(cases) / sizeof(cases[0]);
 

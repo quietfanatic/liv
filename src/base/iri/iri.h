@@ -1,4 +1,4 @@
-// A library for IRIs (International Resource Identifiers).
+// A library for IRIs (Internationalized Resource Identifiers).
 // Basically URIs but unicode.
 // Under heavy development!  Don't use for anything important.
 //
@@ -102,6 +102,13 @@ struct IRI {
      // with base as its base. If base is not provided, ref must be an absolute
      // IRI with scheme included.
     IRI (Str ref, const IRI& base = IRI());
+     // The above doesn't autoconvert for some reason
+    IRI (const char* ref, const IRI& base = IRI())
+        : IRI(Str(ref), base)
+    { }
+    IRI (const String& ref, const IRI& base = IRI())
+        : IRI(Str(ref), base)
+    { }
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
     IRI (
@@ -132,7 +139,7 @@ struct IRI {
     const String& possibly_invalid_spec () const;
 
      // Same as spec()
-    operator const String& () const;
+    operator Str () const;
 
      // Steal the spec string, leaving this IRI empty.
     String move_spec ();
@@ -231,12 +238,6 @@ struct IRI {
 
 } // namespace iri
 
- // Allow IRI in unordered_map
-namespace std {
-    template <>
-    struct hash<iri::IRI> {
-        auto operator () (const iri::IRI& iri) {
-            return std::hash<iri::String>{}(iri.possibly_invalid_spec());
-        }
-    };
-}
+// I was going to specialize std::hash, but using IRIs as keys in an
+// unordered_map would likely be a mistake, since you can just use Strings or
+// Strs instead with the same behavior but less weight.
