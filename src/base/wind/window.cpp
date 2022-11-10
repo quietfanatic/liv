@@ -8,30 +8,36 @@
 
 namespace wind {
 
-Window::Window () : Window(
+Window::Window (const GLAttributes& attrs) : Window(
     "",
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     0, 0,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN
+    SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN,
+    attrs
 ) { }
 
-Window::Window (const char* title, geo::IVec size) : Window(
+Window::Window (
+    const char* title, geo::IVec size,
+    const GLAttributes& attrs
+) : Window(
     title,
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     size.x, size.y,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN
+    SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN,
+    attrs
 ) { }
 
-Window::Window (const char* title, int x, int y, int w, int h, uint32 flags) {
+Window::Window (
+    const char* title, int x, int y, int w, int h, uint32 flags,
+    const GLAttributes& attrs
+) {
     AS(!SDL_InitSubSystem(SDL_INIT_VIDEO));
-    if (flags & SDL_WINDOW_OPENGL) {
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-         // TODO: make this configurable somehow
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-    }
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, attrs.red);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, attrs.green);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, attrs.blue);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, attrs.alpha);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, attrs.depth);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, attrs.stencil);
     sdl_window = AS(SDL_CreateWindow(title, x, y, w, h, flags));
     if (flags & SDL_WINDOW_OPENGL) {
         gl_context = AS(SDL_GL_CreateContext(sdl_window));

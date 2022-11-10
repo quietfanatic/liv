@@ -8,7 +8,7 @@ namespace glow {
 
 TestEnvironment::TestEnvironment (geo::IVec size) :
     size(size),
-    window("Test window", size)
+    window("Test window", size, wind::GLAttributes{.alpha = 8})
 {
     glow::init();
 }

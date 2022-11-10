@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "../base/uni/common.h"
+#include "../base/wind/window.h"
 #include "settings.h"
 
 struct SDL_Window;
@@ -86,8 +87,7 @@ struct Book {
     void set_fullscreen (bool);
 
     ///// Internal stuff
-    SDL_Window* sdl_window = null;
-    void* gl_context = null;
+    wind::Window window;
     bool need_draw = true;
     int64 estimated_page_memory = 0;
      // Handles layout logic.  Returns true if drawing was actually done.

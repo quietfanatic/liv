@@ -118,7 +118,7 @@ static tap::TestSet tests ("app/page", []{
             expected[{x, y}] = RGBA8(0x2674dbff);
         }
         else {
-            expected[{x, y}] = RGBA8(0, 0, 0, 0);
+            expected[{x, y}] = RGBA8(0, 0, 0, 255);
         }
     }
 

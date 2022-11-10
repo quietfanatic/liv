@@ -34,7 +34,7 @@ static void update_title (Book& self) {
             title += " (" + std::to_string(geo::round(self.zoom * 100)) + "%)";
         }
     }
-    SDL_SetWindowTitle(self.sdl_window, title.c_str());
+    SDL_SetWindowTitle(self.window, title.c_str());
 }
 
 static void load_page (Book& self, Page* page) {
@@ -60,23 +60,10 @@ Book::Book (App& app, const std::vector<String>& filenames, String&& folder) :
     auto_zoom_mode(app.settings->page.auto_zoom_mode),
     small_align(app.settings->page.small_align),
     large_align(app.settings->page.large_align),
-    interpolation_mode(app.settings->page.interpolation_mode)
+    interpolation_mode(app.settings->page.interpolation_mode),
+    window("Little Image Viewer", app.settings->window.size)
 {
-    AS(!SDL_InitSubSystem(SDL_INIT_VIDEO));
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-    sdl_window = AS(SDL_CreateWindow(
-        "Little Image Viewer",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        app.settings->window.size.x,
-        app.settings->window.size.y,
-        SDL_WINDOW_OPENGL | (app.hidden ? SDL_WINDOW_HIDDEN : 0)
-    ));
-    SDL_SetWindowResizable(sdl_window, SDL_TRUE);
-    gl_context = AS(SDL_GL_CreateContext(sdl_window));
+    SDL_SetWindowResizable(window, SDL_TRUE);
     DA(!SDL_GL_SetSwapInterval(1));
 
     if (app.settings->window.fullscreen) {
@@ -88,6 +75,7 @@ Book::Book (App& app, const std::vector<String>& filenames, String&& folder) :
         pages.emplace_back(std::make_unique<Page>(filename));
     }
     need_draw = true;
+    if (!app.hidden) SDL_ShowWindow(window);
 }
 Book::~Book () { }
 
@@ -190,13 +178,13 @@ void Book::reset_page () {
 }
 
 bool Book::is_fullscreen () {
-    auto flags = AS(SDL_GetWindowFlags(sdl_window));
+    auto flags = AS(SDL_GetWindowFlags(window));
     return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
 }
 
 void Book::set_fullscreen (bool fs) {
     AS(!SDL_SetWindowFullscreen(
-        sdl_window,
+        window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
     ));
     need_draw = true;
@@ -209,7 +197,7 @@ bool Book::draw_if_needed () {
     need_draw = false;
      // TODO: Currently we have a different context for each window, would it
      // be better to share a context between all windows?
-    SDL_GL_MakeCurrent(sdl_window, gl_context);
+    SDL_GL_MakeCurrent(window, window.gl_context);
      // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -269,7 +257,7 @@ bool Book::draw_if_needed () {
         page->draw(interpolation_mode, zoom, screen_rect);
     }
     update_title(*this);
-    SDL_GL_SwapWindow(sdl_window);
+    SDL_GL_SwapWindow(window);
     return true;
 }
 
@@ -321,7 +309,7 @@ bool Book::idle_processing () {
 
 IVec Book::get_window_size () {
     int w, h;
-    SDL_GL_GetDrawableSize(sdl_window, &w, &h);
+    SDL_GL_GetDrawableSize(window, &w, &h);
     AA(w > 0 && h > 0);
     return {w, h};
 }

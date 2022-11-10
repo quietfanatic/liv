@@ -182,13 +182,13 @@ AYU_DESCRIBE(glow::X::ProgramLinkFailed,
 #include "../tap/tap.h"
 #include "../wind/window.h"
 #include "colors.h"
+#include "test-environment.h"
 
 static tap::TestSet tests ("base/glow/program", []{
     using namespace tap;
     using namespace geo;
     IVec test_size = {120, 120};
-    wind::Window window ("base/glow/program test window", test_size);
-    glow::init();
+    TestEnvironment env;
 
     Program* program;
     doesnt_throw([&]{
