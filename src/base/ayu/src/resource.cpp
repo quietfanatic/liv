@@ -774,7 +774,6 @@ static tap::TestSet tests ("base/ayu/resource", []{
     }, "Can reload file with references to it");
     isnt(rec1["ref"][1].get_as<int*>(), old_p, "Reference to reloaded file was updated");
 
-    todo(1);
     throws<X::UnacceptableResourceType>([&]{
         load("ayu-test:/wrongtype.ayu");
     }, "ResourceScheme::accepts_type rejects wrong type");

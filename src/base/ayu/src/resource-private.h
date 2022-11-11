@@ -52,7 +52,7 @@ namespace in {
             throw X::EmptyResourceValue(String(res.name().spec()));
         }
         const Array& array = Array(tree);
-        if (array.size() != 2) {
+        if (array.size() == 2) {
             Type type = Type(Str(array[0]));
             if (!scheme->accepts_type(type)) {
                 throw X::UnacceptableResourceType(
