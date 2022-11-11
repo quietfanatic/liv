@@ -7,7 +7,7 @@
 #include "app.h"
 
 int main (int argc, char** argv) {
-     // TODO: Don't disable screensaver
+    AS(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = AS(SDL_GetBasePath());
     ayu::FileResourceScheme res_scheme ("res", String(base) + "res");
     SDL_free(base);
