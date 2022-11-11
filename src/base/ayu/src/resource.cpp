@@ -622,20 +622,26 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
 ///// TESTS
 
 #ifndef TAP_DISABLE_TESTS
+ // TODO don't rely on SDL for a non-gui library hahaha
+#include <SDL2/SDL_filesystem.h>
 #include "../../tap/tap.h"
 #include "../document.h"
 
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
-     // Note: We're relying on the caller to set the resource scheme!
-    Resource input ("res:/base/ayu/src/test/testfile.ayu");
-    Resource input2 ("res:/base/ayu/src/test/othertest.ayu");
-    Resource rec1 ("res:/base/ayu/src/test/rec1.ayu");
-    Resource rec2 ("res:/base/ayu/src/test/rec2.ayu");
-    Resource badinput ("res:/base/ayu/src/test/badref.ayu");
-    Resource output ("res:/base/ayu/src/test/test-output.ayu");
-    Resource unicode ("res:/base/ayu/src/test/ユニコード.ayu");
-    Resource unicode2 ("res:/base/ayu/src/test/ユニコード2.ayu");
+     // SDL does a whole lot of work to find this, which I cannot reproduce.
+    char* base = SDL_GetBasePath();
+    FileResourceScheme frs ("ayu-test", String(base) + "res/base/ayu/src/test");
+    SDL_free(base);
+
+    Resource input ("ayu-test:/testfile.ayu");
+    Resource input2 ("ayu-test:/othertest.ayu");
+    Resource rec1 ("ayu-test:/rec1.ayu");
+    Resource rec2 ("ayu-test:/rec2.ayu");
+    Resource badinput ("ayu-test:/badref.ayu");
+    Resource output ("ayu-test:/test-output.ayu");
+    Resource unicode ("ayu-test:/ユニコード.ayu");
+    Resource unicode2 ("ayu-test:/ユニコード2.ayu");
 
     is(input.state(), UNLOADED, "Resources start out unloaded");
     doesnt_throw([&]{ load(input); }, "load");
