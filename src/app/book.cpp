@@ -91,6 +91,13 @@ Page* Book::get_page (isize no) {
     return &*pages[no-1];
 }
 
+isize Book::get_page_no_with_filename (Str filename) {
+    for (isize i = 0; i < isize(pages.size()); i++) {
+        if (pages[i]->filename == filename) return i + 1;
+    }
+    return 0;
+}
+
 ///// Layout logic
 
 float Book::clamp_zoom (float zoom) {

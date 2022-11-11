@@ -127,8 +127,31 @@ void App::open_files (const std::vector<String>& files) {
     }
 
     Str folder;
-    if (files.size() == 1 && fs::is_directory(files[0])) {
-        folder = files[0];
+    if (files.size() == 1) {
+        if (fs::is_directory(files[0])) {
+            folder = files[0];
+        }
+        else if (fs::exists(files[0])) {
+            auto folder_p = fs::path(files[0]).remove_filename();
+            std::u8string folder_u8 = folder_p.u8string();
+            std::string& folder = reinterpret_cast<std::string&>(folder_u8);
+            std::vector<String> real_files;
+            for (auto& entry : fs::directory_iterator(folder_p)) {
+                std::u8string u8name = entry.path().u8string();
+                std::string& name = reinterpret_cast<std::string&>(u8name);
+                Str extension;
+                usize dotpos = name.rfind('.');
+                if (dotpos != std::string::npos) {
+                    extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
+                }
+                if (!extensions.count(extension)) continue;
+                real_files.emplace_back(std::move(name));
+            }
+            auto book = std::make_unique<Book>(*this, std::move(real_files), std::move(folder));
+            book->set_page(book->get_page_no_with_filename(files[0]));
+            add_book(*this, std::move(book));
+            return;
+        }
     }
     std::vector<String> real_files;
     for (auto& file : files) {
@@ -142,14 +165,12 @@ void App::open_files (const std::vector<String>& files) {
                     extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
                 }
                 if (!extensions.count(extension)) continue;
-                real_files.emplace_back(
-                    reinterpret_cast<std::string&&>(std::move(u8name))
-                );
+                real_files.emplace_back(std::move(name));
             }
         }
         else real_files.emplace_back(file);
     }
-    add_book(*this, std::make_unique<Book>(*this, std::move(real_files)));
+    add_book(*this, std::make_unique<Book>(*this, std::move(real_files), String(folder)));
 }
 
 void App::close_book (Book* book) {

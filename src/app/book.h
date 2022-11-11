@@ -35,6 +35,8 @@ struct Book {
      // Returns null if not valid page number
     Page* get_page (isize no);
 
+    isize get_page_no_with_filename (Str filename);
+
     ///// Layout decision logic
     AutoZoomMode auto_zoom_mode = FIT;
      // Controls alignment of the image when it's smaller than the window.
