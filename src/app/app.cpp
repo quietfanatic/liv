@@ -189,6 +189,7 @@ void App::open_list (Str filename) {
             if (c == '\n') lines.emplace_back();
             else lines.back().push_back(c);
         }
+        fs::current_path(fs::absolute(filename).remove_filename());
     }
     if (lines.back() == "") lines.pop_back();
     open_files(lines);
