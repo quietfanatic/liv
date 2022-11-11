@@ -42,6 +42,7 @@ page: {
      // it gradually transitions to smoothed to reduce aliasing.
     interpolation_mode: smart_cubic
 }
+
  // Options for initial window properties
 window: {
      // Initial window size in pixels
@@ -49,6 +50,15 @@ window: {
      // Initial fullscreen state of the window
     fullscreen: false
 }
+
+ // Options dealing with files and filenames
+files: {
+     // When opening a folder, only open files ending with these extensions.
+    supported_extensions: [
+        bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
+    ]
+}
+
  // Options regarding memory usage
 memory: {
      // Load this many pages ahead of the current page
@@ -60,6 +70,7 @@ memory: {
      // current page and pages in the preloading window will never be unloaded.
     page_cache_mb: 200
 }
+
  // Key and mouse bindings
 mappings: [
      // Go to next page(s)

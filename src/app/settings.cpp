@@ -53,6 +53,12 @@ AYU_DESCRIBE(app::Settings::Window,
     )
 )
 
+AYU_DESCRIBE(app::Settings::Files,
+    attrs(
+        attr("supported_extensions", &Settings::Files::supported_extensions, optional)
+    )
+)
+
 AYU_DESCRIBE(app::Settings::Memory,
     attrs(
         attr("preload_ahead", &Settings::Memory::preload_ahead, optional),
@@ -65,6 +71,7 @@ AYU_DESCRIBE(app::Settings,
     attrs(
         attr("page", &Settings::page, optional),
         attr("window", &Settings::window, optional),
+        attr("files", &Settings::files, optional),
         attr("memory", &Settings::memory, optional),
         attr("mappings", &Settings::mappings)
     )

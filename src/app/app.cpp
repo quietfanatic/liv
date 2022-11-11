@@ -1,6 +1,7 @@
 #include "app.h"
 
 #include <filesystem>
+#include <unordered_set>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include "../base/ayu/resource.h"
@@ -118,7 +119,37 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 }
 
 void App::open_files (const std::vector<String>& files) {
-    add_book(*this, std::make_unique<Book>(*this, files));
+     // Put supported extensions into a set for more speed
+    std::unordered_set<Str> extensions;
+    extensions.reserve(settings->files.supported_extensions.size());
+    for (auto& ext : settings->files.supported_extensions) {
+        extensions.emplace(ext);
+    }
+
+    Str folder;
+    if (files.size() == 1 && fs::is_directory(files[0])) {
+        folder = files[0];
+    }
+    std::vector<String> real_files;
+    for (auto& file : files) {
+        if (fs::is_directory(file)) {
+            for (auto& entry : fs::recursive_directory_iterator(file)) {
+                std::u8string u8name = entry.path().u8string();
+                std::string& name = reinterpret_cast<std::string&>(u8name);
+                Str extension;
+                usize dotpos = name.rfind('.');
+                if (dotpos != std::string::npos) {
+                    extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
+                }
+                if (!extensions.count(extension)) continue;
+                real_files.emplace_back(
+                    reinterpret_cast<std::string&&>(std::move(u8name))
+                );
+            }
+        }
+        else real_files.emplace_back(file);
+    }
+    add_book(*this, std::make_unique<Book>(*this, std::move(real_files)));
 }
 
 void App::close_book (Book* book) {

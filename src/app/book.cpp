@@ -54,7 +54,7 @@ static void unload_page (Book& self, Page* page) {
 
 ///// Contents
 
-Book::Book (App& app, const std::vector<String>& filenames, String&& folder) :
+Book::Book (App& app, std::vector<String>&& filenames, String&& folder) :
     app(app),
     folder(std::move(folder)),
     auto_zoom_mode(app.settings->page.auto_zoom_mode),

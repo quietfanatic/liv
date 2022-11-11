@@ -25,7 +25,7 @@ struct Book {
      // Just loads the given files as pages
     explicit Book (
         App& app,
-        const std::vector<String>& filenames,
+        std::vector<String>&& filenames,
         String&& folder = ""
     );
     ~Book ();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "../base/control/command.h"
 #include "../base/control/input.h"
 #include "../base/geo/vec.h"
@@ -42,6 +43,9 @@ struct Settings {
         geo::IVec size = {720, 720};
         bool fullscreen = false;
     } window;
+    struct Files {
+        std::vector<String> supported_extensions;
+    } files;
     struct Memory {
         uint32 preload_ahead = 1;
         uint32 preload_behind = 1;
