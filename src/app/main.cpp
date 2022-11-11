@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <SDL2/SDL.h>
 #include "../base/ayu/common.h"
 #include "../base/ayu/resource.h"
@@ -15,19 +16,34 @@ int main (int argc, char** argv) {
     tap::allow_testing(argc, argv);
 
     std::vector<std::string> args;
+    bool list = false;
     bool done_flags = false;
     for (int i = 1; i < argc; i++) {
         if (!done_flags && argv[i][0] == '-') {
             if (argv[i] == "--"sv) {
                 done_flags = true;
             }
-            else throw ayu::X::GenericError("This program doesn't support options");
+            else if (argv[i] == "-"sv) {
+                args.emplace_back(argv[i]);
+            }
+            else if (argv[i] == "--list"sv) {
+                list = true;
+            }
+            else throw ayu::X::GenericError("Unrecognized option " + String(argv[i]));
         }
         else args.emplace_back(argv[i]);
     }
 
     app::App app;
-    app.open_files(args);
+    if (list) {
+        if (args.size() != 1) {
+            throw ayu::X::GenericError("Wrong number of arguments given with --list (must be 1)");
+        }
+        app.open_list(args[0]);
+    }
+    else {
+        app.open_files(args);
+    }
     app.run();
     return 0;
 }

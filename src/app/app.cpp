@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include "../base/ayu/parse.h"
 #include "../base/ayu/resource.h"
 #include "settings.h"
 
@@ -119,7 +120,7 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 }
 
 void App::open_files (const std::vector<String>& files) {
-     // Put supported extensions into a set for more speed
+     // Put supported extensions into a set for easier access
     std::unordered_set<Str> extensions;
     extensions.reserve(settings->files.supported_extensions.size());
     for (auto& ext : settings->files.supported_extensions) {
@@ -171,6 +172,26 @@ void App::open_files (const std::vector<String>& files) {
         else real_files.emplace_back(file);
     }
     add_book(*this, std::make_unique<Book>(*this, std::move(real_files), String(folder)));
+}
+
+void App::open_list (Str filename) {
+    std::vector<String> lines {""};
+    if (filename == "-") {
+        for (;;) {
+            int c = getchar();
+            if (c == EOF) break;
+            else if (c == '\n') lines.emplace_back();
+            else lines.back() += char(c);
+        }
+    }
+    else {
+        for (char c : ayu::string_from_file(filename)) {
+            if (c == '\n') lines.emplace_back();
+            else lines.back().push_back(c);
+        }
+    }
+    if (lines.back() == "") lines.pop_back();
+    open_files(lines);
 }
 
 void App::close_book (Book* book) {
