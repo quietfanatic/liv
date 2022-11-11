@@ -187,7 +187,6 @@ void Book::set_fullscreen (bool fs) {
         window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
     ));
-    need_draw = true;
 }
 
 ///// Internal stuff

@@ -30,6 +30,10 @@ static void on_event (App& self, SDL_Event* event) {
                     });
                     break;
                 }
+                case SDL_WINDOWEVENT_EXPOSED: {
+                    current_book->need_draw = true;
+                    break;
+                }
                 case SDL_WINDOWEVENT_CLOSE: {
                     self.close_book(current_book);
                     current_book = null;

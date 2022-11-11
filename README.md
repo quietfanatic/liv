@@ -39,7 +39,5 @@ convenient place eventually.
 
 ### KNOWN BUGS
 
-- After entering fullscreen, the view will not be updated until it's redrawn
-  one more time.
 - Trying to load an unsupported image will cause an uncaught exception.
 
