@@ -176,8 +176,17 @@ struct Parser {
          // Detect sign
         bool minus = false;
         switch (look()) {
-            case '+': p++; break;
-            case '-': minus = true; p++; break;
+            case '+': {
+                p++;
+                if (look() == '-') throw error("Malformed number");
+                break;
+            }
+            case '-': {
+                minus = true;
+                p++;
+                if (look() == '-') throw error("Malformed number");
+                break;
+            }
             default: break;
         }
          // Detect hex prefix
