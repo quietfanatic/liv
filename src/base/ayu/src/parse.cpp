@@ -99,8 +99,9 @@ struct Parser {
             case '/': {
                 if (end - p > 1 && p[1] == '/') {
                     skip_comment();
+                    break;
                 }
-                break;
+                else return;
             }
             default: return;
         }
