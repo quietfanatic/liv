@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+namespace iri { struct IRI; }
+
 namespace ayu {
 
 ///// BASIC TYPES AND STUFF
@@ -55,6 +57,8 @@ using Str16 = std::u16string_view;
 using Array = std::vector<Tree>;
 using Pair = std::pair<String, Tree>;
 using Object = std::vector<Pair>;
+
+using iri::IRI;
 
  // Dunno why the standard library doesn't have this
 inline String operator + (Str a, const String& b) { return String(a) + b; }

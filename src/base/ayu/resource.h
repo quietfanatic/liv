@@ -27,7 +27,6 @@
 #include "reference.h"
 
 namespace ayu {
-using iri::IRI;
 
 ///// RESOURCES
 

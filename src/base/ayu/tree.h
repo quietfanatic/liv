@@ -25,11 +25,11 @@ Str form_name (Form);
 
 struct Tree {
     in::RCP<in::TreeData, in::delete_TreeData> data;
-    Tree (in::TreeData* data = null) : data(data) { }
+    constexpr explicit Tree (in::TreeData* data = null) : data(data) { }
     bool has_value () const { return !!data; }
 
     explicit Tree (Null v);
-     // Disable implicit coercion to bool
+     // Disable implicit coercion of the argument to bool
     template <class T, std::enable_if_t<std::is_same_v<std::decay_t<T>, bool>, bool> = true>
     explicit Tree (T v);
      // plain (not signed or unsigned) chars are represented as strings

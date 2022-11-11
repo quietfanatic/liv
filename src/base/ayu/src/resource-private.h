@@ -28,8 +28,6 @@ namespace in {
         }
     };
     Universe& universe ();
-     // TODO: Should this be public?
-    inline Reference universe_ref () { return &universe(); }
     struct PushCurrentResource {
         Resource old_current;
         PushCurrentResource (Resource res) :

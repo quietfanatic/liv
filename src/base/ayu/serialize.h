@@ -49,7 +49,7 @@ Reference item_maybe_elem (const Reference&, usize);
  // Throws if the element doesn't exist
 Reference item_elem (const Reference&, usize);
 
-///// PATH OPERATIONS
+///// LOCATION OPERATIONS
  // Convert a Location to a Reference.  This will not have to do any scanning,
  // so it should be fairly quick.  Well, quicker than reference_to_location.
 Reference reference_from_location (Location);
@@ -70,13 +70,22 @@ struct KeepLocationCache {
 };
 
  // This is used by reference_to_location and KeepLocationCache.  You shouldn't
- // have to use this directly, but you can if you want.  This will scan the
- // given reference and call the callback for every item in it.
- //   - base_item: The Reference to scan.
- //   - base_location: The location of base_item
- //   - cb: A callback called with:
- //       1. A reference to the currently scanned item
- //       2. The location of the currently scanned item
+ // have to use this directly, but you can if you want.  This will scan all data
+ // visible to ayu.  The callback will be called with:
+ //   1. A reference to the currently scanned item
+ //   2. The location of the currently scanned item
+void recursive_scan_universe (
+    Callback<void(const Reference&, Location)> cb
+);
+
+ // Scan only a particular resource.  Silently does nothing if the resource is
+ // UNLOADED.  TODO: Should it throw instead?
+void recursive_scan_resource (
+    Resource res,
+    Callback<void(const Reference&, Location)> cb
+);
+
+ // Scan only data under a given reference.
 void recursive_scan (
     const Reference& base_item,
     Location base_location,

@@ -306,8 +306,8 @@ void unload (const std::vector<Resource>& reses) {
              // First build set of references to things being unloaded
             std::unordered_map<Reference, Location> ref_set;
             for (auto res : rs) {
-                recursive_scan(
-                    res.data->value, Location(Location(), res.data->name.spec()),
+                recursive_scan_resource(
+                    res,
                     [&](const Reference& ref, Location loc) {
                         ref_set.emplace(ref, loc);
                     }
@@ -315,7 +315,8 @@ void unload (const std::vector<Resource>& reses) {
             }
              // Then check if any other resources contain references in that set
             for (auto other : others) {
-                recursive_scan(other.data->value, Location(Location(), other.data->name.spec()),
+                recursive_scan_resource(
+                    other,
                     [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
@@ -422,7 +423,7 @@ void reload (const std::vector<Resource>& reses) {
             std::unordered_map<Reference, Location> old_refs;
             for (auto res : reses) {
                 recursive_scan(
-                    res.data->old_value, Location(Location(), res.data->name.spec()),
+                    res.data->old_value, Location(res),
                     [&](const Reference& ref, Location loc) {
                         old_refs.emplace(ref, loc);
                     }
@@ -430,7 +431,8 @@ void reload (const std::vector<Resource>& reses) {
             }
              // Then build set of ref-refs to update.
             for (auto other : others) {
-                recursive_scan(other.data->value, Location(Location(), other.data->name.spec()),
+                recursive_scan_resource(
+                    other,
                     [&](Reference ref_ref, Location loc) {
                         if (ref_ref.type() != ref_type) return;
                         Reference ref = ref_ref.get_as<Reference>();
@@ -548,24 +550,6 @@ Universe& universe () {
 } using namespace ayu;
 
 ///// DESCRIPTIONS
-
-AYU_DESCRIBE(ayu::in::Universe,
-    keys(value_func<std::vector<String>>([](const Universe& v){
-        std::vector<String> ks;
-        for (auto& p : v.resources) {
-            if (p.second && p.second->state != UNLOADED) {
-                ks.emplace_back(p.first);
-            }
-        }
-        return ks;
-    })),
-    attr_func([](Universe&, Str key){
-         // Resources always have to be Dynamic, so go ahead and reference the
-         //  Dynamic's value instead of the Dynamic object itself (saves a 1
-         //  in locations)
-        return Reference(Resource(key).value());
-    })
-)
 
 AYU_DESCRIBE(ayu::Resource,
     delegate(const_ref_funcs<String>(

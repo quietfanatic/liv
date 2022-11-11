@@ -27,22 +27,22 @@ template <class T, void(& deleter )(T*)>
 struct RCP {
     T* p;
 
-    void inc () {
+    constexpr void inc () {
         if (p) {
             reinterpret_cast<RefCounted*>(p)->ref_count++;
         }
     }
-    void dec () {
+    constexpr void dec () {
         if (p && !--reinterpret_cast<RefCounted*>(p)->ref_count) {
             deleter(p);
         }
     }
 
-    constexpr RCP (Null) : p(null) { }
-    RCP (T* p) : p(p) { inc(); }
-    RCP (const RCP& o) : p(o.p) { inc(); }
+    constexpr RCP (Null n = null) : p(n) { }
+    constexpr RCP (T* p) : p(p) { inc(); }
+    constexpr RCP (const RCP& o) : p(o.p) { inc(); }
     RCP (RCP&& o) : p(o.p) { o.p = null; }
-    ~RCP () { dec(); }
+    constexpr ~RCP () { dec(); }
 
     RCP& operator = (const RCP& o) { dec(); p = o.p; inc(); return *this; }
     RCP& operator = (RCP&& o) { dec(); p = o.p; o.p = null; return *this; }

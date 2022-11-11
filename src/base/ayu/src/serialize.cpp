@@ -70,9 +70,9 @@ Tree item_to_tree (const Reference& item) {
     }
     catch (const X::Error& e) {
         if (diagnostic_serialization) {
-            return new TreeDataT<std::exception_ptr>(
+            return Tree(new TreeDataT<std::exception_ptr>(
                 std::current_exception()
-            );
+            ));
         }
         else throw;
     }
@@ -503,6 +503,7 @@ Reference item_elem (const Reference& item, usize index) {
 ///// REFERENCES AND PATHS
 
 Reference reference_from_location (Location loc) {
+    if (!loc) return Reference();
     if (auto parent = loc.parent()) {
         if (auto key = loc.key()) {
             return reference_from_location(*parent).attr(*key);
@@ -512,7 +513,10 @@ Reference reference_from_location (Location loc) {
         }
         else AYU_INTERNAL_UGUU();
     }
-    else return universe_ref();
+    else if (auto res = loc.resource()) {
+        return res->ref();
+    }
+    else AYU_INTERNAL_UGUU();
 }
 
 static std::unordered_map<Reference, Location> location_cache;
@@ -530,8 +534,7 @@ KeepLocationCache::~KeepLocationCache () {
 Location reference_to_location (const Reference& ref) {
     KeepLocationCache keep;
     if (location_cache.empty()) {
-        recursive_scan(
-            universe_ref(), Location(),
+        recursive_scan_universe(
             [](const Reference& ref, Location loc){
                 location_cache.emplace(ref, loc);
             }
@@ -550,6 +553,22 @@ String show_reference (const Reference& ref) {
     catch (std::exception& e) {
         return "(An error occurred while showing this reference: "s + e.what() + ")"s;
     }
+}
+
+void recursive_scan_universe (
+    Callback<void(const Reference&, Location)> cb
+) {
+    for (auto& [_, resdat] : universe().resources) {
+        recursive_scan_resource(Resource(resdat), cb);
+    }
+}
+
+void recursive_scan_resource (
+    Resource res,
+    Callback<void(const Reference&, Location)> cb
+) {
+    if (res.state() == UNLOADED) return;
+    recursive_scan(res.get_value(), Location(res), cb);
 }
 
 void recursive_scan (
