@@ -1,7 +1,9 @@
 // Provides ayu descriptions for builtin scalar types.  For template types like
 // std::vector, include the .h file.
 
+#include "../iri/iri.h"
 #include "describe-standard.h"
+#include "resource.h"
 
 using namespace ayu;
 
@@ -37,6 +39,28 @@ AYU_DESCRIBE(std::u16string,
 )
  // Str and const char* are not describable because they're reference types, so
  // their ownership is ambiguous.
+
+AYU_DESCRIBE(iri::IRI,
+    delegate(const_ref_funcs<String>(
+        [](const iri::IRI& v) -> const String& {
+            return v.spec();
+        },
+        [](iri::IRI& v, const String& s){
+            if (s.empty()) {
+                v = iri::IRI();
+            }
+            else {
+                if (auto res = current_resource()) {
+                    v = iri::IRI(s, res.name());
+                }
+                else {
+                    v = iri::IRI(s);
+                }
+                if (!v) throw X::GenericError("Invalid IRI " + s);
+            }
+        }
+    ))
+)
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
