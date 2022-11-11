@@ -2,7 +2,7 @@
 
 #include "../base/glow/program.h"
 #include "../base/ayu/compat.h"
-#include "../base/ayu/describe-standard.h"
+#include "../base/ayu/describe.h"
 #include "../base/ayu/resource.h"
 
 using namespace geo;

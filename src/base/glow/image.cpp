@@ -2,7 +2,7 @@
 
 #include <cerrno>
 #include "../ayu/compat.h"
-#include "../ayu/describe-standard.h"
+#include "../ayu/describe.h"
 #include "gl.h"
 
 namespace glow {

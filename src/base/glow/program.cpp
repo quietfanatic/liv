@@ -1,6 +1,6 @@
 #include "program.h"
 
-#include "../ayu/describe-standard.h"
+#include "../ayu/describe.h"
 #include "gl.h"
 
 namespace glow {

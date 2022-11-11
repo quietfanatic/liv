@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include "../base/ayu/describe.h"
-#include "../base/ayu/describe-standard.h"
 
 namespace app {
 

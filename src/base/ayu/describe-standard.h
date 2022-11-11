@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "common.h"
-#include "describe.h"
+#include "describe-base.h"
 #include "reference.h"
 
  // std::optional serializes to null for nullopt and whatever it contains
