@@ -136,6 +136,12 @@ struct IRI {
      // Steal the spec string even if it's invalid.
     String move_possibly_invalid_spec ();
 
+     // Returns an IRI reference that's relative to base, or just spec() if
+     // this IRI has nothing in common with base.  Returning relative paths is
+     // not yet implemented, so if this IRI and base differ in their paths, an
+     // absolute path starting with / will be returned.
+    String spec_relative_to (const IRI& base);
+
      // Check for existence of components.
     bool has_scheme () const;
     bool has_authority () const;
@@ -189,6 +195,8 @@ struct IRI {
     Str spec_without_filename () const;
     Str spec_without_query () const;
     Str spec_without_fragment () const;
+
+    Str path_without_filename () const;
 
      // Destruct this object
     ~IRI ();

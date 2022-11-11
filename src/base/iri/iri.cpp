@@ -538,8 +538,35 @@ String IRI::move_possibly_invalid_spec () {
     return r;
 }
 
+String IRI::spec_relative_to (const IRI& base) {
+    if (!*this || !base) {
+        return "";
+    }
+    else if (has_authority() != base.has_authority()
+          || !is_hierarchical() || !base.is_hierarchical()
+          || scheme() != base.scheme()
+    ) {
+        return spec();
+    }
+    else if (has_authority() && authority() != base.authority()) {
+        return String(&spec_[colon_ + 1], spec_.size() - (colon_ + 1));
+    }
+    else if ((!has_query() && !has_fragment())
+           || path() != base.path()
+    ) {
+         // Pulling apart path is NYI
+        return String(&spec_[path_], spec_.size() - path_);
+    }
+    else if (has_query() && (!has_fragment() || query() != base.query())) {
+        return String(&spec_[question_], spec_.size() - question_);
+    }
+    else {
+        return String(&spec_[hash_], spec_.size() - (hash_));
+    }
+}
+
 bool IRI::has_scheme () const { return colon_; }
-bool IRI::has_authority () const { return path_ > colon_ + 3; }
+bool IRI::has_authority () const { return path_ >= colon_ + 3; }
 bool IRI::has_path () const { return question_ > path_; }
 bool IRI::has_query () const { return hash_ > question_; }
 bool IRI::has_fragment () const { return hash_ && spec_.size() > hash_; }
@@ -634,6 +661,17 @@ Str IRI::spec_without_query () const {
 }
 Str IRI::spec_without_fragment () const {
     return Str(&spec_[0], hash_);
+}
+
+Str IRI::path_without_filename () const {
+    if (is_hierarchical()) {
+        uint32 i = question_;
+        while (spec_[i] != '/') i--;
+        return Str(&spec_[path_], i+1);
+    }
+    else {
+        return path();
+    }
 }
 
 IRI::~IRI () { }
