@@ -69,7 +69,6 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
         }
     }
      // Detect greyscale images and unused alpha channels
-     // TODO: Uh-oh, I think I've found a false positive
     auto pixels = reinterpret_cast<uint8*>(surf->pixels);
     if (surf->format->format == SDL_PIXELFORMAT_RGB24) {
         bool greyscale = true;
@@ -97,11 +96,11 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
             uint8 a = pixels[y * surf->pitch + x*4 + 3];
             if (r != g || g != b) {
                 greyscale = false;
-                goto done_32;
+                if (!unused_alpha) goto done_32;
             }
             if (a != 255) {
                 unused_alpha = false;
-                goto done_32;
+                if (!greyscale) goto done_32;
             }
         }
         done_32:;

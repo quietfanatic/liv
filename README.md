@@ -42,6 +42,4 @@ convenient place eventually.
 - After entering fullscreen, the view will not be updated until it's redrawn
   one more time.
 - Trying to load an unsupported image will cause an uncaught exception.
-- Certain PNG images will trigger a false positive in the greyscale detection,
-  causing the image to be incorrectly rendered in greyscale.
 
