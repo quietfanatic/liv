@@ -180,13 +180,21 @@ void App::open_list (Str filename) {
         for (;;) {
             int c = getchar();
             if (c == EOF) break;
-            else if (c == '\n') lines.emplace_back();
+            else if (c == '\n') {
+                if (lines.back() != "") {
+                    lines.emplace_back();
+                }
+            }
             else lines.back() += char(c);
         }
     }
     else {
         for (char c : ayu::string_from_file(filename)) {
-            if (c == '\n') lines.emplace_back();
+            if (c == '\n') {
+                if (lines.back() != "") {
+                    lines.emplace_back();
+                }
+            }
             else lines.back().push_back(c);
         }
         fs::current_path(fs::absolute(filename).remove_filename());
