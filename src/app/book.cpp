@@ -265,7 +265,7 @@ bool Book::idle_processing () {
     auto& memory_settings = app.settings->memory;
     for (uint32 i = 1; i <= memory_settings.preload_ahead; i++) {
         if (Page* page = get_page(current_page_no + i)) {
-            if (!page->texture) {
+            if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
             }
@@ -274,7 +274,7 @@ bool Book::idle_processing () {
      // Preload pages backwards
     for (uint32 i = 1; i <= memory_settings.preload_behind; i++) {
         if (Page* page = get_page(current_page_no - i)) {
-            if (!page->texture) {
+            if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
             }

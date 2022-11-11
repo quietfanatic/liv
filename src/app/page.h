@@ -17,6 +17,7 @@ struct Page {
     geo::IVec size;
     int64 estimated_memory = 0;
     double last_viewed_at = 0;
+    bool load_failed = false;
 
     explicit Page (String filename);
     ~Page ();

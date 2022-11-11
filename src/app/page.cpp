@@ -28,11 +28,13 @@ void Page::load () {
         ayu::warn_utf8(
             "Uncaught exception while loading " + filename
             + ": " + e.what() + "\n");
+        load_failed = true;
     }
 }
 
 void Page::unload () {
-    texture = {};
+    texture = null;
+    load_failed = false;
 }
 
 struct PageProgram : Program {
