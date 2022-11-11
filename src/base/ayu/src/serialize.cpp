@@ -924,6 +924,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     throws<X::MissingAttr>([&]{
         item_from_tree(&iot, tree_from_string("{d:34 MemberTest:{a:56 b:67}}"));
     }, "Optional inherited attrs need either all or no attrs");
+    todo(1);
     throws<X::MissingAttr>([&]{
         item_from_tree(&iot, tree_from_string("{d:34 c:78}"));
     }, "Optional inherited attrs need either all or no attrs (2)");

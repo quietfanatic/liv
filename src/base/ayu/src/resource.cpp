@@ -627,11 +627,20 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
 #include "../../tap/tap.h"
 #include "../document.h"
 
+namespace ayu::test {
+    struct TestResourceScheme : FileResourceScheme {
+        using FileResourceScheme::FileResourceScheme;
+        bool accepts_type (Type type) const override {
+            return type == Type::CppType<Document>();
+        }
+    };
+}
+
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
      // SDL does a whole lot of work to find this, which I cannot reproduce.
     char* base = SDL_GetBasePath();
-    FileResourceScheme frs ("ayu-test", String(base) + "res/base/ayu/src/test");
+    test::TestResourceScheme frs ("ayu-test", String(base) + "res/base/ayu/src/test");
     SDL_free(base);
 
     Resource input ("ayu-test:/testfile.ayu");
@@ -764,6 +773,11 @@ static tap::TestSet tests ("base/ayu/resource", []{
         reload(rec2);
     }, "Can reload file with references to it");
     isnt(rec1["ref"][1].get_as<int*>(), old_p, "Reference to reloaded file was updated");
+
+    todo(1);
+    throws<X::UnacceptableResourceType>([&]{
+        load("ayu-test:/wrongtype.ayu");
+    }, "ResourceScheme::accepts_type rejects wrong type");
 
     done_testing();
 });
