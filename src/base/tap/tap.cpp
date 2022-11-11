@@ -327,9 +327,9 @@ namespace internal {
 #ifdef TAP_SELF_TEST
 #ifndef TAP_DISABLE_TESTS
 
-static tap::TestSet self_tests ("tap-self-test", []{
+static tap::TestSet self_tests ("base/tap/tap", []{
     using namespace tap;
-    plan(50);
+    plan(51);
     diag(std::to_string(sizeof(std::string)));
 
     pass("pass passes");
@@ -383,6 +383,7 @@ static tap::TestSet self_tests ("tap-self-test", []{
         try_within([]{return 1.4;}, 0.3, 1, "try_within can fail");
         about(1.0, 1.1, "about can fail");
         doesnt_throw([]{throw std::logic_error("ACK");}, "doesnt_throw catches and fails on exception");
+        throws<int>([]{ }, "throws fails when no exception is thrown");
         throws<int>([]{throw std::logic_error("ACK");}, "throws fails on wrong kind of exception");
         throws_check<int>([]{throw (int)3;}, [](int x){return x==5;}, "throws can fail the exception test");
         try_ok([]{

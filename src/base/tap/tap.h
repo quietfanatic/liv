@@ -302,7 +302,12 @@ static inline bool try_isnt (const std::function<const char*()>& code, const cha
 
 template <class E>
 bool throws (const std::function<void()>& code, const std::string& name) {
-    try { code(); return true; }
+    try {
+        code();
+        fail(name);
+        internal::diag_didnt_throw(typeid(E));
+        return false;
+    }
     catch (const E& e) {
         return pass(name);
     }
@@ -321,7 +326,12 @@ bool throws (const std::function<void()>& code, const std::string& name) {
 
 template <class E>
 bool throws_is (const std::function<void()>& code, const E& expected, const std::string& name) {
-    try { code(); return true; }
+    try {
+        code();
+        fail(name);
+        internal::diag_didnt_throw(typeid(E));
+        return false;
+    }
     catch (const E& e) {
         if (e == expected) {
             return pass(name);
@@ -347,7 +357,12 @@ bool throws_is (const std::function<void()>& code, const E& expected, const std:
 
 template <class E>
 bool throws_check (const std::function<void()>& code, const std::function<bool(const E&)>& check, const std::string& name) {
-    try { code(); return true; }
+    try {
+        code();
+        fail(name);
+        internal::diag_didnt_throw(typeid(E));
+        return false;
+    }
     catch (const E& e) {
         if (check(e)) {
             return pass(name);
