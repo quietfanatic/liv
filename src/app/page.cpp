@@ -1,6 +1,7 @@
 #include "page.h"
 
 #include "../base/glow/program.h"
+#include "../base/ayu/compat.h"
 #include "../base/ayu/describe-standard.h"
 #include "../base/ayu/resource.h"
 
@@ -15,12 +16,18 @@ Page::Page (String filename) :
 Page::~Page () { }
 
 void Page::load () {
-    if (!texture) {
+    if (texture) return;
+    try {
         texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
         glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         size = texture->size();
         estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
+    }
+    catch (std::exception& e) {
+        ayu::warn_utf8(
+            "Uncaught exception while loading " + filename
+            + ": " + e.what() + "\n");
     }
 }
 
@@ -55,7 +62,8 @@ void Page::draw (
     const Rect& screen_rect,
     const Rect& tex_rect
 ) {
-    AA(texture && *texture);
+    if (!texture) return;
+    AA(!!*texture);
     AA(texture->target == GL_TEXTURE_RECTANGLE);
 
     static PageProgram* program = ayu::Resource("res:/app/page.ayu")["program"][1];

@@ -37,7 +37,3 @@ convenient place eventually.
 - [ ] Off-thread image loading
 - [ ] Simple animation
 
-### KNOWN BUGS
-
-- Trying to load an unsupported image will cause an uncaught exception.
-

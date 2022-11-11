@@ -14,6 +14,7 @@ void assert_failed_sdl (const char* function, const char* filename, uint line) {
 }
 
 AYU_DESCRIBE(uni::X::AssertionFailed,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::AssertionFailed::function),
         elem(&X::AssertionFailed::filename),
@@ -22,6 +23,7 @@ AYU_DESCRIBE(uni::X::AssertionFailed,
 )
 
 AYU_DESCRIBE(uni::X::AssertionFailedSDL,
+    delegate(base<ayu::X::Error>()),
     elems(
         elem(&X::AssertionFailedSDL::function),
         elem(&X::AssertionFailedSDL::filename),
