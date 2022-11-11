@@ -130,7 +130,7 @@ static void location_to_array (Array& a, const Location& loc) {
     switch (loc.data->form) {
         case ROOT: {
             auto rloc = static_cast<RootLocation*>(loc.data.p);
-            a.emplace_back(Tree(rloc->resource.name().spec()));
+            a.emplace_back(item_to_tree(&rloc->resource));
             return;
         }
         case KEY: {
