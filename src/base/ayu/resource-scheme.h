@@ -8,6 +8,7 @@
 #include "../iri/iri.h"
 #include "common.h"
 #include "compat.h"
+#include "type.h"
 
 namespace ayu {
 using iri::IRI;
@@ -26,9 +27,18 @@ struct ResourceScheme {
     const String scheme_name;
 
      // If you want to do some of your own validation besides the standard IRI
-     // validation.
-    virtual bool accepts (const IRI& iri) const {
+     // validation.  If this returns false, X::UnacceptableResourceName will
+     // be thrown.  The provided IRI will not have a fragment.
+    virtual bool accepts_iri (const IRI& iri) const {
         return !!iri;
+    }
+     // If you want to limit the allowed top-level types of your resources.
+     // This is called when load(), reload(), save(), or set_value() is called
+     // on a resource of this scheme, or a resource of this scheme is
+     // constructed with a specific provided value.  If this returns false,
+     // X::UnacceptableResourceType will be thrown.
+    virtual bool accepts_type (Type) const {
+        return true;
     }
      // Turn an IRI into a filename.  If "" is returned, it means there is no
      // valid filename for this IRI.  It is okay to return non-existent
@@ -61,9 +71,9 @@ struct ResourceScheme {
 struct FileResourceScheme : ResourceScheme {
     String folder;
 
-    bool accepts (const IRI& iri) const override {
+    bool accepts_iri (const IRI& iri) const override {
         return iri && !iri.has_authority() && !iri.has_query()
-            && !iri.has_fragment() && iri.is_hierarchical();
+            && iri.is_hierarchical();
     }
 
     String get_file (const IRI& iri) const override {
@@ -91,6 +101,15 @@ namespace X {
     struct UnacceptableResourceName : ResourceNameError {
         String name;
         UnacceptableResourceName (String&& name) : name(std::move(name)) { }
+    };
+     // Tried to load or set_value a resource with a type that the
+     // ResourceScheme didn't accept.
+    struct UnacceptableResourceType : ResourceNameError {
+        String name;
+        Type type;
+        UnacceptableResourceType (String&& name, Type t) :
+            name(std::move(name)), type(t)
+        { }
     };
      // Tried to register a ResourceScheme with an invalid name.
     struct InvalidResourceScheme : ResourceNameError {

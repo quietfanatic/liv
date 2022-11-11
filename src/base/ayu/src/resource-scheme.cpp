@@ -55,6 +55,13 @@ AYU_DESCRIBE(ayu::X::UnacceptableResourceName,
     delegate(base<X::ResourceNameError>()),
     elems(elem(&X::UnacceptableResourceName::name))
 )
+AYU_DESCRIBE(ayu::X::UnacceptableResourceType,
+    delegate(base<X::ResourceNameError>()),
+    elems(
+        elem(&X::UnacceptableResourceType::name),
+        elem(&X::UnacceptableResourceType::type)
+    )
+)
 AYU_DESCRIBE(ayu::X::InvalidResourceScheme,
     delegate(base<X::ResourceNameError>()),
     elems(elem(&X::InvalidResourceScheme::scheme))

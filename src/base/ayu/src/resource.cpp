@@ -52,8 +52,16 @@ Str show_ResourceState (ResourceState state) {
  // These are separate because it's not known at call time whether we will need
  // to copy or not, so we can't leave the decision to the caller.
 Resource::Resource (const IRI& name) {
+    if (name.has_fragment()) {
+        new (this) Resource(name.iri_without_fragment());
+        return;
+    }
     if (!name) {
         throw X::InvalidResourceName(String(name.possibly_invalid_spec()));
+    }
+    auto scheme = universe().require_scheme(name);
+    if (!scheme->accepts_iri(name)) {
+        throw X::UnacceptableResourceName(String(name.spec()));
     }
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
@@ -67,8 +75,15 @@ Resource::Resource (const IRI& name) {
     }
 }
 Resource::Resource (IRI&& name) {
+    if (name.has_fragment()) {
+        new (this) Resource(name.iri_without_fragment());
+    }
     if (!name) {
         throw X::InvalidResourceName(String(name.possibly_invalid_spec()));
+    }
+    auto scheme = universe().require_scheme(name);
+    if (!scheme->accepts_iri(name)) {
+        throw X::UnacceptableResourceName(String(name.spec()));
     }
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
@@ -92,7 +107,10 @@ Resource::Resource (Str ref) {
 Resource::Resource (IRI name, Dynamic&& value) :
     Resource(std::move(name))
 {
-    if (data->state == UNLOADED) data->value = std::move(value);
+    if (!value.has_value()) {
+        throw X::EmptyResourceValue(String(name.spec()));
+    }
+    if (data->state == UNLOADED) set_value(std::move(value));
     else throw X::InvalidResourceState("construct", *this);
 }
 
@@ -108,13 +126,28 @@ Dynamic& Resource::value () const {
 Dynamic& Resource::get_value () const {
     return data->value;
 }
-Dynamic& Resource::set_value () const {
+void Resource::set_value (Dynamic&& value) const {
+    if (!value.has_value()) {
+        throw X::EmptyResourceValue(String(data->name.spec()));
+    }
+    if (data->name) {
+        auto scheme = universe().require_scheme(data->name);
+        if (!scheme->accepts_type(value.type)) {
+            throw X::UnacceptableResourceType(
+                String(data->name.spec()), value.type
+            );
+        }
+    }
     switch (data->state) {
-        case UNLOADED: data->state = LOADED; return data->value;
+        case UNLOADED:
+            data->state = LOADED;
+            break;
         case LOAD_CONSTRUCTING:
-        case LOADED: return data->value;
+        case LOADED:
+            break;
         default: throw X::InvalidResourceState("set_value"sv, data);
     }
+    data->value = std::move(value);
 }
 
 Reference Resource::ref () const {
@@ -146,9 +179,11 @@ void load (const std::vector<Resource>& reses) {
         }
         for (auto res : rs) {
             PushCurrentResource p (res);
-            auto scheme = universe().scheme_for_iri(res.data->name);
+            auto scheme = universe().require_scheme(res.data->name);
             String filename = scheme->get_file(res.data->name);
-            item_from_tree(&res.data->value, tree_from_file(filename));
+            Tree tree = tree_from_file(filename);
+            verify_tree_for_scheme(res, scheme, tree);
+            item_from_tree(&res.data->value, tree);
         }
         for (auto res : rs) {
             res.data->state = LOADED;
@@ -200,11 +235,24 @@ void save (const std::vector<Resource>& reses) {
          // Serialize all before writing to disk
         std::vector<std::function<void()>> committers (reses.size());
         for (usize i = 0; i < reses.size(); i++) {
-            PushCurrentResource p (reses[i]);
-            auto scheme = universe().scheme_for_iri(reses[i].data->name);
-            String filename = scheme->get_file(reses[i].data->name);
-            auto contents = tree_to_string(item_to_tree(&reses[i].data->value));
-            committers[i] = [contents{std::move(contents)}, filename{std::move(filename)}]{
+            Resource res = reses[i];
+            PushCurrentResource p (res);
+            if (!res.data->value.has_value()) {
+                throw X::EmptyResourceValue(String(res.data->name.spec()));
+            }
+            auto scheme = universe().require_scheme(res.data->name);
+            if (!scheme->accepts_type(res.data->value.type)) {
+                throw X::UnacceptableResourceType(
+                    String(res.data->name.spec()),
+                    res.data->value.type
+                );
+            }
+            String filename = scheme->get_file(res.data->name);
+            auto contents = tree_to_string(item_to_tree(&res.data->value));
+            committers[i] = [
+                contents{std::move(contents)},
+                filename{std::move(filename)}
+            ]{
                 string_to_file(contents, filename);
             };
         }
@@ -291,14 +339,14 @@ void unload (const std::vector<Resource>& reses) {
     for (auto res : rs) {
         res.data->state = UNLOAD_COMMITTING;
     }
-    for (auto res : rs) {
-        try {
+    try {
+        for (auto res : rs) {
             res.data->value = Dynamic();
+            res.data->state = UNLOADED;
         }
-        catch (std::exception& e) {
-            unrecoverable_exception(e, "while running destructor during unload"sv);
-        }
-        res.data->state = UNLOADED;
+    }
+    catch (std::exception& e) {
+        unrecoverable_exception(e, "while running destructor during unload"sv);
     }
 }
 
@@ -318,14 +366,14 @@ void force_unload (const std::vector<Resource>& reses) {
     for (auto res : rs) {
         res.data->state = UNLOAD_COMMITTING;
     }
-    for (auto res : rs) {
-        try {
+    try {
+        for (auto res : rs) {
             res.data->value = Dynamic();
+            res.data->state = UNLOADED;
         }
-        catch (std::exception& e) {
-            unrecoverable_exception(e, "while running destructor during force_unload"sv);
-        }
-        res.data->state = UNLOADED;
+    }
+    catch (std::exception& e) {
+        unrecoverable_exception(e, "while running destructor during force_unload"sv);
     }
 }
 
@@ -349,9 +397,11 @@ void reload (const std::vector<Resource>& reses) {
          // Construct step
         for (auto res : reses) {
             PushCurrentResource p (res);
-            auto scheme = universe().scheme_for_iri(res.data->name);
+            auto scheme = universe().require_scheme(res.data->name);
             String filename = scheme->get_file(res.data->name);
-            item_from_tree(&res.data->value, tree_from_file(filename));
+            Tree tree = tree_from_file(filename);
+            verify_tree_for_scheme(res, scheme, tree);
+            item_from_tree(&res.data->value, tree);
         }
         for (auto res : reses) {
             res.data->state = RELOAD_VERIFYING;
@@ -450,20 +500,20 @@ void reload (const std::vector<Resource>& reses) {
 
 String resource_filename (Resource res) {
     PushCurrentResource p (res);
-    auto scheme = universe().scheme_for_iri(res.data->name);
+    auto scheme = universe().require_scheme(res.data->name);
     return scheme->get_file(res.data->name);
 }
 
 void remove_source (Resource res) {
     PushCurrentResource p (res);
-    auto scheme = universe().scheme_for_iri(res.data->name);
+    auto scheme = universe().require_scheme(res.data->name);
     String filename = scheme->get_file(res.data->name);
     remove_utf8(filename.c_str());
 }
 
 bool source_exists (Resource res) {
     PushCurrentResource p (res);
-    auto scheme = universe().scheme_for_iri(res.data->name);
+    auto scheme = universe().require_scheme(res.data->name);
     String filename = scheme->get_file(res.data->name);
     if (std::FILE* f = fopen_utf8(filename.c_str())) {
         fclose(f);
@@ -538,6 +588,10 @@ AYU_DESCRIBE(ayu::X::InvalidResourceState,
         elem(&X::InvalidResourceState::state),
         elem(&X::InvalidResourceState::res)
     )
+)
+AYU_DESCRIBE(ayu::X::EmptyResourceValue,
+    delegate(base<X::ResourceError>()),
+    elems(elem(&X::EmptyResourceValue::name))
 )
 AYU_DESCRIBE(ayu::X::UnloadWouldBreak,
     delegate(base<X::ResourceError>()),

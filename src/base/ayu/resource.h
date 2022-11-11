@@ -92,11 +92,11 @@ struct Resource {
      // Doesn't autoconvert for some reason
     Resource (const char* name) : Resource(Str(name)) { }
      // Creates the resource already loaded with the given data, without reading
-     // from disk.  Will throw if a resource with this name is already loaded.
+     // from disk.  Will throw X::InvalidResourceState if a resource with this
+     // name is already loaded or X::EmptyResourceValue if value is empty.
     Resource (IRI name, Dynamic&& value);
-     // Creates an anonymous resource with no value
-    Resource (Null);
      // Creates an anonymous resource with the given value
+     // TODO: I forgot to implement this
     Resource (Null, Dynamic&& value);
 
      // Returns the resource's name as an IRI
@@ -112,10 +112,11 @@ struct Resource {
      // be overwritten when the resource is loaded.
     Dynamic& get_value () const;
      // If the resource is UNLOADED, sets is state to LOADED without loading
-     // from disk.  The returned value will be empty and you should write to
-     // it.  Throws X::InvalidResourceState if the resource's state is
-     // anything but UNLOADED, LOADED, or LOAD_CONSTRUCTING.
-    Dynamic& set_value () const;
+     // from disk, and sets its value.  Throws X::InvalidResourceState if the
+     // resource's state is anything but UNLOADED, LOADED, or LOAD_CONSTRUCTING.
+     // Throws X::UnacceptableResourceType if this resource has a name and the
+     // ResourceScheme associated with its name returns false from accepts_type.
+    void set_value (Dynamic&&) const;
 
      // Automatically loads and returns a reference to the value, which can be
      // coerced to a pointer.
@@ -233,6 +234,11 @@ namespace X {
         ResourceState state;
         InvalidResourceState (Str t, Resource r) :
             tried(t), res(r), state(r.state()) { }
+    };
+     // Tried to create a resource with an empty value.
+    struct EmptyResourceValue : ResourceError {
+        String name;
+        EmptyResourceValue (String&& name) : name(std::move(name)) { }
     };
      // Tried to unload a resource, but there's still a reference somewhere
      // referencing an item inside it.
