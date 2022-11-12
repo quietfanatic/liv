@@ -41,9 +41,12 @@ AYU_DESCRIBE(std::u16string,
  // their ownership is ambiguous.
 
 AYU_DESCRIBE(iri::IRI,
-    delegate(const_ref_funcs<String>(
-        [](const iri::IRI& v) -> const String& {
-            return v.spec();
+    delegate(mixed_funcs<String>(
+        [](const iri::IRI& v) {
+            if (auto res = current_resource()) {
+                return v.spec_relative_to(res.name());
+            }
+            else return v.spec();
         },
         [](iri::IRI& v, const String& s){
             if (s.empty()) {

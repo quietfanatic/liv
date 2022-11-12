@@ -41,6 +41,9 @@ struct Location {
      // with two 's.  To put a literal / in a key, use %2F.
     Location (const IRI& iri);
 
+     // Returns this location in IRI form
+    IRI as_iri () const;
+
      // Returns null if this is not a root.
     const Resource* resource () const;
      // Returns null if this is a root.

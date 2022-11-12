@@ -111,6 +111,44 @@ Location::Location (const IRI& iri) {
     *this = std::move(self);
 }
 
+IRI Location::as_iri () const {
+    String fragment;
+    for (const Location* l = this; l; l = l->parent()) {
+        switch (l->data->form) {
+            case ROOT: {
+                const IRI& base = static_cast<RootLocation*>(
+                    l->data.p
+                )->resource.name();
+                if (fragment == "") return base;
+                else return IRI("#" + fragment, base);
+            }
+            case KEY: {
+                Str key = static_cast<KeyLocation*>(
+                    l->data.p
+                )->key;
+                String segment;
+                if (key == "" || key[0] == '\'' || std::isdigit(key[0])) {
+                    segment = '\'' + iri::encode(key);
+                }
+                else segment = iri::encode(key);
+                if (fragment == "") fragment = segment;
+                else fragment = segment + '/' + fragment;
+                break;
+            }
+            case INDEX: {
+                usize index = static_cast<IndexLocation*>(
+                    l->data.p
+                )->index;
+                if (fragment == "") fragment = std::to_string(index);
+                else fragment = std::to_string(index) + '/' + fragment;
+                break;
+            }
+            default: AYU_INTERNAL_UGUU();
+        }
+    }
+    AYU_INTERNAL_UGUU();
+}
+
 const Resource* Location::resource () const {
     if (data->form == ROOT) {
         return &static_cast<RootLocation*>(data.p)->resource;
@@ -174,50 +212,19 @@ bool operator == (const Location& a, const Location& b) {
 
 } using namespace ayu;
 
-static void location_to_array (Array& a, const Location& loc) {
-    if (!loc.data) return;
-    switch (loc.data->form) {
-        case ROOT: {
-            auto rloc = static_cast<RootLocation*>(loc.data.p);
-            a.emplace_back(item_to_tree(&rloc->resource));
-            return;
-        }
-        case KEY: {
-            auto kloc = static_cast<KeyLocation*>(loc.data.p);
-            location_to_array(a, kloc->parent);
-            a.emplace_back(Tree(kloc->key));
-            return;
-        }
-        case INDEX: {
-            auto iloc = static_cast<IndexLocation*>(loc.data.p);
-            location_to_array(a, iloc->parent);
-            a.emplace_back(Tree(iloc->index));
-            return;
-        }
-        default: AYU_INTERNAL_UGUU();
-    }
-}
-
 AYU_DESCRIBE(ayu::Location,
     to_tree([](const Location& v){
-        Array a;
-        location_to_array(a, v);
-        return Tree(std::move(a));
+        IRI iri = v.as_iri();
+        return item_to_tree(&iri);
     }),
     from_tree([](Location& v, const Tree& t){
-        v = Location();
         if (t.form() == STRING) {
-            if (auto res = current_resource()) {
-                v = Location(IRI(
-                    t.data->as_known<String>(),
-                    res.name()
-                ));
-            }
-            else {
-                v = Location(IRI(t.data->as_known<String>()));
-            }
+            IRI iri;
+            item_from_tree(&iri, t);
+            v = Location(iri);
             return;
         }
+        v = Location();
         if (t.form() != ARRAY) throw X::InvalidForm(&v, t);
         const Array& a = t.data->as_known<Array>();
         if (a.size() == 0) return;

@@ -552,14 +552,11 @@ Universe& universe () {
 ///// DESCRIPTIONS
 
 AYU_DESCRIBE(ayu::Resource,
-    delegate(mixed_funcs<String>(
-        [](const Resource& v) {
-            if (auto res = current_resource()) {
-                return v.data->name.spec_relative_to(res.name());
-            }
-            else return v.data->name.spec();
+    delegate(const_ref_funcs<IRI>(
+        [](const Resource& v) -> const IRI& {
+            return v.data->name;
         },
-        [](Resource& v, const String& m){
+        [](Resource& v, const IRI& m){
             v = Resource(m);
         }
     ))
@@ -683,13 +680,13 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{
         loc = reference_to_location(ref);
     });
-    is(item_to_tree(&loc), tree_from_string("[\"" + output.name().spec() + "\" asdf 1]"), "reference_to_location works");
+    is(item_to_tree(&loc), tree_from_string("ayu-test:/test-output.ayu#asdf/1"), "reference_to_location works");
     doc->new_<Reference>(output["bar"][1]);
     doesnt_throw([&]{ save(output); }, "save with reference");
     doc->new_<int32*>(output["asdf"][1]);
     doesnt_throw([&]{ save(output); }, "save with pointer");
     is(tree_from_file(resource_filename(output.name())), tree_from_string(
-        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference [/test-output.ayu bar 1]] _1:[int32* [/test-output.ayu asdf 1]] _next_id:2}]"
+        "[ayu::Document {bar:[std::string qux] asdf:[int32 51] _0:[ayu::Reference #bar/1] _1:[int32* #asdf/1] _next_id:2}]"
     ), "File was saved with correct reference as location");
     throws<X::OpenFailed>([&]{
         load(badinput);
