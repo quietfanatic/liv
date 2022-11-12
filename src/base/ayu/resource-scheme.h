@@ -77,7 +77,7 @@ struct FileResourceScheme : ResourceScheme {
     }
 
     String get_file (const IRI& iri) const override {
-        return folder + iri.path();
+        return folder + iri::decode(iri.path());
     }
 
     FileResourceScheme (String scheme, String folder, bool auto_activate = true)

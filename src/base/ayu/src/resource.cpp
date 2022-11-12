@@ -609,26 +609,12 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
 ///// TESTS
 
 #ifndef TAP_DISABLE_TESTS
- // TODO don't rely on SDL for a non-gui library hahaha
-#include <SDL2/SDL_filesystem.h>
-#include "../../tap/tap.h"
-#include "../document.h"
-
-namespace ayu::test {
-    struct TestResourceScheme : FileResourceScheme {
-        using FileResourceScheme::FileResourceScheme;
-        bool accepts_type (Type type) const override {
-            return type == Type::CppType<Document>();
-        }
-    };
-}
+#include "test-environment-private.h"
 
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;
-     // SDL does a whole lot of work to find this, which I cannot reproduce.
-    char* base = SDL_GetBasePath();
-    test::TestResourceScheme frs ("ayu-test", String(base) + "res/base/ayu/src/test");
-    SDL_free(base);
+
+    test::TestEnvironment env;
 
     Resource input ("ayu-test:/testfile.ayu");
     Resource input2 ("ayu-test:/othertest.ayu");

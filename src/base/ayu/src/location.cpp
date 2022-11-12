@@ -1,8 +1,10 @@
 #include "../location.h"
 
+#include <charconv>
 #include "../describe.h"
 #include "../reference.h"
 #include "../resource.h"
+#include "char-cases-private.h"
 #include "tree-private.h"
 
 namespace ayu {
@@ -61,6 +63,53 @@ Location::Location (Location p, String&& k) :
 Location::Location (Location p, usize i) :
     data(new IndexLocation(p, i))
 { *p.data; }
+
+Location::Location (const IRI& iri) {
+    Location self = Location(new RootLocation(iri.iri_without_fragment()));
+    Str fragment = iri.fragment();
+    if (fragment != "") {
+        usize segment_start = 0;
+        bool segment_is_string = false;
+        for (usize i = 0; i < fragment.size()+1; i++) {
+            switch (i == fragment.size() ? '/' : fragment[i]) {
+                case '/': {
+                    Str segment = fragment.substr(
+                        segment_start, i - segment_start
+                    );
+                    if (segment_is_string) {
+                        self = Location(self, iri::decode(segment));
+                    }
+                    else if (segment.size() == 0) {
+                         // Ignore
+                    }
+                    else {
+                        usize index;
+                        auto [ptr, ec] = std::from_chars(
+                            segment.begin(), segment.end(), index
+                        );
+                        if (ptr == 0) {
+                            throw X::GenericError("Index segment too big?");
+                        }
+                        self = Location(self, index);
+                    }
+                    segment_start = i+1;
+                    segment_is_string = false;
+                    break;
+                }
+                case '\'': {
+                    if (i == segment_start && !segment_is_string) {
+                        segment_start = i+1;
+                    }
+                    segment_is_string = true;
+                    break;
+                }
+                case ANY_DECIMAL_DIGIT: break;
+                default: segment_is_string = true; break;
+            }
+        }
+    }
+    *this = std::move(self);
+}
 
 const Resource* Location::resource () const {
     if (data->form == ROOT) {
@@ -183,3 +232,36 @@ AYU_DESCRIBE(ayu::Location,
 );
 
 // TODO: tests
+
+#ifndef TAP_DISABLE_TESTS
+#include "test-environment-private.h"
+
+static tap::TestSet tests ("base/ayu/location", []{
+    using namespace tap;
+
+    test::TestEnvironment env;
+
+    Location loc = Location(IRI("ayu-test:/#bar/1/bu%2Fp//33/0/'3/''/'//"));
+    const Location* l = &loc;
+    is(*l->key(), "", "Empty key");
+    l = l->parent();
+    is(*l->key(), "'", "Key with apostrophe");
+    l = l->parent();
+    is(*l->key(), "3", "Number-like key");
+    l = l->parent();
+    is(*l->index(), 0u, "Index 0");
+    l = l->parent();
+    is(*l->index(), 33u, "Index 33");
+    l = l->parent();
+    is(*l->key(), "bu/p", "String key with /");
+    l = l->parent();
+    is(*l->index(), 1u, "Index 1");
+    l = l->parent();
+    is(*l->key(), "bar", "String key");
+    l = l->parent();
+    is(*l->resource(), Resource("ayu-test:/"), "Resource root");
+    ok(!l->parent());
+
+    done_testing();
+});
+#endif

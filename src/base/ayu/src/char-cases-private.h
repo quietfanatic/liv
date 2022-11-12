@@ -41,7 +41,7 @@
     case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': \
     case 'o':           case 'q': case 'r': case 's': case 't': case 'u': \
     case 'v': case 'w': case 'x': case 'y': case 'z': \
-    case '!': case '$': case '%': case '+': case '-':           \
+    case '!': case '$': case '%': case '+': case '-': \
     case '/': case '<': case '>': case '?': case '@': case '^': \
     case '_': case '~': case '#': case '&': case '*': case '='
 

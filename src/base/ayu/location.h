@@ -33,6 +33,13 @@ struct Location {
     Location (Location parent, String&& key);
     Location (Location parent, Str key) : Location(parent, String(key)) { }
     Location (Location parent, usize index);
+     // Parses an IRI into a location.  All of the IRI up to the fragment will
+     // be used as the resource name for the root, and the fragment will be
+     // split on / and each segment used as either a key or index.  To force a
+     // string of digits to be used as a key instead of an index, precede it
+     // with ' (apostrophe).  To start a key with a literal ', start it
+     // with two 's.  To put a literal / in a key, use %2F.
+    Location (const IRI& iri);
 
      // Returns null if this is not a root.
     const Resource* resource () const;
