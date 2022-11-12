@@ -8,7 +8,6 @@
 #include "../base/uni/time.h"
 #include "app.h"
 #include "page.h"
-#include "settings.h"
 
 using namespace geo;
 namespace fs = std::filesystem;
@@ -57,16 +56,16 @@ static void unload_page (Book& self, Page* page) {
 Book::Book (App& app, std::vector<String>&& filenames, String&& folder) :
     app(app),
     folder(std::move(folder)),
-    auto_zoom_mode(app.settings->page.auto_zoom_mode),
-    small_align(app.settings->page.small_align),
-    large_align(app.settings->page.large_align),
-    interpolation_mode(app.settings->page.interpolation_mode),
-    window("Little Image Viewer", app.settings->window.size)
+    auto_zoom_mode(app.setting(&PageSettings::auto_zoom_mode)),
+    small_align(app.setting(&PageSettings::small_align)),
+    large_align(app.setting(&PageSettings::large_align)),
+    interpolation_mode(app.setting(&PageSettings::interpolation_mode)),
+    window("Little Image Viewer", app.setting(&WindowSettings::size))
 {
     SDL_SetWindowResizable(window, SDL_TRUE);
     DA(!SDL_GL_SetSwapInterval(1));
 
-    if (app.settings->window.fullscreen) {
+    if (app.setting(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
     glow::init();
@@ -101,8 +100,8 @@ isize Book::get_page_no_with_filename (Str filename) {
 ///// Layout logic
 
 float Book::clamp_zoom (float zoom) {
-    auto max_zoom = app.settings->page.max_zoom;
-    auto min_page_size = app.settings->page.min_page_size;
+    auto max_zoom = app.setting(&PageSettings::max_zoom);
+    auto min_page_size = app.setting(&PageSettings::min_page_size);
     if (Page* page = get_page(current_page_no)) {
         float min_zoom = min(1.f, min(
             min_page_size / page->size.x,
@@ -123,7 +122,7 @@ float Book::clamp_zoom (float zoom) {
 
 void Book::set_page (isize no) {
     current_page_no = clamp_page_no(no);
-    if (app.settings->page.reset_zoom_on_page_turn) {
+    if (app.setting(&PageSettings::reset_zoom_on_page_turn)) {
         manual_zoom = false;
         manual_offset = false;
     }
@@ -175,10 +174,10 @@ void Book::zoom_multiply (float factor) {
 }
 
 void Book::reset_page () {
-    auto_zoom_mode = app.settings->page.auto_zoom_mode;
-    small_align = app.settings->page.small_align;
-    large_align = app.settings->page.large_align;
-    interpolation_mode = app.settings->page.interpolation_mode;
+    auto_zoom_mode = app.setting(&PageSettings::auto_zoom_mode);
+    small_align = app.setting(&PageSettings::small_align);
+    large_align = app.setting(&PageSettings::large_align);
+    interpolation_mode = app.setting(&PageSettings::interpolation_mode);
     manual_zoom = false;
     manual_offset = false;
     need_draw = true;
@@ -269,8 +268,10 @@ bool Book::draw_if_needed () {
 
 bool Book::idle_processing () {
      // Preload pages forwards
-    auto& memory_settings = app.settings->memory;
-    for (uint32 i = 1; i <= memory_settings.preload_ahead; i++) {
+    uint32 preload_ahead = app.setting(&MemorySettings::preload_ahead);
+    uint32 preload_behind = app.setting(&MemorySettings::preload_behind);
+    uint32 page_cache_mb = app.setting(&MemorySettings::page_cache_mb);
+    for (uint32 i = 1; i <= preload_ahead; i++) {
         if (Page* page = get_page(current_page_no + i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
@@ -279,7 +280,7 @@ bool Book::idle_processing () {
         }
     }
      // Preload pages backwards
-    for (uint32 i = 1; i <= memory_settings.preload_behind; i++) {
+    for (uint32 i = 1; i <= preload_behind; i++) {
         if (Page* page = get_page(current_page_no - i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
@@ -288,14 +289,14 @@ bool Book::idle_processing () {
         }
     }
      // Unload pages if we're above the memory limit
-    int64 limit = memory_settings.page_cache_mb * (1024*1024);
+    int64 limit = page_cache_mb * (1024*1024);
     if (estimated_page_memory > limit) {
         double oldest_viewed_at = INF;
         Page* oldest_page = null;
         for (isize no = 1; no <= isize(pages.size()); no++) {
              // Don't unload images in the preload region
-            if (no >= current_page_no - memory_settings.preload_behind
-             && no <= current_page_no + memory_settings.preload_ahead) {
+            if (no >= current_page_no - preload_behind
+             && no <= current_page_no + preload_ahead) {
                 continue;
             }
             Page* page = get_page(no);
@@ -345,7 +346,7 @@ static tap::TestSet tests ("app/book", []{
 
     App app;
     app.hidden = true;
-    app.settings->window.size = size;
+    app.settings->WindowSettings::size = size;
     Book book (app, {
         exe_folder + "/res/base/glow/test/image.png"sv,
         exe_folder + "/res/base/glow/test/image2.png"sv

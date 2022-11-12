@@ -34,7 +34,10 @@ AYU_DESCRIBE_TEMPLATE(
         hcb::value(ayu::null, std::optional<T>())
     ),
     hcb::delegate(hcb::template ref_func<T>(
-        [](std::optional<T>& v)->T&{ return *v; }
+        [](std::optional<T>& v)->T&{
+            if (!v) v.emplace();
+            return *v;
+        }
     ))
 )
 

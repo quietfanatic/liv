@@ -10,7 +10,9 @@
 int main (int argc, char** argv) {
     AS(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = AS(SDL_GetBasePath());
+     // TODO: allow resource schemes to be readonly
     ayu::FileResourceScheme res_scheme ("res", String(base) + "res");
+    ayu::FileResourceScheme data_scheme ("data", String(base));
     SDL_free(base);
 
     tap::allow_testing(argc, argv);

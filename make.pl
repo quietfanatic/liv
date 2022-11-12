@@ -145,12 +145,14 @@ my %opts = (
     'base/tap/tap' => [qw(-DTAP_SELF_TEST)],
 );
 
-my @resources = qw(
+my @resources = (qw(
     app/page.ayu
-    app/settings.ayu
+    app/settings-default.ayu
+    app/settings-template.ayu
     base/ayu/src/test/*
     base/glow/test/*
     base/glow/texture-program.ayu
+), ["app/settings-template.ayu", "../settings-template.ayu"]
 );
 my %dlls = ();
 #my %dlls = (
@@ -189,10 +191,12 @@ for my $cfg (keys %configs) {
 
     my @out_resources;
     for (@resources) {
-        my @files = glob "src/$_";
-        @files or die "No resources matched $_\n";
-        for my $from (glob "src/$_") {
-            (my $to = $from) =~ s[^src/][out/$cfg/res/];
+        my $name = ref $_ eq 'ARRAY' ? $_->[0] : $_;
+        my @files = glob "src/$name";
+        @files or die "No resources matched $name\n";
+        for my $from (@files) {
+            my $to = ref $_ eq 'ARRAY' ? $_->[1] : $from;
+            $to =~ s[^src/][out/$cfg/res/];
             copy_rule($to, $from);
             push @out_resources, $to;
         }

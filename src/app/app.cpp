@@ -76,8 +76,22 @@ static void on_event (App& self, SDL_Event* event) {
     for (auto& [input, action] : self.settings->mappings) {
         if (input_matches_event(input, event)) {
             action();
+            goto done_mapping;
         }
     }
+    for (auto& [input, action] : res_default_settings->mappings) {
+        if (input_matches_event(input, event)) {
+            action();
+            goto done_mapping;
+        }
+    }
+    for (auto& [input, action] : builtin_default_settings.mappings) {
+        if (input_matches_event(input, event)) {
+            action();
+            goto done_mapping;
+        }
+    }
+    done_mapping:
     current_book = null;
     current_app = null;
 }
@@ -102,9 +116,15 @@ static bool on_idle (App& self) {
     return false;
 }
 
-App::App () :
-    settings(ayu::Resource("res:/app/settings.ayu").ref())
-{
+App::App () {
+    ayu::Resource settings_ayu ("data:/settings.ayu");
+    if (!ayu::source_exists(settings_ayu)) {
+        fs::copy(
+            ayu::resource_filename("res:/app/settings-template.ayu"),
+            ayu::resource_filename(settings_ayu)
+        );
+    }
+    settings = settings_ayu.ref();
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
 }
@@ -120,10 +140,10 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 }
 
 void App::open_files (const std::vector<String>& files) {
-     // Put supported extensions into a set for easier access
     std::unordered_set<Str> extensions;
-    extensions.reserve(settings->files.supported_extensions.size());
-    for (auto& ext : settings->files.supported_extensions) {
+    auto& supported = setting(&FilesSettings::supported_extensions);
+    extensions.reserve(supported.size());
+    for (auto& ext : supported) {
         extensions.emplace(ext);
     }
 

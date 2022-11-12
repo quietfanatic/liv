@@ -6,9 +6,9 @@
 #include "../base/geo/vec.h"
 #include "../base/wind/passive_loop.h"
 #include "book.h"
+#include "settings.h"
 
 namespace app {
-struct Settings;
 
 struct App {
     App();
@@ -24,6 +24,11 @@ struct App {
 
      // Loaded from an ayu::Resource
     Settings* settings;
+
+    template <class T, class Category>
+    const T& setting (std::optional<T> Category::* setting) {
+        return get_setting(settings, setting);
+    }
 
     std::vector<std::unique_ptr<Book>> books;
     std::unordered_map<uint32, Book*> books_by_window_id;

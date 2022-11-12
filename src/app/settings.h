@@ -29,29 +29,51 @@ struct Mapping {
     control::Statement action;
 };
 
-struct Settings {
-    struct Page {
-        AutoZoomMode auto_zoom_mode = FIT;
-        float max_zoom = 32;
-        float min_page_size = 16;
-        bool reset_zoom_on_page_turn = true;
-        geo::Vec small_align = {0.5, 0.5};
-        geo::Vec large_align = {0.5, 0.5};
-        InterpolationMode interpolation_mode = SMART_CUBIC;
-    } page;
-    struct Window {
-        geo::IVec size = {720, 720};
-        bool fullscreen = false;
-    } window;
-    struct Files {
-        std::vector<String> supported_extensions;
-    } files;
-    struct Memory {
-        uint32 preload_ahead = 1;
-        uint32 preload_behind = 1;
-        double page_cache_mb = 200;
-    } memory;
+struct PageSettings {
+    std::optional<AutoZoomMode> auto_zoom_mode;
+    std::optional<float> max_zoom;
+    std::optional<float> min_page_size;
+    std::optional<bool> reset_zoom_on_page_turn;
+    std::optional<geo::Vec> small_align;
+    std::optional<geo::Vec> large_align;
+    std::optional<InterpolationMode> interpolation_mode;
+};
+struct WindowSettings {
+    std::optional<geo::IVec> size;
+    std::optional<bool> fullscreen;
+};
+struct FilesSettings {
+    std::optional<std::vector<String>> supported_extensions;
+};
+struct MemorySettings {
+    std::optional<uint32> preload_ahead;
+    std::optional<uint32> preload_behind;
+    std::optional<double> page_cache_mb;
+};
+
+struct Settings : PageSettings, WindowSettings, FilesSettings, MemorySettings {
     std::vector<Mapping> mappings;
 };
+
+extern const Settings builtin_default_settings;
+extern const Settings* res_default_settings;
+
+void init_settings ();
+
+template <class T, class Category>
+const T& get_setting (
+    const Settings* app_settings,
+    std::optional<T> Category::* setting
+) {
+    init_settings();
+    auto setting_generic = static_cast<std::optional<T> Settings::*>(setting);
+    if (app_settings && app_settings->*setting_generic) {
+        return *(app_settings->*setting_generic);
+    }
+    else if (res_default_settings->*setting_generic) {
+        return *(res_default_settings->*setting_generic);
+    }
+    else return *(builtin_default_settings.*setting_generic);
+}
 
 } // namespace app
