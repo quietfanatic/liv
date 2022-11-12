@@ -4,10 +4,19 @@
 
 namespace uni {
 
+ // From what I see, different implementations of natural sort vary on their
+ // behavior in corner cases.  For example:
+ //     ls -v      |   nemo
+ //   "001" < "01" | "01" < "001"
+ //   "ab" < "a "  | "a " < "ab"
+ // I'm going to side with nemo's behavior because it looks easier. : )
 int natural_compare (Str a, Str b) {
     auto ap = a.begin();
     auto bp = b.begin();
     while (ap != a.end() && bp != b.end()) {
+         // If one has a number but not the other, the number comes first
+        if (std::isdigit(*ap) && !std::isdigit(*bp)) return -1;
+        if (!std::isdigit(*ap) && std::isdigit(*bp)) return 1;
          // Skip but count zeroes
         usize azeros = 0;
         usize bzeros = 0;
@@ -28,7 +37,7 @@ int natural_compare (Str a, Str b) {
         auto bnumlen = bp - bnumstart;
          // If there are more digits (after zeros), it comes after
         if (anumlen != bnumlen) {
-            return (anumlen > bnumlen) - (anumlen < bnumlen);
+            return anumlen < bnumlen ? -1 : 1;
         }
          // Otherwise, compare digits in the number
         for (isize i = 0; i < anumlen; i++) {
@@ -37,18 +46,16 @@ int natural_compare (Str a, Str b) {
                      - (anumstart[i] < bnumstart[i]);
             }
         }
-         // Digits are the same, so if there are more zeros put it earlier
-        if (azeros != bzeros) return (bzeros > azeros) - (bzeros < azeros);
+         // Digits are the same, so if there are more zeros put it after
+        if (azeros != bzeros) return azeros < bzeros ? -1 : 1;
          // Zeros and digits are the same so just compare a non-digit character
         if (ap != a.end() && bp != b.end()) {
-            if (*ap != *bp) return (*ap > *bp) - (*ap < *bp);
+            if (*ap != *bp) return *ap < *bp ? -1 : 1;
             ap++; bp++;
         }
     }
      // Ran out of one side, so whichever has more left comes after
-    usize arest = a.end() - ap;
-    usize brest = b.end() - bp;
-    return (arest > brest) - (arest < brest);
+    return a.end() - ap < b.end() - bp ? -1 : 1;
 }
 
 } using namespace uni;
@@ -62,8 +69,11 @@ static tap::TestSet tests ("base/uni/text", []{
     is(natural_compare("3", "2"), 1);
     is(natural_compare("a1b", "a10b"), -1);
     is(natural_compare("a9b", "a10b"), -1);
-    is(natural_compare("a01b", "a1b"), -1);
+    is(natural_compare("a9b", "ab"), -1);
+    is(natural_compare("a1b", "a01b"), -1);
     is(natural_compare("a0", "a "), -1);
+    is(natural_compare("a b", "ab"), -1);
+    is(natural_compare("01", "001"), -1);
     done_testing();
 });
 #endif
