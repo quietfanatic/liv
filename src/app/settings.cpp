@@ -6,7 +6,7 @@
 namespace app {
 
 const Settings builtin_default_settings = {
-    {
+    PageSettings{
         .auto_zoom_mode = FIT,
         .max_zoom = 32,
         .min_page_size = 16,
@@ -15,20 +15,20 @@ const Settings builtin_default_settings = {
         .large_align = geo::Vec{0.5, 0.5},
         .interpolation_mode = SMART_CUBIC,
     },
-    {
+    WindowSettings{
         .size = geo::IVec{720, 720},
         .fullscreen = false,
     },
-    {
+    FilesSettings{
         .supported_extensions = std::vector<String>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg", "png",
             "tif", "tiff", "xbm", "xpm", "webp",
         },
     },
-    {
+    ControlSettings{
         .drag_speed = 1,
     },
-    {
+    MemorySettings{
         .preload_ahead = 1,
         .preload_behind = 1,
         .page_cache_mb = 200
