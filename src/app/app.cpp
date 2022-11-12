@@ -61,11 +61,12 @@ static void on_event (App& self, SDL_Event* event) {
                 current_book = book_with_window_id(
                     self, event->motion.windowID
                 );
+                auto drag_speed = self.setting(&ControlSettings::drag_speed);
                 if (current_book) {
                     current_book->drag(geo::Vec(
                         event->motion.xrel,
                         event->motion.yrel
-                    ));
+                    ) * drag_speed);
                 }
             }
             break;

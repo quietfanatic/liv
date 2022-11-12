@@ -26,6 +26,9 @@ const Settings builtin_default_settings = {
         },
     },
     {
+        .drag_speed = 1,
+    },
+    {
         .preload_ahead = 1,
         .preload_behind = 1,
         .page_cache_mb = 200
@@ -93,6 +96,12 @@ AYU_DESCRIBE(app::FilesSettings,
     )
 )
 
+AYU_DESCRIBE(app::ControlSettings,
+    attrs(
+        attr("drag_speed", &ControlSettings::drag_speed, optional)
+    )
+)
+
 AYU_DESCRIBE(app::MemorySettings,
     attrs(
         attr("preload_ahead", &MemorySettings::preload_ahead, optional),
@@ -106,6 +115,7 @@ AYU_DESCRIBE(app::Settings,
         attr("page", base<PageSettings>(), optional),
         attr("window", base<WindowSettings>(), optional),
         attr("files", base<FilesSettings>(), optional),
+        attr("control", base<ControlSettings>(), optional),
         attr("memory", base<MemorySettings>(), optional),
         attr("mappings", &Settings::mappings)
     )

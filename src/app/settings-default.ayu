@@ -59,6 +59,12 @@ files: {
     ]
 }
 
+ // Options about control and input
+control: {
+     // When dragging the page with the mouse, multiply the speed by this.
+    drag_speed: 1
+}
+
  // Options regarding memory usage
 memory: {
      // Load this many pages ahead of the current page

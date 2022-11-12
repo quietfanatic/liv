@@ -15,6 +15,10 @@ window: {
 files: {
 }
 
+ // Options about control and input
+control: {
+}
+
  // Options regarding memory usage
 memory: {
 }

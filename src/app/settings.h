@@ -45,13 +45,19 @@ struct WindowSettings {
 struct FilesSettings {
     std::optional<std::vector<String>> supported_extensions;
 };
+struct ControlSettings {
+    std::optional<float> drag_speed;
+};
 struct MemorySettings {
     std::optional<uint32> preload_ahead;
     std::optional<uint32> preload_behind;
     std::optional<double> page_cache_mb;
 };
 
-struct Settings : PageSettings, WindowSettings, FilesSettings, MemorySettings {
+struct Settings :
+    PageSettings, WindowSettings, FilesSettings,
+    ControlSettings, MemorySettings
+{
     std::vector<Mapping> mappings;
 };
 
