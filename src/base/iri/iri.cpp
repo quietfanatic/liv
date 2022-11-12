@@ -104,6 +104,7 @@ String decode (Str input) {
         if (input[i] == '%' && i + 2 < input.size()) {
             uint8 byte = 0;
             for (int j = 1; j <= 2; j++) {
+                byte <<= 4;
                 switch (input[i+j]) {
                     case IRI_DIGIT: byte |= input[i+j] - '0'; break;
                     case IRI_UPPERHEX: byte |= input[i+j] - 'A' + 10; break;
@@ -111,6 +112,7 @@ String decode (Str input) {
                     default: return ""; // Invalid
                 }
             }
+            r += char(byte);
             i += 2;
         }
         else r += input[i];
