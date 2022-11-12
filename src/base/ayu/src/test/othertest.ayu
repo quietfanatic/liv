@@ -1,4 +1,4 @@
 [ayu::Document {
-    ext_ref:[ayu::Reference [testfile.ayu foo 1]]
-    ext_pointer:[std::string* [testfile.ayu bar 1]]
+    ext_ref:[ayu::Reference testfile.ayu#foo/1]
+    ext_pointer:[std::string* testfile.ayu#bar/1]
 }]

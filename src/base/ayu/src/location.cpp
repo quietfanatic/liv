@@ -206,6 +206,18 @@ AYU_DESCRIBE(ayu::Location,
     }),
     from_tree([](Location& v, const Tree& t){
         v = Location();
+        if (t.form() == STRING) {
+            if (auto res = current_resource()) {
+                v = Location(IRI(
+                    t.data->as_known<String>(),
+                    res.name()
+                ));
+            }
+            else {
+                v = Location(IRI(t.data->as_known<String>()));
+            }
+            return;
+        }
         if (t.form() != ARRAY) throw X::InvalidForm(&v, t);
         const Array& a = t.data->as_known<Array>();
         if (a.size() == 0) return;
