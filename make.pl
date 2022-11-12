@@ -138,6 +138,7 @@ my @modules = qw(
     base/iri/iri
     base/tap/tap
     base/uni/common
+    base/uni/text
     base/wind/passive_loop
     base/wind/window
 );
