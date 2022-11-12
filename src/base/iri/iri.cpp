@@ -73,7 +73,7 @@ namespace iri {
     case char(0xf8): case char(0xf9): case char(0xfa): case char(0xfb): \
     case char(0xfc): case char(0xfd): case char(0xfe): case char(0xff)
 #define IRI_UNRESERVED \
-         IRI_UPPERCASE: case IRI_LOWERCASE: \
+         IRI_UPPERCASE: case IRI_LOWERCASE: case IRI_DIGIT: \
     case IRI_UNRESERVED_SYMBOL: case IRI_UTF8_HIGH
 
 String encode (Str input) {
@@ -727,6 +727,7 @@ constexpr TestCase cases [] = {
     {.i = "#bar", .b = "foo:?baz#qux", .s = "foo", .q = "baz", .f = "bar"},
     {.i = "foo:/ユニコード", .s = "foo", .p = "/ユニコード"},
     {.i = "foo://ユ/ニ?コー#ド", .s = "foo", .a = "ユ", .p = "/ニ", .q = "コー", .f = "ド"},
+    {.i = "ayu-test:/#bar/1/bu%2Fp//33/0/'3/''/'//", .s = "ayu-test", .p = "/", .f = "bar/1/bu%2Fp//33/0/'3/''/'//"},
 };
 constexpr auto n_cases = sizeof(cases) / sizeof(cases[0]);
 
