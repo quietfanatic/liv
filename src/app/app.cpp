@@ -6,6 +6,7 @@
 #include <SDL2/SDL_video.h>
 #include "../base/ayu/parse.h"
 #include "../base/ayu/resource.h"
+#include "../base/uni/text.h"
 #include "settings.h"
 
 namespace fs = std::filesystem;
@@ -169,7 +170,12 @@ void App::open_files (const std::vector<String>& files) {
                 if (!extensions.count(extension)) continue;
                 real_files.emplace_back(std::move(name));
             }
-            auto book = std::make_unique<Book>(*this, std::move(real_files), std::move(folder));
+            std::sort(
+                real_files.begin(), real_files.end(), &uni::natural_lessthan
+            );
+            auto book = std::make_unique<Book>(
+                *this, std::move(real_files), std::move(folder)
+            );
             book->set_page(book->get_page_no_with_filename(files[0]));
             add_book(*this, std::move(book));
             return;
@@ -178,6 +184,7 @@ void App::open_files (const std::vector<String>& files) {
     std::vector<String> real_files;
     for (auto& file : files) {
         if (fs::is_directory(file)) {
+            usize subfiles_begin = real_files.size();
             for (auto& entry : fs::recursive_directory_iterator(file)) {
                 std::u8string u8name = entry.path().u8string();
                 std::string& name = reinterpret_cast<std::string&>(u8name);
@@ -189,10 +196,17 @@ void App::open_files (const std::vector<String>& files) {
                 if (!extensions.count(extension)) continue;
                 real_files.emplace_back(std::move(name));
             }
+            std::sort(
+                real_files.begin() + subfiles_begin,
+                real_files.end(),
+                &uni::natural_lessthan
+            );
         }
         else real_files.emplace_back(file);
     }
-    add_book(*this, std::make_unique<Book>(*this, std::move(real_files), String(folder)));
+    add_book(*this, std::make_unique<Book>(
+        *this, std::move(real_files), String(folder)
+    ));
 }
 
 void App::open_list (Str filename) {
