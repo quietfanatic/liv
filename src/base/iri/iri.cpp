@@ -540,7 +540,7 @@ String IRI::move_possibly_invalid_spec () {
     return r;
 }
 
-String IRI::spec_relative_to (const IRI& base) {
+String IRI::spec_relative_to (const IRI& base) const {
     if (!*this || !base) {
         return "";
     }

@@ -140,7 +140,7 @@ struct IRI {
      // this IRI has nothing in common with base.  Returning relative paths is
      // not yet implemented, so if this IRI and base differ in their paths, an
      // absolute path starting with / will be returned.
-    String spec_relative_to (const IRI& base);
+    String spec_relative_to (const IRI& base) const;
 
      // Check for existence of components.
     bool has_scheme () const;
