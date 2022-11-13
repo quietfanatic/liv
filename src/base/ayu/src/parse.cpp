@@ -389,6 +389,11 @@ struct Parser {
     }
 
     Tree parse () {
+         // Skip BOM
+        if (p + 2 < end && p[0] == char(0xef)
+                        && p[1] == char(0xbb)
+                        && p[2] == char(0xbf)
+        ) p += 3;
         skip_ws();
         Tree r = parse_term();
         skip_ws();
