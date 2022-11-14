@@ -163,20 +163,27 @@ struct Parser {
     Tree got_number () {
          // Detect special numbers
         if (end - p >= 4) {
-             // TODO: Reject these if they have junk at the end
             Str p4 (p, 4);
+            double special_number = 0;
             if (p4 == "+nan"sv) {
-                p += 4;
-                return Tree(std::numeric_limits<double>::quiet_NaN());
+                special_number = std::numeric_limits<double>::quiet_NaN();
             }
-            if (p4 == "+inf"sv) {
-                p += 4;
-                return Tree(std::numeric_limits<double>::infinity());
+            else if (p4 == "+inf"sv) {
+                special_number = std::numeric_limits<double>::infinity();
             }
-            if (p4 == "-inf"sv) {
-                p += 4;
-                return Tree(-std::numeric_limits<double>::infinity());
+            else if (p4 == "-inf"sv) {
+                special_number = -std::numeric_limits<double>::infinity();
             }
+            else goto no_special_number;
+             // Make sure there's no junk at the end
+            p += 4;
+            if (end != p) switch (look()) {
+                case ANY_LETTER: case ANY_DECIMAL_DIGIT: case ANY_WORD_SYMBOL:
+                    throw error("Malformed_number"sv);
+                default: break;
+            }
+            return Tree(special_number);
+            no_special_number:;
         }
          // Detect sign
         bool minus = false;
@@ -537,6 +544,7 @@ static tap::TestSet tests ("base/ayu/parse", []{
     f("&foo:*foo 1");
     f("&&a 1");
     f("& a 1");
+    f("[+nana]");
     done_testing();
 });
 #endif
