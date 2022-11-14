@@ -65,9 +65,10 @@ Location::Location (Location p, usize i) :
 { *p.data; }
 
 Location::Location (const IRI& iri) {
+    if (!iri) return;
     Location self = Location(new RootLocation(iri.iri_without_fragment()));
     Str fragment = iri.fragment();
-    if (fragment != "") {
+    if (!fragment.empty()) {
         usize segment_start = 0;
         bool segment_is_string = false;
         for (usize i = 0; i < fragment.size()+1; i++) {
@@ -88,7 +89,7 @@ Location::Location (const IRI& iri) {
                             segment.begin(), segment.end(), index
                         );
                         if (ptr == 0) {
-                            throw X::GenericError("Index segment too big?");
+                            throw X::GenericError("Index segment too big?"s);
                         }
                         self = Location(self, index);
                     }
@@ -112,6 +113,7 @@ Location::Location (const IRI& iri) {
 }
 
 IRI Location::as_iri () const {
+    if (!*this) return IRI();
     String fragment;
     for (const Location* l = this; l; l = l->parent()) {
         switch (l->data->form) {
@@ -119,28 +121,28 @@ IRI Location::as_iri () const {
                 const IRI& base = static_cast<RootLocation*>(
                     l->data.p
                 )->resource.name();
-                if (fragment == "") return base;
-                else return IRI("#" + fragment, base);
+                if (fragment.empty()) return base;
+                else return IRI(cat('#', fragment), base);
             }
             case KEY: {
                 Str key = static_cast<KeyLocation*>(
                     l->data.p
                 )->key;
                 String segment;
-                if (key == "" || key[0] == '\'' || std::isdigit(key[0])) {
-                    segment = '\'' + iri::encode(key);
+                if (key.empty() || key[0] == '\'' || std::isdigit(key[0])) {
+                    segment = cat('\'', iri::encode(key));
                 }
                 else segment = iri::encode(key);
-                if (fragment == "") fragment = segment;
-                else fragment = segment + '/' + fragment;
+                if (fragment.empty()) fragment = segment;
+                else fragment = cat(segment, '/', fragment);
                 break;
             }
             case INDEX: {
                 usize index = static_cast<IndexLocation*>(
                     l->data.p
                 )->index;
-                if (fragment == "") fragment = std::to_string(index);
-                else fragment = std::to_string(index) + '/' + fragment;
+                if (fragment.empty()) fragment = cat(index);
+                else fragment = cat(index, '/', fragment);
                 break;
             }
             default: AYU_INTERNAL_UGUU();
@@ -214,8 +216,11 @@ bool operator == (const Location& a, const Location& b) {
 
 AYU_DESCRIBE(ayu::Location,
     to_tree([](const Location& v){
-        IRI iri = v.as_iri();
-        return item_to_tree(&iri);
+        if (v) {
+            IRI iri = v.as_iri();
+            return item_to_tree(&iri);
+        }
+        else return Tree("");
     }),
     from_tree([](Location& v, const Tree& t){
         if (t.form() == STRING) {
@@ -243,7 +248,7 @@ AYU_DESCRIBE(ayu::Location,
                     );
                 }
                 default: {
-                    throw X::GenericError("Location element is not string or integer");
+                    throw X::GenericError("Location element is not string or integer"s);
                 }
             }
         }

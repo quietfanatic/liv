@@ -122,58 +122,58 @@ static tap::TestSet tests ("base/ayu/accessors", []{
     });
     is(thing2.b, 88, "BaseAcr::write");
 
-    auto test_addressable = [&](const char* type, auto acr){
+    auto test_addressable = [&](Str type, auto acr){
         Thing t {1, 2};
         is(
             acr.address(reinterpret_cast<Mu&>(t)),
             reinterpret_cast<Mu*>(&t.b),
-            (type + "::address"s).c_str()
+            cat(type, "::address"sv).c_str()
         );
         acr.read(reinterpret_cast<const Mu&>(t), [&](const Mu& v){
-            is(reinterpret_cast<const int&>(v), 2, (type + "::read"s).c_str());
+            is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) = 4;
         });
-        is(t.b, 4, (type + "::write"s).c_str());
+        is(t.b, 4, cat(type, "::write"sv).c_str());
         acr.modify(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) += 5;
         });
-        is(t.b, 9, (type + "::modify"s).c_str());
+        is(t.b, 9, cat(type, "::modify"sv).c_str());
     };
-    auto test_unaddressable = [&](const char* type, auto acr){
+    auto test_unaddressable = [&](Str type, auto acr){
         Thing t {1, 2};
         is(
             acr.address(reinterpret_cast<Mu&>(t)),
             null,
-            (type + "::address return null"s).c_str()
+            cat(type, "::address return null"sv).c_str()
         );
         acr.read(reinterpret_cast<const Mu&>(t), [&](const Mu& v){
-            is(reinterpret_cast<const int&>(v), 2, (type + "::read"s).c_str());
+            is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) = 4;
         });
-        is(t.b, 4, (type + "::write"s).c_str());
+        is(t.b, 4, cat(type, "::write"sv).c_str());
         acr.modify(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) += 5;
         });
-        is(t.b, 9, (type + "::modify"s).c_str());
+        is(t.b, 9, cat(type, "::modify"sv).c_str());
     };
 
-    test_addressable("MemberAcr", deduce_MemberAcr(&Thing::b));
-    test_addressable("RefFuncAcr", RefFuncAcr2<Thing, int>{
+    test_addressable("MemberAcr"sv, deduce_MemberAcr(&Thing::b));
+    test_addressable("RefFuncAcr"sv, RefFuncAcr2<Thing, int>{
         [](Thing& t)->int&{ return t.b; }
     });
-    test_unaddressable("RefFuncsAcr", RefFuncsAcr2<Thing, int>{
+    test_unaddressable("RefFuncsAcr"sv, RefFuncsAcr2<Thing, int>{
         [](const Thing& t)->const int&{ return t.b; },
         [](Thing& t, const int& v){ t.b = v; }
     });
-    test_unaddressable("ValueFuncsAcr", ValueFuncsAcr2<Thing, int>{
+    test_unaddressable("ValueFuncsAcr"sv, ValueFuncsAcr2<Thing, int>{
         [](const Thing& t)->int{ return t.b; },
         [](Thing& t, int v){ t.b = v; }
     });
-    test_unaddressable("MixedFuncsAcr", MixedFuncsAcr2<Thing, int>{
+    test_unaddressable("MixedFuncsAcr"sv, MixedFuncsAcr2<Thing, int>{
         [](const Thing& t)->int{ return t.b; },
         [](Thing& t, const int& v){ t.b = v; }
     });

@@ -8,8 +8,6 @@
 #include "describe-private.h"
 #include "resource-private.h"
 
-using namespace std::literals;
-
 namespace ayu {
 using namespace in;
 
@@ -551,7 +549,7 @@ String show_reference (const Reference& ref) {
         return item_to_string(&loc);
     }
     catch (std::exception& e) {
-        return "(An error occurred while showing this reference: "s + e.what() + ")"s;
+        return cat("(An error occurred while showing this reference: "sv, e.what(), ')');
     }
 }
 
@@ -619,7 +617,7 @@ namespace X {
             location = reference_to_location(item);
         }
         catch (std::exception& e) {
-            location = Location(Location(), "?(Error occurred while serializing location of item: "s + e.what() + ")");
+             // TODO: Embed this error in Location
         }
     }
 }

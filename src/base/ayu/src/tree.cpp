@@ -4,8 +4,6 @@
 #include "../print.h"
 #include "../describe.h"
 
-using namespace std::literals;
-
 namespace ayu {
 using namespace in;
 
@@ -142,11 +140,15 @@ Tree* Tree::elem (usize index) const {
 }
 Tree Tree::operator[] (Str key) const {
     if (Tree* r = attr(key)) return *r;
-    else throw X::GenericError("This tree has no attr with key \""s + String(key) + "\""s);
+    else throw X::GenericError(cat(
+        "This tree has no attr with key \""sv, key, '"'
+    ));
 }
 Tree Tree::operator[] (usize index) const {
     if (Tree* r = elem(index)) return *r;
-    else throw X::GenericError("This tree has no elem with index \""s + std::to_string(index) + "\""s);
+    else throw X::GenericError(cat(
+        "This tree has no elem with index \""sv, index, '"'
+    ));
 }
 
 bool operator == (const Tree& a, const Tree& b) {

@@ -43,7 +43,7 @@ struct ResourceScheme {
      // Turn an IRI into a filename.  If "" is returned, it means there is no
      // valid filename for this IRI.  It is okay to return non-existent
      // filenames.
-    virtual String get_file (const IRI&) const { return ""; }
+    virtual String get_file (const IRI&) const { return ""s; }
      // TODO: Non-file resource schemes
 
     explicit ResourceScheme (Str scheme_name, bool auto_activate = true) :

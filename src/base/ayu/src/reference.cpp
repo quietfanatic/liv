@@ -7,8 +7,6 @@
  // TODO: Is this header needed?
 #include "tree-private.h"
 
-using namespace std::literals;
-
 namespace ayu {
 namespace in {
 

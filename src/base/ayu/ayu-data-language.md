@@ -87,16 +87,6 @@ unquoted strings
 Arrays are delimited by square brackets (`[` and `]`) and can contain multiple
 items, called elements.  Commas are allowed but not required between items.
 
-Note: Elements in arrays can be prefixed by an integer followed by a colon, in a
-syntax similar to objects, but this is just for documentation purposes, it does
-not let you reorder or skip elements.
-```
-[0:a 1:b] # Allowed
-[1:a 0:b] # Not allowed
-[0:a 2:b] # Not allowed
-[0:a b 2:c] # Allowed
-```
-
 ##### Object
 
 Objects are delimited by curly braces (`{` and `}`) and contain key-value pairs,

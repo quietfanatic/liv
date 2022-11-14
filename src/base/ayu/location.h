@@ -27,7 +27,7 @@ struct Location {
      // Trying to do anything with the empty location will segfault.
     explicit operator bool () const { return !!data; }
      // Constructs a root location from a Resource.
-    Location (Resource);
+    explicit Location (Resource);
      // Constructs a location based on another one with an added attribute key
      // or element index.
     Location (Location parent, String&& key);
@@ -39,7 +39,7 @@ struct Location {
      // string of digits to be used as a key instead of an index, precede it
      // with ' (apostrophe).  To start a key with a literal ', start it
      // with two 's.  To put a literal / in a key, use %2F.
-    Location (const IRI& iri);
+    explicit Location (const IRI& iri);
 
      // Returns this location in IRI form
     IRI as_iri () const;

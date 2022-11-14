@@ -6,8 +6,6 @@
 #include "char-cases-private.h"
 #include "resource-private.h"
 
-using namespace std::literals;
-
 namespace ayu {
 
 void ResourceScheme::activate () const {

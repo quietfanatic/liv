@@ -5,8 +5,6 @@
 #include <io.h>
 #endif
 
-using namespace std::literals;
-
 namespace ayu {
 
  // Yes, I did write my own UTF conversion routines instead of taking a

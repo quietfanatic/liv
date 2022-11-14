@@ -13,8 +13,6 @@
 #include "../describe.h"
 #include "describe-private.h"
 
-using namespace std::literals;
-
 namespace ayu {
 
 Str Type::name () const {
@@ -232,7 +230,7 @@ std::string get_demangled_name (const std::type_info& t) {
 #if __has_include(<cxxabi.h>)
     int status;
     char* demangled = abi::__cxa_demangle(t.name(), nullptr, nullptr, &status);
-    if (status != 0) return "(Failed to demangle "s + t.name() + ")"s;
+    if (status != 0) return cat("?(Failed to demangle "sv, t.name(), ')');
     std::string r = const_cast<const char*>(demangled);
     free(demangled);
     return r;

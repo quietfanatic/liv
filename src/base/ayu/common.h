@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cwchar>
 #include <limits>
 #include <string>
 #include <string_view>
@@ -13,6 +14,8 @@
 namespace iri { struct IRI; }
 
 namespace ayu {
+
+using namespace std::literals;
 
 ///// BASIC TYPES AND STUFF
 
@@ -54,15 +57,58 @@ using Str = std::string_view;
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
 
+
+template <class T, class = void>
+struct ToString {
+    static auto to_string (T&& a) { return std::forward<T>(a); }
+};
+template <class T>
+struct ToString<T,
+    std::enable_if_t<
+        !std::is_same_v<std::decay_t<T>, char>,
+        std::void_t<decltype(std::to_string(std::declval<T>()))>
+    >
+> {
+    static auto to_string (T&& a) { return std::to_string(std::forward<T>(a)); }
+};
+
+ // I'm sick and tired of weirdness around string concatenation operators.
+ // Just use this.  It will probably end up being more efficient anyway.
+ // TODO join(), copy elision
+template <class... Args>
+String cat (Args&&... args) {
+    String r; // Should we reserve()?  Profile!
+    ((r += ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    return r;
+}
+
 using Array = std::vector<Tree>;
 using Pair = std::pair<String, Tree>;
 using Object = std::vector<Pair>;
 
 using iri::IRI;
 
- // Dunno why the standard library doesn't have this
-inline String operator + (Str a, const String& b) { return String(a) + b; }
-inline String operator + (const String& a, Str b) { return a + String(b); }
+ // I guess this isn't in the standard library because they increase the risk
+ // of referencing a temporary.  So just don't do that. :)
+inline String operator + (Str a, Str b) {
+    String r;
+    r.reserve(a.size() + b.size());
+    return (r += a) += b;
+}
+inline String operator + (Str a, char b) {
+    String r;
+    r.reserve(a.size() + 1);
+    return (r += a) += b;
+}
+inline String operator + (char a, Str b) {
+    String r;
+    r.reserve(1 + b.size());
+    return (r += a) += b;
+}
+inline String operator + (String&& a, Str b) {
+     // Optimization
+    return a += b;
+}
 
 ///// CALLBACKS
 

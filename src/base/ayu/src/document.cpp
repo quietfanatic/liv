@@ -6,8 +6,6 @@
 #include "../describe.h"
 #include "../reference.h"
 
-using namespace std::literals;
-
 namespace ayu {
 namespace in {
 
@@ -19,7 +17,7 @@ static usize parse_numbered_name (const String& name) {
     return atoll(name.c_str() + 1);
 }
 static String print_numbered_name (usize id) {
-    return '_' + std::to_string(id);
+    return cat('_', id);
 }
 
 struct DocumentLinks {
@@ -139,7 +137,7 @@ void* Document::allocate_named (Type t, const String& name) {
         return header+1;
     }
     else { // Actually a numbered item
-        if (id > data->next_id + 10000) throw X::GenericError("Unreasonable growth of next_id");
+        if (id > data->next_id + 10000) throw X::GenericError("Unreasonable growth of next_id"s);
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
         auto header = new (p) DocumentItemHeader(&data->items, t, id);

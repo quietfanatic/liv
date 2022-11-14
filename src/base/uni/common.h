@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cwchar>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -33,28 +34,56 @@ using Null = std::nullptr_t;
 CE Null null = nullptr;
 
 using String = std::string;
-using String16 = std::wstring;
 using Str = std::string_view;
+ // This is scuffed, wide strings are all scuffed
+#if WCHAR_MAX > 0xffff
+using String16 = std::u16string;
+using Str16 = std::u16string_view;
+#else
+using String16 = std::wstring;
 using Str16 = std::wstring_view;
+#endif
 
- // Why these aren't standard I don't know.
-static inline String operator + (Str a, Str b) {
+ // I guess these aren't in the standard library because they increase the risk
+ // of referencing a temporary.  So just don't do that. :)
+inline String operator + (Str a, Str b) {
     String r;
     r.reserve(a.size() + b.size());
-    r.append(a);
-    r.append(b);
-    return r;
+    return (r += a) += b;
 }
-static inline String16 operator + (Str16 a, Str16 b) {
+inline String operator + (Str a, char b) {
+    String r;
+    r.reserve(a.size() + 1);
+    return (r += a) += b;
+}
+inline String operator + (char a, Str b) {
+    String r;
+    r.reserve(1 + b.size());
+    return (r += a) += b;
+}
+inline String operator + (String&& a, Str b) {
+     // Optimization
+    return a += b;
+}
+inline String16 operator + (Str16 a, Str16 b) {
     String16 r;
     r.reserve(a.size() + b.size());
-    r.append(a);
-    r.append(b);
-    return r;
+    return (r += a) += b;
 }
-static inline String& operator += (String& a, Str b) { return a.append(b); }
-static inline String16& operator += (String16& a, Str16 b) { return a.append(b); }
-
+inline String16 operator + (Str16 a, wchar_t b) {
+    String16 r;
+    r.reserve(a.size() + 1);
+    return (r += a) += b;
+}
+inline String16 operator + (wchar_t a, Str16 b) {
+    String16 r;
+    r.reserve(1 + b.size());
+    return (r += a) += b;
+}
+inline String16 operator + (String16&& a, Str16 b) {
+     // Optimization
+    return a += b;
+}
 
 ///// CLASS DEFINITION CONVENIENCE
  // Recommended that you make sure the move and copy constructors can't throw.

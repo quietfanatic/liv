@@ -25,10 +25,8 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
     hcb::name([]{
-        using namespace ayu;
-        using namespace std::literals;
-        static String r = Type::CppType<T>().name() + "?"s;
-        return Str(r);
+        static ayu::String r = ayu::cat(ayu::Type::CppType<T>().name(), '?');
+        return ayu::Str(r);
     }),
     hcb::values(
         hcb::value(ayu::null, std::optional<T>())
@@ -46,10 +44,11 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "std::vector<"s + Type::CppType<T>().name() + ">"s;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            "std::vector<"sv, ayu::Type::CppType<T>().name(), '>'
+        );
+        return ayu::Str(r);
     }),
     hcb::length(hcb::template value_funcs<ayu::usize>(
         [](const std::vector<T>& v){ return v.size(); },
@@ -65,11 +64,12 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "std::unordered_map<std::string, "s
-            + Type::CppType<T>().name() + ">"s;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            "std::unordered_map<std::string, "sv,
+            ayu::Type::CppType<T>().name(), '>'
+        );
+        return ayu::Str(r);
     }),
     hcb::keys(hcb::template mixed_funcs<std::vector<std::string>>(
         [](const std::unordered_map<std::string, T>& v){
@@ -99,10 +99,9 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(T*),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = Type::CppType<T>().name() + "*"s;
-        return Str(r);
+        static ayu::String r = ayu::cat(ayu::Type::CppType<T>().name(), '*');
+        return ayu::Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
      // save that until we know we need it.
@@ -122,11 +121,12 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = Type::CppType<T>().name()
-                        + "["sv + std::to_string(n) + "]"sv;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            ayu::Type::CppType<T>().name(),
+            '[', n, ']'
+        );
+        return ayu::Str(r);
     }),
     hcb::length(hcb::template constant<ayu::usize>(n)),
     hcb::elem_func([](T(& v )[n], ayu::usize i){
@@ -140,10 +140,9 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "char[" + std::to_string(n) + "]"sv;
-        return Str(r);
+        static ayu::String r = ayu::cat("char["sv, n, ']');
+        return ayu::Str(r);
     }),
      // Serialize as a string
     hcb::to_tree([](const char(& v )[n]){
@@ -183,11 +182,12 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "std::array<"sv + Type::CppType<T>().name()
-                        + ", "sv + std::to_string(n) + ">"sv;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            "std::array<"sv + ayu::Type::CppType<T>().name(),
+            ", "sv, n, '>'
+        );
+        return ayu::Str(r);
     }),
     hcb::length(hcb::template constant<ayu::usize>(n)),
     hcb::elem_func([](std::array<T, n>& v, ayu::usize i){
@@ -201,11 +201,12 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class A, class B),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "std::pair<"sv + Type::CppType<A>().name()
-                        + ", "sv + Type::CppType<B>().name() + ">"sv;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            "std::pair<"sv, ayu::Type::CppType<A>().name(),
+            ", "sv, ayu::Type::CppType<B>().name(), '>'
+        );
+        return ayu::Str(r);
     }),
     hcb::elems(
         hcb::elem(&std::pair<A, B>::first),
@@ -215,7 +216,6 @@ AYU_DESCRIBE_TEMPLATE(
 
  // A bit convoluted but hopefully worth it
 namespace ayu::in {
-    using namespace ayu;
     using namespace std::literals;
 
      // Recursive template function to construct the type name of the tuple
@@ -224,21 +224,23 @@ namespace ayu::in {
     struct TupleNames;
     template <>
     struct TupleNames<> {
-        static String make () {
-            return "";
+        static ayu::String make () {
+            return ""s;
         }
     };
     template <class T>
     struct TupleNames<T> {
-        static String make () {
-            return String(Type::CppType<T>().name());
+        static ayu::String make () {
+            return ayu::String(Type::CppType<T>().name());
         }
     };
     template <class A, class B, class... Ts>
     struct TupleNames<A, B, Ts...> {
-        static String make () {
-            return Type::CppType<A>().name()
-                 + ", "s + TupleNames<B, Ts...>::make();
+        static ayu::String make () {
+            return ayu::cat(
+                ayu::Type::CppType<A>().name(),
+                ", "sv, TupleNames<B, Ts...>::make()
+            );
         }
     };
 
@@ -271,12 +273,11 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class... Ts),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::tuple<Ts...>),
     hcb::name([]{
-        using namespace ayu;
         using namespace std::literals;
-        static String r = "std::tuple<"sv
-            + ayu::in::TupleNames<Ts...>::make()
-            + ">"sv;
-        return Str(r);
+        static ayu::String r = ayu::cat(
+            "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'
+        );
+        return ayu::Str(r);
     }),
     ayu::in::TupleElems<Ts...>::make(
         std::index_sequence_for<Ts...>{}

@@ -13,8 +13,6 @@
 #include "../serialize.h"
 #include "resource-private.h"
 
-using namespace std::literals;
-
 ///// INTERNALS
 
 namespace ayu {
@@ -98,7 +96,7 @@ Resource::Resource (IRI&& name) {
 }
 Resource::Resource (Str ref) {
     if (auto res = current_resource()) {
-        if (ref == "#") new (this) Resource(res.data->name);
+        if (ref == "#"sv) new (this) Resource(res.data->name);
         else new (this) Resource (IRI(ref, res.data->name));
     }
     else new (this) Resource(IRI(ref));
@@ -111,7 +109,7 @@ Resource::Resource (IRI name, Dynamic&& value) :
         throw X::EmptyResourceValue(String(name.spec()));
     }
     if (data->state == UNLOADED) set_value(std::move(value));
-    else throw X::InvalidResourceState("construct", *this);
+    else throw X::InvalidResourceState("construct"sv, *this);
 }
 
 const IRI& Resource::name () const { return data->name; }
@@ -225,7 +223,7 @@ void save (Resource res) {
 void save (const std::vector<Resource>& reses) {
     for (auto res : reses) {
         if (res.data->state != LOADED) {
-            throw X::InvalidResourceState("save", res);
+            throw X::InvalidResourceState("save"sv, res);
         }
     }
     try {

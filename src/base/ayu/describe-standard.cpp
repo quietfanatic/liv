@@ -6,6 +6,7 @@
 #include "resource.h"
 
 using namespace ayu;
+using namespace std::literals;
 
 #define AYU_DESCRIBE_SCALAR(type) \
 AYU_DESCRIBE(type, \
@@ -49,6 +50,7 @@ AYU_DESCRIBE(iri::IRI,
             else return v.spec();
         },
         [](iri::IRI& v, const String& s){
+            using namespace std::string_literals;
             if (s.empty()) {
                 v = iri::IRI();
             }
@@ -59,7 +61,7 @@ AYU_DESCRIBE(iri::IRI,
                 else {
                     v = iri::IRI(s);
                 }
-                if (!v) throw X::GenericError("Invalid IRI " + s);
+                if (!v) throw X::GenericError(cat("Invalid IRI "sv, s));
             }
         }
     ))

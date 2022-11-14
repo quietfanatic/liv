@@ -113,7 +113,10 @@ namespace ayu::X {
      // Generic serialization error
     struct SerError : LogicError {
         Location location;
+        String mess;
         SerError (const Reference& item);
+        SerError (Location&& loc) : location(std::move(loc)) { }
+        SerError (String&& mess) : mess(std::move(mess)) { }
     };
      // Tried to call to_tree on a type that doesn't support to_tree
     struct CannotToTree : SerError {

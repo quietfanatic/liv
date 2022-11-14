@@ -7,8 +7,6 @@
 #include "char-cases-private.h"
 #include "tree-private.h"
 
-using namespace std::string_literals;
-
 namespace ayu {
 using namespace in;
 
@@ -17,22 +15,23 @@ static String print_quoted (Str s) {
     String r = "\""s;
     for (auto p = s.begin(); p != s.end(); p++)
     switch (*p) {
-        case '"': r += "\\\""; break;
-        case '\\': r += "\\\\"; break;
-        case '\b': r += "\\b"; break;
-        case '\f': r += "\\f"; break;
-        case '\n': r += "\\n"; break;
-        case '\r': r += "\\r"; break;
-        case '\t': r += "\\t"; break;
+        case '"': r += "\\\""sv; break;
+        case '\\': r += "\\\\"sv; break;
+        case '\b': r += "\\b"sv; break;
+        case '\f': r += "\\f"sv; break;
+        case '\n': r += "\\n"sv; break;
+        case '\r': r += "\\r"sv; break;
+        case '\t': r += "\\t"sv; break;
         default: r += String(1, *p); break;
     }
     return r + '"';
 }
 
 static String print_string (Str s) {
-    if (s == "" || s == "null" || s == "true" || s == "false") {
-        return print_quoted(s);
-    }
+    if (s == ""sv) return "\"\""s;
+    else if (s == "null"sv) return "\"null\""s;
+    else if (s == "true"sv) return "\"true\""s;
+    else if (s == "false"sv) return "\"false\""s;
     switch (s[0]) {
         case ANY_LETTER:
         case '_': break;
@@ -56,22 +55,22 @@ static String print_string (Str s) {
 }
 
 static String indent (uint n) {
-    String r = "";
-    for (; n; n--) r += "    ";
+    String r;
+    for (; n; n--) r += "    "sv;
     return r;
 }
 
  // TODO: Use a string builder system
 String print_tree (const Tree& t, PrintFlags flags, uint ind) {
     switch (t.data->rep) {
-        case Rep::NULLREP: return "null";
-        case Rep::BOOL: return t.data->as_known<bool>() ? "true" : "false";
+        case Rep::NULLREP: return "null"s;
+        case Rep::BOOL: return t.data->as_known<bool>() ? "true"s : "false"s;
         case Rep::INT64: return std::to_string(t.data->as_known<int64>());
         case Rep::DOUBLE: {
             double v = t.data->as_known<double>();
-            if (v != v) return "+nan";
-            else if (v == 1.0/0.0) return "+inf";
-            else if (v == -1.0/0.0) return "-inf";
+            if (v != v) return "+nan"s;
+            else if (v == 1.0/0.0) return "+inf"s;
+            else if (v == -1.0/0.0) return "-inf"s;
             else {
                 char buf [32]; // Should be enough?
                 auto [ptr, ec] = std::to_chars(buf, buf+32, v);
@@ -102,44 +101,46 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
             }();
 
             bool show_indices = !print_compact && a.size() > 3;
-            String r = "[";
+            String r = "["s;
             for (auto& e : a) {
                 if (print_compact) {
-                    if (&e != &a.front()) r += " ";
+                    if (&e != &a.front()) r += ' ';
                 }
                 else {
-                    r += "\n" + indent(ind + 1);
+                    r += '\n'; r += indent(ind + 1);
                 }
                 r += print_tree(e, flags, ind + !print_compact);
                 if (show_indices) {
-                    r += "  # " + std::to_string(&e - &a.front());
+                    r += "  # "sv; r += std::to_string(&e - &a.front());
                 }
             }
-            if (!print_compact)
-                r += "\n" + indent(ind);
-            return r + "]";
+            if (!print_compact) {
+                r += '\n'; r += indent(ind);
+            }
+            return r + ']';
         }
         case Rep::OBJECT: {
             const Object& o = t.data->as_known<Object>();
-            if (o.size() == 0) return "{}";
+            if (o.size() == 0) return "{}"s;
             bool print_compact = (flags & COMPACT) || o.size() == 1;
-            String r = "{";
+            String r = "{"s;
             auto nexti = o.begin();
             for (auto i = nexti; i != o.end(); i = nexti) {
                 if (print_compact) {
-                    if (nexti != o.begin()) r += " ";
+                    if (nexti != o.begin()) r += ' ';
                 }
                 else {
-                    r += "\n" + indent(ind + 1);
+                    r += '\n'; r += indent(ind + 1);
                 }
                 r += print_string(i->first);
-                r += ":";
+                r += ':';
                 r += print_tree(i->second, flags, ind + !print_compact);
                 nexti++;
             }
-            if (!print_compact)
-                r += "\n" + indent(ind);
-            return r + "}";
+            if (!print_compact) {
+                r += '\n'; r += indent(ind);
+            }
+            return r + '}';
         }
         case Rep::ERROR: {
             try {
@@ -147,10 +148,10 @@ String print_tree (const Tree& t, PrintFlags flags, uint ind) {
             }
             catch (const X::Error& e) {
                 try {
-                    return "?(" + Type(typeid(e)).name() + ")";
+                    return cat("?("sv, Type(typeid(e)).name(), ')');
                 }
                 catch (const X::UnknownType&) {
-                    return "?("s + typeid(e).name() + ")";
+                    return cat("?("sv, typeid(e).name(), ')');
                 }
             }
         }

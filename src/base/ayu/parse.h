@@ -7,7 +7,7 @@
 namespace ayu {
 
  // The filename parameter is used for error reporting.
-Tree tree_from_string (Str, Str filename = "");
+Tree tree_from_string (Str, Str filename = ""sv);
 
 String string_from_file (Str filename);
 
@@ -19,7 +19,7 @@ namespace X {
         String filename;
         uint line;
         uint col;
-        ParseError (String&& mess = "", Str f = "", uint l = 0, uint c = 0) :
+        ParseError (String&& mess = ""s, Str f = ""sv, uint l = 0, uint c = 0) :
             mess(std::move(mess)), filename(f), line(l), col(c)
         { }
     };

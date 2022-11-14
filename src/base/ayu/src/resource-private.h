@@ -13,11 +13,11 @@ namespace in {
         std::unordered_map<Str, ResourceData*> resources;
         Resource current_resource;
         std::unordered_map<String, const ResourceScheme*> schemes;
-        FileResourceScheme default_scheme {"file", "/", false};
+        FileResourceScheme default_scheme {"file"s, "/"s, false};
         const ResourceScheme* require_scheme (const IRI& name) {
             Str scheme = name.scheme();
             if (schemes.empty()) {
-                if (scheme == "file") return &default_scheme;
+                if (scheme == "file"sv) return &default_scheme;
                 else throw X::UnknownResourceScheme(String(scheme));
             }
             else {

@@ -7,22 +7,21 @@
 #include "../describe.h"
 #include "../serialize.h"
 
-using namespace std::literals;
-
 namespace ayu {
 using namespace in;
 
 void dump_refs (const std::vector<Reference>& rs) {
     switch (rs.size()) {
-        case 0: warn_utf8("[]\n"); break;
+        case 0: warn_utf8("[]\n"sv); break;
         case 1: warn_utf8(item_to_string(rs[0])); break;
         default: {
-            std::string r = "[";
+            std::string r = "["s;
             r += item_to_string(rs[0], COMPACT);
             for (usize i = 1; i < rs.size(); i++) {
-                r += " " + item_to_string(rs[i], COMPACT);
+                r += ' ';
+                r += item_to_string(rs[i], COMPACT);
             }
-            warn_utf8(r + "]\n");
+            warn_utf8(r += "]\n"sv);
             break;
         }
     }
@@ -33,21 +32,21 @@ namespace X {
         if (mess_cache.empty()) {
             auto& cppt = typeid(*this);
             if (Type t = get_description_by_type_info(cppt)) {
-                String s = "[" + t.name() + ' ';
+                String s = cat('[', t.name(), ' ');
                 {
                     DiagnosticSerialization ds;
                     if (auto derived = Reference(this).try_downcast_to(t)) {
                         s += item_to_string(derived, COMPACT);
                     }
                     else {
-                        s += "?(Could not downcast error data)";
+                        s += "?(Could not downcast error data)"sv;
                     }
                 }
                 s += ']';
                 mess_cache = s;
             }
             else {
-                mess_cache = '[' + get_demangled_name(cppt) + ']';
+                mess_cache = cat('[', get_demangled_name(cppt), ']');
             }
         }
         return mess_cache.c_str();
@@ -56,15 +55,15 @@ namespace X {
 
 namespace in {
     void unrecoverable_exception (std::exception& e, Str when) {
-        std::cerr << "Unrecoverable exception " << when
-                  << ": " << e.what() << std::endl;
+        std::cerr << "Unrecoverable exception "sv << when
+                  << ": "sv << e.what() << std::endl;
         std::abort();
     }
     void internal_error (
         const char* function, const char* filename, uint line
     ) {
-        std::cerr << "Internal error in " << function
-                  << " at " << filename << ":" << line << std::endl;
+        std::cerr << "Internal error in "sv << function
+                  << " at "sv << filename << ":"sv << line << std::endl;
         std::abort();
     }
 }
