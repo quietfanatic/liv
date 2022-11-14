@@ -13,7 +13,9 @@ namespace in {
 enum LocationForm {
     ROOT,
     KEY,
-    INDEX
+    INDEX,
+     // Internal for lazy error throwing
+    ERROR_LOC,
 };
 
 struct LocationData : RefCounted {
@@ -42,12 +44,33 @@ struct IndexLocation : LocationData {
         LocationData(INDEX), parent(p), index(i)
     { }
 };
+struct ErrorLocation : LocationData {
+    std::exception_ptr error;
+    ErrorLocation (std::exception_ptr&& e) :
+        LocationData(ERROR_LOC), error(std::move(e)) { }
+};
+
+Location make_error_location (std::exception_ptr&& e) {
+    return Location(new ErrorLocation(std::move(e)));
+}
+
+[[noreturn]]
+static void rethrow (const Location& l) {
+    if (l.data->form == ERROR_LOC) {
+        std::rethrow_exception(
+            static_cast<ErrorLocation*>(l.data.p)->error
+        );
+    }
+    else AYU_INTERNAL_UGUU();
+}
 
 void delete_LocationData (LocationData* p) {
     switch (p->form) {
         case ROOT: delete static_cast<RootLocation*>(p); break;
         case KEY: delete static_cast<KeyLocation*>(p); break;
         case INDEX: delete static_cast<IndexLocation*>(p); break;
+         // Okay to delete without throwing
+        case ERROR_LOC: delete static_cast<ErrorLocation*>(p); break;
         default: AYU_INTERNAL_UGUU();
     }
 }
@@ -145,6 +168,7 @@ IRI Location::as_iri () const {
                 else fragment = cat(index, '/', fragment);
                 break;
             }
+            case ERROR_LOC: rethrow(*l);
             default: AYU_INTERNAL_UGUU();
         }
     }
@@ -163,20 +187,23 @@ const Location* Location::parent () const {
         case ROOT: return null;
         case KEY: return &static_cast<KeyLocation*>(data.p)->parent;
         case INDEX: return &static_cast<IndexLocation*>(data.p)->parent;
+        case ERROR_LOC: rethrow(*this);
         default: AYU_INTERNAL_UGUU();
     }
 }
 const String* Location::key () const {
-    if (data->form == KEY) {
-        return &static_cast<KeyLocation*>(data.p)->key;
+    switch (data->form) {
+        case KEY: return &static_cast<KeyLocation*>(data.p)->key;
+        case ERROR_LOC: rethrow(*this);
+        default: return null;
     }
-    else return null;
 }
 const usize* Location::index () const {
-    if (data->form == INDEX) {
-        return &static_cast<IndexLocation*>(data.p)->index;
+    switch (data->form) {
+        case INDEX: return &static_cast<IndexLocation*>(data.p)->index;
+        case ERROR_LOC: rethrow(*this);
+        default: return null;
     }
-    else return null;
 }
 
 usize Location::length () const {
@@ -189,6 +216,8 @@ usize Location::length () const {
 }
 
 bool operator == (const Location& a, const Location& b) {
+    if (a.data->form == ERROR_LOC) rethrow(a);
+    if (b.data->form == ERROR_LOC) rethrow(b);
     if (a.data == b.data) return true;
     if (!a.data || !b.data) return false;
     if (a.data->form != b.data->form) return false;

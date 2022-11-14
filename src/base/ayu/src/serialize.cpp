@@ -6,6 +6,7 @@
 #include "../resource.h"
 #include "tree-private.h"
 #include "describe-private.h"
+#include "location-private.h"
 #include "resource-private.h"
 
 namespace ayu {
@@ -617,7 +618,7 @@ namespace X {
             location = reference_to_location(item);
         }
         catch (std::exception& e) {
-             // TODO: Embed this error in Location
+            location = make_error_location(std::current_exception());
         }
     }
 }
