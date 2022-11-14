@@ -70,9 +70,8 @@ struct DescribeBase<T, false> {
             return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
         }
         else {
-             // Assume const char* for simplicity
-             // TODO: do we want this to be Str?
-            return in::ValueDcrWith<T, const char*, false>(in::VFCONSTCHARP, n, v);
+             // Assume something convertible to Str (std::string_view)
+            return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, v);
         }
     }
     template <class N>
@@ -90,8 +89,8 @@ struct DescribeBase<T, false> {
             return in::ValueDcrWith<T, double, true>(in::VFDOUBLE, n, v);
         }
         else {
-             // Assume const char* for simplicity
-            return in::ValueDcrWith<T, const char*, true>(in::VFCONSTCHARP, n, v);
+             // Assume something convertible to Str (std::string_view)
+            return in::ValueDcrWith<T, Str, true>(in::VFSTR, n, v);
         }
     }
 

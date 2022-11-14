@@ -19,7 +19,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFBOOL: return &((const ValueDcrWith<void*, bool, false>*)this)->name;
             case VFINT64: return &((const ValueDcrWith<void*, int64, false>*)this)->name;
             case VFDOUBLE: return &((const ValueDcrWith<void*, double, false>*)this)->name;
-            case VFCONSTCHARP: return &((const ValueDcrWith<void*, const char*, false>*)this)->name;
+            case VFSTR: return &((const ValueDcrWith<void*, Str, false>*)this)->name;
             default: AYU_INTERNAL_UGUU();
         }
     }
@@ -30,7 +30,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFBOOL: return ((const ValueDcrWith<Mu, bool, true>*)this)->ptr;
             case VFINT64: return ((const ValueDcrWith<Mu, int64, true>*)this)->ptr;
             case VFDOUBLE: return ((const ValueDcrWith<Mu, double, true>*)this)->ptr;
-            case VFCONSTCHARP: return ((const ValueDcrWith<Mu, const char*, true>*)this)->ptr;
+            case VFSTR: return ((const ValueDcrWith<Mu, Str, true>*)this)->ptr;
             default: AYU_INTERNAL_UGUU();
         }
         else switch (form) {
@@ -38,7 +38,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFBOOL: return (const Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->value;
             case VFINT64: return (const Mu*)&((const ValueDcrWith<void*, int64, false>*)this)->value;
             case VFDOUBLE: return (const Mu*)&((const ValueDcrWith<void*, double, false>*)this)->value;
-            case VFCONSTCHARP: return (const Mu*)&((const ValueDcrWith<void*, const char*, false>*)this)->value;
+            case VFSTR: return (const Mu*)&((const ValueDcrWith<void*, Str, false>*)this)->value;
             default: AYU_INTERNAL_UGUU();
         }
     }
@@ -49,7 +49,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFBOOL: return Tree(*(const bool*)name());
                 case VFINT64: return Tree(*(const int64*)name());
                 case VFDOUBLE: return Tree(*(const double*)name());
-                case VFCONSTCHARP: return Tree(*(const char**)name());
+                case VFSTR: return Tree(*(Str*)name());
                 default: AYU_INTERNAL_UGUU();
             }
         }
@@ -72,9 +72,9 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                     return a == b || (a != a && b != b);
                 }
                 else return false;
-            case VFCONSTCHARP:
+            case VFSTR:
                 return tree.form() == STRING
-                    && tree.data->as_known<String>() == *(const char*const*)name();
+                    && tree.data->as_known<String>() == *(const Str*)name();
             default: AYU_INTERNAL_UGUU();
         }
     }

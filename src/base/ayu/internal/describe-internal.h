@@ -167,7 +167,7 @@ enum ValueForm {
     VFBOOL,
     VFINT64,
     VFDOUBLE,
-    VFCONSTCHARP
+    VFSTR
 };
 
 template <class T>
