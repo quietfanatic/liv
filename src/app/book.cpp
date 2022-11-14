@@ -268,10 +268,10 @@ bool Book::draw_if_needed () {
 
 bool Book::idle_processing () {
      // Preload pages forwards
-    uint32 preload_ahead = app.setting(&MemorySettings::preload_ahead);
-    uint32 preload_behind = app.setting(&MemorySettings::preload_behind);
-    uint32 page_cache_mb = app.setting(&MemorySettings::page_cache_mb);
-    for (uint32 i = 1; i <= preload_ahead; i++) {
+    int32 preload_ahead = app.setting(&MemorySettings::preload_ahead);
+    int32 preload_behind = app.setting(&MemorySettings::preload_behind);
+    int32 page_cache_mb = app.setting(&MemorySettings::page_cache_mb);
+    for (int32 i = 1; i <= preload_ahead; i++) {
         if (Page* page = get_page(current_page_no + i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
@@ -280,7 +280,7 @@ bool Book::idle_processing () {
         }
     }
      // Preload pages backwards
-    for (uint32 i = 1; i <= preload_behind; i++) {
+    for (int32 i = 1; i <= preload_behind; i++) {
         if (Page* page = get_page(current_page_no - i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
@@ -289,7 +289,7 @@ bool Book::idle_processing () {
         }
     }
      // Unload pages if we're above the memory limit
-    int64 limit = page_cache_mb * (1024*1024);
+    isize limit = page_cache_mb * (1024*1024);
     if (estimated_page_memory > limit) {
         double oldest_viewed_at = INF;
         Page* oldest_page = null;
