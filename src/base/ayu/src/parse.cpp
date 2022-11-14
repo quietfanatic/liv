@@ -8,6 +8,7 @@
 #include "../describe.h"
 #include "../print.h"
 #include "char-cases-private.h"
+#include "tree-private.h"
 
 namespace ayu {
 
@@ -86,7 +87,7 @@ struct Parser {
         for (;;) switch (look()) {
             case ANY_WS: p++; break;
             case '/': {
-                if (end - p > 1 && p[1] == '/') {
+                if (look(1) == '/') {
                     skip_comment();
                 }
                 break;
@@ -99,7 +100,7 @@ struct Parser {
             case ANY_WS:
             case ',': p++; break;
             case '/': {
-                if (end - p > 1 && p[1] == '/') {
+                if (look(1) == '/') {
                     skip_comment();
                     break;
                 }
@@ -161,95 +162,85 @@ struct Parser {
     }
 
     Tree got_number () {
+        Str word = got_word();
          // Detect special numbers
-        if (end - p >= 4) {
-            Str p4 (p, 4);
-            double special_number = 0;
-            if (p4 == "+nan"sv) {
-                special_number = std::numeric_limits<double>::quiet_NaN();
-            }
-            else if (p4 == "+inf"sv) {
-                special_number = std::numeric_limits<double>::infinity();
-            }
-            else if (p4 == "-inf"sv) {
-                special_number = -std::numeric_limits<double>::infinity();
-            }
-            else goto no_special_number;
-             // Make sure there's no junk at the end
-            p += 4;
-            if (end != p) switch (look()) {
-                case ANY_LETTER: case ANY_DECIMAL_DIGIT: case ANY_WORD_SYMBOL:
-                    throw error("Malformed_number"sv);
-                default: break;
-            }
-            return Tree(special_number);
-            no_special_number:;
+        if (word == "+nan"sv) {
+            return Tree(std::numeric_limits<double>::quiet_NaN());
+        }
+        if (word == "+inf"sv) {
+            return Tree(std::numeric_limits<double>::infinity());
+        }
+        if (word == "-inf"sv) {
+            return Tree(-std::numeric_limits<double>::infinity());
         }
          // Detect sign
         bool minus = false;
-        switch (look()) {
+        switch (word[0]) {
             case '+': {
-                p++;
-                if (look() == '-') throw error("Malformed number"sv);
+                word = word.substr(1);
+                if (word.empty() || !std::isdigit(word[0])) {
+                    throw error("Malformed number"sv);
+                }
                 break;
             }
             case '-': {
                 minus = true;
-                p++;
-                if (look() == '-') throw error("Malformed number"sv);
+                word = word.substr(1);
+                if (word.empty() || !std::isdigit(word[0])) {
+                    throw error("Malformed number"sv);
+                }
                 break;
             }
             default: break;
         }
          // Detect hex prefix
         bool hex = false;
-        if (end - p >= 2 && p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
-            p += 2;
+        if (word.size() >= 2 && word[0] == '0'
+         && (word[1] == 'x' || word[1] == 'X')
+        ) {
             hex = true;
+            word = word.substr(2);
         }
          // Try integer
         {
             int64 integer;
-            auto [ptr, ec] = std::from_chars(p, end, integer, hex ? 16 : 10);
-            if (ptr == p) {
+            auto [ptr, ec] = std::from_chars(
+                word.begin(), word.end(), integer, hex ? 16 : 10
+            );
+            if (ptr == word.begin()) {
                  // If the integer parse failed, the float parse will also fail.
                 throw error("Malformed number"sv);
             }
-             // Is this really an integer?
-            if (ptr != end) switch (*ptr) {
-                case '.': case 'e': case 'E': case 'p': case 'P': {
-                    goto try_floating;
-                }
-                case ANY_INVALID_NUMBER_ENDER: {
-                    throw error("Junk at end of number"sv);
-                }
-                default: break;
+            else if (ptr == word.end()) {
+                return Tree(minus ? -integer : integer);
             }
-            p = ptr;
-            return Tree(minus ? -integer : integer);
+             // Forbid . without a digit after
+            else if (ptr < word.end() && ptr[0] == '.') {
+                if (ptr == word.end() + 1 ||
+                    (hex ? !std::isxdigit(ptr[1]) : !std::isdigit(ptr[1]))
+                ) {
+                    throw error("Number cannot end with a ."sv);
+                }
+            }
         }
-        try_floating: {
+         // Integer parse didn't take the whole word, try float parse
+        {
             double floating;
             auto [ptr, ec] = std::from_chars(
-                p, end, floating,
+                word.begin(), word.end(), floating,
                 hex ? std::chars_format::hex
                     : std::chars_format::general
             );
-            if (ptr == p) {
+            if (ptr == word.begin()) {
+                 // Shouldn't happen?
                 throw error("Malformed number"sv);
             }
-            if (ptr[-1] == '.') {
-                throw error("Number cannot end with ."sv);
+            else if (ptr == word.end()) {
+                return Tree(minus ? -floating : floating);
             }
-            if (ptr != end) switch (*ptr) {
-                case ANY_LETTER:
-                case ANY_WORD_SYMBOL: {
-                    throw error("Junk at end of number"sv);
-                }
-                default: break;
+            else {
+                throw error("Junk at end of number"sv);
             }
-            p = ptr;
-            return Tree(minus ? -floating : floating);
         }
     }
 
@@ -464,57 +455,58 @@ AYU_DESCRIBE(ayu::X::ParseError,
 #include "../../tap/tap.h"
 static tap::TestSet tests ("base/ayu/parse", []{
     using namespace tap;
-    auto t = [](const char* s, const Tree& t){
+    auto y = [](const char* s, const Tree& t){
         try_is<Tree>([&]{return tree_from_string(s);}, t, cat("yes: "s, s).c_str());
     };
-    auto f = [](const char* s){
+    auto n = [](const char* s){
         throws<X::ParseError>([&]{
             tree_from_string(s);
         }, "no: "s + s);
     };
-    t("null", Tree(null));
-    t("0", Tree(0));
-    t("345", Tree(345));
-    t("-44", Tree(-44));
-    t("2.5", Tree(2.5));
-    t("-4", Tree(-4.0));
-    t("1e45", Tree(1e45));
-    t("0xdeadbeef00", Tree(0xdeadbeef00));
-    t("+0x40", Tree(0x40));
-    t("-0x40", Tree(-0x40));
-    t("000099", Tree(99));
-    t("000", Tree(0));
-    f("0.");
-    f(".0");
-    t("0xdead.beefP30", Tree(0xdead.beefP30));
-    t("+0xdead.beefP30", Tree(0xdead.beefP30));
-    t("-0xdead.beefP30", Tree(-0xdead.beefP30));
-    f("++0");
-    f("--0");
-    t("+nan", Tree(0.0/0.0));
-    t("+inf", Tree(1.0/0.0));
-    t("-inf", Tree(-1.0/0.0));
-    t("\"\"", Tree(""));
-    t("asdf", Tree("asdf"));
-    t("\"null\"", Tree("null"));
-    t("\"true\"", Tree("true"));
-    t("\"false\"", Tree("false"));
-    t("[]", Tree(Array{}));
-    t("[,,,,,]", Tree(Array{}));
-    t("[0 1 foo]", Tree(Array{Tree(0), Tree(1), Tree("foo")}));
-    t("{}", Tree(Object{}));
-    t("{\"asdf\":\"foo\"}", Tree(Object{Pair{"asdf", Tree("foo")}}));
-    t("{\"asdf\":0}", Tree(Object{Pair{"asdf", Tree(0)}}));
-    t("{asdf:0}", Tree(Object{Pair{"asdf", Tree(0)}}));
-    f("{0:0}");
-    t("{a:0 \"null\":1 \"0\":foo}",
+    y("null", Tree(null));
+    y("0", Tree(0));
+    y("345", Tree(345));
+    y("-44", Tree(-44));
+    y("2.5", Tree(2.5));
+    y("-4", Tree(-4.0));
+    y("1e45", Tree(1e45));
+    y("0xdeadbeef00", Tree(0xdeadbeef00));
+    y("+0x40", Tree(0x40));
+    y("-0x40", Tree(-0x40));
+    y("000099", Tree(99));
+    y("000", Tree(0));
+    n("0.");
+    n(".0");
+    n("0.e4");
+    y("0xdead.beefP30", Tree(0xdead.beefP30));
+    y("+0xdead.beefP30", Tree(0xdead.beefP30));
+    y("-0xdead.beefP30", Tree(-0xdead.beefP30));
+    n("++0");
+    n("--0");
+    y("+nan", Tree(0.0/0.0));
+    y("+inf", Tree(1.0/0.0));
+    y("-inf", Tree(-1.0/0.0));
+    y("\"\"", Tree(""));
+    y("asdf", Tree("asdf"));
+    y("\"null\"", Tree("null"));
+    y("\"true\"", Tree("true"));
+    y("\"false\"", Tree("false"));
+    y("[]", Tree(Array{}));
+    y("[,,,,,]", Tree(Array{}));
+    y("[0 1 foo]", Tree(Array{Tree(0), Tree(1), Tree("foo")}));
+    y("{}", Tree(Object{}));
+    y("{\"asdf\":\"foo\"}", Tree(Object{Pair{"asdf", Tree("foo")}}));
+    y("{\"asdf\":0}", Tree(Object{Pair{"asdf", Tree(0)}}));
+    y("{asdf:0}", Tree(Object{Pair{"asdf", Tree(0)}}));
+    n("{0:0}");
+    y("{a:0 \"null\":1 \"0\":foo}",
         Tree(Object{
             Pair{"a", Tree(0)},
             Pair{"null", Tree(1)},
             Pair{"0", Tree("foo")}
         })
     );
-    t("[[0 1] [[2] [3 4]]]",
+    y("[[0 1] [[2] [3 4]]]",
         Tree(Array{
             Tree(Array{Tree(0), Tree(1)}),
             Tree(Array{
@@ -523,28 +515,28 @@ static tap::TestSet tests ("base/ayu/parse", []{
             })
         })
     );
-    t("&foo 1", Tree(1));
-    t("&foo:1 *foo", Tree(1));
-    t("&\"null\":4 *\"null\"", Tree(4));
-    t("[&foo 1 *foo]", Tree(Array{Tree(1), Tree(1)}));
-    t("[&foo:1 *foo]", Tree(Array{Tree(1)}));
-    t("{&key asdf:*key}", Tree(Object{Pair{"asdf", Tree("asdf")}}));
-    t("{&borp:\"bump\" *borp:*borp}", Tree(Object{Pair{"bump", Tree("bump")}}));
-    t("3 //4", Tree(3));
-    t("#", Tree("#"));
-    t("#foo", Tree("#foo"));
-    f("{&borp:44 *borp:*borp}");
-    f("&foo");
-    f("&foo:1");
-    f("&1 1");
-    f("&null 1");
-    f("*foo");
-    f("4 &foo:4");
-    f("&foo *foo");
-    f("&foo:*foo 1");
-    f("&&a 1");
-    f("& a 1");
-    f("[+nana]");
+    y("&foo 1", Tree(1));
+    y("&foo:1 *foo", Tree(1));
+    y("&\"null\":4 *\"null\"", Tree(4));
+    y("[&foo 1 *foo]", Tree(Array{Tree(1), Tree(1)}));
+    y("[&foo:1 *foo]", Tree(Array{Tree(1)}));
+    y("{&key asdf:*key}", Tree(Object{Pair{"asdf", Tree("asdf")}}));
+    y("{&borp:\"bump\" *borp:*borp}", Tree(Object{Pair{"bump", Tree("bump")}}));
+    y("3 //4", Tree(3));
+    y("#", Tree("#"));
+    y("#foo", Tree("#foo"));
+    n("{&borp:44 *borp:*borp}");
+    n("&foo");
+    n("&foo:1");
+    n("&1 1");
+    n("&null 1");
+    n("*foo");
+    n("4 &foo:4");
+    n("&foo *foo");
+    n("&foo:*foo 1");
+    n("&&a 1");
+    n("& a 1");
+    n("[+nana]");
     done_testing();
 });
 #endif
