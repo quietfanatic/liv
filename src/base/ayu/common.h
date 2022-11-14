@@ -74,12 +74,17 @@ struct ToString<T,
 
  // I'm sick and tired of weirdness around string concatenation operators.
  // Just use this.  It will probably end up being more efficient anyway.
- // TODO join(), copy elision
 template <class... Args>
 String cat (Args&&... args) {
     String r; // Should we reserve()?  Profile!
     ((r += ToString<Args>::to_string(std::forward<Args>(args))), ...);
     return r;
+}
+ // Optimization to skip a copy
+template <class... Args>
+String&& cat (String&& s, Args... args) {
+    ((s += ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    return std::move(s);
 }
 
 using Array = std::vector<Tree>;
