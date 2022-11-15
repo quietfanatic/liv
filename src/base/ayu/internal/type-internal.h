@@ -12,8 +12,8 @@
  // cause weird errors in some situations.
 namespace ayu_desc {
     template <class T>
-    struct Describe {
-        static constexpr bool defined = false;
+    struct _AYU_Describe {
+        static constexpr bool _ayu_defined = false;
     };
 }
 
@@ -32,8 +32,8 @@ namespace ayu::in {
 
     template <class T>
     const Description* get_description_by_cpp_type () {
-        if constexpr (ayu_desc::Describe<T>::defined) {
-            return ayu_desc::Describe<T>::description;
+        if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
+            return ayu_desc::_AYU_Describe<T>::_ayu_description;
         }
         else {
             return get_description_by_type_info(typeid(T));
@@ -41,8 +41,8 @@ namespace ayu::in {
     }
     template <class T>
     const Description* need_description_for_cpp_type () {
-        if constexpr (ayu_desc::Describe<T>::defined) {
-            return ayu_desc::Describe<T>::description;
+        if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
+            return ayu_desc::_AYU_Describe<T>::_ayu_description;
         }
         else {
             return need_description_for_type_info(typeid(T));

@@ -250,7 +250,7 @@ namespace ayu::in {
     template <class... Ts>
     struct TupleElems {
         using Tuple = std::tuple<Ts...>;
-        using hcb = ayu::DescribeBase<Tuple>;
+        using hcb = ayu::_AYU_DescribeBase<Tuple>;
         template <class T>
         using Getter = T&(*)(Tuple&);
         template <usize... is>

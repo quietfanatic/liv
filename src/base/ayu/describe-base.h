@@ -15,12 +15,12 @@
 namespace ayu {
 
 template <class T, bool has_members = std::is_class_v<T> || std::is_union_v<T>>
-struct DescribeBase;
+struct _AYU_DescribeBase;
 
 template <class T>
-struct DescribeBase<T, false> {
+struct _AYU_DescribeBase<T, false> {
     template <class... Dcrs>
-    static constexpr in::FullDescription<T, Dcrs...> describe (
+    static constexpr in::FullDescription<T, Dcrs...> _ayu_describe (
         ayu::Str name, const Dcrs&... dcrs
     ) {
         return in::make_description<T, Dcrs...>(name, dcrs...);
@@ -106,7 +106,7 @@ struct DescribeBase<T, false> {
     ) {
          // Implicit member().
         if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return attr(key, DescribeBase<T, true>::member(acr), flags);
+            return attr(key, _AYU_DescribeBase<T, true>::member(acr), flags);
         }
         else {
             static_assert(
@@ -128,7 +128,7 @@ struct DescribeBase<T, false> {
         in::AttrFlags flags = in::AttrFlags(0)
     ) {
         if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return elem(DescribeBase<T, true>::member(acr), flags);
+            return elem(_AYU_DescribeBase<T, true>::member(acr), flags);
         }
         else {
             static_assert(
@@ -250,7 +250,7 @@ struct DescribeBase<T, false> {
     }
 
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
-     // NYI
+     // NYI for array-like types
     static constexpr in::AttrFlags inherit = in::ATTR_INHERIT;
 
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
@@ -259,7 +259,7 @@ struct DescribeBase<T, false> {
 
  // This contains functions that aren't valid for scalar types like int
 template <class T>
-struct DescribeBase<T, true> : DescribeBase<T, false> {
+struct _AYU_DescribeBase<T, true> : _AYU_DescribeBase<T, false> {
     template <class T2, class M>
     static constexpr in::MemberAcr2<T, M> member (
         M T2::* mp,
@@ -291,17 +291,18 @@ struct DescribeBase<T, true> : DescribeBase<T, false> {
 #define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
 #define AYU_DESCRIBE_BEGIN_NAME(T, name) \
 template <> \
-struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
-    static constexpr bool defined = true; \
-    static constexpr auto full_description = ayu::DescribeBase<T>::describe(name,
+struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
+    using hcb = ayu::_AYU_DescribeBase<T>; \
+    static constexpr bool _ayu_defined = true; \
+    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(name,
 
 #define AYU_DESCRIBE_END(T) \
     ); \
-    static const ayu::in::Description* const description; \
+    static const ayu::in::Description* const _ayu_description; \
 }; \
-const ayu::in::Description* const ayu_desc::Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
     ayu::in::register_description( \
-        full_description.template get<ayu::in::Description>(0) \
+        _ayu_full_description.template get<ayu::in::Description>(0) \
     );
 
 #define AYU_DESCRIBE(T, ...) AYU_DESCRIBE_NAME(T, #T, __VA_ARGS__)
@@ -314,15 +315,15 @@ AYU_DESCRIBE_END(T)
  // TODO: use __VA_OPT__ instead
 #define AYU_DESCRIBE_0(T) \
 template <> \
-struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
-    using hcb = ayu::DescribeBase<T>; \
-    static constexpr bool defined = true; \
-    static constexpr auto full_description = ayu::DescribeBase<T>::describe(#T); \
-    static const ayu::in::Description* const description; \
+struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
+    using hcb = ayu::_AYU_DescribeBase<T>; \
+    static constexpr bool _ayu_defined = true; \
+    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(#T); \
+    static const ayu::in::Description* const _ayu_description; \
 }; \
-const ayu::in::Description* const ayu_desc::Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
     ayu::in::register_description( \
-        full_description.template get<ayu::in::Description>(0) \
+        _ayu_full_description.template get<ayu::in::Description>(0) \
     );
 
 #define AYU_DESCRIBE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
@@ -330,20 +331,19 @@ const ayu::in::Description* const ayu_desc::Describe<T>::description = \
 
 #define AYU_DESCRIBE_TEMPLATE_BEGIN(params, T) \
 template params \
-struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
-    /* annoying lookup problems in templates */ \
-    using hcb = ayu::DescribeBase<T>; \
-    static constexpr bool defined = true; \
-    static constexpr auto full_description = hcb::describe(ayu::Str(),
+struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
+    using hcb = ayu::_AYU_DescribeBase<T>; \
+    static constexpr bool _ayu_defined = true; \
+    static constexpr auto _ayu_full_description = hcb::_ayu_describe(ayu::Str(),
 
 #define AYU_DESCRIBE_TEMPLATE_END(params, T) \
     ); \
-    static const ayu::in::Description* const description; \
+    static const ayu::in::Description* const _ayu_description; \
 }; \
 template params \
-const ayu::in::Description* const ayu_desc::Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
     ayu::in::register_description( \
-        full_description.template get<ayu::in::Description>(0) \
+        _ayu_full_description.template get<ayu::in::Description>(0) \
     );
 
 #define AYU_DESCRIBE_ESCAPE(...) __VA_ARGS__
@@ -354,6 +354,6 @@ AYU_DESCRIBE_TEMPLATE_BEGIN(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
 AYU_DESCRIBE_TEMPLATE_END(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
 
 #define AYU_DESCRIBE_INSTANTIATE(T) \
-static_assert(ayu_desc::Describe<T>::description);
+static_assert(ayu_desc::_AYU_Describe<T>::_ayu_defined);
 
 #endif
