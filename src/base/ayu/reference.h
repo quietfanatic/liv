@@ -265,24 +265,22 @@ namespace X {
 } // namespace ayu
 
  // Allow Reference to be a key in unordered_map
-namespace std {
-    template <>
-    struct hash<ayu::Reference> {
-        size_t operator () (const ayu::Reference& r) const {
-             // This is in a different order than operator==, but I don't think
-             // that should be a problem, assuming the address is deterministic.
-            auto a = r.address();
-            if (a) return ayu::in::hash_combine(
-                hash<void*>()((void*)a),
-                hash<ayu::Type>()(r.type())
-            );
-            else return ayu::in::hash_combine(
-                hash<void*>()((void*)r.host),
-                hash<void*>()((void*)r.acr)
-            );
-        }
-    };
-}
+template <>
+struct std::hash<ayu::Reference> {
+    size_t operator () (const ayu::Reference& r) const {
+         // This is in a different order than operator==, but I don't think
+         // that should be a problem, assuming the address is deterministic.
+        auto a = r.address();
+        if (a) return ayu::in::hash_combine(
+            hash<void*>()((void*)a),
+            hash<ayu::Type>()(r.type())
+        );
+        else return ayu::in::hash_combine(
+            hash<void*>()((void*)r.host),
+            hash<void*>()((void*)r.acr)
+        );
+    }
+};
 
  // Break cyclic dependency
  // TODO: Check if this is still necessary

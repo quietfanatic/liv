@@ -417,16 +417,14 @@ AYU_DESCRIBE_TEMPLATE(
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
-namespace tap {
-    template <class T, uni::usize n>
-    struct Show<geo::GVec<T, n>> {
-        std::string show (const geo::GVec<T, n>& v) {
-            std::string r = "[" + std::to_string(v[0]);
-            for (uni::usize i = 1; i < n; i++) {
-                r += ", " + std::to_string(v[i]);
-            }
-            return r + "]";
+template <class T, uni::usize n>
+struct tap::Show<geo::GVec<T, n>> {
+    std::string show (const geo::GVec<T, n>& v) {
+        std::string r = "[" + std::to_string(v[0]);
+        for (uni::usize i = 1; i < n; i++) {
+            r += ", " + std::to_string(v[i]);
         }
-    };
-}
+        return r + "]";
+    }
+};
 #endif

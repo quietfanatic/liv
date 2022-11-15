@@ -200,12 +200,10 @@ namespace X {
 } // namespace ayu
 
  // Allow hashing Type for std::unordered_map
-namespace std {
-    template <>
-    struct hash<ayu::Type> {
-        size_t operator () (ayu::Type t) const {
-            return hash<void*>()((void*)t.desc);
-        }
-    };
-}
+template <>
+struct std::hash<ayu::Type> {
+    size_t operator () (ayu::Type t) const {
+        return hash<void*>()((void*)t.desc);
+    }
+};
 

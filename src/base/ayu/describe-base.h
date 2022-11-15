@@ -290,9 +290,8 @@ struct DescribeBase<T, true> : DescribeBase<T, false> {
  // Stringify name as early as possible to avoid macro expansion
 #define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
 #define AYU_DESCRIBE_BEGIN_NAME(T, name) \
-namespace ayu_desc { \
 template <> \
-struct Describe<T> : ayu::DescribeBase<T> { \
+struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
     static constexpr bool defined = true; \
     static constexpr auto full_description = ayu::DescribeBase<T>::describe(name,
 
@@ -300,11 +299,10 @@ struct Describe<T> : ayu::DescribeBase<T> { \
     ); \
     static const ayu::in::Description* const description; \
 }; \
-const ayu::in::Description* const Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::Describe<T>::description = \
     ayu::in::register_description( \
         full_description.template get<ayu::in::Description>(0) \
-    ); \
-}
+    );
 
 #define AYU_DESCRIBE(T, ...) AYU_DESCRIBE_NAME(T, #T, __VA_ARGS__)
 #define AYU_DESCRIBE_NAME(T, name, ...) \
@@ -315,27 +313,24 @@ AYU_DESCRIBE_END(T)
  // The only way to make an empty description work
  // TODO: use __VA_OPT__ instead
 #define AYU_DESCRIBE_0(T) \
-namespace ayu_desc { \
 template <> \
-struct Describe<T> : ayu::DescribeBase<T> { \
+struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
     using hcb = ayu::DescribeBase<T>; \
     static constexpr bool defined = true; \
     static constexpr auto full_description = ayu::DescribeBase<T>::describe(#T); \
     static const ayu::in::Description* const description; \
 }; \
-const ayu::in::Description* const Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::Describe<T>::description = \
     ayu::in::register_description( \
         full_description.template get<ayu::in::Description>(0) \
-    ); \
-}
+    );
 
 #define AYU_DESCRIBE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
 #define AYU_DESCRIBE_TEMPLATE_TYPE(...) __VA_ARGS__
 
 #define AYU_DESCRIBE_TEMPLATE_BEGIN(params, T) \
-namespace ayu_desc { \
 template params \
-struct Describe<T> : ayu::DescribeBase<T> { \
+struct ayu_desc::Describe<T> : ayu::DescribeBase<T> { \
     /* annoying lookup problems in templates */ \
     using hcb = ayu::DescribeBase<T>; \
     static constexpr bool defined = true; \
@@ -346,11 +341,10 @@ struct Describe<T> : ayu::DescribeBase<T> { \
     static const ayu::in::Description* const description; \
 }; \
 template params \
-const ayu::in::Description* const Describe<T>::description = \
+const ayu::in::Description* const ayu_desc::Describe<T>::description = \
     ayu::in::register_description( \
         full_description.template get<ayu::in::Description>(0) \
-    ); \
-}
+    );
 
 #define AYU_DESCRIBE_ESCAPE(...) __VA_ARGS__
 
