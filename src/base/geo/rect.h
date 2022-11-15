@@ -279,7 +279,7 @@ CE GVec<T, 2> snap (const GRect<T>& a, const GVec<T, 2>& p) {
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GRect<T>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         using namespace uni;
         if CE (std::is_same_v<T, float>) return "geo::Rect"sv;
@@ -292,10 +292,10 @@ AYU_DESCRIBE_TEMPLATE(
             return Str(r);
         }
     }),
-    hcb::elems(
-        hcb::elem(&geo::GRect<T>::l),
-        hcb::elem(&geo::GRect<T>::b),
-        hcb::elem(&geo::GRect<T>::r),
-        hcb::elem(&geo::GRect<T>::t)
+    desc::elems(
+        desc::elem(&geo::GRect<T>::l),
+        desc::elem(&geo::GRect<T>::b),
+        desc::elem(&geo::GRect<T>::r),
+        desc::elem(&geo::GRect<T>::t)
     )
 )

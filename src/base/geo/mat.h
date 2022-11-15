@@ -222,7 +222,7 @@ CE GMat<cols, rows+1> add_row (
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(uni::usize cols, uni::usize rows),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GMat<cols, rows>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         using namespace uni;
         if CE (cols == 2) {
@@ -246,27 +246,27 @@ AYU_DESCRIBE_TEMPLATE(
     []{
         using namespace geo;
         if CE (cols == 2 && rows == 2) {
-            return hcb::values(
-                hcb::value(double(NAN), Mat(NAN)),
-                hcb::value(0, Mat()),
-                hcb::value(1, Mat(1)),
-                hcb::value("flipx", Mat(-1, 0, 0, 1)),
-                hcb::value("flipy", Mat(1, 0, 0, -1)),
-                hcb::value("rotcw", Mat(0, -1, 1, 0)),
-                hcb::value("rotccw", Mat(0, 1, -1, 0)),
-                hcb::value("rot180", Mat(-1, 0, 0, -1))
+            return desc::values(
+                desc::value(double(NAN), Mat(NAN)),
+                desc::value(0, Mat()),
+                desc::value(1, Mat(1)),
+                desc::value("flipx", Mat(-1, 0, 0, 1)),
+                desc::value("flipy", Mat(1, 0, 0, -1)),
+                desc::value("rotcw", Mat(0, -1, 1, 0)),
+                desc::value("rotccw", Mat(0, 1, -1, 0)),
+                desc::value("rot180", Mat(-1, 0, 0, -1))
             );
         }
         else {
-            return hcb::values(
-                hcb::value(double(NAN), GMat<cols, rows>(NAN)),
-                hcb::value(0, &GMat<cols, rows>()),
-                hcb::value(1, &GMat<cols, rows>(1))
+            return desc::values(
+                desc::value(double(NAN), GMat<cols, rows>(NAN)),
+                desc::value(0, &GMat<cols, rows>()),
+                desc::value(1, &GMat<cols, rows>(1))
             );
         }
     }(),
-    hcb::length(hcb::template constant<uni::usize>(cols)),
-    hcb::elem_func([](geo::GMat<cols, rows>& v, uni::usize i){
+    desc::length(desc::template constant<uni::usize>(cols)),
+    desc::elem_func([](geo::GMat<cols, rows>& v, uni::usize i){
         if (i < cols) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })

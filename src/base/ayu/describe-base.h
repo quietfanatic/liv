@@ -292,7 +292,7 @@ struct _AYU_DescribeBase<T, true> : _AYU_DescribeBase<T, false> {
 #define AYU_DESCRIBE_BEGIN_NAME(T, name) \
 template <> \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using hcb = ayu::_AYU_DescribeBase<T>; \
+    using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
     static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(name,
 
@@ -316,7 +316,7 @@ AYU_DESCRIBE_END(T)
 #define AYU_DESCRIBE_0(T) \
 template <> \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using hcb = ayu::_AYU_DescribeBase<T>; \
+    using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
     static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(#T); \
     static const ayu::in::Description* const _ayu_description; \
@@ -332,9 +332,9 @@ const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description =
 #define AYU_DESCRIBE_TEMPLATE_BEGIN(params, T) \
 template params \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using hcb = ayu::_AYU_DescribeBase<T>; \
+    using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = hcb::_ayu_describe(ayu::Str(),
+    static constexpr auto _ayu_full_description = desc::_ayu_describe(ayu::Str(),
 
 #define AYU_DESCRIBE_TEMPLATE_END(params, T) \
     ); \

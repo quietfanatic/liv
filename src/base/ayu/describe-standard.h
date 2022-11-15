@@ -24,14 +24,14 @@
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
-    hcb::name([]{
+    desc::name([]{
         static ayu::String r = ayu::cat(ayu::Type::CppType<T>().name(), '?');
         return ayu::Str(r);
     }),
-    hcb::values(
-        hcb::value(ayu::null, std::optional<T>())
+    desc::values(
+        desc::value(ayu::null, std::optional<T>())
     ),
-    hcb::delegate(hcb::template ref_func<T>(
+    desc::delegate(desc::template ref_func<T>(
         [](std::optional<T>& v)->T&{
             if (!v) v.emplace();
             return *v;
@@ -43,18 +43,18 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::vector<"sv, ayu::Type::CppType<T>().name(), '>'
         );
         return ayu::Str(r);
     }),
-    hcb::length(hcb::template value_funcs<ayu::usize>(
+    desc::length(desc::template value_funcs<ayu::usize>(
         [](const std::vector<T>& v){ return v.size(); },
         [](std::vector<T>& v, ayu::usize l){ v.resize(l); }
     )),
-    hcb::elem_func([](std::vector<T>& v, ayu::usize i){
+    desc::elem_func([](std::vector<T>& v, ayu::usize i){
         return ayu::Reference(&v.at(i));
     })
 )
@@ -63,7 +63,7 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::unordered_map<std::string, "sv,
@@ -71,7 +71,7 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    hcb::keys(hcb::template mixed_funcs<std::vector<std::string>>(
+    desc::keys(desc::template mixed_funcs<std::vector<std::string>>(
         [](const std::unordered_map<std::string, T>& v){
             std::vector<std::string> r;
             for (auto& p : v) {
@@ -88,7 +88,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
     )),
-    hcb::attr_func([](std::unordered_map<std::string, T>& v, ayu::Str k){
+    desc::attr_func([](std::unordered_map<std::string, T>& v, ayu::Str k){
         return ayu::Reference(&v.at(std::string(k)));
     })
 )
@@ -98,14 +98,14 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(T*),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(ayu::Type::CppType<T>().name(), '*');
         return ayu::Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
      // save that until we know we need it.
-    hcb::delegate(hcb::template value_funcs<ayu::Reference>(
+    desc::delegate(desc::template value_funcs<ayu::Reference>(
         [](T* const& v){
             return ayu::Reference(v);
         },
@@ -120,7 +120,7 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             ayu::Type::CppType<T>().name(),
@@ -128,8 +128,8 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    hcb::length(hcb::template constant<ayu::usize>(n)),
-    hcb::elem_func([](T(& v )[n], ayu::usize i){
+    desc::length(desc::template constant<ayu::usize>(n)),
+    desc::elem_func([](T(& v )[n], ayu::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
@@ -139,17 +139,17 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat("char["sv, n, ']');
         return ayu::Str(r);
     }),
      // Serialize as a string
-    hcb::to_tree([](const char(& v )[n]){
+    desc::to_tree([](const char(& v )[n]){
         return ayu::Tree(v);
     }),
      // Deserialize as either a string or an array
-    hcb::from_tree([](char(& v )[n], const ayu::Tree& tree){
+    desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
         if (tree.form() == ayu::STRING) {
             auto s = ayu::Str(tree);
             if (s.size() != n) {
@@ -170,8 +170,8 @@ AYU_DESCRIBE_TEMPLATE(
         }
     }),
      // Allow accessing individual elements like an array
-    hcb::length(hcb::template constant<ayu::usize>(n)),
-    hcb::elem_func([](char(& v )[n], ayu::usize i){
+    desc::length(desc::template constant<ayu::usize>(n)),
+    desc::elem_func([](char(& v )[n], ayu::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
@@ -181,7 +181,7 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::array<"sv + ayu::Type::CppType<T>().name(),
@@ -189,8 +189,8 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    hcb::length(hcb::template constant<ayu::usize>(n)),
-    hcb::elem_func([](std::array<T, n>& v, ayu::usize i){
+    desc::length(desc::template constant<ayu::usize>(n)),
+    desc::elem_func([](std::array<T, n>& v, ayu::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
@@ -200,7 +200,7 @@ AYU_DESCRIBE_TEMPLATE(
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class A, class B),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::pair<"sv, ayu::Type::CppType<A>().name(),
@@ -208,9 +208,9 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    hcb::elems(
-        hcb::elem(&std::pair<A, B>::first),
-        hcb::elem(&std::pair<A, B>::second)
+    desc::elems(
+        desc::elem(&std::pair<A, B>::first),
+        desc::elem(&std::pair<A, B>::second)
     )
 )
 
@@ -250,13 +250,13 @@ namespace ayu::in {
     template <class... Ts>
     struct TupleElems {
         using Tuple = std::tuple<Ts...>;
-        using hcb = ayu::_AYU_DescribeBase<Tuple>;
+        using desc = ayu::_AYU_DescribeBase<Tuple>;
         template <class T>
         using Getter = T&(*)(Tuple&);
         template <usize... is>
         static constexpr auto make (std::index_sequence<is...>) {
-            return hcb::elems(
-                hcb::elem(hcb::ref_func(
+            return desc::elems(
+                desc::elem(desc::ref_func(
                     Getter<typename std::tuple_element<is, Tuple>::type>(
                         &std::get<is, Ts...>
                     )
@@ -272,7 +272,7 @@ namespace ayu::in {
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class... Ts),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::tuple<Ts...>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'

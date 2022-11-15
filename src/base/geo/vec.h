@@ -376,7 +376,7 @@ CE auto map (const F& f, const GVec<T, n>& a) {
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, uni::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GVec<T, n>),
-    hcb::name([]{
+    desc::name([]{
         using namespace std::literals;
         using namespace uni;
         if CE (std::is_same_v<T, float>) {
@@ -408,8 +408,8 @@ AYU_DESCRIBE_TEMPLATE(
                         + ", " + std::to_string(n) + ">";
         return Str(r);
     }),
-    hcb::length(hcb::template constant<uni::usize>(n)),
-    hcb::elem_func([](geo::GVec<T, n>& v, uni::usize i){
+    desc::length(desc::template constant<uni::usize>(n)),
+    desc::elem_func([](geo::GVec<T, n>& v, uni::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
