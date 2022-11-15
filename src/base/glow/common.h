@@ -4,6 +4,7 @@
 #include "../uni/common.h"
 
 namespace glow {
+using namespace uni;
 
 void init ();
 

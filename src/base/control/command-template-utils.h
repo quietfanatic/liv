@@ -5,6 +5,7 @@
 #include "../uni/common.h"
 
 namespace control {
+using namespace uni;
 
 template <class... Args>
 using StatementStorage = std::tuple<std::remove_cvref_t<Args>...>;

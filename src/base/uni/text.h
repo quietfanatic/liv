@@ -1,6 +1,7 @@
+// Some convenient text-related functions, as well as UTF-8 file IO.
+
 #pragma once
 
-#include <compare>
 #include "common.h"
 
 namespace uni {

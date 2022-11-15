@@ -279,8 +279,8 @@ static tap::TestSet tests ("app/app", []{
     app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            exe_folder + "/res/base/glow/test/image.png"sv,
-            exe_folder + "/res/base/glow/test/image2.png"sv
+            ayu::cat(exe_folder, "/res/base/glow/test/image.png"sv),
+            ayu::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
         });
     }, "App::open_files");
     auto window_id = AS(SDL_GetWindowID(app.books[0]->window));

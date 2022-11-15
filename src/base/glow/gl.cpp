@@ -4,6 +4,7 @@
 #include <sstream>
 #include <SDL2/SDL_video.h>
 #include "../ayu/describe.h"
+#include "../uni/macros.h"
 
 using namespace std::literals;
 
@@ -52,10 +53,10 @@ void throw_on_glGetError (
 AYU_DESCRIBE(glow::X::GLError,
     delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::GLError::error_code),
-        elem(&X::GLError::gl_function),
-        elem(&X::GLError::caller),
-        elem(&X::GLError::filename),
-        elem(&X::GLError::line)
+        elem(&glow::X::GLError::error_code),
+        elem(&glow::X::GLError::gl_function),
+        elem(&glow::X::GLError::caller),
+        elem(&glow::X::GLError::filename),
+        elem(&glow::X::GLError::line)
     )
 )

@@ -5,9 +5,11 @@
 #include <cmath>  // for sqrt
 
 #include "../ayu/describe.h"
+#include "../uni/common.h"
 #include "scalar.h"
 
 namespace geo {
+using namespace uni;
 
 template <class T, usize n>
 struct GVec;
@@ -372,10 +374,11 @@ CE auto map (const F& f, const GVec<T, n>& a) {
 ///// GENERIC AYU DESCRIPTION
 
 AYU_DESCRIBE_TEMPLATE(
-    AYU_DESCRIBE_TEMPLATE_PARAMS(class T, usize n),
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T, uni::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GVec<T, n>),
     hcb::name([]{
         using namespace std::literals;
+        using namespace uni;
         if CE (std::is_same_v<T, float>) {
             if CE (n == 2) { return "geo::Vec"sv; }
             else if CE (n == 3) { return "geo::Vec3"sv; }
@@ -405,8 +408,8 @@ AYU_DESCRIBE_TEMPLATE(
                         + ", " + std::to_string(n) + ">";
         return Str(r);
     }),
-    hcb::length(hcb::template constant<usize>(n)),
-    hcb::elem_func([](geo::GVec<T, n>& v, size_t i){
+    hcb::length(hcb::template constant<uni::usize>(n)),
+    hcb::elem_func([](geo::GVec<T, n>& v, uni::usize i){
         if (i < n) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })
@@ -415,11 +418,11 @@ AYU_DESCRIBE_TEMPLATE(
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 namespace tap {
-    template <class T, usize n>
+    template <class T, uni::usize n>
     struct Show<geo::GVec<T, n>> {
         std::string show (const geo::GVec<T, n>& v) {
             std::string r = "[" + std::to_string(v[0]);
-            for (usize i = 1; i < n; i++) {
+            for (uni::usize i = 1; i < n; i++) {
                 r += ", " + std::to_string(v[i]);
             }
             return r + "]";

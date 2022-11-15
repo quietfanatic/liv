@@ -7,6 +7,7 @@
 #include "vec.h"
 
 namespace geo {
+using namespace uni;
 
 template <usize cols, usize rows>
 struct GMat;
@@ -219,10 +220,11 @@ CE GMat<cols, rows+1> add_row (
 } // namespace geo
 
 AYU_DESCRIBE_TEMPLATE(
-    AYU_DESCRIBE_TEMPLATE_PARAMS(usize cols, usize rows),
+    AYU_DESCRIBE_TEMPLATE_PARAMS(uni::usize cols, uni::usize rows),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GMat<cols, rows>),
     hcb::name([]{
         using namespace std::literals;
+        using namespace uni;
         if CE (cols == 2) {
             if CE (rows == 2) return "geo::Mat"sv;
             else if CE (rows == 3) return "geo::Mat2x3"sv;
@@ -263,8 +265,8 @@ AYU_DESCRIBE_TEMPLATE(
             );
         }
     }(),
-    hcb::length(hcb::template constant<usize>(cols)),
-    hcb::elem_func([](geo::GMat<cols, rows>& v, usize i){
+    hcb::length(hcb::template constant<uni::usize>(cols)),
+    hcb::elem_func([](geo::GMat<cols, rows>& v, uni::usize i){
         if (i < cols) return ayu::Reference(&v[i]);
         else return ayu::Reference();
     })

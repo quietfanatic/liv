@@ -1,6 +1,7 @@
 #include "program.h"
 
 #include "../ayu/describe.h"
+#include "../uni/macros.h"
 #include "gl.h"
 
 namespace glow {
@@ -160,18 +161,18 @@ AYU_DESCRIBE(glow::Program,
 )
 
 AYU_DESCRIBE(glow::X::ShaderCompileFailed,
-    delegate(base<X::GlowError>()),
+    delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::ShaderCompileFailed::location),
-        elem(&X::ShaderCompileFailed::info_log)
+        elem(&glow::X::ShaderCompileFailed::location),
+        elem(&glow::X::ShaderCompileFailed::info_log)
     )
 )
 
 AYU_DESCRIBE(glow::X::ProgramLinkFailed,
-    delegate(base<X::GlowError>()),
+    delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::ProgramLinkFailed::location),
-        elem(&X::ProgramLinkFailed::info_log)
+        elem(&glow::X::ProgramLinkFailed::location),
+        elem(&glow::X::ProgramLinkFailed::info_log)
     )
 )
 

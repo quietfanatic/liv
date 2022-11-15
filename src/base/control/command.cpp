@@ -85,27 +85,26 @@ AYU_DESCRIBE(Statement,
 AYU_DESCRIBE(control::X::ConflictingCommandName,
     delegate(base<ayu::X::Error>()),
     elems(
-        elem(&X::ConflictingCommandName::name),
-        elem(&X::ConflictingCommandName::desc_a),
-        elem(&X::ConflictingCommandName::desc_b)
+        elem(&control::X::ConflictingCommandName::name),
+        elem(&control::X::ConflictingCommandName::desc_a),
+        elem(&control::X::ConflictingCommandName::desc_b)
     )
 )
 
 AYU_DESCRIBE(control::X::CommandNotFound,
     delegate(base<ayu::X::Error>()),
     elems(
-        elem(&X::CommandNotFound::name)
+        elem(&control::X::CommandNotFound::name)
     )
 )
 
 AYU_DESCRIBE(control::X::StatementWrongArgsType,
     delegate(base<ayu::X::Error>()),
     attrs(
-        attr("expected", &X::StatementWrongArgsType::expected),
-        attr("got", &X::StatementWrongArgsType::got)
+        attr("expected", &control::X::StatementWrongArgsType::expected),
+        attr("got", &control::X::StatementWrongArgsType::got)
     )
 )
-
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"

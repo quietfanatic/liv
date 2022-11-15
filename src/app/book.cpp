@@ -348,8 +348,8 @@ static tap::TestSet tests ("app/book", []{
     app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, {
-        exe_folder + "/res/base/glow/test/image.png"sv,
-        exe_folder + "/res/base/glow/test/image2.png"sv
+        ayu::cat(exe_folder, "/res/base/glow/test/image.png"sv),
+        ayu::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
     });
 
     book.draw_if_needed();

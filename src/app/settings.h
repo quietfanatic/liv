@@ -4,8 +4,10 @@
 #include "../base/control/command.h"
 #include "../base/control/input.h"
 #include "../base/geo/vec.h"
+#include "../base/uni/common.h"
 
 namespace app {
+using namespace uni;
 
  // TODO: Add more fit modes
 enum AutoZoomMode : uint8 {

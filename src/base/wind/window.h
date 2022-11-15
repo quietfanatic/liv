@@ -6,6 +6,7 @@
 struct SDL_Window;
 
 namespace wind {
+using namespace uni;
 
  // Attributes to give to SDL_GL_SetAttribute before creating the window
 struct GLAttributes {

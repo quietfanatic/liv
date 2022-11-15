@@ -7,6 +7,8 @@
 #include "../base/uni/common.h"
 #include "app.h"
 
+using namespace uni;
+
 int main (int argc, char** argv) {
     AS(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = AS(SDL_GetBasePath());

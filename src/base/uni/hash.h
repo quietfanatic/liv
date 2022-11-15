@@ -4,6 +4,8 @@
 
 #include "common.h"
 
+namespace uni {
+
 template <class T>
 constexpr uint64 x31_hash (T* s) {
     uint64 h = 0;
@@ -22,3 +24,5 @@ constexpr uint64 x31_hash (T s) {
     }
     return h;
 }
+
+} // namespace uni

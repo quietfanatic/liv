@@ -3,9 +3,11 @@
 #pragma once
 
 #include "../ayu/describe.h"
+#include "../uni/common.h"
 #include "vec.h"
 
 namespace geo {
+using namespace uni;
 
 template <class T>
 struct GRect;
@@ -279,6 +281,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GRect<T>),
     hcb::name([]{
         using namespace std::literals;
+        using namespace uni;
         if CE (std::is_same_v<T, float>) return "geo::Rect"sv;
         else if CE (std::is_same_v<T, double>) return "geo::DRect"sv;
         else if CE (std::is_same_v<T, int32>) return "geo::IRect"sv;

@@ -5,6 +5,7 @@
 
 #include "../glow/gl.h"
 #include "../ayu/describe.h"
+#include "../uni/macros.h"
 
 namespace wind {
 

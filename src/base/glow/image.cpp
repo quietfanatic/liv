@@ -114,34 +114,34 @@ AYU_DESCRIBE(glow::ImageTexture,
 )
 
 AYU_DESCRIBE(glow::X::ImageLoadFailed,
-    delegate(base<X::GlowError>()),
+    delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::ImageLoadFailed::filename),
-        elem(&X::ImageLoadFailed::details)
+        elem(&glow::X::ImageLoadFailed::filename),
+        elem(&glow::X::ImageLoadFailed::details)
     )
 )
 
 AYU_DESCRIBE(glow::X::ImageSaveFailed,
-    delegate(base<X::GlowError>()),
+    delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::ImageSaveFailed::filename),
-        elem(&X::ImageSaveFailed::details)
+        elem(&glow::X::ImageSaveFailed::filename),
+        elem(&glow::X::ImageSaveFailed::details)
     )
 )
 AYU_DESCRIBE(glow::X::SubImageBoundsNotProper,
-    delegate(base<X::GlowError>()),
-    elems( elem(&X::SubImageBoundsNotProper::bounds) )
+    delegate(base<glow::X::GlowError>()),
+    elems( elem(&glow::X::SubImageBoundsNotProper::bounds) )
 )
 AYU_DESCRIBE(glow::X::SubImageOutOfBounds,
-    delegate(base<X::GlowError>()),
+    delegate(base<glow::X::GlowError>()),
     elems(
-        elem(&X::SubImageOutOfBounds::image),
-        elem(&X::SubImageOutOfBounds::size),
-        elem(&X::SubImageOutOfBounds::bounds)
+        elem(&glow::X::SubImageOutOfBounds::image),
+        elem(&glow::X::SubImageOutOfBounds::size),
+        elem(&glow::X::SubImageOutOfBounds::bounds)
     )
 )
 AYU_DESCRIBE(glow::X::ImageTextureIncompatibleTarget,
-    delegate(base<X::GlowError>()),
-    elems( elem(&X::ImageTextureIncompatibleTarget::target) )
+    delegate(base<glow::X::GlowError>()),
+    elems( elem(&glow::X::ImageTextureIncompatibleTarget::target) )
 )
 

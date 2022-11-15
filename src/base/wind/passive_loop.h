@@ -6,6 +6,7 @@
 union SDL_Event;
 
 namespace wind {
+using namespace uni;
 
  // A passive event loop using SDL
 struct PassiveLoop {

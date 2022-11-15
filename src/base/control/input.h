@@ -9,6 +9,7 @@
 union SDL_Event;
 
 namespace control {
+using namespace uni;
 
 enum InputType : uint8 {
     NONE,
