@@ -9,9 +9,9 @@
 #include <cxxabi.h>
 #endif
 
-#include "../internal/describe-internal.h"
+#include "../internal/descriptors-internal.h"
 #include "../describe.h"
-#include "describe-private.h"
+#include "descriptors-private.h"
 
 namespace ayu {
 

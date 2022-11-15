@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "internal/accessors-internal.h"
-#include "internal/describe-internal.h"
+#include "internal/descriptors-internal.h"
 #include "dynamic.h"
 #include "location.h"
 

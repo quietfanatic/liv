@@ -7,7 +7,7 @@
 #include <typeinfo>
 
 #include "internal/accessors-internal.h"
-#include "internal/describe-internal.h"
+#include "internal/descriptors-internal.h"
 #include "common.h"
 #include "reference.h"
 #include "tree.h"
@@ -19,235 +19,114 @@ struct _AYU_DescribeBase;
 
 template <class T>
 struct _AYU_DescribeBase<T, false> {
-    template <class... Dcrs>
-    static constexpr in::FullDescription<T, Dcrs...> _ayu_describe (
-        ayu::Str name, const Dcrs&... dcrs
-    ) {
-        return in::make_description<T, Dcrs...>(name, dcrs...);
-    }
-
-    static constexpr in::NameDcr<T> name (Str(* f )()) {
-        return in::NameDcr<T>{{}, f};
-    }
-
-    static constexpr in::ToTreeDcr<T> to_tree (Tree(* f )(const T&)) {
-        return in::ToTreeDcr<T>{{}, f};
-    }
-    static constexpr in::FromTreeDcr<T> from_tree (void(* f )(T&, const Tree&)) {
-        return in::FromTreeDcr<T>{{}, f};
-    }
-    static constexpr in::SwizzleDcr<T> swizzle (void(* f )(T&, const Tree&)) {
-        return in::SwizzleDcr<T>{{}, f};
-    }
-    static constexpr in::InitDcr<T> init (void(* f )(T&)) {
-        return in::InitDcr<T>{{}, f};
-    }
+    static constexpr auto name (Str(* f )());
+    static constexpr auto to_tree (Tree(* f )(const T&));
+    static constexpr auto from_tree (void(* f )(T&, const Tree&));
+    static constexpr auto swizzle (void(* f )(T&, const Tree&));
+    static constexpr auto init (void(* f )(T&));
 
     template <class... Values>
-    static constexpr in::ValuesDcrWith<T, Values...> values (const Values&... vs) {
-        return in::ValuesDcrWith<T, Values...>(vs...);
-    }
+    static constexpr auto values (const Values&... vs);
     template <class... Values>
-    static constexpr in::ValuesDcrWith<T, Values...> values_custom (
+    static constexpr auto values_custom (
         bool(* compare )(const T&, const T&),
         void(* assign )(T&, const T&),
         const Values&... vs
-    ) {
-        return in::ValuesDcrWith<T, Values...>(compare, assign, vs...);
-    }
+    );
     template <class N>
-    static constexpr auto value (const N& n, const T& v) {
-        if constexpr (std::is_null_pointer_v<N>) {
-            return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, v);
-        }
-        else if constexpr (std::is_same_v<N, bool>) {
-            return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, v);
-        }
-        else if constexpr (std::is_integral_v<N>) {
-            return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, v);
-        }
-        else if constexpr (std::is_floating_point_v<N>) {
-            return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
-        }
-        else {
-             // Assume something convertible to Str (std::string_view)
-            return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, v);
-        }
-    }
+    static constexpr auto value (const N& n, const T& v);
     template <class N>
-    static constexpr auto value_pointer (const N& n, const T* v) {
-        if constexpr (std::is_null_pointer_v<N>) {
-            return in::ValueDcrWith<T, Null, true>(in::VFNULL, n, v);
-        }
-        else if constexpr (std::is_same_v<N, bool>) {
-            return in::ValueDcrWith<T, bool, true>(in::VFBOOL, n, v);
-        }
-        else if constexpr (std::is_integral_v<N>) {
-            return in::ValueDcrWith<T, int64, true>(in::VFINT64, n, v);
-        }
-        else if constexpr (std::is_floating_point_v<N>) {
-            return in::ValueDcrWith<T, double, true>(in::VFDOUBLE, n, v);
-        }
-        else {
-             // Assume something convertible to Str (std::string_view)
-            return in::ValueDcrWith<T, Str, true>(in::VFSTR, n, v);
-        }
-    }
+    static constexpr auto value_pointer (const N& n, const T* v);
 
     template <class... Attrs>
-    static constexpr in::AttrsDcrWith<T, Attrs...> attrs (const Attrs&... as) {
-        return in::AttrsDcrWith<T, Attrs...>(as...);
-    }
+    static constexpr auto attrs (const Attrs&... as);
     template <class Acr>
     static constexpr auto attr (
         Str key,
         const Acr& acr,
         in::AttrFlags flags = in::AttrFlags(0)
-    ) {
-         // Implicit member().
-        if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return attr(key, _AYU_DescribeBase<T, true>::member(acr), flags);
-        }
-        else {
-            static_assert(
-                std::is_same_v<typename Acr::AccessorFromType, T>,
-                "Second argument to attr() is not an accessor of this type"
-            );
-            auto r = in::AttrDcrWith<T, Acr>(key, acr);
-            r.acr.attr_flags = flags;
-            return r;
-        }
-    }
+    );
     template <class... Elems>
-    static constexpr in::ElemsDcrWith<T, Elems...> elems (const Elems&... es) {
-        return in::ElemsDcrWith<T, Elems...>(es...);
-    }
+    static constexpr auto elems (const Elems&... es);
     template <class Acr>
     static constexpr auto elem (
         const Acr& acr,
         in::AttrFlags flags = in::AttrFlags(0)
-    ) {
-        if constexpr (std::is_member_object_pointer_v<Acr>) {
-            return elem(_AYU_DescribeBase<T, true>::member(acr), flags);
-        }
-        else {
-            static_assert(
-                std::is_same_v<typename Acr::AccessorFromType, T>,
-                "First argument to elem() is not an accessor of this type"
-            );
-            auto r = in::ElemDcrWith<T, Acr>(acr);
-            r.acr.attr_flags = flags;
-            return r;
-        }
-    }
+    );
     template <class Acr>
-    static constexpr in::KeysDcrWith<T, Acr> keys (const Acr& acr) {
-        return in::KeysDcrWith<T, Acr>(acr);
-    }
-    static constexpr in::AttrFuncDcr<T> attr_func (Reference(* f )(T&, Str)) {
-        return in::AttrFuncDcr<T>{{}, f};
-    }
+    static constexpr auto keys (const Acr& acr);
+    static constexpr auto attr_func (Reference(* f )(T&, Str));
     template <class Acr>
-    static constexpr in::LengthDcrWith<T, Acr> length (const Acr& acr) {
-        return in::LengthDcrWith<T, Acr>(acr);
-    }
-    static constexpr in::ElemFuncDcr<T> elem_func (Reference(* f )(T&, usize)) {
-        return in::ElemFuncDcr<T>{{}, f};
-    }
+    static constexpr auto length (const Acr& acr);
+    static constexpr auto elem_func (Reference(* f )(T&, usize));
     template <class Acr>
-    static constexpr in::DelegateDcrWith<T, Acr> delegate (const Acr& acr) {
-        return in::DelegateDcrWith<T, Acr>(acr);
-    }
+    static constexpr auto delegate (const Acr& acr);
 
     template <class B>
-    static constexpr in::BaseAcr2<T, B> base (
+    static constexpr auto base (
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::BaseAcr2<T, B>(flags);
-    }
+    );
     template <class M>
-    static constexpr in::RefFuncAcr2<T, M> ref_func (
+    static constexpr auto ref_func (
         M&(* f )(T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::RefFuncAcr2<T, M>(f, flags);
-    }
+    );
     template <class M>
-    static constexpr in::ConstRefFuncAcr2<T, M> const_ref_func (
+    static constexpr auto const_ref_func (
         const M&(* f )(const T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ConstRefFuncAcr2<T, M>(f, flags);
-    }
+    );
     template <class M>
-    static constexpr in::RefFuncsAcr2<T, M> const_ref_funcs (
+    static constexpr auto const_ref_funcs (
         const M&(* g )(const T&),
         void(* s )(T&, const M&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::RefFuncsAcr2<T, M>(g, s, flags);
-    }
+    );
     template <class M>
-    static constexpr in::ValueFuncAcr2<T, M> value_func (
+    static constexpr auto value_func (
         M(* f )(const T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ValueFuncAcr2<T, M>(f, flags);
-    }
+    );
     template <class M>
-    static constexpr in::ValueFuncsAcr2<T, M> value_funcs (
+    static constexpr auto value_funcs (
         M(* g )(const T&),
         void(* s )(T&, M),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ValueFuncsAcr2<T, M>(g, s, flags);
-    }
+    );
     template <class M>
-    static constexpr in::MixedFuncsAcr2<T, M> mixed_funcs (
+    static constexpr auto mixed_funcs (
         M(* g )(const T&),
         void(* s )(T&, const M&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::MixedFuncsAcr2<T, M>(g, s, flags);
-    }
+    );
 
     template <class M>
-    static constexpr in::AssignableAcr2<T, M> assignable (
+    static constexpr auto assignable (
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::AssignableAcr2<T, M>(flags);
-    }
+    );
 
      // This one is not constexpr, so it is only valid in attr_func, elem_func,
      // or reference_func.
     template <class M>
-    static in::VariableAcr2<T, M> variable (
+    static auto variable (
         M&& v,
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::VariableAcr2<T, M>(std::move(v), flags);
-    }
+    );
 
     template <class M>
-    static constexpr in::ConstantAcr2<T, M> constant (
+    static constexpr auto constant (
         const M& v,
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ConstantAcr2<T, M>(v, flags);
-    }
+    );
     template <class M>
-    static constexpr in::ConstantPointerAcr2<T, M> constant_pointer (
+    static constexpr auto constant_pointer (
         const M* p,
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ConstantPointerAcr2<T, M>(p, flags);
-    }
-    static constexpr in::ReferenceFuncAcr2<T> reference_func (
+    );
+    static constexpr auto reference_func (
         Reference(* f )(T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::ReferenceFuncAcr2<T>(f, flags);
-    }
+    );
 
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
      // NYI for array-like types
@@ -255,103 +134,28 @@ struct _AYU_DescribeBase<T, false> {
 
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
     static constexpr in::AccessorFlags anchored_to_parent = in::ACR_ANCHORED_TO_PARENT;
+     // Internal
+    template <class... Dcrs>
+    static constexpr auto _ayu_describe (
+        ayu::Str name, const Dcrs&... dcrs
+    );
 };
 
  // This contains functions that aren't valid for scalar types like int
 template <class T>
 struct _AYU_DescribeBase<T, true> : _AYU_DescribeBase<T, false> {
     template <class T2, class M>
-    static constexpr in::MemberAcr2<T, M> member (
+    static constexpr auto member (
         M T2::* mp,
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::MemberAcr2<T, M>(mp, flags);
-    }
-    template <class M>
-    static constexpr in::MemberAcr2<T, M> const_member (
-        const M T::* mp,
+    );
+    template <class T2, class M>
+    static constexpr auto const_member (
+        const M T2::* mp,
         in::AccessorFlags flags = in::AccessorFlags(0)
-    ) {
-        return in::MemberAcr2<T, M>(const_cast<M T::*>(mp), flags | in::ACR_READONLY);
-    }
+    );
 };
 
 } // namespace ayu
 
-#ifdef AYU_DISCARD_ALL_DESCRIPTIONS
-#define AYU_DESCRIBE(...)
-#define AYU_DESCRIBE_0(...)
-#define AYU_DESCRIBE_TEMPLATE(...)
-#define AYU_DESCRIBE_INSTANTIATE(...)
-#else
-
- // Stringify name as early as possible to avoid macro expansion
-#define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
-#define AYU_DESCRIBE_BEGIN_NAME(T, name) \
-template <> \
-struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using desc = ayu::_AYU_DescribeBase<T>; \
-    static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(name,
-
-#define AYU_DESCRIBE_END(T) \
-    ); \
-    static const ayu::in::Description* const _ayu_description; \
-}; \
-const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
-    ayu::in::register_description( \
-        _ayu_full_description.template get<ayu::in::Description>(0) \
-    );
-
-#define AYU_DESCRIBE(T, ...) AYU_DESCRIBE_NAME(T, #T, __VA_ARGS__)
-#define AYU_DESCRIBE_NAME(T, name, ...) \
-AYU_DESCRIBE_BEGIN_NAME(T, name) \
-    __VA_ARGS__ \
-AYU_DESCRIBE_END(T)
-
- // The only way to make an empty description work
- // TODO: use __VA_OPT__ instead
-#define AYU_DESCRIBE_0(T) \
-template <> \
-struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using desc = ayu::_AYU_DescribeBase<T>; \
-    static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(#T); \
-    static const ayu::in::Description* const _ayu_description; \
-}; \
-const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
-    ayu::in::register_description( \
-        _ayu_full_description.template get<ayu::in::Description>(0) \
-    );
-
-#define AYU_DESCRIBE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
-#define AYU_DESCRIBE_TEMPLATE_TYPE(...) __VA_ARGS__
-
-#define AYU_DESCRIBE_TEMPLATE_BEGIN(params, T) \
-template params \
-struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using desc = ayu::_AYU_DescribeBase<T>; \
-    static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = desc::_ayu_describe(ayu::Str(),
-
-#define AYU_DESCRIBE_TEMPLATE_END(params, T) \
-    ); \
-    static const ayu::in::Description* const _ayu_description; \
-}; \
-template params \
-const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
-    ayu::in::register_description( \
-        _ayu_full_description.template get<ayu::in::Description>(0) \
-    );
-
-#define AYU_DESCRIBE_ESCAPE(...) __VA_ARGS__
-
-#define AYU_DESCRIBE_TEMPLATE(params, T, ...) \
-AYU_DESCRIBE_TEMPLATE_BEGIN(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T)) \
-    __VA_ARGS__ \
-AYU_DESCRIBE_TEMPLATE_END(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
-
-#define AYU_DESCRIBE_INSTANTIATE(T) \
-static_assert(ayu_desc::_AYU_Describe<T>::_ayu_defined);
-
-#endif
+#include "internal/describe-base-internal.h"

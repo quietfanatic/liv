@@ -5,7 +5,7 @@
 #include "../reference.h"
 #include "../resource.h"
 #include "tree-private.h"
-#include "describe-private.h"
+#include "descriptors-private.h"
 #include "location-private.h"
 #include "resource-private.h"
 

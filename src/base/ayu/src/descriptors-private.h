@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../internal/describe-internal.h"
+#include "../internal/descriptors-internal.h"
 
 #include "tree-private.h"
 
