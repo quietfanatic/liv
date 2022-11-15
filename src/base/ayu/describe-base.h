@@ -285,8 +285,6 @@ struct _AYU_DescribeBase<T, true> : _AYU_DescribeBase<T, false> {
 #define AYU_DESCRIBE_INSTANTIATE(...)
 #else
 
-// TODO: Put _ before these names so they don't accidentally shadow other things
-
  // Stringify name as early as possible to avoid macro expansion
 #define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
 #define AYU_DESCRIBE_BEGIN_NAME(T, name) \
