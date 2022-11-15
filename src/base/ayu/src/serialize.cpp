@@ -768,6 +768,8 @@ namespace ayu::test {
         int value;
         int value_after_init = 0;
     };
+    enum ScalarElemTest : uint8 {
+    };
 } using namespace ayu::test;
 
 AYU_DESCRIBE(ayu::test::ToTreeTest,
@@ -860,6 +862,26 @@ AYU_DESCRIBE(ayu::test::InitTest,
     init([](InitTest& v){
         v.value_after_init = v.value + 1;
     })
+)
+AYU_DESCRIBE(ayu::test::ScalarElemTest,
+    elems(
+        elem(value_funcs<uint8>(
+            [](const ScalarElemTest& v) -> uint8 {
+                return uint8(v) >> 4;
+            },
+            [](ScalarElemTest& v, uint8 m){
+                v = ScalarElemTest((uint8(v) & 0xf) | (m << 4));
+            }
+        )),
+        elem(value_funcs<uint8>(
+            [](const ScalarElemTest& v) -> uint8 {
+                return uint8(v) & 0xf;
+            },
+            [](ScalarElemTest& v, uint8 m){
+                v = ScalarElemTest((uint8(v) & 0xf0) | (m & 0xf));
+            }
+        ))
+    )
 )
 
 static tap::TestSet tests ("base/ayu/serialize", []{
@@ -1044,6 +1066,13 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_from_string(&initt, "6");
     });
     is(initt.value_after_init, 7, "Basic init works");
+
+    ScalarElemTest set = ScalarElemTest(0xab);
+    is(item_to_tree(&set), tree_from_string("[0xa 0xb]"), "Can use elems() on scalar type (to_tree)");
+    doesnt_throw([&]{
+        item_from_string(&set, "[0xc 0xd]");
+    });
+    is(set, ScalarElemTest(0xcd), "Can use elems() on scalar type (from_tree)");
 
     done_testing();
 });

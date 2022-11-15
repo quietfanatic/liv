@@ -14,11 +14,8 @@
 
 namespace ayu {
 
-template <class T, bool has_members = std::is_class_v<T> || std::is_union_v<T>>
-struct _AYU_DescribeBase;
-
 template <class T>
-struct _AYU_DescribeBase<T, false> {
+struct _AYU_DescribeBase {
     static constexpr auto name (Str(* f )());
     static constexpr auto to_tree (Tree(* f )(const T&));
     static constexpr auto from_tree (void(* f )(T&, const Tree&));
@@ -61,6 +58,17 @@ struct _AYU_DescribeBase<T, false> {
     static constexpr auto elem_func (Reference(* f )(T&, usize));
     template <class Acr>
     static constexpr auto delegate (const Acr& acr);
+
+    template <class T2, class M>
+    static constexpr auto member (
+        M T2::* mp,
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    );
+    template <class T2, class M>
+    static constexpr auto const_member (
+        const M T2::* mp,
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    );
 
     template <class B>
     static constexpr auto base (
@@ -138,21 +146,6 @@ struct _AYU_DescribeBase<T, false> {
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
         ayu::Str name, const Dcrs&... dcrs
-    );
-};
-
- // This contains functions that aren't valid for scalar types like int
-template <class T>
-struct _AYU_DescribeBase<T, true> : _AYU_DescribeBase<T, false> {
-    template <class T2, class M>
-    static constexpr auto member (
-        M T2::* mp,
-        in::AccessorFlags flags = in::AccessorFlags(0)
-    );
-    template <class T2, class M>
-    static constexpr auto const_member (
-        const M T2::* mp,
-        in::AccessorFlags flags = in::AccessorFlags(0)
     );
 };
 

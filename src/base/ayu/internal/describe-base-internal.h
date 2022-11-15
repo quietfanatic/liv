@@ -4,35 +4,35 @@
 namespace ayu {
 
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::name (Str(* f )()) {
+constexpr auto _AYU_DescribeBase<T>::name (Str(* f )()) {
     return in::NameDcr<T>{{}, f};
 }
 
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::to_tree (Tree(* f )(const T&)) {
+constexpr auto _AYU_DescribeBase<T>::to_tree (Tree(* f )(const T&)) {
     return in::ToTreeDcr<T>{{}, f};
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::from_tree (void(* f )(T&, const Tree&)) {
+constexpr auto _AYU_DescribeBase<T>::from_tree (void(* f )(T&, const Tree&)) {
     return in::FromTreeDcr<T>{{}, f};
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::swizzle (void(* f )(T&, const Tree&)) {
+constexpr auto _AYU_DescribeBase<T>::swizzle (void(* f )(T&, const Tree&)) {
     return in::SwizzleDcr<T>{{}, f};
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::init (void(* f )(T&)) {
+constexpr auto _AYU_DescribeBase<T>::init (void(* f )(T&)) {
     return in::InitDcr<T>{{}, f};
 }
 
 template <class T>
 template <class... Values>
-constexpr auto _AYU_DescribeBase<T, false>::values (const Values&... vs) {
+constexpr auto _AYU_DescribeBase<T>::values (const Values&... vs) {
     return in::ValuesDcrWith<T, Values...>(vs...);
 }
 template <class T>
 template <class... Values>
-constexpr auto _AYU_DescribeBase<T, false>::values_custom (
+constexpr auto _AYU_DescribeBase<T>::values_custom (
     bool(* compare )(const T&, const T&),
     void(* assign )(T&, const T&),
     const Values&... vs
@@ -41,7 +41,7 @@ constexpr auto _AYU_DescribeBase<T, false>::values_custom (
 }
 template <class T>
 template <class N>
-constexpr auto _AYU_DescribeBase<T, false>::value (const N& n, const T& v) {
+constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
     if constexpr (std::is_null_pointer_v<N>) {
         return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, v);
     }
@@ -61,7 +61,7 @@ constexpr auto _AYU_DescribeBase<T, false>::value (const N& n, const T& v) {
 }
 template <class T>
 template <class N>
-constexpr auto _AYU_DescribeBase<T, false>::value_pointer (const N& n, const T* v) {
+constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* v) {
     if constexpr (std::is_null_pointer_v<N>) {
         return in::ValueDcrWith<T, Null, true>(in::VFNULL, n, v);
     }
@@ -82,19 +82,19 @@ constexpr auto _AYU_DescribeBase<T, false>::value_pointer (const N& n, const T* 
 
 template <class T>
 template <class... Attrs>
-constexpr auto _AYU_DescribeBase<T, false>::attrs (const Attrs&... as) {
+constexpr auto _AYU_DescribeBase<T>::attrs (const Attrs&... as) {
     return in::AttrsDcrWith<T, Attrs...>(as...);
 }
 template <class T>
 template <class Acr>
-constexpr auto _AYU_DescribeBase<T, false>::attr (
+constexpr auto _AYU_DescribeBase<T>::attr (
     Str key,
     const Acr& acr,
     in::AttrFlags flags
 ) {
      // Implicit member().
     if constexpr (std::is_member_object_pointer_v<Acr>) {
-        return attr(key, _AYU_DescribeBase<T, true>::member(acr), flags);
+        return attr(key, _AYU_DescribeBase<T>::member(acr), flags);
     }
     else {
         static_assert(
@@ -108,17 +108,17 @@ constexpr auto _AYU_DescribeBase<T, false>::attr (
 }
 template <class T>
 template <class... Elems>
-constexpr auto _AYU_DescribeBase<T, false>::elems (const Elems&... es) {
+constexpr auto _AYU_DescribeBase<T>::elems (const Elems&... es) {
     return in::ElemsDcrWith<T, Elems...>(es...);
 }
 template <class T>
 template <class Acr>
-constexpr auto _AYU_DescribeBase<T, false>::elem (
+constexpr auto _AYU_DescribeBase<T>::elem (
     const Acr& acr,
     in::AttrFlags flags
 ) {
     if constexpr (std::is_member_object_pointer_v<Acr>) {
-        return elem(_AYU_DescribeBase<T, true>::member(acr), flags);
+        return elem(_AYU_DescribeBase<T>::member(acr), flags);
     }
     else {
         static_assert(
@@ -132,38 +132,54 @@ constexpr auto _AYU_DescribeBase<T, false>::elem (
 }
 template <class T>
 template <class Acr>
-constexpr auto _AYU_DescribeBase<T, false>::keys (const Acr& acr) {
+constexpr auto _AYU_DescribeBase<T>::keys (const Acr& acr) {
     return in::KeysDcrWith<T, Acr>(acr);
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::attr_func (Reference(* f )(T&, Str)) {
+constexpr auto _AYU_DescribeBase<T>::attr_func (Reference(* f )(T&, Str)) {
     return in::AttrFuncDcr<T>{{}, f};
 }
 template <class T>
 template <class Acr>
-constexpr auto _AYU_DescribeBase<T, false>::length (const Acr& acr) {
+constexpr auto _AYU_DescribeBase<T>::length (const Acr& acr) {
     return in::LengthDcrWith<T, Acr>(acr);
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::elem_func (Reference(* f )(T&, usize)) {
+constexpr auto _AYU_DescribeBase<T>::elem_func (Reference(* f )(T&, usize)) {
     return in::ElemFuncDcr<T>{{}, f};
 }
 template <class T>
 template <class Acr>
-constexpr auto _AYU_DescribeBase<T, false>::delegate (const Acr& acr) {
+constexpr auto _AYU_DescribeBase<T>::delegate (const Acr& acr) {
     return in::DelegateDcrWith<T, Acr>(acr);
 }
 
 template <class T>
+template <class T2, class M>
+constexpr auto _AYU_DescribeBase<T>::member (
+    M T2::* mp,
+    in::AccessorFlags flags
+) {
+    return in::MemberAcr2<T, M>(mp, flags);
+}
+template <class T>
+template <class T2, class M>
+constexpr auto _AYU_DescribeBase<T>::const_member (
+    const M T2::* mp,
+    in::AccessorFlags flags
+) {
+    return in::MemberAcr2<T, M>(const_cast<M T::*>(mp), flags | in::ACR_READONLY);
+}
+template <class T>
 template <class B>
-constexpr auto _AYU_DescribeBase<T, false>::base (
+constexpr auto _AYU_DescribeBase<T>::base (
     in::AccessorFlags flags
 ) {
     return in::BaseAcr2<T, B>(flags);
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::ref_func (
+constexpr auto _AYU_DescribeBase<T>::ref_func (
     M&(* f )(T&),
     in::AccessorFlags flags
 ) {
@@ -171,7 +187,7 @@ constexpr auto _AYU_DescribeBase<T, false>::ref_func (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::const_ref_func (
+constexpr auto _AYU_DescribeBase<T>::const_ref_func (
     const M&(* f )(const T&),
     in::AccessorFlags flags
 ) {
@@ -179,7 +195,7 @@ constexpr auto _AYU_DescribeBase<T, false>::const_ref_func (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::const_ref_funcs (
+constexpr auto _AYU_DescribeBase<T>::const_ref_funcs (
     const M&(* g )(const T&),
     void(* s )(T&, const M&),
     in::AccessorFlags flags
@@ -188,7 +204,7 @@ constexpr auto _AYU_DescribeBase<T, false>::const_ref_funcs (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::value_func (
+constexpr auto _AYU_DescribeBase<T>::value_func (
     M(* f )(const T&),
     in::AccessorFlags flags
 ) {
@@ -196,7 +212,7 @@ constexpr auto _AYU_DescribeBase<T, false>::value_func (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::value_funcs (
+constexpr auto _AYU_DescribeBase<T>::value_funcs (
     M(* g )(const T&),
     void(* s )(T&, M),
     in::AccessorFlags flags
@@ -205,7 +221,7 @@ constexpr auto _AYU_DescribeBase<T, false>::value_funcs (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::mixed_funcs (
+constexpr auto _AYU_DescribeBase<T>::mixed_funcs (
     M(* g )(const T&),
     void(* s )(T&, const M&),
     in::AccessorFlags flags
@@ -215,7 +231,7 @@ constexpr auto _AYU_DescribeBase<T, false>::mixed_funcs (
 
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::assignable (
+constexpr auto _AYU_DescribeBase<T>::assignable (
     in::AccessorFlags flags
 ) {
     return in::AssignableAcr2<T, M>(flags);
@@ -225,7 +241,7 @@ constexpr auto _AYU_DescribeBase<T, false>::assignable (
  // or reference_func.
 template <class T>
 template <class M>
-auto _AYU_DescribeBase<T, false>::variable (
+auto _AYU_DescribeBase<T>::variable (
     M&& v,
     in::AccessorFlags flags
 ) {
@@ -234,7 +250,7 @@ auto _AYU_DescribeBase<T, false>::variable (
 
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::constant (
+constexpr auto _AYU_DescribeBase<T>::constant (
     const M& v,
     in::AccessorFlags flags
 ) {
@@ -242,14 +258,14 @@ constexpr auto _AYU_DescribeBase<T, false>::constant (
 }
 template <class T>
 template <class M>
-constexpr auto _AYU_DescribeBase<T, false>::constant_pointer (
+constexpr auto _AYU_DescribeBase<T>::constant_pointer (
     const M* p,
     in::AccessorFlags flags
 ) {
     return in::ConstantPointerAcr2<T, M>(p, flags);
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T, false>::reference_func (
+constexpr auto _AYU_DescribeBase<T>::reference_func (
     Reference(* f )(T&),
     in::AccessorFlags flags
 ) {
@@ -258,27 +274,10 @@ constexpr auto _AYU_DescribeBase<T, false>::reference_func (
 
 template <class T>
 template <class... Dcrs>
-constexpr auto _AYU_DescribeBase<T, false>::_ayu_describe (
+constexpr auto _AYU_DescribeBase<T>::_ayu_describe (
     ayu::Str name, const Dcrs&... dcrs
 ) {
     return in::make_description<T, Dcrs...>(name, dcrs...);
-}
-
-template <class T>
-template <class T2, class M>
-constexpr auto _AYU_DescribeBase<T, true>::member (
-    M T2::* mp,
-    in::AccessorFlags flags
-) {
-    return in::MemberAcr2<T, M>(mp, flags);
-}
-template <class T>
-template <class T2, class M>
-constexpr auto _AYU_DescribeBase<T, true>::const_member (
-    const M T2::* mp,
-    in::AccessorFlags flags
-) {
-    return in::MemberAcr2<T, M>(const_cast<M T::*>(mp), flags | in::ACR_READONLY);
 }
 
 } // namespace ayu
