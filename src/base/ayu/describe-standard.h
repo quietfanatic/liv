@@ -135,7 +135,8 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
- // Special case for const char[n], which is probably a string literal.
+ // Special case for char[n], mainly to allow string literals to be passed to
+ // ayu::dump without surprising behavior.
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),

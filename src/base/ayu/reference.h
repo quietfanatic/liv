@@ -46,6 +46,7 @@ struct Reference {
      // TODO: construct readonly Reference from const Dynamic?
     Reference (Dynamic& d) : Reference(d.data, &d.type.desc->identity_acr) { }
      // For use in attr_func and elem_func.
+     // Todo: Also check std::is_base_of
     template <class From, class Acr,
         std::enable_if_t<
             std::is_same_v<typename Acr::AccessorFromType, From>, bool

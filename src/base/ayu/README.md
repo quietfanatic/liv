@@ -40,7 +40,7 @@ See ayu-data-language.md for more details.
 
 #### Serialization library
 
-Documentation pending, but see describe.h
+Documentation pending, but see describe-base.h
 
 #### Resource management
 
