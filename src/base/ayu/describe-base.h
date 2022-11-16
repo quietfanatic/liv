@@ -83,16 +83,15 @@ struct _AYU_DescribeBase {
      // for most types.
      //
      // For compound types (types with attrs() or elems()), this will be called
-     // first on the outer item, and then on all the inner items.
+     // first on all the child items in order, then on the parent item.
     static constexpr auto swizzle (void(* f )(T&, const Tree&));
      // If your type has an extra step needed to complete its initialization
      // after from_tree and swizzle, use this function.  As an example, you can
      // have a window type which sets all the parameters using attrs(), and then
      // calls a library function to open the window in init().
      //
-     // For compound types, this will be called first on the outer item, and
-     // then on all the inner items.  TODO: This should probably be the other
-     // way around.
+     // For compound types, this will be called first on all the child items in
+     // order, then on the parent item.
     static constexpr auto init (void(* f )(T&));
 
      // Make this type behave like another type.  `accessor` must be the result

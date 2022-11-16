@@ -129,21 +129,14 @@ static void do_inits () {
 
 static void item_populate (const Reference& item, const Tree& tree) {
     auto desc = DescriptionPrivate::get(item.type());
-     // TODO: Put these last!
-     // TODOTODO: Why?  I forgot.
-     // TODOTODOTODO: I remembered!  It's because for swizzle and init, we
-     // probably want to do the child items before the parent item.
-    if (auto swizzle = desc->swizzle()) {
-        swizzle_ops.emplace_back(swizzle->f, item, tree, current_resource());
-    }
-    if (auto init = desc->init()) {
-        init_ops.emplace_back(init->f, item, current_resource());
-    }
+     // If description has a from_tree, just use that.
     if (auto from_tree = desc->from_tree()) {
-        return item.write([&](Mu& v){
+        item.write([&](Mu& v){
             from_tree->f(v, tree);
         });
+        goto done;
     }
+     // Now the behavior depends on what kind of tree we've been given
     switch (tree.form()) {
         case OBJECT: {
              // This'll be pretty inefficient for copying accessors but w/e
@@ -156,7 +149,7 @@ static void item_populate (const Reference& item, const Tree& tree) {
                 for (auto& p : tree.data->as_known<Object>()) {
                     item_populate(item_attr(item, p.first), p.second);
                 }
-                return;
+                goto done;
             }
             else break;
         }
@@ -167,7 +160,7 @@ static void item_populate (const Reference& item, const Tree& tree) {
                 for (usize i = 0; i < a.size(); i++) {
                     item_populate(item_elem(item, i), a[i]);
                 }
-                return;
+                goto done;
             }
             else break;
         }
@@ -176,13 +169,15 @@ static void item_populate (const Reference& item, const Tree& tree) {
             std::rethrow_exception(tree.data->as_known<std::exception_ptr>());
         }
         default: {
+             // All other tree types support the values descriptor
             if (auto values = desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
                     auto r = values->value(i)->tree_to_value(tree);
                     if (r) {
-                        return item.write([&](Mu& v){
+                        item.write([&](Mu& v){
                             values->assign(v, *r);
                         });
+                        goto done;
                     }
                 }
                 break;
@@ -190,13 +185,16 @@ static void item_populate (const Reference& item, const Tree& tree) {
             else break;
         }
     }
+     // Nothing matched, so use delegate
     if (auto acr = desc->delegate_acr()) {
-        return item_populate(item.chain(acr), tree);
+        item_populate(item.chain(acr), tree);
+        goto done;
     }
-     // Allow swizzle with no from_tree
-    else if (desc->swizzle()) return;
+     // Still nothing?  Allow swizzle with no from_tree.
+    if (desc->swizzle()) goto done;
+     // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong
-    else if (tree.form() == OBJECT && (desc->values() || desc->accepts_array())) {
+    if (tree.form() == OBJECT && (desc->values() || desc->accepts_array())) {
         throw X::InvalidForm(item, tree);
     }
     else if (tree.form() == ARRAY && (desc->values() || desc->accepts_object())) {
@@ -207,6 +205,16 @@ static void item_populate (const Reference& item, const Tree& tree) {
     }
     else if (desc->values()) throw X::NoValueForName(item, tree);
     else throw X::CannotFromTree(item);
+
+    done:
+     // Now register swizzle and init ops.  We're doing it now instead of before
+     // to make sure that children get swizzled and initted before their parent.
+    if (auto swizzle = desc->swizzle()) {
+        swizzle_ops.emplace_back(swizzle->f, item, tree, current_resource());
+    }
+    if (auto init = desc->init()) {
+        init_ops.emplace_back(init->f, item, current_resource());
+    }
 }
 
 void item_from_tree (const Reference& item, const Tree& tree) {
@@ -785,6 +793,10 @@ namespace ayu::test {
         int value;
         int value_after_init = 0;
     };
+    struct NestedInitTest {
+        InitTest it;
+        int it_val = -1;
+    };
     enum ScalarElemTest : uint8 {
     };
 } using namespace ayu::test;
@@ -884,6 +896,12 @@ AYU_DESCRIBE(ayu::test::InitTest,
     delegate(member(&InitTest::value)),
     init([](InitTest& v){
         v.value_after_init = v.value + 1;
+    })
+)
+AYU_DESCRIBE(ayu::test::NestedInitTest,
+    attrs(attr("it", &NestedInitTest::it)),
+    init([](NestedInitTest& v){
+        v.it_val = v.it.value_after_init;
     })
 )
 AYU_DESCRIBE(ayu::test::ScalarElemTest,
@@ -1093,6 +1111,11 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_from_string(&initt, "6");
     });
     is(initt.value_after_init, 7, "Basic init works");
+    NestedInitTest nit {{3}};
+    doesnt_throw([&]{
+        item_from_string(&nit, "{it:55}");
+    });
+    is(nit.it_val, 56, "Children get init() before parent");
 
     ScalarElemTest set = ScalarElemTest(0xab);
     is(item_to_tree(&set), tree_from_string("[0xa 0xb]"), "Can use elems() on scalar type (to_tree)");
