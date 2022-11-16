@@ -27,8 +27,7 @@ struct Dynamic {
      // The empty value will cause null derefs if you do anything with it.
     constexpr Dynamic () : type(), data(null) { }
      // Create from internal data.  Takes ownership.
-     // TODO: rvalue?
-    constexpr Dynamic (Type t, Mu* d) : type(t), data(d) { }
+    Dynamic (Type t, Mu*&& d) : type(t), data(d) { d = null; }
      // Default construction
     explicit Dynamic (Type t) :
         type(t),
