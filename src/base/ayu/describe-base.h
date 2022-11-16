@@ -149,7 +149,9 @@ struct _AYU_DescribeBase {
      // Specify a list of attributes for this item to behave like an object with
      // a fixes set of attributes.  All arguments to this must be calls to
      // attr().  The attribute list may be empty, in which case the item will be
-     // serialized as {}.
+     // serialized as {}.  Attrs will be deserialized in the order they're
+     // specified in the description, not in the order they're provided in the
+     // Tree.
     template <class... Attrs>
     static constexpr auto attrs (const Attrs&... as);
      // Specify a single attribute for an object-like type.  When serializing,
@@ -229,10 +231,17 @@ struct _AYU_DescribeBase {
 
      // Provide a list of elements for this type to behave like a fixed-size
      // array.  All arguments to this must be calls to elem().  The element list
-     // may be empty, in which case this item will be serialized as [].  If you
-     // specify both attrs() and elems(), then the type can be deserialized from
-     // either an object or an array, and will be serialized using whichever of
-     // attrs() and elems() was specified first.
+     // may be empty, in which case this item will be serialized as [].
+     //
+     // Elems are deserialized in order starting at index 0, so it is acceptable
+     // to have the first elem clear the contents of the object when written to,
+     // in anticipation of the other elems being written.  Dynamic does this,
+     // for instance, because its first element is its type, and changing the
+     // type necessitates clearing its contents.
+     //
+     // If you specify both attrs() and elems(), then the type can be
+     // deserialized from either an object or an array, and will be serialized
+     // using whichever of attrs() and elems() was specified first.
     template <class... Elems>
     static constexpr auto elems (const Elems&... es);
      // Provide an individual element accessor.  `accessor` must be one of the
