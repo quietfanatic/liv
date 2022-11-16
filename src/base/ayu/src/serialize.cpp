@@ -742,6 +742,13 @@ namespace ayu::test {
         MemberTest (int a, int b) : a(a), b(b) { }
     };
 
+    struct PrivateMemberTest {
+        PrivateMemberTest (int s) : stuff(s) { }
+      private:
+        int stuff;
+        AYU_FRIEND_DESCRIBE(PrivateMemberTest)
+    };
+
     struct BaseTest : MemberTest {
         int c;
     };
@@ -801,6 +808,12 @@ AYU_DESCRIBE(ayu::test::MemberTest,
         attr("b", &MemberTest::b)  // Implicit member()
     )
 )
+AYU_DESCRIBE(ayu::test::PrivateMemberTest,
+    attrs(
+        attr("stuff", &PrivateMemberTest::stuff)
+    )
+)
+
 AYU_DESCRIBE(ayu::test::BaseTest,
     attrs(
         attr("MemberTest", base<MemberTest>()),
@@ -923,6 +936,10 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     auto mt = MemberTest(3, 4);
     Tree mtt = item_to_tree(&mt);
     is(mtt, tree_from_string("{a:3 b:4}"), "item_to_tree works with attrs descriptor");
+
+    auto pmt = PrivateMemberTest(4);
+    Tree pmtt = item_to_tree(&pmt);
+    is(pmtt, tree_from_string("{stuff:4}"), "AYU_FRIEND_DESCRIBE works");
 
     item_from_string(&mt, "{a:87 b:11}");
     is(mt.a, 87, "item_from_tree works with attrs descriptor (a)");

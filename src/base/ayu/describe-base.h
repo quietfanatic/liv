@@ -338,9 +338,9 @@ struct _AYU_DescribeBase {
      // them through this, you can declare the AYU description as a friend
      // class by saying
      //     class MyClass {
-     //         friend class ayu_desc::_AYU_Describe<MyClass>;
+     //         ...
+     //         AYU_FRIEND_DESCRIBE(MyClass)
      //     };
-     // TODO: Provide a macro for that.
     template <class T2, class M>
     static constexpr auto member (
         M T2::* mp,

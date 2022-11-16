@@ -358,4 +358,7 @@ AYU_DESCRIBE_TEMPLATE_END(AYU_DESCRIBE_ESCAPE(params), AYU_DESCRIBE_ESCAPE(T))
 #define AYU_DESCRIBE_INSTANTIATE(T) \
 static_assert(ayu_desc::_AYU_Describe<T>::_ayu_defined);
 
+#define AYU_FRIEND_DESCRIBE(T) \
+    friend struct ::ayu_desc::_AYU_Describe<T>;
+
 #endif
