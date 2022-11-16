@@ -313,16 +313,15 @@ struct _AYU_DescribeBase {
      //   - readonly: Make this accessor readonly and disable its write
      //   operation.  If an accessor doesn't support the write operation, it is
      //   readonly by default and this flag is ignored.
-     //   - anchored_to_parent: Normally you can only take the address of a
+     //   - anchored_to_grandparent: Normally you can only take the address of a
      //   child item if its parent is also addressable, but if the child item's
-     //   accessor has anchored_to_parent specified, then instead you can take
-     //   its address if its grandparent is addressable (or if its parent also
-     //   has anchored_to_parent, then its grandgrandparent).  If you misuse
-     //   this, you can potentially leave dangling pointers around, leading to
-     //   memory corruption, so be careful.  This is intended to be used when
-     //   the parent type is a reference-like proxy item which is generated
-     //   temporarily, but refers to non-temporary items.  TODO: rename this to
-     //   anchored_to_grandparent.
+     //   accessor has anchored_to_grandparent specified, then instead you can
+     //   take its address if its grandparent is addressable (or if its parent
+     //   also has anchored_to_grandparent, then its grandgrandparent).  If you
+     //   misuse this, you can potentially leave dangling pointers around,
+     //   leading to memory corruption, so be careful.  This is intended to be
+     //   used when the parent type is a reference-like proxy item which is
+     //   generated temporarily, but refers to non-temporary items.
 
      // This accessor gives access to a non-static data member of a class by
      // means of a pointer-to-member.  This accessor will be addressable and
@@ -460,8 +459,8 @@ struct _AYU_DescribeBase {
      // pointer directly to an ayu::Reference instead of using an accessor.
      //
      // This is intended to be used for proxy types along with
-     // anchored_to_parent (but don't specify anchored_to_parent on this
-     // accessor, specify it on accessors to its children).
+     // anchored_to_grandparent (but don't specify anchored_to_grandparent on
+     // this accessor, specify it on accessors to its children).
     template <class M>
     static auto variable (
         M&& v,
@@ -484,7 +483,7 @@ struct _AYU_DescribeBase {
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
     static constexpr in::AttrFlags inherit = in::ATTR_INHERIT;
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
-    static constexpr in::AccessorFlags anchored_to_parent = in::ACR_ANCHORED_TO_PARENT;
+    static constexpr in::AccessorFlags anchored_to_grandparent = in::ACR_ANCHORED_TO_GRANDPARENT;
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
         ayu::Str name, const Dcrs&... dcrs

@@ -27,7 +27,7 @@ enum AccessorFlags {
      // is usable even if the accessor above it is not addressable.  This
      // allows for reference-like objects to be accessed through value_funcs
      // or similar, but have their derived references still be addressable.
-    ACR_ANCHORED_TO_PARENT = 0x2
+    ACR_ANCHORED_TO_GRANDPARENT = 0x2
 };
 constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
     return AccessorFlags(int(a)|int(b));

@@ -45,7 +45,7 @@ struct ChainAcr : Accessor {
     }
     static Mu* _address (const Accessor* acr, Mu& v) {
         auto self = static_cast<const ChainAcr*>(acr);
-        if (self->b->accessor_flags & ACR_ANCHORED_TO_PARENT) {
+        if (self->b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT) {
             Mu* r = null;
             self->a->access(ACR_READ, v, [&](const Mu& av){
                 r = self->b->address(const_cast<Mu&>(av));
@@ -69,9 +69,11 @@ struct ChainAcr : Accessor {
         Accessor(
             &_vt,
              // Readonly if either accessor is readonly
-            ((a->accessor_flags & ACR_READONLY) | (b->accessor_flags & ACR_READONLY))
-             // Anchored to parent if both accessors are anchored to parent.
-          | ((a->accessor_flags & ACR_ANCHORED_TO_PARENT) & (b->accessor_flags & ACR_ANCHORED_TO_PARENT))
+            ((a->accessor_flags & ACR_READONLY)
+           | (b->accessor_flags & ACR_READONLY))
+             // Anchored to grandparent if both are anchored to grandparent.
+          | ((a->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT)
+           & (b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT))
         ), a(a), b(b)
     {
         a->inc(); b->inc();

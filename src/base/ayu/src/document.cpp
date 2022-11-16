@@ -246,7 +246,7 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
                 return Reference(header->type, header->data());
             }
             else return Reference();
-        }, anchored_to_parent))
+        }, anchored_to_grandparent))
     )
 )
 
