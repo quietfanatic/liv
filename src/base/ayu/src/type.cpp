@@ -173,7 +173,6 @@ const Description* register_description (const Description* desc) {
     if (registry().initted) {
         throw X::GenericError("register_description called after init time");
     }
-     // TODO: return existing if existing
     auto [p, e] = registry().by_cpp_type.emplace(*desc->cpp_type, desc);
     return p->second;
 }
@@ -273,13 +272,6 @@ AYU_DESCRIBE(ayu::X::TypeNotFound,
     elems(elem(&X::TypeNotFound::name))
 )
 
-AYU_DESCRIBE(ayu::X::WrongType,
-    delegate(base<X::TypeError>()),
-    elems(
-        elem(&X::WrongType::expected),
-        elem(&X::WrongType::got)
-    )
-)
 AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
     delegate(base<X::TypeError>()),
     elems( elem(&X::CannotDefaultConstruct::type) )

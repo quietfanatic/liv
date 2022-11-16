@@ -4,8 +4,6 @@
 #include "../dynamic.h"
 #include "../resource.h"
 #include "../serialize.h"
- // TODO: Is this header needed?
-#include "tree-private.h"
 
 namespace ayu {
 namespace in {

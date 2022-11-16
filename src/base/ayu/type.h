@@ -173,12 +173,6 @@ namespace X {
         String name;
         TypeNotFound (String&& n) : name(n) { }
     };
-     // TODO: This is unused, get rid of it
-    struct WrongType : TypeError {
-        Type expected;
-        Type got;
-        WrongType (Type e, Type g) : expected(e), got(g) { }
-    };
      // Tried to default construct a type that has no default constructor.
     struct CannotDefaultConstruct : TypeError {
         Type type;

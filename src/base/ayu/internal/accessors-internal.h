@@ -9,7 +9,8 @@
 #include "../common.h"
 #include "../type.h"
 
- // TODO: Find somewhere to put this not in the internal folder?
+ // Theoretically, this should never be thrown (in all circumstances,
+ // X::WriteReadonlyReference should be thrown instead).
 namespace ayu::X {
     struct WriteReadonlyAccessor : LogicError { };
 }
@@ -155,7 +156,6 @@ constexpr Acr constexpr_acr (const Acr& a) {
 
 /// base
 
- // TODO: Detect when From and To have the same address and erase both types.
 template <class From, class To>
 struct BaseAcr2 : Accessor {
     using AccessorFromType = From;
@@ -190,7 +190,6 @@ struct MemberAcr0 : Accessor {
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static Mu* _inverse_address (const Accessor*, Mu&);
-     // TODO: move to .cpp?
     static constexpr AccessorVT _vt = {
         &_type, &_access, &_address, &_inverse_address
     };
