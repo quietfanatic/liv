@@ -28,20 +28,12 @@ AYU_DESCRIBE_SCALAR(int64)
 AYU_DESCRIBE_SCALAR(uint64)
 AYU_DESCRIBE_SCALAR(float)
 AYU_DESCRIBE_SCALAR(double)
-#undef AYU_DESCRIBE_SCALAR
-
- // TODO: AYU_DESCRIBE_SCALAR these
-AYU_DESCRIBE(std::string,
-    to_tree([](const std::string& v){ return Tree(v); }),
-    from_tree([](std::string& v, const Tree& t){ v = std::string(t); })
-)
-AYU_DESCRIBE(std::u16string,
-    to_tree([](const std::u16string& v){ return Tree(v); }),
-    from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
-)
  // Str and const char* are not describable because they're reference types, so
  // their ownership is ambiguous.  Possibly we should relax this restriction,
  // because they could be useful for keys().
+AYU_DESCRIBE_SCALAR(std::string)
+AYU_DESCRIBE_SCALAR(std::u16string)
+#undef AYU_DESCRIBE_SCALAR
 
 AYU_DESCRIBE(iri::IRI,
     delegate(mixed_funcs<String>(
