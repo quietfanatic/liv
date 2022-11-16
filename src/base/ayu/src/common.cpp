@@ -83,9 +83,6 @@ AYU_DESCRIBE(ayu::X::GenericError,
 AYU_DESCRIBE(ayu::X::UnimplementedError,
     delegate(base<ayu::X::GenericError>())
 )
-AYU_DESCRIBE(ayu::X::DebugError,
-    delegate(base<ayu::X::Error>())
-)
 AYU_DESCRIBE(ayu::X::IOError,
     delegate(base<ayu::X::Error>()),
     elems(

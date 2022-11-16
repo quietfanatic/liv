@@ -83,7 +83,7 @@ namespace X {
     };
      // (Debug only) Tried to delete a document item by pointer, but the given
      // pointer doesn't belong to this document.
-    struct DocumentDeleteNotOwned : DebugError { };
+    struct DocumentDeleteNotOwned : DocumentError { };
      // Tried to delete a document item by name, but the given name isn't in
      // this document.
     struct DocumentDeleteMissing : DocumentError {

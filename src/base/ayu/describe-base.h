@@ -51,6 +51,8 @@ namespace ayu {
 template <class T>
 struct _AYU_DescribeBase {
     ///// GENERAL-PURPOSE DESCRIPTORS
+     // TODO: Document which descriptors take priority over which other ones in
+     // which situations.
 
      // Specifies the name of the type, as it will appear in serialized strings.
      // You do not need to provide this for non-template types, since the

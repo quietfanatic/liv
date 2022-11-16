@@ -173,9 +173,6 @@ namespace X {
     struct UnimplementedError : GenericError {
         using GenericError::GenericError;
     };
-     // Errors that only occur in debug builds
-     // TODO: remove this
-    struct DebugError : Error { };
      // General IO-related problem
     struct IOError : Error {
         String filename;

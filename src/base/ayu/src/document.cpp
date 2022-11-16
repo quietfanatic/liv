@@ -266,7 +266,7 @@ AYU_DESCRIBE(ayu::X::DocumentDeleteWrongType,
     )
 )
 AYU_DESCRIBE(ayu::X::DocumentDeleteNotOwned,
-    delegate(base<X::DebugError>())
+    delegate(base<X::DocumentError>())
 )
 AYU_DESCRIBE(ayu::X::DocumentDeleteMissing,
     delegate(base<X::DocumentError>()),
