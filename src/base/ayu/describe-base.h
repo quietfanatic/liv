@@ -1,5 +1,39 @@
  // This is the interface for describing types to ayu.
- // TODO: document AYU_DESCRIBE and AYU_DESCRIBE_TEMPLATE
+ //
+ // A type can be described to ayu by declaring a description with the
+ // AYU_DESCRIBE macro.  Here's an example of its usage.
+ //     AYU_DESCRIBE(myns::MyClass,
+ //         attrs(
+ //             attr("MyBase", base<MyBase>(), inherit),
+ //             attr("data", &MyClass::data, optional),
+ //             attr("size", value_funcs<int32>(
+ //                  [](const MyClass& v){ return v.get_size(); },
+ //                  [](MyClass& v, int32 m){ v.set_size(m); }
+ //             )
+ //         )
+ //     )
+ // AYU_DESCRIBE descriptions must be declared in the global namespace.  For
+ // non-template types, you should declare them in the .cpp file associated with
+ // your class (or a nearby .cpp file).
+ //
+ // The first parameter to AYU_DESCRIBE is the type name as you wish it to
+ // appear in data files.  It's recommended to fully qualify all namespaces even
+ // if you have "using namespace" declarations nearby, because the type name is
+ // stringified and used exactly as it appears.
+ //
+ // All later parameters to AYU_DESCRIBE must be descriptors, which are
+ // documented later in this file under various sections.
+ //
+ // It is possible to declare template ayu descriptions, though it is
+ // necessarily more complicated.  It requires you to manually specify a
+ // function to generate the type name, and the descriptor and accessor
+ // functions must be preceded with desc:: because of C++'s name lookup rules in
+ // templates.  Also, several of the descriptor and accessor functions must have
+ // the "template" keyword added to help out the C++ parser.  See
+ // describe-standard.h for some examples of template descriptions.
+ //
+ // If the list of descriptors passed to AYU_DESCRIBE is empty, you will get a
+ // syntax error.  To work around this, use AYU_DESCRIBE_0.
 
 #pragma once
 

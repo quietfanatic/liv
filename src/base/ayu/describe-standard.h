@@ -1,6 +1,6 @@
 // This header provides template ayu descriptions for a few stl types.  The
 // corresponding .cpp file provides descriptions for non-template types like
-// builtin integers.  If you want to use things like std::vector in ayu
+// native integers.  If you want to use things like std::vector in ayu
 // descriptions, include this file.
 
 #pragma once
@@ -19,8 +19,8 @@
 
  // std::optional serializes to null for nullopt and whatever it contains
  // otherwise.  Yes, that means that this won't serialize properly if the
- // contained object itself serializes to null.  Hopefully this won't be
- // a problem.
+ // contained object itself serializes to null.  Hopefully this won't be a
+ // problem.
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
