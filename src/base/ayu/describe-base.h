@@ -82,8 +82,8 @@ struct _AYU_DescribeBase {
      // after those items have been properly constructed.  This is not needed
      // for most types.
      //
-     // For compound types (types with attrs() or elems()), this will be called
-     // first on all the child items in order, then on the parent item.
+     // For compound types (types with attributes or elements), this will be
+     // called first on all the child items in order, then on the parent item.
     static constexpr auto swizzle (void(* f )(T&, const Tree&));
      // If your type has an extra step needed to complete its initialization
      // after from_tree and swizzle, use this function.  As an example, you can
@@ -122,8 +122,8 @@ struct _AYU_DescribeBase {
      //
      // Using this, you can provide names for specific values of more complex
      // types.  For instance, for a matrix item, you can provide special names
-     // like "id" and "fliph" that refer to specific matrices, and still allow
-     // arbitrary matrices to be specified with lists of numbers.
+     // like "id" and "fliph" that refer to specific matrixes, and still allow
+     // an arbitrary matrix to be specified with a list of numbers.
     template <class... Values>
     static constexpr auto values (const Values&... vs);
      // This is just like values(), but will use the provided compare and assign

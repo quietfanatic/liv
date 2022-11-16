@@ -93,28 +93,6 @@ using Object = std::vector<Pair>;
 
 using iri::IRI;
 
- // I guess this isn't in the standard library because they increase the risk
- // of referencing a temporary.  So just don't do that. :)
-inline String operator + (Str a, Str b) {
-    String r;
-    r.reserve(a.size() + b.size());
-    return (r += a) += b;
-}
-inline String operator + (Str a, char b) {
-    String r;
-    r.reserve(a.size() + 1);
-    return (r += a) += b;
-}
-inline String operator + (char a, Str b) {
-    String r;
-    r.reserve(1 + b.size());
-    return (r += a) += b;
-}
-inline String operator + (String&& a, Str b) {
-     // Optimization
-    return a += b;
-}
-
 ///// CALLBACKS
 
  // A super lightweight callback class with reference semantics (std::function

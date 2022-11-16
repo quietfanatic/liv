@@ -385,7 +385,7 @@ struct Parser {
             case ':':
             case ',':
             case ']':
-            case '}': throw error("Unexpected "sv + *p);
+            case '}': throw error("Unexpected "sv, *p);
             case ANY_RESERVED_SYMBOL:
                 throw error(*p, " is a reserved symbol and can't be used outside of strings."sv);
             default: throw error("Unrecognized character "sv, *p);
