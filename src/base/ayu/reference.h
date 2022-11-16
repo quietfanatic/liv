@@ -1,3 +1,35 @@
+// A Reference is a reference-like class that can point to an item of any type
+// that is known to AYU, that is, any type that has an AYU_DESCRIBE description.
+//
+// A Reference can reference any item that can be accessed through an accessor
+// (see describe-base.h), even if its address cannot be taken.  So for instance,
+// if a class has an abstract property that can only be accessed with methods
+// called "get_size" and "set_size", then a Reference would let you refer to
+// that abstract property as though it's a single item.
+//
+// Just as with C++ native references or pointers, there is no way to check that
+// the lifetime of the Reference does not exceed the lifetime of the referred-to
+// item, so take care not to dereference a Reference after its item goes away.
+//
+// Objects of the Reference class themselves are immutable.  Internally they
+// contain a raw pointer to a parent object and a possibly-refcounted pointer to
+// an accessor, so they are cheap to copy, but not threadsafe.
+//
+// TODO: remove the _as from the following methods.
+//
+// References can be read from with read_as<> which takes a callback or get_as<>
+// which returns the referenced value after copying it with operator=.
+//
+// References can be written with write_as<> which takes a callback or set_as<>
+// which assigns the referenced value with operator=.  write_as<> may or may not
+// clear the item's value before passing a reference to the callback, so if you
+// want to keep the item's original value, use modify_as<>.  Some References are
+// readonly, and trying to write to them will throw X::WriteReadonlyReference.
+//
+// A Reference can be implicitly cast to a raw C++ pointer if the item it points
+// to is addressable (i.e. the internal accessor supports the address
+// operation).  A readonly Reference can only be cast to a const pointer.
+
 #pragma once
 
 #include <cassert>
@@ -10,21 +42,13 @@
 
 namespace ayu {
 
- // Represents a dynamically typed object with reference semantics.
- //
- // Can reference any object that can be accessed through an Accessor, even if
- // its address cannot be taken.  Just as with C++ references or pointers, do
- // not dereference a Reference after the object it refers to goes away.
- //
- // This Reference object itself is immutable once created.
 struct Reference {
     Mu* const host;
     const in::Accessor* const acr;
 
      // The empty value will cause null derefs if you do anything with it.
     constexpr Reference () : host(null), acr(null) { }
-     // Construct from internal data.  Does not take ownership (host is a
-     // reference-like pointer and acr is refcounted).
+     // Construct from internal data.
     Reference (Mu* h, const in::Accessor* a) : host(h), acr(a) {
         if (acr) acr->inc();
     }
