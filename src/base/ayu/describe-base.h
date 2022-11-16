@@ -1,6 +1,6 @@
- // This is the interface for describing types to ayu.
+ // This is the interface for describing types to AYU.
  //
- // A type can be described to ayu by declaring a description with the
+ // A type can be described to AYU by declaring a description with the
  // AYU_DESCRIBE macro.  Here's an example of its usage.
  //     AYU_DESCRIBE(myns::MyClass,
  //         attrs(
@@ -89,7 +89,8 @@ struct _AYU_DescribeBase {
      // calls a library function to open the window in init().
      //
      // For compound types, this will be called first on the outer item, and
-     // then on all the inner items.
+     // then on all the inner items.  TODO: This should probably be the other
+     // way around.
     static constexpr auto init (void(* f )(T&));
 
      // Make this type behave like another type.  `accessor` must be the result
@@ -193,7 +194,8 @@ struct _AYU_DescribeBase {
      // `accessor` is a readonly accessor, then instead its `read` operation
      // will be called, and the list of provided keys must match exactly or an
      // exception will be thrown.  It is acceptable to ignore the provided list
-     // of keys and autovivify attributes given to attr_func() instead.
+     // of keys and instead clear the item and later autovivify attributes given
+     // to attr_func().
     template <class Acr>
     static constexpr auto keys (const Acr& accessor);
      // Provide a way to read or write arbitrary attributes.  The function is

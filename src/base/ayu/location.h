@@ -1,17 +1,21 @@
-// This implements a recursive object that is a symbolic representation of a
-// Reference, explaining how to reach the referend from the root.  I would have
-// just used ayu::Array, but due to the way these are used, a linked list
-// structure will be much more efficient than a packed array structure.
-// TODO: Are we sure about that?  An ayu::Array is just a std::vector of
-// refcounted pointers.  Worth some benchmarking once we get around to it.
-//
-// In ADT syntax, a Location is:
-// data Location = RootLocation Resource
-//               | KeyLocation Location String
-//               | IndexLocation Location usize
+// A Location is an intermediate step between a Reference and an IRI.  A valid
+// Location can be easily converted to and from a valid IRI.  A Location can
+// also be easily converted to a Reference, but converting a Reference to a
+// Location may require scanning a lot of data.  The functions for doing these
+// conversions are in serialize.h.
 //
 // You shouldn't have to use this class directly, but I guess you can if you
 // want to.
+//
+// Internally, a Location is a recursive object that is a symbolic
+// representation of a Reference, explaining how to reach the referend from the
+// root Resource by a chain of item_attr() and item_elem() calls. In ADT syntax,
+//     data Location = RootLocation Resource
+//                   | KeyLocation Location String
+//                   | IndexLocation Location usize
+//
+// TODO: Provide functions to translate References directly to and from IRIs
+// somewhere.
 
 #pragma once
 

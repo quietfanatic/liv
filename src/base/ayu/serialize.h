@@ -15,14 +15,15 @@ namespace ayu {
 ////// MAIN OPERATIONS
  // Convert an item to a tree.
 Tree item_to_tree (const Reference&);
- // Write to an item from a tree.  If an error occurs, will leave the item in an
- // incomplete state.
+ // Write to an item from a tree.  If an exception is thrown, the item may be
+ // left in an incomplete state, so if you're worried about that, construct a
+ // fresh item, call item_from_tree on that, and then move it onto the original
+ // item (this is what ayu::reload() on resources does).
 void item_from_tree (const Reference&, const Tree&);
 
 ///// MAIN OPERATION SHORTCUTS
 String item_to_string (const Reference&, PrintFlags flags = PrintFlags(0));
 void item_to_file (const Reference&, Str filename, PrintFlags flags = PrintFlags(0));
-
 void item_from_string (const Reference&, Str src);
 void item_from_file (const Reference&, Str filename);
 
@@ -113,10 +114,8 @@ namespace ayu::X {
      // Generic serialization error
     struct SerError : LogicError {
         Location location;
-        String mess;
         SerError (const Reference& item);
         SerError (Location&& loc) : location(std::move(loc)) { }
-        SerError (String&& mess) : mess(std::move(mess)) { }
     };
      // Tried to call to_tree on a type that doesn't support to_tree
     struct CannotToTree : SerError {

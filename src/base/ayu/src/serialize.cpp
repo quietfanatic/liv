@@ -131,6 +131,8 @@ static void item_populate (const Reference& item, const Tree& tree) {
     auto desc = DescriptionPrivate::get(item.type());
      // TODO: Put these last!
      // TODOTODO: Why?  I forgot.
+     // TODOTODOTODO: I remembered!  It's because for swizzle and init, we
+     // probably want to do the child items before the parent item.
     if (auto swizzle = desc->swizzle()) {
         swizzle_ops.emplace_back(swizzle->f, item, tree, current_resource());
     }
@@ -234,16 +236,24 @@ void item_from_tree (const Reference& item, const Tree& tree) {
 
 ///// SHORTCUTS
 
-String item_to_string (const Reference& item, PrintFlags flags) {
+String item_to_string (
+    const Reference& item, PrintFlags flags
+) {
     return tree_to_string(item_to_tree(item), flags);
 }
-void item_to_file (const Reference& item, Str filename, PrintFlags flags) {
+void item_to_file (
+    const Reference& item, Str filename, PrintFlags flags
+) {
     return tree_to_file(item_to_tree(item), filename, flags);
 }
-void item_from_string (const Reference& item, Str src) {
+void item_from_string (
+    const Reference& item, Str src
+) {
     return item_from_tree(item, tree_from_string(src));
 }
-void item_from_file (const Reference& item, Str filename) {
+void item_from_file (
+    const Reference& item, Str filename
+) {
     return item_from_tree(item, tree_from_file(filename));
 }
 
