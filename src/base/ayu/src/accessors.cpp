@@ -4,7 +4,7 @@
 
 namespace ayu::in {
 
-Type MemberAcr0::_type (const Accessor* acr, const Mu&) {
+Type MemberAcr0::_type (const Accessor* acr, const Mu*) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -26,7 +26,7 @@ Mu* MemberAcr0::_inverse_address (const Accessor* acr, Mu& to) {
     return reinterpret_cast<Mu*>(to_address - offset);
 }
 
-Type RefFuncAcr0::_type (const Accessor* acr, const Mu&) {
+Type RefFuncAcr0::_type (const Accessor* acr, const Mu*) {
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -41,7 +41,7 @@ Mu* RefFuncAcr0::_address (const Accessor* acr, Mu& from) {
     return &(self->f)(from);
 }
 
-Type ConstRefFuncAcr0::_type (const Accessor* acr, const Mu&) {
+Type ConstRefFuncAcr0::_type (const Accessor* acr, const Mu*) {
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -55,7 +55,7 @@ Mu* ConstRefFuncAcr0::_address (const Accessor* acr, Mu& from) {
     return const_cast<Mu*>(&(self->f)(from));
 }
 
-Type ConstantPointerAcr0::_type (const Accessor* acr, const Mu&) {
+Type ConstantPointerAcr0::_type (const Accessor* acr, const Mu*) {
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -65,20 +65,15 @@ void ConstantPointerAcr0::_access (const Accessor* acr, AccessOp op, Mu&, Callba
     cb(*const_cast<Mu*>(self->pointer));
 }
 
- // Kind of a workaround for an unworkable situation
-static constexpr Null null_ref_value = null;
-
-Type ReferenceFuncAcr1::_type (const Accessor* acr, const Mu& from) {
+Type ReferenceFuncAcr1::_type (const Accessor* acr, const Mu* from) {
+    if (!from) return Type();
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
-    auto ref = self->f(const_cast<Mu&>(from));
-    if (ref.empty()) ref = &null_ref_value;
-    return ref.type();
+    return self->f(const_cast<Mu&>(*from)).type();
 }
 void ReferenceFuncAcr1::_access (const Accessor* acr, AccessOp op, Mu& from, Callback<void(Mu&)> cb) {
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
-    auto ref = self->f(from);
-    if (ref.empty()) ref = &null_ref_value;
-    ref.access(op, cb);
+     // This will null deref if f returns an empty Reference
+    self->f(from).access(op, cb);
 }
 Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);

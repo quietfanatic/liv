@@ -472,8 +472,14 @@ struct _AYU_DescribeBase {
      // whose child type can vary depending on the parent item it's applied to.
      // Whether this accessor is addressable depends on whether the returned
      // Reference is addressable, so make sure not to return an addressable
-     // reference to a temporary and then use that reference past the
+     // Reference to a temporary and then use that Reference past the
      // temporary's lifespan, just like with attr_func and elem_func.
+     //
+     // Unlike attr_func and elem_func, you should not return an empty Reference
+     // from this function, or you may get null pointer derefs down the line.
+     //
+     // If the returned Reference was made with an accessor that has different
+     // flags than this one, which flags are used is Unspecified Behavior.
     static constexpr auto reference_func (
         Reference(* f )(T&),
         in::AccessorFlags flags = in::AccessorFlags(0)

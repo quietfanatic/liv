@@ -11,12 +11,17 @@ namespace in {
 struct ChainAcr : Accessor {
     const Accessor* a;
     const Accessor* b;
-    static Type _type (const Accessor* acr, const Mu& v) {
+    static Type _type (const Accessor* acr, const Mu* v) {
         auto self = static_cast<const ChainAcr*>(acr);
-        Type r;
-        self->a->read(v, [&](const Mu& av){
-            r = self->b->type(av);
-        });
+         // Most accessors ignore the parameter, so we can usually skip the
+         // read operation on a.
+        Type r = self->b->type(null);
+        if (!r) {
+            if (!v) return Type();
+            self->a->read(*v, [&](const Mu& av){
+                r = self->b->type(&av);
+            });
+        }
         return r;
     }
     static void _access (const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb) {
@@ -82,9 +87,10 @@ struct ChainAcr : Accessor {
 struct AttrFuncAcr : Accessor {
     Reference(* fp )(Mu&, Str);
     String key;
-    static Type _type (const Accessor* acr, const Mu& v) {
+    static Type _type (const Accessor* acr, const Mu* v) {
+        if (!v) return Type();
         auto self = static_cast<const AttrFuncAcr*>(acr);
-        return self->fp(const_cast<Mu&>(v), self->key).type();
+        return self->fp(const_cast<Mu&>(*v), self->key).type();
     }
     static void _access (const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb) {
         auto self = static_cast<const AttrFuncAcr*>(acr);
@@ -107,9 +113,10 @@ struct AttrFuncAcr : Accessor {
 struct ElemFuncAcr : Accessor {
     Reference(* fp )(Mu&, usize);
     size_t index;
-    static Type _type (const Accessor* acr, const Mu& v) {
+    static Type _type (const Accessor* acr, const Mu* v) {
+        if (!v) return Type();
         auto self = static_cast<const ElemFuncAcr*>(acr);
-        return self->fp(const_cast<Mu&>(v), self->index).type();
+        return self->fp(const_cast<Mu&>(*v), self->index).type();
     }
     static void _access (const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb) {
         auto self = static_cast<const ElemFuncAcr*>(acr);
@@ -125,7 +132,7 @@ struct ElemFuncAcr : Accessor {
 
 } using namespace in;
 
-void Reference::require_writable () const {
+void Reference::require_writeable () const {
     if (readonly()) throw X::WriteReadonlyReference(*this);
 }
 

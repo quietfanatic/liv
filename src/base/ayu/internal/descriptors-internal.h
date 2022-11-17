@@ -357,7 +357,7 @@ struct DelegateDcrWith : DelegateDcr<T> {
  //
  // This relies on being in member slot 0 in Description.
 struct IdentityAcr : Accessor {
-    static Type _type (const Accessor* acr, const Mu&) {
+    static Type _type (const Accessor* acr, const Mu*) {
         return Type(reinterpret_cast<const Description*>(acr));
     }
     static void _access (
@@ -378,7 +378,7 @@ struct IdentityAcr : Accessor {
 };
  // This relies on being in member slot 1 in Description.
 struct ReadonlyIdentityAcr : Accessor {
-    static Type _type (const Accessor* acr, const Mu&) {
+    static Type _type (const Accessor* acr, const Mu*) {
         return Type(reinterpret_cast<const Description*>(acr - 1));
     }
     static void _access (

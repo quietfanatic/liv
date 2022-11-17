@@ -70,14 +70,14 @@ Mu* Type::try_upcast_to (Type to, Mu* p) const {
 
     if (auto delegate = desc->delegate_acr())
     if (Mu* a = delegate->address(*p))
-    if (Mu* b = delegate->type(*p).try_upcast_to(to, a))
+    if (Mu* b = delegate->type(p).try_upcast_to(to, a))
         return b;
 
     if (auto attrs = desc->attrs())
     for (size_t i = 0; i < attrs->n_attrs; i++) {
         auto acr = attrs->attr(i)->acr();
         if (Mu* a = acr->address(*p))
-        if (Mu* b = acr->type(*p).try_upcast_to(to, a))
+        if (Mu* b = acr->type(p).try_upcast_to(to, a))
             return b;
     }
 
@@ -85,7 +85,7 @@ Mu* Type::try_upcast_to (Type to, Mu* p) const {
     for (size_t i = 0; i < elems->n_elems; i++) {
         auto acr = elems->elem(i)->acr();
         if (Mu* a = acr->address(*p))
-        if (Mu* b = acr->type(*p).try_upcast_to(to, a))
+        if (Mu* b = acr->type(p).try_upcast_to(to, a))
             return b;
     }
     return null;
@@ -100,13 +100,11 @@ Mu* Type::try_downcast_to (Type to, Mu* p) const {
     if (*this == to) return p;
     auto desc = in::DescriptionPrivate::get(to);
 
-    Mu* nullp = null;
-
-     // It's okay to pass *null to ->type() because the only accessors that have
+     // It's okay to pass null to ->type() because the only accessors that have
      // an inverse_address are statically typed and so ignore that argument.
     if (auto delegate = desc->delegate_acr())
     if (delegate->vt->inverse_address)
-    if (Mu* a = try_downcast_to(delegate->type(*nullp), p))
+    if (Mu* a = try_downcast_to(delegate->type(null), p))
     if (Mu* b = delegate->inverse_address(*a))
         return b;
 
@@ -114,7 +112,7 @@ Mu* Type::try_downcast_to (Type to, Mu* p) const {
     for (size_t i = 0; i < attrs->n_attrs; i++) {
         auto acr = attrs->attr(i)->acr();
         if (acr->vt->inverse_address)
-        if (Mu* a = try_downcast_to(acr->type(*nullp), p))
+        if (Mu* a = try_downcast_to(acr->type(null), p))
         if (Mu* b = acr->inverse_address(*a))
             return b;
     }
@@ -123,7 +121,7 @@ Mu* Type::try_downcast_to (Type to, Mu* p) const {
     for (size_t i = 0; i < elems->n_elems; i++) {
         auto acr = elems->elem(i)->acr();
         if (acr->vt->inverse_address)
-        if (Mu* a = try_downcast_to(acr->type(*nullp), p))
+        if (Mu* a = try_downcast_to(acr->type(null), p))
         if (Mu* b = acr->inverse_address(*a))
             return b;
     }

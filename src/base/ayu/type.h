@@ -23,7 +23,7 @@ struct Type {
      // Can throw X::UnknownType
     template <class T>
     static Type CppType () {
-        return in::need_description_for_cpp_type<T>();
+        return in::need_description_for_cpp_type<std::remove_cvref_t<T>>();
     }
      // Can throw X::TypeNotFound
     Type (Str name) :
@@ -94,7 +94,7 @@ struct Type {
      // One difference from upcast_to is that while upcast_to can follow any
      // accessors with the "address" operation, downcast_to can only follow
      // accessors with the "inverse_address" operation, namely base<>() and
-     // member<>().
+     // member().
      //
      // As with C++'s static_cast, this cannot check that the pointed-to data
      // really is the derived class, and if it isn't, incorrect execution

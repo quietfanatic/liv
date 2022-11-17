@@ -81,7 +81,7 @@ struct Accessor;
 struct AccessorVT {
     static Mu* default_address (const Accessor*, Mu&) { return null; }
     static void default_destroy (Accessor*) { }
-    Type(* type )(const Accessor*, const Mu&) = null;
+    Type(* type )(const Accessor*, const Mu*) = null;
     void(* access )(const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>) = null;
     Mu*(* address )(const Accessor*, Mu&) = &default_address;
     Mu*(* inverse_address )(const Accessor*, Mu&) = null;
@@ -107,7 +107,7 @@ struct Accessor {
         vt(vt), accessor_flags(flags)
     { }
 
-    Type type (const Mu& from) const { return vt->type(this, from); }
+    Type type (const Mu* from) const { return vt->type(this, from); }
     void access (AccessOp op, Mu& from, Callback<void(Mu&)> cb) const {
         if (op != ACR_READ && accessor_flags & ACR_READONLY) {
             throw X::WriteReadonlyAccessor();
@@ -160,7 +160,8 @@ template <class From, class To>
 struct BaseAcr2 : Accessor {
     using AccessorFromType = From;
     using AccessorToType = To;
-    static Type _type (const Accessor*, const Mu&) {
+     // TODO: merge this and all identical functions
+    static Type _type (const Accessor*, const Mu*) {
         return Type::CppType<To>();
     }
     static void _access (
@@ -186,7 +187,7 @@ struct BaseAcr2 : Accessor {
 /// member
 
 struct MemberAcr0 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static Mu* _inverse_address (const Accessor*, Mu&);
@@ -199,6 +200,17 @@ template <class From, class To>
 struct MemberAcr2 : MemberAcr0 {
     using AccessorFromType = From;
     using AccessorToType = To;
+     // This isn't a plain Type because Type::CppType may not work properly at
+     // global init time, and it isn't a std::type_info* because we still need
+     // to reference Type::CppType<To> to auto-instantiate template descriptions.
+     // We could make this a std::type_info* and manually reference
+     // Type::CppType<To> with the comma operator, but if the description for To
+     // was declared in the same translation unit, Type::CppType<To>() will be
+     // much faster than need_description_for_type_info().
+     //
+     // Wouldn't it save space to put this in the vtable?  No!  Doing so would
+     // require a different vtable for each To type, so it would likely use more
+     // space.
     Type(* get_type )();
     To From::* mp;
     explicit constexpr MemberAcr2 (To From::* mp, uint8 flags = 0) :
@@ -211,7 +223,7 @@ struct MemberAcr2 : MemberAcr0 {
 struct RefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
@@ -233,7 +245,7 @@ struct RefFuncAcr2 : RefFuncAcr0 {
 struct ConstRefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
@@ -256,7 +268,7 @@ struct ConstRefFuncAcr2 : ConstRefFuncAcr0 {
 
 template <class To>
 struct RefFuncsAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static constexpr AccessorVT _vt = {&_type, &_access};
     using Accessor::Accessor;
@@ -276,7 +288,7 @@ struct RefFuncsAcr2 : RefFuncsAcr1<To> {
     { }
 };
 template <class To>
-Type RefFuncsAcr1<To>::_type (const Accessor*, const Mu&) {
+Type RefFuncsAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -308,7 +320,7 @@ void RefFuncsAcr1<To>::_access (
 
 template <class To>
 struct ValueFuncAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static constexpr AccessorVT _vt = {&_type, &_access};
     using Accessor::Accessor;
@@ -323,7 +335,7 @@ struct ValueFuncAcr2 : ValueFuncAcr1<To> {
     { }
 };
 template <class To>
-Type ValueFuncAcr1<To>::_type (const Accessor*, const Mu&) {
+Type ValueFuncAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -339,7 +351,7 @@ void ValueFuncAcr1<To>::_access (
 
 template <class To>
 struct ValueFuncsAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static constexpr AccessorVT _vt = {&_type, &_access};
     using Accessor::Accessor;
@@ -360,7 +372,7 @@ struct ValueFuncsAcr2 : ValueFuncsAcr1<To> {
     { }
 };
 template <class To>
-Type ValueFuncsAcr1<To>::_type (const Accessor*, const Mu&) {
+Type ValueFuncsAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -392,7 +404,7 @@ void ValueFuncsAcr1<To>::_access (
 
 template <class To>
 struct MixedFuncsAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static constexpr AccessorVT _vt = {&_type, &_access};
     using Accessor::Accessor;
@@ -413,7 +425,7 @@ struct MixedFuncsAcr2 : MixedFuncsAcr1<To> {
     { }
 };
 template <class To>
-Type MixedFuncsAcr1<To>::_type (const Accessor*, const Mu&) {
+Type MixedFuncsAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -447,7 +459,7 @@ template <class From, class To>
 struct AssignableAcr2 : Accessor {
     using AccessorFromType = From;
     using AccessorToType = To;
-    static Type _type (const Accessor*, const Mu&) {
+    static Type _type (const Accessor*, const Mu*) {
         return Type::CppType<To>();
     }
     static void _access (
@@ -486,7 +498,7 @@ struct AssignableAcr2 : Accessor {
 
 template <class To>
 struct VariableAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
      // This ACR cannot be addressable, because then Reference::chain and co.
      //  may take the address of value but then release this ACR object,
@@ -508,7 +520,7 @@ struct VariableAcr2 : VariableAcr1<To> {
     { }
 };
 template <class To>
-Type VariableAcr1<To>::_type (const Accessor*, const Mu&) {
+Type VariableAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -528,7 +540,7 @@ void VariableAcr1<To>::_destroy_this (Accessor* acr) {
 
 template <class To>
 struct ConstantAcr1 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static void _destroy_this (Accessor*);
     static constexpr AccessorVT _vt = {
@@ -546,7 +558,7 @@ struct ConstantAcr2 : ConstantAcr1<To> {
     { }
 };
 template <class To>
-Type ConstantAcr1<To>::_type (const Accessor*, const Mu&) {
+Type ConstantAcr1<To>::_type (const Accessor*, const Mu*) {
     return Type::CppType<To>();
 }
 template <class To>
@@ -566,7 +578,7 @@ void ConstantAcr1<To>::_destroy_this (Accessor* acr) {
 /// constant_pointer
 
 struct ConstantPointerAcr0 : Accessor {
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
      // Should be okay addressing this.
     static Mu* _address (const Accessor*, Mu&);
@@ -593,7 +605,7 @@ struct ConstantPointerAcr2 : ConstantPointerAcr0 {
  //  miss anything important.
 struct ReferenceFuncAcr1 : Accessor {
     using Accessor::Accessor;
-    static Type _type (const Accessor*, const Mu&);
+    static Type _type (const Accessor*, const Mu*);
     static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};

@@ -122,6 +122,8 @@ struct CallbackV<Ret(Args...)> {
 template <class Sig>
 using Callback = const CallbackV<Sig>&;
 
+///// UTILITY
+
 void dump_refs (const std::vector<Reference>&);
  // Primarily for debugging.  Prints item_to_string(Reference(&v)) to stderr
 template <class... Args>
