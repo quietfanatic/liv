@@ -225,6 +225,7 @@ for my $cfg (keys %configs) {
 }
 
 phony 'debug', 'out/deb/build';
+phony 'optimized', 'out/opt/build';
 phony 'release', 'out/rel/build';
 phony 'test', 'out/deb/test';
 defaults 'test';
