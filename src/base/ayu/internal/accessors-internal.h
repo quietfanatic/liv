@@ -57,7 +57,10 @@ constexpr AttrFlags operator | (const AttrFlags& a, const AttrFlags& b) {
 
  // Instead of having separate methods for each type of access, we're using the
  // same method for all of them, and using an enum to differentiate.  This saves
- // a lot of code size.
+ // a lot of code size, because a lot of ACRs have nearly or exactly the same
+ // methods for all access operations.  Even manually demerging identical access
+ // methods and storing the same pointer three times in the VT compiles larger
+ // than this.
 enum AccessOp {
      // Provides a const ref containing the value of the object.  It may refer
      // to the object itself or to a temporary that will go out of scope when

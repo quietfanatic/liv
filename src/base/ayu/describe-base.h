@@ -162,7 +162,7 @@ struct _AYU_DescribeBase {
      // Tree, its value will be passed to `accessor`'s write operation.
      // `accessor` must be the output of one of the accessor functions (see the
      // ACCESSORS section below), or a pointer-to-data-member as a shortcut for
-     // the member() accessor.  `flags` can be 0 or any |ed combination of:
+     // the member() accessor.  `flags` can be any |ed combination of:
      //   - optional: This attribute does not need to be provided when
      //   deserializing.  If it is not provided, `accessor`'s write operation
      //   will not be called (normally X::MissingAttr would be thrown).
@@ -187,7 +187,7 @@ struct _AYU_DescribeBase {
      // child type of std::vector<String>.
      //
      // During serialization, the list of keys will be determined with
-     // `accessor`'s read operation, and for eacah key, the attribute's value
+     // `accessor`'s read operation, and for each key, the attribute's value
      // will be set using either the attrs() or attr_func() descriptors.
      //
      // During deserialization, `accessor`'s write operation will be called with
@@ -298,9 +298,8 @@ struct _AYU_DescribeBase {
      //   (that's the type of the AYU_DESCRIBE block that you're currently in).
      //   - Child type: The type of the item that this accessor points to.
      // Accessors have up to four operations that they support:
-     //   - read: Read a value from the parent item (or turn a reference to the
-     //   parent into a reference to the child).  All accessors support this
-     //   operation.
+     //   - read: Read the value of the child item from the parent item.  All
+     //   accessors support this operation.
      //   - write: Write a value to the child item through the parent item.  If
      //   an accessor is readonly, it does not support this operation.
      //   - address: Get the memory address of a child item from the parent
@@ -308,12 +307,14 @@ struct _AYU_DescribeBase {
      //   operations will be much more efficient, and pointers can be serialized
      //   and deserialized which point to the child item.
      //   - reverse_address: Get the memory address of a parent item from a
-     //   child item.  This operation is only used for upcasting, and very few
+     //   child item.  This operation is only used for downcasting, and very few
      //   accessors support it.
      // In addition, accessors can take these flags:
      //   - readonly: Make this accessor readonly and disable its write
      //   operation.  If an accessor doesn't support the write operation, it is
-     //   readonly by default and this flag is ignored.
+     //   readonly by default and this flag is ignored.  Attrs and elems with
+     //   readonly accessors will not be serialized, because they can't be
+     //   deserialized anyway, so there's no point.
      //   - anchored_to_grandparent: Normally you can only take the address of a
      //   child item if its parent is also addressable, but if the child item's
      //   accessor has anchored_to_grandparent specified, then instead you can
