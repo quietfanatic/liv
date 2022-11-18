@@ -22,8 +22,8 @@ Tree item_to_tree (const Reference&);
 void item_from_tree (const Reference&, const Tree&);
 
 ///// MAIN OPERATION SHORTCUTS
-String item_to_string (const Reference&, PrintFlags flags = PrintFlags(0));
-void item_to_file (const Reference&, Str filename, PrintFlags flags = PrintFlags(0));
+String item_to_string (const Reference&, PrintOptions opts = 0);
+void item_to_file (const Reference&, Str filename, PrintOptions opts = 0);
 void item_from_string (const Reference&, Str src);
 void item_from_file (const Reference&, Str filename);
 

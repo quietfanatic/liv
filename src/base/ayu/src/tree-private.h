@@ -83,7 +83,7 @@ namespace tap {
     template <>
     struct Show<ayu::Tree> {
         std::string show (const ayu::Tree& t) {
-            return tree_to_string(t, ayu::COMPACT);
+            return tree_to_string(t);
         }
     };
 }

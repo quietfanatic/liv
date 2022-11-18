@@ -69,7 +69,7 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
      // Test wstrings
     std::string s8 = "\"あいうえお\""s;
     std::u16string s16 = u"あいうえお"s;
-    is(item_to_string(&s16, COMPACT), s8, "Can serialize wstring");
+    is(item_to_string(&s16), s8, "Can serialize wstring");
     std::u16string s16_got;
     doesnt_throw([&]{
         item_from_string(&s16_got, s8);
@@ -86,7 +86,7 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
     is(data, expected_data, "gives correct result");
     String got_s;
     doesnt_throw([&]{
-        got_s = item_to_string(&expected_data, ayu::COMPACT);
+        got_s = item_to_string(&expected_data);
     }, "item_to_string on tuple");
     is(got_s, s, "gives correct result");
     done_testing();

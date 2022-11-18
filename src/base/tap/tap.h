@@ -193,6 +193,7 @@ void set_print (void(*)(const std::string&));
 
  // Convert an arbitrary item to a string.  Feel free to overload this for your
  //  own types.  Throwing exceptions from show() may cause duplicate test failures.
+ // TODO: allow wholesale replacement of showing for ayu
 template <class T>
 struct Show {
     std::string show (const T&);

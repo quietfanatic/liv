@@ -3,6 +3,7 @@
 #include <charconv>
 
 #include "../compat.h"
+#include "../describe-base.h"
 #include "../type.h"
 #include "char-cases-private.h"
 #include "tree-private.h"
@@ -12,9 +13,9 @@ namespace in {
 
 struct Printer {
     String& out;
-    PrintFlags flags;
+    PrintOptions opts;
 
-    Printer (String& o, PrintFlags f) : out(o), flags(f) { }
+    Printer (String& o, PrintOptions f) : out(o), opts(f) { }
 
      // TODO: Keep newlines in non-compact layout?
     void print_quoted (Str s) {
@@ -108,7 +109,7 @@ struct Printer {
                 if (a.size() == 0) { out += "[]"sv; return; }
 
                  // Print "small" arrays compactly.
-                bool print_compact = (flags & COMPACT) || a.size() == 1 || [&]{
+                bool print_compact = (opts & COMPACT) || a.size() == 1 || [&]{
                     usize n_elems = 0;
                     bool contains_array = false;
                     for (auto& e : a) {
@@ -144,7 +145,7 @@ struct Printer {
                 const Object& o = t.data->as_known<Object>();
                 if (o.size() == 0) { out += "{}"sv; return; }
 
-                bool print_compact = (flags & COMPACT) || o.size() == 1;
+                bool print_compact = (opts & COMPACT) || o.size() == 1;
 
                 out += '{';
                 for (auto i = o.begin(); i != o.end(); i++) {
@@ -180,12 +181,20 @@ struct Printer {
     }
 };
 
+static void validate_print_options (PrintOptions opts) {
+    if ((opts & PRETTY) && (opts & COMPACT)) {
+        throw X::InvalidPrintOptions();
+    }
+}
+
 } using namespace in;
 
-String tree_to_string (const Tree& t, PrintFlags flags) {
+String tree_to_string (const Tree& t, PrintOptions opts) {
+    validate_print_options(opts);
+    if (!(opts & PRETTY)) opts |= COMPACT;
     String r;
-    Printer(r, flags).print_tree(t, 0);
-    if (!(flags & COMPACT)) r += '\n';
+    Printer(r, opts).print_tree(t, 0);
+    if (!(opts & COMPACT)) r += '\n';
     return r;
 }
 
@@ -201,11 +210,17 @@ void string_to_file (Str content, Str filename) {
     }
 }
 
-void tree_to_file (const Tree& tree, Str filename, PrintFlags flags) {
-    return string_to_file(tree_to_string(tree, flags), filename);
+void tree_to_file (const Tree& tree, Str filename, PrintOptions opts) {
+    validate_print_options(opts);
+    if (!(opts & COMPACT)) opts |= PRETTY;
+    return string_to_file(tree_to_string(tree, opts), filename);
 }
 
 } using namespace ayu;
+
+AYU_DESCRIBE(ayu::X::InvalidPrintOptions,
+    delegate(base<X::Error>())
+)
 
 #ifndef TAP_DISABLE_TESTS
 #include "../../tap/tap.h"
@@ -213,7 +228,7 @@ void tree_to_file (const Tree& tree, Str filename, PrintFlags flags) {
 static tap::TestSet tests ("base/ayu/print", []{
     using namespace tap;
     auto t = [](const Tree& t, const char* s){
-        is(tree_to_string(t, ayu::COMPACT), s, s);
+        is(tree_to_string(t), s, s);
     };
     t(Tree(null), "null");
     t(Tree(345), "345");

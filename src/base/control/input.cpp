@@ -230,7 +230,7 @@ static tap::TestSet tests ("base/control/input", []{
         is(got.alt, expect.alt, ayu::cat(s, " - alt is correct"));
         is(got.shift, expect.shift, ayu::cat(s, " - shift is correct"));
         is(got.code, expect.code, ayu::cat(s, " - code is correct"));
-        is(ayu::item_to_string(&expect, ayu::COMPACT), s2, ayu::cat(s, " - item_to_string"));
+        is(ayu::item_to_string(&expect), s2, ayu::cat(s, " - item_to_string"));
     };
     auto test = [&](Str s, Input expect){
         test2(s, expect, s);

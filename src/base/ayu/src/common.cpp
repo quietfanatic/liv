@@ -16,10 +16,10 @@ void dump_refs (const std::vector<Reference>& rs) {
         case 1: warn_utf8(item_to_string(rs[0])); break;
         default: {
             std::string r = "["s;
-            r += item_to_string(rs[0], COMPACT);
+            r += item_to_string(rs[0]);
             for (usize i = 1; i < rs.size(); i++) {
                 r += ' ';
-                r += item_to_string(rs[i], COMPACT);
+                r += item_to_string(rs[i]);
             }
             warn_utf8(r += "]\n"sv);
             break;
@@ -36,7 +36,7 @@ namespace X {
                 {
                     DiagnosticSerialization ds;
                     if (auto derived = Reference(this).try_downcast_to(t)) {
-                        s += item_to_string(derived, COMPACT);
+                        s += item_to_string(derived);
                     }
                     else {
                         s += "?(Could not downcast error data)"sv;

@@ -245,14 +245,14 @@ void item_from_tree (const Reference& item, const Tree& tree) {
 ///// SHORTCUTS
 
 String item_to_string (
-    const Reference& item, PrintFlags flags
+    const Reference& item, PrintOptions opts
 ) {
-    return tree_to_string(item_to_tree(item), flags);
+    return tree_to_string(item_to_tree(item), opts);
 }
 void item_to_file (
-    const Reference& item, Str filename, PrintFlags flags
+    const Reference& item, Str filename, PrintOptions opts
 ) {
-    return tree_to_file(item_to_tree(item), filename, flags);
+    return tree_to_file(item_to_tree(item), filename, opts);
 }
 void item_from_string (
     const Reference& item, Str src

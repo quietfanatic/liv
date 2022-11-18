@@ -135,7 +135,7 @@ static tap::TestSet tests ("base/control/command", []{
     }, "Can call command");
     is(test_vals.back(), 30, "Command gave correct result");
 
-    is(ayu::item_to_string(&s, ayu::COMPACT), "[_test_command 5 6]",
+    is(ayu::item_to_string(&s), "[_test_command 5 6]",
         "Command serializes correctly"
     );
 
