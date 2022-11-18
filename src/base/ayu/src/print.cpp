@@ -182,8 +182,11 @@ struct Printer {
 };
 
 static void validate_print_options (PrintOptions opts) {
+    if (opts & ~VALID_PRINT_OPTION_BITS) {
+        throw X::InvalidPrintOptions(opts);
+    }
     if ((opts & PRETTY) && (opts & COMPACT)) {
-        throw X::InvalidPrintOptions();
+        throw X::InvalidPrintOptions(opts);
     }
 }
 
@@ -219,7 +222,8 @@ void tree_to_file (const Tree& tree, Str filename, PrintOptions opts) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::X::InvalidPrintOptions,
-    delegate(base<X::Error>())
+    delegate(base<X::Error>()),
+    elems(elem(&X::InvalidPrintOptions::opts))
 )
 
 #ifndef TAP_DISABLE_TESTS
