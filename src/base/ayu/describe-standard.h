@@ -59,7 +59,8 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
- // std::unordered_map
+ // std::unordered_map with strings for keys.  We might add a more general
+ // unordered_map description later.
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
@@ -197,7 +198,7 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
-
+ // std::pair
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class A, class B),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
@@ -274,6 +275,10 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class... Ts),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::tuple<Ts...>),
     desc::name([]{
+        static_assert(
+            (!std::is_reference_v<Ts> && ...),
+            "Cannot instantiate AYU description of a tuple with references as type parameters"
+        );
         using namespace std::literals;
         static ayu::String r = ayu::cat(
             "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'

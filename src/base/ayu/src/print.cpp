@@ -41,7 +41,7 @@ static String print_string (Str s) {
     for (auto p = s.begin(); p != s.end(); p++)
     switch (p[0]) {
         case ':': {
-            if (p[1] == ':') {
+            if (p[1] == ':' || p[1] == '/') {
                 p++;
                 continue;
             }
