@@ -147,17 +147,14 @@ struct Printer {
                 bool print_compact = (flags & COMPACT) || o.size() == 1;
 
                 out += '{';
-                 // TODO: Remove this nexti
-                auto nexti = o.begin();
-                for (auto i = nexti; i != o.end(); i = nexti) {
+                for (auto i = o.begin(); i != o.end(); i++) {
                     if (print_compact) {
-                        if (nexti != o.begin()) out += ' ';
+                        if (i != o.begin()) out += ' ';
                     }
                     else print_newline(ind + 1);
                     print_string(i->first);
                     out += ':';
                     print_tree(i->second, ind + !print_compact);
-                    nexti++;
                 }
                 if (!print_compact) print_newline(ind);
                 out += '}';
