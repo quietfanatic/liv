@@ -8,159 +8,186 @@
 #include "tree-private.h"
 
 namespace ayu {
-using namespace in;
+namespace in {
 
- // TODO: Keep newlines in non-compact layout?
-static String print_quoted (Str s) {
-    String r = "\""s;
-    for (auto p = s.begin(); p != s.end(); p++)
-    switch (*p) {
-        case '"': r += "\\\""sv; break;
-        case '\\': r += "\\\\"sv; break;
-        case '\b': r += "\\b"sv; break;
-        case '\f': r += "\\f"sv; break;
-        case '\n': r += "\\n"sv; break;
-        case '\r': r += "\\r"sv; break;
-        case '\t': r += "\\t"sv; break;
-        default: r += String(1, *p); break;
-    }
-    return r + '"';
-}
+struct Printer {
+    String& out;
+    PrintFlags flags;
 
-static String print_string (Str s) {
-    if (s == ""sv) return "\"\""s;
-    else if (s == "null"sv) return "\"null\""s;
-    else if (s == "true"sv) return "\"true\""s;
-    else if (s == "false"sv) return "\"false\""s;
-    switch (s[0]) {
-        case ANY_LETTER:
-        case '_': break;
-        default: return print_quoted(s);
-    }
+    Printer (String& o, PrintFlags f) : out(o), flags(f) { }
 
-    for (auto p = s.begin(); p != s.end(); p++)
-    switch (p[0]) {
-        case ':': {
-            if (p[1] == ':' || p[1] == '/') {
-                p++;
-                continue;
-            }
-            else return print_quoted(s);
+     // TODO: Keep newlines in non-compact layout?
+    void print_quoted (Str s) {
+        out += '"';
+        for (auto p = s.begin(); p != s.end(); p++)
+        switch (*p) {
+            case '"': out += "\\\""sv; break;
+            case '\\': out += "\\\\"sv; break;
+            case '\b': out += "\\b"sv; break;
+            case '\f': out += "\\f"sv; break;
+            case '\n': out += "\\n"sv; break;
+            case '\r': out += "\\r"sv; break;
+            case '\t': out += "\\t"sv; break;
+            default: out += String(1, *p); break;
         }
-        case ANY_LETTER: case ANY_DECIMAL_DIGIT:
-        case '-': case '.': case '/': case '_': continue;
-        default: return print_quoted(s);
+        out += '"';
     }
-    return String(s);
-}
 
-static String indent (uint n) {
-    String r;
-    for (; n; n--) r += "    "sv;
-    return r;
-}
-
- // TODO: Use a string builder system
-String print_tree (const Tree& t, PrintFlags flags, uint ind) {
-    switch (t.data->rep) {
-        case Rep::NULLREP: return "null"s;
-        case Rep::BOOL: return t.data->as_known<bool>() ? "true"s : "false"s;
-        case Rep::INT64: return std::to_string(t.data->as_known<int64>());
-        case Rep::DOUBLE: {
-            double v = t.data->as_known<double>();
-            if (v != v) return "+nan"s;
-            else if (v == 1.0/0.0) return "+inf"s;
-            else if (v == -1.0/0.0) return "-inf"s;
-            else {
-                char buf [32]; // Should be enough?
-                auto [ptr, ec] = std::to_chars(buf, buf+32, v);
-                if (ptr == buf) AYU_INTERNAL_UGUU();
-                return String(buf, ptr - buf);
-            }
+    void print_string (Str s) {
+        if (s == ""sv) {
+            out += "\"\""sv; return;
         }
-        case Rep::STRING: return print_string(t.data->as_known<String>());
-        case Rep::ARRAY: {
-            const Array& a = t.data->as_known<Array>();
-            if (a.size() == 0) return "[]"s;
+        else if (s == "null"sv) {
+            out += "\"null\""sv; return;
+        }
+        else if (s == "true"sv) {
+            out += "\"true\""sv; return;
+        }
+        else if (s == "false"sv) {
+            out += "\"false\""sv; return;
+        }
+        switch (s[0]) {
+            case ANY_LETTER:
+            case '_': break;
+            default: return print_quoted(s);
+        }
 
-             // Print "small" arrays compactly.
-            bool print_compact = (flags & COMPACT) || a.size() == 1 || [&]{
-                usize n_elems = 0;
-                bool contains_array = false;
+        for (auto p = s.begin(); p != s.end(); p++)
+        switch (p[0]) {
+            case ':': {
+                 // Don't need to check bounds because String is NUL-terminated
+                if (p[1] == ':' || p[1] == '/') {
+                    p++;
+                    continue;
+                }
+                else return print_quoted(s);
+            }
+            case ANY_LETTER: case ANY_DECIMAL_DIGIT:
+            case '-': case '.': case '/': case '_': continue;
+            default: return print_quoted(s);
+        }
+         // No need to quote
+        out += s;
+    }
+
+    void print_newline (uint n) {
+        out += '\n';
+        for (; n; n--) out += "    "sv;
+    }
+
+    void print_tree (const Tree& t, uint ind) {
+        switch (t.data->rep) {
+            case Rep::NULLREP:
+                out += "null"sv;
+                return;
+            case Rep::BOOL:
+                out += (t.data->as_known<bool>()
+                    ? "true"sv : "false"sv
+                );
+                return;
+            case Rep::INT64:
+                out += std::to_string(t.data->as_known<int64>());
+                return;
+            case Rep::DOUBLE: {
+                double v = t.data->as_known<double>();
+                if (v != v) out += "+nan"sv;
+                else if (v == 1.0/0.0) out += "+inf"sv;
+                else if (v == -1.0/0.0) out += "-inf"sv;
+                else {
+                    char buf [32]; // Should be enough?
+                    auto [ptr, ec] = std::to_chars(buf, buf+32, v);
+                    if (ptr == buf) AYU_INTERNAL_UGUU();
+                    out += Str(buf, ptr - buf);
+                }
+                return;
+            }
+            case Rep::STRING:
+                return print_string(t.data->as_known<String>());
+            case Rep::ARRAY: {
+                const Array& a = t.data->as_known<Array>();
+                if (a.size() == 0) { out += "[]"sv; return; }
+
+                 // Print "small" arrays compactly.
+                bool print_compact = (flags & COMPACT) || a.size() == 1 || [&]{
+                    usize n_elems = 0;
+                    bool contains_array = false;
+                    for (auto& e : a) {
+                        if (e.form() == ARRAY) {
+                            n_elems += e.data->as_known<Array>().size();
+                            contains_array = true;
+                        }
+                        else if (e.form() == OBJECT) {
+                            return false;
+                        }
+                        else n_elems += 1;
+                    }
+                    return !contains_array || n_elems <= 8;
+                }();
+
+                bool show_indices = !print_compact && a.size() > 3;
+                out += '[';
                 for (auto& e : a) {
-                    if (e.form() == ARRAY) {
-                        n_elems += e.data->as_known<Array>().size();
-                        contains_array = true;
+                    if (print_compact) {
+                        if (&e != &a.front()) out += ' ';
                     }
-                    else if (e.form() == OBJECT) {
-                        return false;
+                    else print_newline(ind + 1);
+                    print_tree(e, ind + !print_compact);
+                    if (show_indices) {
+                        out = cat(out, "  # "sv, (&e - &a.front()));
                     }
-                    else n_elems += 1;
                 }
-                return !contains_array || n_elems <= 8;
-            }();
+                if (!print_compact) print_newline(ind);
+                out += ']';
+                return;
+            }
+            case Rep::OBJECT: {
+                const Object& o = t.data->as_known<Object>();
+                if (o.size() == 0) { out += "{}"sv; return; }
 
-            bool show_indices = !print_compact && a.size() > 3;
-            String r = "["s;
-            for (auto& e : a) {
-                if (print_compact) {
-                    if (&e != &a.front()) r += ' ';
+                bool print_compact = (flags & COMPACT) || o.size() == 1;
+
+                out += '{';
+                 // TODO: Remove this nexti
+                auto nexti = o.begin();
+                for (auto i = nexti; i != o.end(); i = nexti) {
+                    if (print_compact) {
+                        if (nexti != o.begin()) out += ' ';
+                    }
+                    else print_newline(ind + 1);
+                    print_string(i->first);
+                    out += ':';
+                    print_tree(i->second, ind + !print_compact);
+                    nexti++;
                 }
-                else {
-                    r += '\n'; r += indent(ind + 1);
-                }
-                r += print_tree(e, flags, ind + !print_compact);
-                if (show_indices) {
-                    r += "  # "sv; r += std::to_string(&e - &a.front());
-                }
+                if (!print_compact) print_newline(ind);
+                out += '}';
+                return;
             }
-            if (!print_compact) {
-                r += '\n'; r += indent(ind);
-            }
-            return r + ']';
-        }
-        case Rep::OBJECT: {
-            const Object& o = t.data->as_known<Object>();
-            if (o.size() == 0) return "{}"s;
-            bool print_compact = (flags & COMPACT) || o.size() == 1;
-            String r = "{"s;
-            auto nexti = o.begin();
-            for (auto i = nexti; i != o.end(); i = nexti) {
-                if (print_compact) {
-                    if (nexti != o.begin()) r += ' ';
-                }
-                else {
-                    r += '\n'; r += indent(ind + 1);
-                }
-                r += print_string(i->first);
-                r += ':';
-                r += print_tree(i->second, flags, ind + !print_compact);
-                nexti++;
-            }
-            if (!print_compact) {
-                r += '\n'; r += indent(ind);
-            }
-            return r + '}';
-        }
-        case Rep::ERROR: {
-            try {
-                std::rethrow_exception(t.data->as_known<std::exception_ptr>());
-            }
-            catch (const X::Error& e) {
+            case Rep::ERROR: {
                 try {
-                    return cat("?("sv, Type(typeid(e)).name(), ')');
+                    std::rethrow_exception(
+                        t.data->as_known<std::exception_ptr>()
+                    );
                 }
-                catch (const X::UnknownType&) {
-                    return cat("?("sv, typeid(e).name(), ')');
+                catch (const X::Error& e) {
+                    try {
+                        out += cat("?("sv, Type(typeid(e)).name(), ')');
+                    }
+                    catch (const X::UnknownType&) {
+                        out += cat("?("sv, typeid(e).name(), ')');
+                    }
                 }
             }
+            default: AYU_INTERNAL_UGUU();
         }
-        default: AYU_INTERNAL_UGUU();
     }
-}
+};
+
+} using namespace in;
 
 String tree_to_string (const Tree& t, PrintFlags flags) {
-    String r = print_tree(t, flags, 0);
+    String r;
+    Printer(r, flags).print_tree(t, 0);
     if (!(flags & COMPACT)) r += '\n';
     return r;
 }
