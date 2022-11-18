@@ -12,7 +12,11 @@ enum PrintOptionsEnum : uint32 {
     COMPACT = 1 << 0,
      // Print with a pretty layout.  This is the default for tree_to_file.
     PRETTY = 1 << 1,
-    VALID_PRINT_OPTION_BITS = COMPACT | PRETTY
+     // Print in JSON-compatible format.  This option is NOT WELL TESTED so it
+     // may produce non-conforming output.
+    JSON = 1 << 2,
+     // For validation
+    VALID_PRINT_OPTION_BITS = COMPACT | PRETTY | JSON
 };
 using PrintOptions = uint32;
 
@@ -23,7 +27,8 @@ void string_to_file (Str, Str filename);
 void tree_to_file (const Tree&, Str filename, PrintOptions opts = 0);
 
 namespace X {
-     // Invalid combination of print options was provided.
+     // Conflicting combination of print options was provided, or it had bits
+     // outside of VALID_PRINT_OPTION_BITS.
     struct InvalidPrintOptions : Error {
         PrintOptions opts;
         InvalidPrintOptions (PrintOptions opts) : opts(opts) { }

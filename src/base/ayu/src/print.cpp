@@ -35,6 +35,7 @@ struct Printer {
     }
 
     void print_string (Str s) {
+        if (opts & JSON) return print_quoted(s);
         if (s == ""sv) {
             out += "\"\""sv; return;
         }
@@ -91,9 +92,18 @@ struct Printer {
                 return;
             case Rep::DOUBLE: {
                 double v = t.data->as_known<double>();
-                if (v != v) out += "+nan"sv;
-                else if (v == 1.0/0.0) out += "+inf"sv;
-                else if (v == -1.0/0.0) out += "-inf"sv;
+                if (v != v) {
+                    if (opts & JSON) out += "null";
+                    else out += "+nan"sv;
+                }
+                else if (v == 1.0/0.0) {
+                    if (opts & JSON) out += "1e999";
+                    else out += "+inf"sv;
+                }
+                else if (v == -1.0/0.0) {
+                    if (opts & JSON) out += "-1e999";
+                    else out += "-inf"sv;
+                }
                 else {
                     char buf [32]; // Should be enough?
                     auto [ptr, ec] = std::to_chars(buf, buf+32, v);
@@ -125,11 +135,16 @@ struct Printer {
                     return !contains_array || n_elems <= 8;
                 }();
 
-                bool show_indices = !print_compact && a.size() > 3;
+                bool show_indices = !print_compact
+                                 && a.size() > 4
+                                 && !(opts & JSON);
                 out += '[';
                 for (auto& e : a) {
                     if (print_compact) {
-                        if (&e != &a.front()) out += ' ';
+                        if (&e != &a.front()) {
+                            if (opts & JSON) out += ',';
+                            else out += ' ';
+                        }
                     }
                     else print_newline(ind + 1);
                     print_tree(e, ind + !print_compact);
@@ -150,7 +165,10 @@ struct Printer {
                 out += '{';
                 for (auto i = o.begin(); i != o.end(); i++) {
                     if (print_compact) {
-                        if (i != o.begin()) out += ' ';
+                        if (i != o.begin()) {
+                            if (opts & JSON) out += ',';
+                            else out += ' ';
+                        }
                     }
                     else print_newline(ind + 1);
                     print_string(i->first);
@@ -262,6 +280,15 @@ static tap::TestSet tests ("base/ayu/print", []{
             Tree(Array{Tree(3), Tree(4)})
         })
     }), "[[0 1] [[2] [3 4]]]");
+    is(tree_to_string(Tree(Object{
+        Pair{"a", Tree(0)},
+        Pair{"b", Tree(+nan)},
+        Pair{"c", Tree(Array{
+           Tree(3),
+           Tree(-inf)
+        })}
+    }), JSON), "{\"a\":0,\"b\":null,\"c\":[3,-1e999]}", "JSON");
+
     done_testing();
 });
 #endif
