@@ -264,17 +264,29 @@ static tap::TestSet tests ("base/ayu/print", []{
     compact_json.pop_back();
 
     Tree t = tree_from_string(pretty);
-    is(tree_to_string(t, PRETTY), pretty, "Pretty");
-    is(tree_to_string(t, COMPACT), compact, "Compact");
-    is(tree_to_string(t, PRETTY|JSON), pretty_json, "Pretty JSON");
-    is(tree_to_string(t, COMPACT|JSON), compact_json, "Compact JSON");
-    usize i = 0;
-    auto s = tree_to_string(t, COMPACT|JSON);
-    for (; i < compact_json.size(); i++) {
-        if (s[i] != compact_json[i]) {
-            diag(cat(i, "|", s[i], "|", compact_json[i], "|"));
+
+    auto test = [](Str got, Str expected, String name){
+        if (!is(got, expected, name)) {
+            usize i = 0;
+            for (; i < got.size() && i < expected.size(); i++) {
+                if (got[i] != expected[i]) {
+                    diag(cat("First difference at ",
+                        i, " |", got[i], '|', expected[i], '|'
+                    ));
+                    return;
+                }
+            }
+            if (got.size() != expected.size()) {
+                diag(cat("Size difference got ",
+                    got.size(), " expected ", expected.size()
+                ));
+            }
         }
-    }
+    };
+    test(tree_to_string(t, PRETTY), pretty, "Pretty");
+    test(tree_to_string(t, COMPACT), compact, "Compact");
+    test(tree_to_string(t, PRETTY|JSON), pretty_json, "Pretty JSON");
+    test(tree_to_string(t, COMPACT|JSON), compact_json, "Compact JSON");
 
     done_testing();
 });
