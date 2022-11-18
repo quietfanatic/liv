@@ -116,66 +116,66 @@ struct Printer {
                 return print_string(t.data->as_known<String>());
             case Rep::ARRAY: {
                 const Array& a = t.data->as_known<Array>();
-                if (a.size() == 0) { out += "[]"sv; return; }
+                if (a.empty()) { out += "[]"sv; return; }
 
                  // Print "small" arrays compactly.
-                bool print_compact = (opts & COMPACT) || a.size() == 1 || [&]{
-                    usize n_elems = 0;
-                    bool contains_array = false;
-                    for (auto& e : a) {
-                        if (e.form() == ARRAY) {
-                            n_elems += e.data->as_known<Array>().size();
-                            contains_array = true;
-                        }
-                        else if (e.form() == OBJECT) {
-                            return false;
-                        }
-                        else n_elems += 1;
-                    }
-                    return !contains_array || n_elems <= 8;
-                }();
+                 // TODO: Revise this?
+                bool expand = (opts & PRETTY) && a.size() > 4;
 
-                bool show_indices = !print_compact
+                bool show_indices = expand
                                  && a.size() > 4
                                  && !(opts & JSON);
                 out += '[';
-                for (auto& e : a) {
-                    if (print_compact) {
-                        if (&e != &a.front()) {
+                for (auto& elem : a) {
+                    if (&elem == &a.front()) {
+                        if (expand) print_newline(ind + 1);
+                    }
+                    else {
+                        if (expand) {
+                            if (opts & JSON) out += ',';
+                            print_newline(ind + 1);
+                        }
+                        else {
                             if (opts & JSON) out += ',';
                             else out += ' ';
                         }
                     }
-                    else print_newline(ind + 1);
-                    print_tree(e, ind + !print_compact);
+                    print_tree(elem, ind + expand);
                     if (show_indices) {
-                        out = cat(out, "  # "sv, (&e - &a.front()));
+                        out = cat(out, "  // "sv, (&elem - &a.front()));
                     }
                 }
-                if (!print_compact) print_newline(ind);
+                if (expand) print_newline(ind);
                 out += ']';
                 return;
             }
             case Rep::OBJECT: {
                 const Object& o = t.data->as_known<Object>();
-                if (o.size() == 0) { out += "{}"sv; return; }
+                if (o.empty()) { out += "{}"sv; return; }
 
-                bool print_compact = (opts & COMPACT) || o.size() == 1;
+                bool expand = (opts & PRETTY) && o.size() > 1;
 
                 out += '{';
-                for (auto i = o.begin(); i != o.end(); i++) {
-                    if (print_compact) {
-                        if (i != o.begin()) {
+                for (auto& attr : o) {
+                    if (&attr == &o.front()) {
+                        if (expand) print_newline(ind + 1);
+                    }
+                    else {
+                        if (expand) {
+                            if (opts & JSON) out += ',';
+                            print_newline(ind + 1);
+                        }
+                        else {
                             if (opts & JSON) out += ',';
                             else out += ' ';
                         }
                     }
-                    else print_newline(ind + 1);
-                    print_string(i->first);
+                    print_string(attr.first);
                     out += ':';
-                    print_tree(i->second, ind + !print_compact);
+                    if (expand) out += ' ';
+                    print_tree(attr.second, ind + expand);
                 }
-                if (!print_compact) print_newline(ind);
+                if (expand) print_newline(ind);
                 out += '}';
                 return;
             }
@@ -215,7 +215,7 @@ String tree_to_string (const Tree& t, PrintOptions opts) {
     if (!(opts & PRETTY)) opts |= COMPACT;
     String r;
     Printer(r, opts).print_tree(t, 0);
-    if (!(opts & COMPACT)) r += '\n';
+    if (opts & PRETTY) r += '\n';
     return r;
 }
 
@@ -246,48 +246,35 @@ AYU_DESCRIBE(ayu::X::InvalidPrintOptions,
 
 #ifndef TAP_DISABLE_TESTS
 #include "../../tap/tap.h"
+#include "../parse.h"
+#include "../resource.h"
+#include "test-environment-private.h"
 
 static tap::TestSet tests ("base/ayu/print", []{
     using namespace tap;
-    auto t = [](const Tree& t, const char* s){
-        is(tree_to_string(t), s, s);
-    };
-    t(Tree(null), "null");
-    t(Tree(345), "345");
-    t(Tree(-44), "-44");
-    t(Tree(2.5), "2.5");
-    t(Tree(-4.0), "-4");
-    t(Tree(0.0/0.0), "+nan");
-    t(Tree(1.0/0.0), "+inf");
-    t(Tree(-1.0/0.0), "-inf");
-    t(Tree(""), "\"\"");
-    t(Tree("asdf"), "asdf");
-    t(Tree("null"), "\"null\"");
-    t(Tree("true"), "\"true\"");
-    t(Tree("false"), "\"false\"");
-    t(Tree(Array{}), "[]");
-    t(Tree(Array{Tree(0), Tree(1), Tree("foo")}), "[0 1 foo]");
-    t(Tree(Object{}), "{}");
-    t(Tree(Object{
-        Pair{"a", Tree(0)},
-        Pair{"null", Tree(1)},
-        Pair{"0", Tree("foo")}
-    }), "{a:0 \"null\":1 \"0\":foo}");
-    t(Tree(Array{
-        Tree(Array{Tree(0), Tree(1)}),
-        Tree(Array{
-            Tree(Array{Tree(2)}),
-            Tree(Array{Tree(3), Tree(4)})
-        })
-    }), "[[0 1] [[2] [3 4]]]");
-    is(tree_to_string(Tree(Object{
-        Pair{"a", Tree(0)},
-        Pair{"b", Tree(+nan)},
-        Pair{"c", Tree(Array{
-           Tree(3),
-           Tree(-inf)
-        })}
-    }), JSON), "{\"a\":0,\"b\":null,\"c\":[3,-1e999]}", "JSON");
+
+    test::TestEnvironment env;
+
+    String pretty = string_from_file(resource_filename("ayu-test:/print-pretty.ayu"));
+    String compact = string_from_file(resource_filename("ayu-test:/print-compact.ayu"));
+    String pretty_json = string_from_file(resource_filename("ayu-test:/print-pretty.json"));
+    String compact_json = string_from_file(resource_filename("ayu-test:/print-compact.json"));
+     // Remove final LF
+    compact.pop_back();
+    compact_json.pop_back();
+
+    Tree t = tree_from_string(pretty);
+    is(tree_to_string(t, PRETTY), pretty, "Pretty");
+    is(tree_to_string(t, COMPACT), compact, "Compact");
+    is(tree_to_string(t, PRETTY|JSON), pretty_json, "Pretty JSON");
+    is(tree_to_string(t, COMPACT|JSON), compact_json, "Compact JSON");
+    usize i = 0;
+    auto s = tree_to_string(t, COMPACT|JSON);
+    for (; i < compact_json.size(); i++) {
+        if (s[i] != compact_json[i]) {
+            diag(cat(i, "|", s[i], "|", compact_json[i], "|"));
+        }
+    }
 
     done_testing();
 });
