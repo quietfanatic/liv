@@ -137,7 +137,8 @@ AYU_DESCRIBE_TEMPLATE(
 )
 
  // Special case for char[n], mainly to allow string literals to be passed to
- // ayu::dump without surprising behavior.
+ // ayu::dump without surprising behavior.  Note that the deserialization from
+ // string WILL NOT NUL-TERMINATE the char[n].
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(ayu::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
@@ -148,14 +149,19 @@ AYU_DESCRIBE_TEMPLATE(
     }),
      // Serialize as a string
     desc::to_tree([](const char(& v )[n]){
+         // TODO
+        //return ayu::Tree(Str(v, n));
         return ayu::Tree(v);
     }),
      // Deserialize as either a string or an array
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
         if (tree.form() == ayu::STRING) {
             auto s = ayu::Str(tree);
-            if (s.size() != n) {
-                throw ayu::X::WrongLength(&v, n, n, s.size());
+            if (s.size() < n) {
+                throw ayu::X::TooShort(&v, n, s.size());
+            }
+            if (s.size() > n) {
+                throw ayu::X::TooLong(&v, n, s.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = s[i];
@@ -163,8 +169,11 @@ AYU_DESCRIBE_TEMPLATE(
         }
         else if (tree.form() == ayu::ARRAY) {
             const auto& a = ayu::Array(tree);
-            if (a.size() != n) {
-                throw ayu::X::WrongLength(&v, n, n, a.size());
+            if (a.size() < n) {
+                throw ayu::X::TooShort(&v, n, a.size());
+            }
+            if (a.size() > n) {
+                throw ayu::X::TooLong(&v, n, a.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = char(a[i]);

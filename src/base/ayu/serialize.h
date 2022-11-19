@@ -154,14 +154,25 @@ namespace ayu::X {
         String key;
         UnwantedAttr (const Reference& r, Str k) : SerError(r), key(k) { }
     };
-     // Tried to deserialize an item from an array tree, but the item didn't
-     // the array's length.
-    struct WrongLength : SerError {
+     // Tried to deserialize an item from an array tree, but the array has too
+     // few elements for the item.
+     // KNOWN BUG: If an inherited element containing optional elements is
+     // followed by a non-optional element, the reported minimum length may be
+     // incorrect.
+    struct TooShort : SerError {
         usize min;
+        usize got;
+        TooShort (const Reference& r, usize m, usize g) :
+            SerError(r), min(m), got(g)
+        { }
+    };
+     // Tried to deserialize an item from an array tree, but the array has too
+     // many elements for the item.
+    struct TooLong : SerError {
         usize max;
         usize got;
-        WrongLength (const Reference& r, usize a, usize b, usize g) :
-            SerError(r), min(a), max(b), got(g)
+        TooLong (const Reference& r, usize m, usize g) :
+            SerError(r), max(m), got(g)
         { }
     };
      // Tried to treat an item like it has attributes, but it does not support

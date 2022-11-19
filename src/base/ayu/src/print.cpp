@@ -193,6 +193,7 @@ struct Printer {
                         out += cat("?("sv, typeid(e).name(), ')');
                     }
                 }
+                break;
             }
             default: AYU_INTERNAL_UGUU();
         }

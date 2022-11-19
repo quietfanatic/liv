@@ -1,5 +1,6 @@
 #include "../serialize.h"
 
+#include <cassert>
 #include "../describe.h"
 #include "../parse.h"
 #include "../reference.h"
@@ -12,7 +13,9 @@
 namespace ayu {
 using namespace in;
 
-static int64 diagnostic_serialization = 0;
+namespace in {
+    static int64 diagnostic_serialization = 0;
+}
 
 ///// TO_TREE
 
@@ -80,26 +83,26 @@ Tree item_to_tree (const Reference& item) {
 ///// FROM_TREE
 
 namespace in {
-    struct SwizzleOp {
-        using FP = void(*)(Mu&, const Tree&);
-        FP f;
-        Reference item;
-        Tree tree;
-        Resource current_resource;
-        SwizzleOp (FP f, const Reference& r, const Tree& t, Resource res) :
-            f(f), item(r), tree(t), current_resource(res)
-        { }
-    };
-    struct InitOp {
-        using FP = void(*)(Mu&);
-        FP f;
-        Reference item;
-        Resource current_resource;
-        InitOp (FP f, const Reference& r, Resource res) :
-            f(f), item(r), current_resource(res)
-        { }
-    };
-}
+
+struct SwizzleOp {
+    using FP = void(*)(Mu&, const Tree&);
+    FP f;
+    Reference item;
+    Tree tree;
+    Resource current_resource;
+    SwizzleOp (FP f, const Reference& r, const Tree& t, Resource res) :
+        f(f), item(r), tree(t), current_resource(res)
+    { }
+};
+struct InitOp {
+    using FP = void(*)(Mu&);
+    FP f;
+    Reference item;
+    Resource current_resource;
+    InitOp (FP f, const Reference& r, Resource res) :
+        f(f), item(r), current_resource(res)
+    { }
+};
 static std::vector<SwizzleOp> swizzle_ops;
 static std::vector<InitOp> init_ops;
 
@@ -216,6 +219,7 @@ static void item_populate (const Reference& item, const Tree& tree) {
         init_ops.emplace_back(init->f, item, current_resource());
     }
 }
+} // namespace in
 
 void item_from_tree (const Reference& item, const Tree& tree) {
     static bool in_from_tree = false;
@@ -267,6 +271,7 @@ void item_from_file (
 
 ///// ATTR OPERATIONS
 
+namespace in {
 static void add_key (std::vector<String>& ks, Str k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
@@ -296,13 +301,10 @@ static void item_collect_keys (const Reference& item, std::vector<String>& ks) {
     }
     else throw X::NoAttrs(item);
 }
-std::vector<String> item_get_keys (const Reference& item) {
-    std::vector<String> ks;
-    item_collect_keys(item, ks);
-    return ks;
-}
 
 static bool claim_key (std::vector<String>& ks, Str k) {
+     // This algorithm overall is pretty inefficient, we may be able to speed it
+     // up by setting a flag if there are no inherited attrs.
     for (auto it = ks.begin(); it != ks.end(); it++) {
         if (*it == k) {
             ks.erase(it);
@@ -381,6 +383,14 @@ static void item_claim_keys (
     }
     else throw X::NoAttrs(item);
 }
+} // namespace in
+
+std::vector<String> item_get_keys (const Reference& item) {
+    std::vector<String> ks;
+    item_collect_keys(item, ks);
+    return ks;
+}
+
 void item_set_keys (const Reference& item, const std::vector<String>& ks) {
     std::vector<String> claimed = ks;
     item_claim_keys(item, claimed, false);
@@ -445,9 +455,15 @@ usize item_get_length (const Reference& item) {
         return l;
     }
     else if (auto elems = desc->elems()) {
-         // We could support inheritance on elems if we wanted, but it's too
-         // much work for too little gain.
-        return elems->n_elems;
+        usize l = 0;
+        for (usize i = 0; i < elems->n_elems; i++) {
+            auto acr = elems->elem(i)->acr();
+            if (acr->attr_flags & ATTR_INHERIT) {
+                l += item_get_length(item.chain(acr));
+            }
+            else l += 1;
+        }
+        return l;
     }
     else if (auto acr = desc->delegate_acr()) {
         return item_get_length(item.chain(acr));
@@ -455,53 +471,86 @@ usize item_get_length (const Reference& item) {
     else throw X::NoElems(item);
 }
 
-void item_set_length (const Reference& item, usize l) {
+namespace in {
+void item_claim_length (const Reference& item, usize& claimed, usize len) {
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->length_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
-            return item.write([&](Mu& v){
+             // Note: don't use chain because it can include a modify op.
+             // TODO: make this not necessary?
+            usize remaining = (claimed <= len ? len - claimed : 0);
+            item.write([&](Mu& v){
                 acr->write(v, [&](Mu& lv){
-                    reinterpret_cast<usize&>(lv) = l;
+                    reinterpret_cast<usize&>(lv) = remaining;
                 });
             });
+            claimed += remaining;
         }
         else {
-             // For readonly length, get length and compare
+             // For readonly length, just claim the returned length
             usize expected;
             item.chain(acr).read([&](const Mu& lv){
                 expected = reinterpret_cast<const usize&>(lv);
             });
-            if (l == expected) return;
-            else throw X::WrongLength(item, expected, expected, l);
+            claimed += expected;
         }
     }
     else if (auto elems = desc->elems()) {
-        usize min = elems->n_elems;
-        usize max = elems->n_elems;
-         // Scan for optional elems starting from the end.
-        for (usize i = elems->n_elems; i > 0; i--) {
-            auto acr = elems->elem(i-1)->acr();
-            if (acr->attr_flags & ATTR_OPTIONAL) min -= 1;
-            else break;
+        for (usize i = 0; i < elems->n_elems; i++) {
+            auto acr = elems->elem(i)->acr();
+            if (claimed >= len && acr->attr_flags & ATTR_OPTIONAL) {
+                continue;
+            }
+            if (acr->attr_flags & ATTR_INHERIT) {
+                item_claim_length(item.chain(acr), claimed, len);
+            }
+            else claimed += 1;
         }
-        if (l >= min && l <= max) return;
-        else throw X::WrongLength(item, min, max, l);
     }
     else if (auto acr = desc->delegate_acr()) {
-        return item_set_length(item.chain(acr), l);
+        item_claim_length(item.chain(acr), claimed, len);
     }
     else throw X::NoElems(item);
+}
+}
+
+void item_set_length (const Reference& item, usize len) {
+    usize claimed = 0;
+    item_claim_length(item, claimed, len);
+    if (claimed > len) {
+        throw X::TooShort(item, claimed, len);
+    }
+    if (claimed < len) {
+        throw X::TooLong(item, claimed, len);
+    }
 }
 
 Reference item_maybe_elem (const Reference& item, usize index) {
     auto desc = DescriptionPrivate::get(item.type());
     if (desc->accepts_array()) {
         if (auto elems = desc->elems()) {
-            if (index < elems->n_elems) {
-                return item.chain(elems->elem(index)->acr());
+             // Including inheritance in this mix turns this from constant-time
+             // to linear time, and thus serializing from linear time into
+             // squared time.  We should probably have set a flag somewhere if
+             // there no inherited elems so we can skip this loop.
+            usize offset = 0;
+            for (usize i = 0; i < elems->n_elems && offset <= index; i++) {
+                auto acr = elems->elem(i)->acr();
+                if (acr->attr_flags & ATTR_INHERIT) {
+                    usize len = item_get_length(item.chain(acr));
+                    if (index - offset < len) {
+                        return item_maybe_elem(item.chain(acr), index - offset);
+                    }
+                    offset += len;
+                }
+                else {
+                    if (offset == index) return item.chain(acr);
+                    offset += 1;
+                }
             }
+            return Reference();
         }
-        if (auto elem_func = desc->elem_func()) {
+        else if (auto elem_func = desc->elem_func()) {
             return item.chain_elem_func(elem_func->f, index);
         }
         else return Reference();
@@ -626,6 +675,7 @@ DiagnosticSerialization::DiagnosticSerialization () {
 }
 DiagnosticSerialization::~DiagnosticSerialization () {
     diagnostic_serialization -= 1;
+    assert(diagnostic_serialization >= 0);
 }
 
 ///// ERRORS
@@ -684,13 +734,20 @@ AYU_DESCRIBE(ayu::X::UnwantedAttr,
         elem(&X::UnwantedAttr::key)
     )
 )
-AYU_DESCRIBE(ayu::X::WrongLength,
+AYU_DESCRIBE(ayu::X::TooShort,
     delegate(base<X::SerError>()),
     attrs(
-        attr("location", &X::WrongLength::location),
-        attr("min", &X::WrongLength::min),
-        attr("max", &X::WrongLength::max),
-        attr("got", &X::WrongLength::got)
+        attr("location", &X::TooShort::location),
+        attr("min", &X::TooShort::min),
+        attr("got", &X::TooShort::got)
+    )
+)
+AYU_DESCRIBE(ayu::X::TooLong,
+    delegate(base<X::SerError>()),
+    attrs(
+        attr("location", &X::TooLong::location),
+        attr("max", &X::TooLong::max),
+        attr("got", &X::TooLong::got)
     )
 )
 AYU_DESCRIBE(ayu::X::NoAttrs,
@@ -775,6 +832,14 @@ namespace ayu::test {
         void foo ();
     };
 
+    struct ElemInheritTest {
+        float a;
+        ElemTest et1;
+        float b;
+        ElemTest et2;
+        float c;
+    };
+
     struct ElemsTest {
         std::vector<int> xs;
     };
@@ -849,6 +914,15 @@ AYU_DESCRIBE(ayu::test::ElemTest,
         elem(member(&ElemTest::x)),
         elem(&ElemTest::y),
         elem(member(&ElemTest::z))
+    )
+)
+AYU_DESCRIBE(ayu::test::ElemInheritTest,
+    elems(
+        elem(&ElemInheritTest::a),
+        elem(&ElemInheritTest::et1, inherit),
+        elem(&ElemInheritTest::b, optional),
+        elem(&ElemInheritTest::et2, inherit|optional),
+        elem(&ElemInheritTest::c, optional)
     )
 )
 AYU_DESCRIBE(ayu::test::ElemsTest,
@@ -1020,15 +1094,39 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     Tree from_tree_et1 = tree_from_string("[3.5 4.5 5.5]");
     item_from_tree(&et, from_tree_et1);
     is(et.y, 4.5, "item_from_tree with elems descriptor");
-    throws<X::WrongLength>([&]{
+    throws<X::TooShort>([&]{
         item_from_string(&et, "[6.5 7.5]");
     }, "item_from_tree throws on too short array with elems descriptor");
-    throws<X::WrongLength>([&]{
+    throws<X::TooLong>([&]{
         item_from_string(&et, "[6.5 7.5 8.5 9.5]");
     }, "item_from_tree throws on too long array with elems descriptor");
     throws<X::InvalidForm>([&]{
         item_from_string(&et, "{x:1.1 y:2.2}");
     }, "item_from_tree throws X::InvalidForm when trying to make elems thing from object");
+
+    auto eit = ElemInheritTest{0xa, {1, 2, 3}, 0xb, {4, 5, 6}, 0xc};
+    is(*(float*)item_elem(&eit, 7), 6, "item_elem with inherited elems");
+    is(*(float*)item_elem(&eit, 8), 0xc, "item_elem with inherited elems");
+    ok(item_maybe_elem(&eit, 9).empty(), "item_elem out of range with inherited elems");
+    Tree eitt = item_to_tree(&eit);
+    is(eitt, tree_from_string("[0xa 1 2 3 0xb 4 5 6 0xc]"), "item_to_tree with inherited elems");
+    Tree from_tree_eit1 = tree_from_string("[0xaa 11 22 33 0xbb 44 55 66 0xcc]");
+    item_from_tree(&eit, from_tree_eit1);
+    is(eit.c, 0xcc, "item_from_tree with inherited elems");
+    is(eit.et2.y, 55, "item_from_tree with inherited elems (inherited elem)");
+    Tree from_tree_eit2 = tree_from_string("[0xaaa 111 222 333]");
+    item_from_tree(&eit, from_tree_eit2);
+    is(eit.a, 0xaaa, "item_from_tree with optional elems (provided)");
+    is(eit.b, 0xbb, "item_from_tree with optional elems (unprovided)");
+    throws<X::TooShort>([&]{
+        item_from_string(&eit, "[1 2 3]");
+    }, "item_from_tree throws on too short array with inherited elems");
+    throws<X::TooLong>([&]{
+        item_from_string(&eit, "[0xa 1 2 3 0xb 4 5 6 0xc 0xd]");
+    }, "item_from_tree throws on too long array with inherited elems");
+    throws<X::TooShort>([&]{
+        item_from_string(&eit, "[0xa 1 2 3 0xb 4]");
+    }, "item_from_tree throws on partially provided optional inherited element");
 
     auto est = ElemsTest{{1, 3, 6, 10, 15, 21}};
     is(item_get_length(&est), 6u, "item_get_length");

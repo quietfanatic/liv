@@ -32,9 +32,8 @@ namespace ayu::in {
 struct ComparableAddress { };
 static_assert(sizeof(ComparableAddress) == 1);
 
- // [[no_unique_address]] causes internal compiler errors in GCC 9.1, so we're
- // still relying on this classical workaround.  TODO: Undo workaround.
- // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98463
+ // We could use [[no_unique_address]] but this is more aggressive at optimizing
+ // out empty structs.
 template <size_t, class Head, bool = std::is_empty_v<Head>>
 struct CatHead;
 template <size_t i, class Head>
