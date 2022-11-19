@@ -86,7 +86,7 @@ struct FileResourceScheme : ResourceScheme {
 };
 
 namespace X {
-    struct ResourceNameError : LogicError { };
+    struct ResourceNameError : Error { };
      // An invalid IRI was given as a resource name.
     struct InvalidResourceName : ResourceNameError {
         String name;

@@ -160,7 +160,7 @@ inline bool operator != (Type a, Type b) {
 }
 
 namespace X {
-    struct TypeError : LogicError { };
+    struct TypeError : Error { };
      // Tried to map a C++ type to an AYU type, but AYU doesn't know about this
      // type (it has no AYU_DESCRIBE description).
      // TODO: serializing this doesn't work?

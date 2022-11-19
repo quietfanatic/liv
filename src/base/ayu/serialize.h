@@ -112,7 +112,7 @@ struct DiagnosticSerialization {
 
 namespace ayu::X {
      // Generic serialization error
-    struct SerError : LogicError {
+    struct SerError : Error {
         Location location;
         SerError (const Reference& item);
         SerError (Location&& loc) : location(std::move(loc)) { }
@@ -199,8 +199,8 @@ namespace ayu::X {
     };
      // Tried to transform a Reference into a path, but a global scan could not
      // find where the Reference pointed to.
-    struct UnresolvedReference : LogicError {
+    struct UnresolvedReference : SerError {
         Type type;
-        UnresolvedReference (const Reference& r) : type(r.type()) { }
+        UnresolvedReference (const Reference& r) : SerError(Location()), type(r.type()) { }
     };
 }

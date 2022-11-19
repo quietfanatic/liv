@@ -224,7 +224,7 @@ std::vector<Resource> loaded_resources ();
 ///// ERRORS
 
 namespace X {
-    struct ResourceError : LogicError { };
+    struct ResourceError : Error { };
      // Tried an an operation on a resource when its state wasn't appropriate
      // for that operation.
     struct InvalidResourceState : ResourceError {

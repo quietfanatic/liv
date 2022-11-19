@@ -12,7 +12,7 @@
  // Theoretically, this should never be thrown (in all circumstances,
  // X::WriteReadonlyReference should be thrown instead).
 namespace ayu::X {
-    struct WriteReadonlyAccessor : LogicError { };
+    struct WriteReadonlyAccessor : Error { };
 }
 
 namespace ayu::in {

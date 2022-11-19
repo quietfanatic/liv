@@ -255,32 +255,40 @@ AYU_DESCRIBE(ayu::Type,
 )
 
 AYU_DESCRIBE(ayu::X::TypeError,
-    delegate(base<X::LogicError>())
+    delegate(base<X::Error>())
 )
 
 AYU_DESCRIBE(ayu::X::UnknownType,
-    delegate(base<X::TypeError>()),
-    elems(elem(value_func<std::string>(
-        [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }
-    )))
+    elems(
+        elem(base<X::TypeError>(), inherit),
+        elem(value_func<std::string>(
+            [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }
+        ))
+    )
 )
 
 AYU_DESCRIBE(ayu::X::TypeNotFound,
-    delegate(base<X::TypeError>()),
-    elems(elem(&X::TypeNotFound::name))
+    elems(
+        elem(base<X::TypeError>(), inherit),
+        elem(&X::TypeNotFound::name)
+    )
 )
 
 AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
-    delegate(base<X::TypeError>()),
-    elems( elem(&X::CannotDefaultConstruct::type) )
+    elems(
+        elem(base<X::TypeError>(), inherit),
+        elem(&X::CannotDefaultConstruct::type)
+    )
 )
 AYU_DESCRIBE(ayu::X::CannotDestruct,
-    delegate(base<X::TypeError>()),
-    elems( elem(&X::CannotDestruct::type) )
+    elems(
+        elem(base<X::TypeError>(), inherit),
+        elem(&X::CannotDestruct::type)
+    )
 )
 AYU_DESCRIBE(ayu::X::CannotCoerce,
-    delegate(base<X::TypeError>()),
     elems(
+        elem(base<X::TypeError>(), inherit),
         elem(&X::CannotCoerce::from),
         elem(&X::CannotCoerce::to)
     )

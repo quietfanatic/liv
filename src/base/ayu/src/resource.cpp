@@ -564,34 +564,36 @@ AYU_DESCRIBE(ayu::X::ResourceError,
     delegate(base<X::Error>())
 )
 AYU_DESCRIBE(ayu::X::InvalidResourceState,
-    delegate(base<X::ResourceError>()),
     elems(
+        elem(base<X::ResourceError>(), inherit),
         elem(&X::InvalidResourceState::tried),
         elem(&X::InvalidResourceState::state),
         elem(&X::InvalidResourceState::res)
     )
 )
 AYU_DESCRIBE(ayu::X::EmptyResourceValue,
-    delegate(base<X::ResourceError>()),
-    elems(elem(&X::EmptyResourceValue::name))
+    elems(
+        elem(base<X::ResourceError>(), inherit),
+        elem(&X::EmptyResourceValue::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::UnloadWouldBreak,
-    delegate(base<X::ResourceError>()),
     elems(
+        elem(base<X::ResourceError>(), inherit),
         elem(&X::UnloadWouldBreak::from),
         elem(&X::UnloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::ReloadWouldBreak,
-    delegate(base<X::ResourceError>()),
     elems(
+        elem(base<X::ResourceError>(), inherit),
         elem(&X::ReloadWouldBreak::from),
         elem(&X::ReloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
-    delegate(base<X::ResourceError>()),
     elems(
+        elem(base<X::ResourceError>(), inherit),
         elem(&X::RemoveSourceFailed::res),
         elem(value_func<String>(
             [](const X::RemoveSourceFailed& v){

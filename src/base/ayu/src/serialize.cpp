@@ -694,87 +694,79 @@ namespace X {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::X::SerError,
-    delegate(base<X::Error>())
+    elems(
+        elem(base<X::Error>(), inherit)
+    ),
+    attrs(
+        attr("ayu::X::Error", base<X::Error>(), inherit)
+    )
 )
 
 AYU_DESCRIBE(ayu::X::CannotToTree,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::CannotToTree::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::CannotFromTree,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::CannotFromTree::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::InvalidForm,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::InvalidForm::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::NoNameForValue,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::NoNameForValue::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::NoValueForName,
-    delegate(base<X::SerError>()),
     elems(
-        elem(&X::NoValueForName::location),
+        elem(base<X::SerError>(), inherit),
         elem(&X::NoValueForName::tree)
     )
 )
 AYU_DESCRIBE(ayu::X::MissingAttr,
-    delegate(base<X::SerError>()),
     elems(
-        elem(&X::MissingAttr::location),
+        elem(base<X::SerError>(), inherit),
         elem(&X::MissingAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::UnwantedAttr,
-    delegate(base<X::SerError>()),
     elems(
-        elem(&X::UnwantedAttr::location),
+        elem(base<X::SerError>(), inherit),
         elem(&X::UnwantedAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::X::TooShort,
-    delegate(base<X::SerError>()),
     attrs(
-        attr("location", &X::TooShort::location),
+        attr("ayu::X::SerError", base<X::SerError>(), inherit),
         attr("min", &X::TooShort::min),
         attr("got", &X::TooShort::got)
     )
 )
 AYU_DESCRIBE(ayu::X::TooLong,
-    delegate(base<X::SerError>()),
     attrs(
-        attr("location", &X::TooLong::location),
+        attr("ayu::X::SerError", base<X::SerError>(), inherit),
         attr("max", &X::TooLong::max),
         attr("got", &X::TooLong::got)
     )
 )
 AYU_DESCRIBE(ayu::X::NoAttrs,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::NoAttrs::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::NoElems,
-    delegate(base<X::SerError>()),
-    elems( elem(&X::NoElems::location) )
+    delegate(base<X::SerError>())
 )
 AYU_DESCRIBE(ayu::X::AttrNotFound,
-    delegate(base<X::SerError>()),
     elems(
-        elem(&X::AttrNotFound::location),
+        elem(base<X::SerError>(), inherit),
         elem(&X::AttrNotFound::key)
     )
 )
 AYU_DESCRIBE(ayu::X::ElemNotFound,
-    delegate(base<X::SerError>()),
     elems(
-        elem(&X::ElemNotFound::location),
+        elem(base<X::SerError>(), inherit),
         elem(&X::ElemNotFound::index)
     )
 )
 AYU_DESCRIBE(ayu::X::UnresolvedReference,
-    delegate(base<X::LogicError>()),
-    elems( elem(&X::UnresolvedReference::type) )
+    delegate(base<X::SerError>()),
+    elems(elem(&X::UnresolvedReference::type))
 )
 
 ///// TESTS

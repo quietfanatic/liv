@@ -204,11 +204,15 @@ AYU_DESCRIBE(ayu::Reference,
     })
 )
 
+AYU_DESCRIBE(ayu::X::ReferenceError,
+    elems(
+        elem(base<X::Error>(), inherit),
+        elem(&X::ReferenceError::location)
+    )
+)
 AYU_DESCRIBE(ayu::X::WriteReadonlyReference,
-    delegate(base<X::LogicError>()),
-    elems( elem(&X::WriteReadonlyReference::location) )
+    elems(elem(base<X::ReferenceError>(), inherit))
 )
 AYU_DESCRIBE(ayu::X::UnaddressableReference,
-    delegate(base<X::LogicError>()),
-    elems( elem(&X::UnaddressableReference::location) )
+    elems(elem(base<X::ReferenceError>(), inherit))
 )

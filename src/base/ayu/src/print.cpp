@@ -241,8 +241,10 @@ void tree_to_file (const Tree& tree, Str filename, PrintOptions opts) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::X::InvalidPrintOptions,
-    delegate(base<X::Error>()),
-    elems(elem(&X::InvalidPrintOptions::opts))
+    elems(
+        elem(base<X::Error>(), inherit),
+        elem(&X::InvalidPrintOptions::opts)
+    )
 )
 
 #ifndef TAP_DISABLE_TESTS

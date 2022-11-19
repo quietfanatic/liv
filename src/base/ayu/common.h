@@ -142,16 +142,10 @@ namespace X {
          // Calls item_to_string on the most derived type
         const char* what () const noexcept override;
     };
-     // Things like incorrect attribute names, type mismatches
-    struct LogicError : Error { };
      // Unclassified error
-    struct GenericError : LogicError {
+    struct GenericError : Error {
         String mess;
         GenericError (String&& m) : mess(m) { }
-    };
-     // Triggered an unimplemented code path
-    struct UnimplementedError : GenericError {
-        using GenericError::GenericError;
     };
      // General IO-related problem
     struct IOError : Error {

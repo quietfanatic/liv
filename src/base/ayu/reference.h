@@ -289,16 +289,18 @@ inline bool operator != (const Reference& a, const Reference& b) {
 }
 
 namespace X {
-     // Tried to write to a readonly reference.
-    struct WriteReadonlyReference : LogicError {
+    struct ReferenceError : Error {
         Location location;
-        WriteReadonlyReference (const Reference& r);
+        ReferenceError (const Reference& r);
+    };
+     // Tried to write to a readonly reference.
+    struct WriteReadonlyReference : ReferenceError {
+        using ReferenceError::ReferenceError;
     };
      // Used the reference in a context where its address was required, but it
      // has no address.
-    struct UnaddressableReference : LogicError {
-        Location location;
-        UnaddressableReference (const Reference& r);
+    struct UnaddressableReference : ReferenceError {
+        using ReferenceError::ReferenceError;
     };
 }
 
@@ -339,10 +341,7 @@ inline Reference Reference::maybe_elem (usize index) const { return item_maybe_e
 inline Reference Reference::elem (usize index) const { return item_elem(*this, index); }
 
 namespace X {
-    inline WriteReadonlyReference::WriteReadonlyReference (const Reference& r) :
-        location(reference_to_location(r))
-    { }
-    inline UnaddressableReference::UnaddressableReference (const Reference& r) :
+    inline ReferenceError::ReferenceError (const Reference& r) :
         location(reference_to_location(r))
     { }
 }

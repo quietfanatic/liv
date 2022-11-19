@@ -14,7 +14,7 @@ String string_from_file (Str filename);
 Tree tree_from_file (Str filename);
 
 namespace X {
-    struct ParseError : LogicError {
+    struct ParseError : Error {
         String mess;
         String filename;
         uint line;

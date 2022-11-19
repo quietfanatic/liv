@@ -250,25 +250,35 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
     )
 )
 
+AYU_DESCRIBE(ayu::X::DocumentError,
+    delegate(base<X::Error>())
+)
+
 AYU_DESCRIBE(ayu::X::DocumentInvalidName,
-    delegate(base<X::DocumentError>()),
-    elems( elem(&X::DocumentInvalidName::name) )
+    elems(
+        elem(base<X::DocumentError>(), inherit),
+        elem(&X::DocumentInvalidName::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::DocumentDuplicateName,
-    delegate(base<X::DocumentError>()),
-    elems( elem(&X::DocumentDuplicateName::name) )
+    elems(
+        elem(base<X::DocumentError>(), inherit),
+        elem(&X::DocumentDuplicateName::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::DocumentDeleteWrongType,
-    delegate(base<X::DocumentError>()),
     elems(
+        elem(base<X::DocumentError>(), inherit),
         elem(&X::DocumentDeleteWrongType::existing),
         elem(&X::DocumentDeleteWrongType::deleted_as)
     )
 )
 AYU_DESCRIBE(ayu::X::DocumentDeleteNotOwned,
-    delegate(base<X::DocumentError>())
+    elems(elem(base<X::DocumentError>(), inherit))
 )
 AYU_DESCRIBE(ayu::X::DocumentDeleteMissing,
-    delegate(base<X::DocumentError>()),
-    elems( elem(&X::DocumentDeleteMissing::name) )
+    elems(
+        elem(base<X::DocumentError>(), inherit),
+        elem(&X::DocumentDeleteMissing::name)
+    )
 )

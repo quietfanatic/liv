@@ -219,17 +219,21 @@ AYU_DESCRIBE(ayu::Tree,
     from_tree([](Tree& v, const Tree& t){ v = t; })
 )
 
+AYU_DESCRIBE(ayu::X::TreeError,
+    delegate(base<X::Error>())
+)
+
 AYU_DESCRIBE(ayu::X::WrongForm,
-    delegate(base<X::LogicError>()),
     elems(
+        elem(base<X::TreeError>(), inherit),
         elem(&X::WrongForm::form),
         elem(&X::WrongForm::tree)
     )
 )
 
 AYU_DESCRIBE(ayu::X::CantRepresent,
-    delegate(base<X::LogicError>()),
     elems(
+        elem(base<X::TreeError>(), inherit),
         elem(&X::CantRepresent::type_name),
         elem(&X::CantRepresent::tree)
     )

@@ -42,30 +42,40 @@ AYU_DESCRIBE(ayu::X::ResourceNameError,
     delegate(base<X::Error>())
 )
 AYU_DESCRIBE(ayu::X::InvalidResourceName,
-    delegate(base<X::ResourceNameError>()),
-    elems(elem(&X::InvalidResourceName::name))
+    elems(
+        elem(base<X::ResourceNameError>(), inherit),
+        elem(&X::InvalidResourceName::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::UnknownResourceScheme,
-    delegate(base<X::ResourceNameError>()),
-    elems(elem(&X::UnknownResourceScheme::name))
+    elems(
+        elem(base<X::ResourceNameError>(), inherit),
+        elem(&X::UnknownResourceScheme::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::UnacceptableResourceName,
-    delegate(base<X::ResourceNameError>()),
-    elems(elem(&X::UnacceptableResourceName::name))
+    elems(
+        elem(base<X::ResourceNameError>(), inherit),
+        elem(&X::UnacceptableResourceName::name)
+    )
 )
 AYU_DESCRIBE(ayu::X::UnacceptableResourceType,
-    delegate(base<X::ResourceNameError>()),
     elems(
+        elem(base<X::ResourceNameError>(), inherit),
         elem(&X::UnacceptableResourceType::name),
         elem(&X::UnacceptableResourceType::type)
     )
 )
 AYU_DESCRIBE(ayu::X::InvalidResourceScheme,
-    delegate(base<X::ResourceNameError>()),
-    elems(elem(&X::InvalidResourceScheme::scheme))
+    elems(
+        elem(base<X::ResourceNameError>(), inherit),
+        elem(&X::InvalidResourceScheme::scheme)
+    )
 )
 AYU_DESCRIBE(ayu::X::DuplicateResourceScheme,
-    delegate(base<X::ResourceNameError>()),
-    elems(elem(&X::DuplicateResourceScheme::scheme))
+    elems(
+        elem(base<X::ResourceNameError>(), inherit),
+        elem(&X::DuplicateResourceScheme::scheme)
+    )
 )
 
