@@ -32,7 +32,6 @@ AYU_DESCRIBE_SCALAR(double)
  // their ownership is ambiguous.  Possibly we should relax this restriction,
  // because they could be useful for keys().
 AYU_DESCRIBE_SCALAR(std::string)
- // TODO u8string
 AYU_DESCRIBE_SCALAR(std::u16string)
 #undef AYU_DESCRIBE_SCALAR
 
