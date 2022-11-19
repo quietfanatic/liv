@@ -212,7 +212,9 @@ struct Parser {
                 throw error("Malformed number"sv);
             }
             else if (ptr == word.end()) {
-                return Tree(minus ? -integer : integer);
+                return minus && integer == 0
+                    ? Tree(-0.0)
+                    : Tree(minus ? -integer : integer);
             }
              // Forbid . without a digit after
             else if (ptr < word.end() && ptr[0] == '.') {

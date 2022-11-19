@@ -104,6 +104,9 @@ struct Printer {
                     if (opts & JSON) out += "-1e999";
                     else out += "-inf"sv;
                 }
+                else if (v == 0 && 1.0/v == -inf) {
+                    out += "-0"sv;
+                }
                 else {
                     char buf [32]; // Should be enough?
                     auto [ptr, ec] = std::to_chars(buf, buf+32, v);
@@ -290,6 +293,8 @@ static tap::TestSet tests ("base/ayu/print", []{
     test(tree_to_string(t, COMPACT), compact, "Compact");
     test(tree_to_string(t, PRETTY|JSON), pretty_json, "Pretty JSON");
     test(tree_to_string(t, COMPACT|JSON), compact_json, "Compact JSON");
+    test(tree_to_string(Tree(1.0)), "1", "Autointification small");
+    test(tree_to_string(Tree(145.0)), "145", "Autointification small");
 
     done_testing();
 });

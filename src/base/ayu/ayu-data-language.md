@@ -40,7 +40,8 @@ Numbers must not start or end with a `.`.  `.5` and `5.` are not valid numbers.
 
 Three special numeric values are supported: `+inf`, `-inf`, and `+nan`.  The
 sign is required on all of these.  Without the sign, they would be considered
-strings.
+strings.  There is only one +nan, which is the canonical NaN for the platform.
+-0.0 is preserved but considered equal to +0.0.
 
 The reference implementation supports floating-point numbers of double precision
 and all integers between -2^63 and 2^63-1.

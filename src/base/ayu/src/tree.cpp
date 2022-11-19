@@ -38,27 +38,60 @@ Form Tree::form () const { return form_of_rep(data->rep); }
 static TreeDataT<Null> global_null {null, 1};
 static TreeDataT<bool> global_false {false, 1};
 static TreeDataT<bool> global_true {true, 1};
-static TreeDataT<int64> global_0 {0, 1};
+static TreeDataT<int64> global_ints [16] = {
+    {-8, 1},
+    {-7, 1},
+    {-6, 1},
+    {-5, 1},
+    {-4, 1},
+    {-3, 1},
+    {-2, 1},
+    {-1, 1},
+    {0, 1},
+    {1, 1},
+    {2, 1},
+    {3, 1},
+    {4, 1},
+    {5, 1},
+    {6, 1},
+    {7, 1}
+};
 static TreeDataT<double> global_nan {nan, 1};
+static TreeDataT<double> global_plus_inf {inf, 1};
+static TreeDataT<double> global_minus_inf {-inf, 1};
+static TreeDataT<double> global_minus_zero {-0.0, 1};
 static TreeDataT<String> global_empty_string {""s, 1};
 static TreeDataT<Array> global_empty_array {Array{}, 1};
 static TreeDataT<Object> global_empty_object {Object{}, 1};
 
 Tree::Tree (Null) : Tree(&global_null) { }
 namespace in {
-    TreeData* TreeData_bool (bool v) { return v ? &global_true : &global_false; }
+    TreeData* TreeData_bool (bool v) {
+        return v ? &global_true : &global_false;
+    }
 }
-Tree::Tree (int64 v) : Tree(v == 0 ? &global_0 : new TreeDataT<int64>(v)) { }
+Tree::Tree (int64 v) : Tree(
+    v >= -8 && v < 8
+        ? &global_ints[v+8]
+        : new TreeDataT<int64>(v)
+) { }
 Tree::Tree (double v) : Tree(
     v != v ? static_cast<TreeData*>(&global_nan)
-  : v == 0 ? static_cast<TreeData*>(&global_0)
-  : static_cast<TreeData*>(new TreeDataT<double>(v))
+  : v == inf ? static_cast<TreeData*>(&global_plus_inf)
+  : v == -inf ? static_cast<TreeData*>(&global_minus_inf)
+  : v == 0 && (1.0/v == -inf) ? static_cast<TreeData*>(&global_minus_zero)
+  : int64(v) == v && int64(v) >= -8 && int64(v) < 8
+      ? static_cast<TreeData*>(&global_ints[int64(v)+8])
+      : static_cast<TreeData*>(new TreeDataT<double>(v))
 ) { }
 Tree::Tree (String&& v) : Tree(
     v.empty() ? &global_empty_string
               : new TreeDataT<String>(std::move(v))
 ) { }
-Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
+Tree::Tree (String16&& v) : Tree(
+    v.empty() ? &global_empty_string
+              : new TreeDataT<String>(from_utf16(v))
+) { }
 Tree::Tree (const Array& v) : Tree(
     v.empty() ? &global_empty_array
               : new TreeDataT<Array>(v)
