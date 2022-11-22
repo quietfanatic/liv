@@ -48,7 +48,7 @@ Str show_ResourceState (ResourceState state) {
 ///// RESOURCES
 
  // These are separate because it's not known at call time whether we will need
- // to copy or not, so we can't leave the decision to the caller.
+ // to copy or not.  We won't know until just about the end of the constructor.
 Resource::Resource (const IRI& name) {
     if (name.has_fragment()) {
         new (this) Resource(name.iri_without_fragment());
@@ -64,12 +64,13 @@ Resource::Resource (const IRI& name) {
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
     if (iter != resources.end()) {
-        data = iter->second;
+        data = &*iter->second;
     }
     else {
-        data = new ResourceData{name};
+        auto ptr = std::make_unique<ResourceData>(name);
+        data = &*ptr;
          // Be careful about storing the right Str (std::string_view)
-        resources.emplace(data->name.spec(), data);
+        resources.emplace(data->name.spec(), std::move(ptr));
     }
 }
 Resource::Resource (IRI&& name) {
@@ -86,12 +87,13 @@ Resource::Resource (IRI&& name) {
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
     if (iter != resources.end()) {
-        data = iter->second;
+        data = &*iter->second;
     }
     else {
-        data = new ResourceData{std::move(name)};
+        auto ptr = std::make_unique<ResourceData>(name);
+        data = &*ptr;
          // Be careful about storing the right Str (std::string_view)
-        resources.emplace(data->name.spec(), data);
+        resources.emplace(data->name.spec(), std::move(ptr));
     }
 }
 Resource::Resource (Str ref) {
@@ -295,8 +297,8 @@ void unload (const std::vector<Resource>& reses) {
             switch (other->state) {
                 case UNLOADED: continue;
                 case UNLOAD_VERIFYING: continue;
-                case LOADED: others.emplace_back(other); break;
-                default: throw X::InvalidResourceState("scan for unload"sv, other);
+                case LOADED: others.emplace_back(&*other); break;
+                default: throw X::InvalidResourceState("scan for unload"sv, &*other);
             }
         }
          // If we're unloading everything, no need to do any scanning.
@@ -411,8 +413,8 @@ void reload (const std::vector<Resource>& reses) {
             switch (other->state) {
                 case UNLOADED: continue;
                 case RELOAD_VERIFYING: continue;
-                case LOADED: others.emplace_back(other); break;
-                default: throw X::InvalidResourceState("scan for reload"sv, other);
+                case LOADED: others.emplace_back(&*other); break;
+                default: throw X::InvalidResourceState("scan for reload"sv, &*other);
             }
         }
          // If we're reloading everything, no need to do any scanning.
@@ -530,7 +532,7 @@ std::vector<Resource> loaded_resources () {
     std::vector<Resource> r;
     for (auto& [name, rd] : universe().resources)
     if (rd->state != UNLOADED) {
-        r.push_back(rd);
+        r.push_back(&*rd);
     }
     return r;
 }

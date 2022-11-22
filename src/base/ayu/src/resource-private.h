@@ -1,16 +1,16 @@
 #pragma once
 
+#include <memory>
+#include <unordered_map>
 #include "../common.h"
 #include "../resource.h"
 #include "../resource-scheme.h"
-
-#include <unordered_map>
 
 namespace ayu {
 namespace in {
 
     struct Universe {
-        std::unordered_map<Str, ResourceData*> resources;
+        std::unordered_map<Str, std::unique_ptr<ResourceData>> resources;
         Resource current_resource;
         std::unordered_map<String, const ResourceScheme*> schemes;
         FileResourceScheme default_scheme {"file"s, "/"s, false};

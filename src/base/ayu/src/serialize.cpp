@@ -625,7 +625,7 @@ void recursive_scan_universe (
     Callback<void(const Reference&, Location)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
-        recursive_scan_resource(Resource(resdat), cb);
+        recursive_scan_resource(Resource(&*resdat), cb);
     }
 }
 
