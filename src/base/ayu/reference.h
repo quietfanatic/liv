@@ -74,11 +74,9 @@ struct Reference {
     Reference (Dynamic& d) : Reference(d.data, &d.type.desc->identity_acr) { }
      // For use in attr_func and elem_func.
      // Todo: Also check std::is_base_of
-    template <class From, class Acr,
-        std::enable_if_t<
-            std::is_same_v<typename Acr::AccessorFromType, From>, bool
-        > = true
-    >
+    template <class From, class Acr> requires (
+        std::is_same_v<typename Acr::AccessorFromType, From>
+    )
     Reference (From& h, Acr&& a) : Reference(
         reinterpret_cast<Mu*>(&h), new Acr(a)
     ) { }

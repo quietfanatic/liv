@@ -57,33 +57,31 @@ using Str = std::string_view;
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
 
-
-template <class T, class = void>
-struct ToString {
-    static auto to_string (T&& a) { return std::forward<T>(a); }
-};
-template <class T>
-struct ToString<T,
-    std::enable_if_t<
-        !std::is_same_v<std::decay_t<T>, char>,
-        std::void_t<decltype(std::to_string(std::declval<T>()))>
-    >
-> {
-    static auto to_string (T&& a) { return std::to_string(std::forward<T>(a)); }
-};
+namespace in {
+    template <class T, class = void>
+    struct ToString {
+        static auto to_string (T&& a) { return std::forward<T>(a); }
+    };
+    template <class T>
+    concept HasStdToString = requires (T v) { std::to_string(v); };
+    template <HasStdToString T> requires (!std::is_same_v<std::decay_t<T>, char>)
+    struct ToString<T> {
+        static auto to_string (T&& a) { return std::to_string(std::forward<T>(a)); }
+    };
+}
 
  // I'm sick and tired of weirdness around string concatenation operators.
  // Just use this.  It will probably end up being more efficient anyway.
 template <class... Args>
 String cat (Args&&... args) {
     String r; // Should we reserve()?  Profile!
-    ((r += ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    ((r += in::ToString<Args>::to_string(std::forward<Args>(args))), ...);
     return r;
 }
  // Optimization to skip a copy
 template <class... Args>
 String&& cat (String&& s, Args... args) {
-    ((s += ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    ((s += in::ToString<Args>::to_string(std::forward<Args>(args))), ...);
     return std::move(s);
 }
 
@@ -102,9 +100,9 @@ template <class Ret, class... Args>
 struct CallbackV<Ret(Args...)> {
     Ret(* wrapper )(const void*, Args&&...);
     const void* f;
-    template <class F, std::enable_if_t<
-        std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>, bool
-    > = true>
+    template <class F> requires(
+        std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
+    )
     [[gnu::always_inline]]
     constexpr CallbackV (const F& f) :
         wrapper([](const void* f, Args&&... args)->Ret{

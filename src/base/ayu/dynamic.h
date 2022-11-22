@@ -8,6 +8,16 @@
 
 namespace ayu {
 
+namespace in {
+     // Filter out types that would be confusing or ambiguous to implicitly cast
+     // to or from Dynamic.
+    template <class T>
+    concept AllowedForImplicitDynamic =
+        !std::is_base_of_v<Dynamic, T>
+        && !std::is_base_of_v<Type, T>
+        && !std::is_reference_v<T>;
+}
+
  // Represents a dynamically typed object with value semantics.  This is
  // always allocated on the heap.  Can only represent types known to ayu.
  // Can be moved but not copied.
@@ -15,14 +25,6 @@ namespace ayu {
 struct Dynamic {
     const Type type;
     Mu* const data;
-
-     // Filter out types that aren't allowed here
-    template <class T>
-    using AllowedForDynamic = std::enable_if_t<
-        !std::is_base_of_v<Dynamic, T>
-        && !std::is_base_of_v<Type, T>
-        && !std::is_reference_v<T>
-    , bool>;
 
      // The empty value will cause null derefs if you do anything with it.
     constexpr Dynamic () : type(), data(null) { }
@@ -39,11 +41,12 @@ struct Dynamic {
         const_cast<Mu*&>(o.data) = null;
     }
      // Construct by moving an arbitrary type in
-    template <class T, AllowedForDynamic<T> = true>
+    template <in::AllowedForImplicitDynamic T>
     Dynamic (T&& v) :
         Dynamic(Type::CppType<T>(), reinterpret_cast<Mu*>(new T (std::move(v))))
     { }
-     // Construct with arguments
+     // Construct with arguments.
+     // TODO: Use Type::allocate!  Type uses malloc/free, not new/delete
     template <class T, class... Args>
     static Dynamic make (Args&&... args) {
         return Dynamic(
@@ -91,11 +94,11 @@ struct Dynamic {
         return as<std::remove_cvref_t<T>>();
     }
      // Explicit coercion
-    template <class T, AllowedForDynamic<T> = true>
+    template <in::AllowedForImplicitDynamic T>
     explicit operator T& () {
         return as<T>();
     }
-    template <class T, AllowedForDynamic<T> = true>
+    template <in::AllowedForImplicitDynamic T>
     explicit operator const T& () const {
         return as<T>();
     }

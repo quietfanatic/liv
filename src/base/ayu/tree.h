@@ -30,7 +30,7 @@ struct Tree {
 
     explicit Tree (Null v);
      // Disable implicit coercion of the argument to bool
-    template <class T, std::enable_if_t<std::is_same_v<std::decay_t<T>, bool>, bool> = true>
+    template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
     explicit Tree (T v);
      // plain (not signed or unsigned) chars are represented as strings
     explicit Tree (char v) : Tree(String(1,v)) { }
@@ -118,7 +118,7 @@ namespace X {
 namespace in {
     TreeData* TreeData_bool (bool);
 }
-template <class T, std::enable_if_t<std::is_same_v<std::decay_t<T>, bool>, bool>>
+template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
 Tree::Tree (T v) : Tree(in::TreeData_bool(v)) { }
 
 }  // namespace ayu
