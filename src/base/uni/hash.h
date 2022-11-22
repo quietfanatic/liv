@@ -10,7 +10,7 @@ template <class T>
 constexpr uint64 x31_hash (T* s) {
     uint64 h = 0;
     for (; *s != 0; s++) {
-        h = (h << 5) - h + *s;
+        h = (h << 5) - h + uint64(*s);
     }
     return h;
 }
@@ -20,7 +20,7 @@ template <class T>
 constexpr uint64 x31_hash (T s) {
     uint64 h = 0;
     for (auto c : s) {
-        h = (h << 5) - h + c;
+        h = (h << 5) - h + uint64(c);
     }
     return h;
 }
