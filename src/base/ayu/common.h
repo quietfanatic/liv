@@ -62,9 +62,10 @@ namespace in {
     struct ToString {
         static auto to_string (T&& a) { return std::forward<T>(a); }
     };
-    template <class T>
-    concept HasStdToString = requires (T v) { std::to_string(v); };
-    template <HasStdToString T> requires (!std::is_same_v<std::decay_t<T>, char>)
+    template <class T> requires (
+        !std::is_same_v<std::decay_t<T>, char>
+        && requires (T v) { std::to_string(v); }
+    )
     struct ToString<T> {
         static auto to_string (T&& a) { return std::to_string(std::forward<T>(a)); }
     };

@@ -206,7 +206,8 @@ struct _AYU_DescribeBase {
      // the given key.  You can create that Reference any way you like, such as
      // by using a pointer to the child item, or by using a pointer to the
      // parent item plus an accessor (see ACCESSORS).  If the parent item has no
-     // attribute with the given key, you should return an empty Reference.
+     // attribute with the given key, you should return an empty or null
+     // Reference.
      //
      // You should expect that this may be called with a key that was not in the
      // output of the `keys` accessor, and return an empty Reference if that
@@ -290,7 +291,7 @@ struct _AYU_DescribeBase {
      //
      // You should expect that this might be called with an index larger than
      // what was returned by the length() accessor, in which case you should
-     // return an empty Reference.
+     // return an empty or null Reference.
      //
      // elems() and elem_func() may both be specified, in which case elem_func()
      // will only be called if the requested index is larger than the index of

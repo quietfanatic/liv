@@ -78,7 +78,7 @@ void ReferenceFuncAcr1::_access (const Accessor* acr, AccessOp op, Mu& from, Cal
 Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
     auto ref = self->f(from);
-    if (ref.empty()) return null;
+    assert(ref.type());
     return ref.address();
 }
 

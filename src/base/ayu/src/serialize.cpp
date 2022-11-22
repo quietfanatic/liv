@@ -1099,7 +1099,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     auto eit = ElemInheritTest{0xa, {1, 2, 3}, 0xb, {4, 5, 6}, 0xc};
     is(*(float*)item_elem(&eit, 7), 6, "item_elem with inherited elems");
     is(*(float*)item_elem(&eit, 8), 0xc, "item_elem with inherited elems");
-    ok(item_maybe_elem(&eit, 9).empty(), "item_elem out of range with inherited elems");
+    ok(!item_maybe_elem(&eit, 9).type(), "item_elem out of range with inherited elems");
     Tree eitt = item_to_tree(&eit);
     is(eitt, tree_from_string("[0xa 1 2 3 0xb 4 5 6 0xc]"), "item_to_tree with inherited elems");
     Tree from_tree_eit1 = tree_from_string("[0xaa 11 22 33 0xbb 44 55 66 0xcc]");

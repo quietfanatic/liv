@@ -1,3 +1,8 @@
+// Represents a dynamically typed object with value semantics.  This is always
+// allocated on the heap.  Can only represent types known to ayu.  Can be moved
+// but not copied.  There is an empty Dynamic which has no type and no value,
+// but unlike Reference, there is no "null" Dynamic which has type and no value.
+// If there is a type there is a value, and vice versa.
 #pragma once
 
 #include <cassert>
@@ -8,19 +13,6 @@
 
 namespace ayu {
 
-namespace in {
-     // Filter out types that would be confusing or ambiguous to implicitly cast
-     // to or from Dynamic.
-    template <class T>
-    concept AllowedForImplicitDynamic =
-        !std::is_base_of_v<Dynamic, T>
-        && !std::is_base_of_v<Type, T>
-        && !std::is_reference_v<T>;
-}
-
- // Represents a dynamically typed object with value semantics.  This is
- // always allocated on the heap.  Can only represent types known to ayu.
- // Can be moved but not copied.
  // TODO: Should we rename this to Any?
 struct Dynamic {
     const Type type;
@@ -41,7 +33,11 @@ struct Dynamic {
         const_cast<Mu*&>(o.data) = null;
     }
      // Construct by moving an arbitrary type in
-    template <in::AllowedForImplicitDynamic T>
+    template <class T> requires (
+        !std::is_base_of_v<Dynamic, T>
+        && !std::is_base_of_v<Type, T>
+        && !std::is_reference_v<T>
+    )
     Dynamic (T&& v) :
         Dynamic(Type::CppType<T>(), reinterpret_cast<Mu*>(new T (std::move(v))))
     { }
@@ -69,6 +65,10 @@ struct Dynamic {
         assert(!!type == !!data);
         return !!type;
     }
+    bool empty () const {
+        assert(!!type == !!data);
+        return !type;
+    }
      // Runtime casting
     Mu& as (Type t) {
         return *type.cast_to(t, data);
@@ -94,11 +94,19 @@ struct Dynamic {
         return as<std::remove_cvref_t<T>>();
     }
      // Explicit coercion
-    template <in::AllowedForImplicitDynamic T>
+    template <class T> requires (
+        !std::is_base_of_v<Dynamic, T>
+        && !std::is_base_of_v<Type, T>
+        && !std::is_reference_v<T>
+    )
     explicit operator T& () {
         return as<T>();
     }
-    template <in::AllowedForImplicitDynamic T>
+    template <class T> requires (
+        !std::is_base_of_v<Dynamic, T>
+        && !std::is_base_of_v<Type, T>
+        && !std::is_reference_v<T>
+    )
     explicit operator const T& () const {
         return as<T>();
     }

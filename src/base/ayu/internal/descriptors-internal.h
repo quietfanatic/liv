@@ -107,19 +107,17 @@ using DefaultConstructor = void(void*);
 using Destructor = void(Mu&);
 
  // Determine presence of constructors and stuff using a sfinae trick
-template <class T, class = void>
-constexpr DefaultConstructor* default_construct_p = null;
 template <class T>
-constexpr DefaultConstructor* default_construct_p<
-    T, std::void_t<decltype(new (null) T)>
-> = [](void* target){ new (target) T; };
+constexpr DefaultConstructor* default_construct_p = null;
+template <class T> requires (requires { new (null) T; })
+constexpr DefaultConstructor* default_construct_p<T>
+    = [](void* target){ new (target) T; };
 
 template <class T, class = void>
 constexpr Destructor* destruct_p = null;
-template <class T>
-constexpr Destructor* destruct_p<
-    T, std::void_t<decltype(std::declval<T>().~T())>
-> = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
+template <class T> requires (requires (T& v) { v.~T(); })
+constexpr Destructor* destruct_p<T>
+    = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
  // values() absolutely requires them.
@@ -402,9 +400,11 @@ static_assert(sizeof(IdentityAcr) == sizeof(ReadonlyIdentityAcr));
 ///// DESCRIPTION HEADER
 
 struct Description : ComparableAddress {
+     // Don't put anything before these!  See their definitions for why.
     IdentityAcr identity_acr = constexpr_acr(IdentityAcr());
     ReadonlyIdentityAcr readonly_identity_acr =
         constexpr_acr(ReadonlyIdentityAcr());
+
     const std::type_info* cpp_type = null;
     size_t cpp_size = 0;
     DefaultConstructor* default_construct = null;

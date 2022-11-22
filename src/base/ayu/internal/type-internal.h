@@ -30,7 +30,7 @@ namespace ayu::in {
      // shouldn't be dereferenced.
     bool is_valid_type (const Description*);
 
-    template <class T>
+    template <class T> requires (!std::is_reference_v<T>)
     const Description* get_description_by_cpp_type () {
         if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
             return ayu_desc::_AYU_Describe<T>::_ayu_description;
@@ -39,7 +39,7 @@ namespace ayu::in {
             return get_description_by_type_info(typeid(T));
         }
     }
-    template <class T>
+    template <class T> requires (!std::is_reference_v<T>)
     const Description* need_description_for_cpp_type () {
         if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
             return ayu_desc::_AYU_Describe<T>::_ayu_description;

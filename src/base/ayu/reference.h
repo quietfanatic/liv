@@ -32,6 +32,13 @@
 // C++ pointer can be implicitly cast to a Reference if the pointed-to type is
 // known to AYU.  You cannot cast a native C++ reference to an AYU Reference
 // because that would conflict with other constructors of Reference.
+//
+// There is an empty Reference, which has no type and no value.  There are also
+// typed "null" References, which have a type but no value, and are equivalent
+// to typed null pointers.  operator bool returns false for both of these, so to
+// differentiate them, call .type(), which will return the empty Type for the
+// empty Reference.  .address() will return null for null References and
+// segfault for the empty Reference.
 
 #pragma once
 
@@ -99,18 +106,14 @@ struct Reference {
         return *this;
     }
 
-     // These are slightly different semantically.  A null (false) Reference
-     // still has a type, and calling type() or address() may be valid
-     // depending on the accessor type.  An empty Reference has no type and
-     // no operations on it are valid (besides these of course).
-    bool empty () const { assert(!!host == !!acr); return !acr; }
     explicit operator bool () const { return host; }
+     // Get type of referred-to item
+    Type type () const { return acr ? acr->type(host) : Type(); }
+
      // Writing to this reference throws if this is true
     bool readonly () const { return acr->accessor_flags & in::ACR_READONLY; }
      // Throws X::WriteReadonlyReference if readonly()
     void require_writeable () const;
-     // Get type of referred-to item
-    Type type () const { return acr ? acr->type(host) : Type(); }
 
      // Returns null if this reference is not addressable.
     Mu* address () const {
