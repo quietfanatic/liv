@@ -47,9 +47,6 @@ struct Type {
      // Should be called delete, but, you know
     void delete_ (Mu*) const;
 
-     // For now, all these do is throw an exception if the type doesn't match.
-     // Eventually we will implement base conversion.
-
      // Cast from derived class to base class.  Does a depth-first search
      // through the derived class's description looking for accessors like:
      //  - delegate(...)
