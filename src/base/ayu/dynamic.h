@@ -38,17 +38,30 @@ struct Dynamic {
         && !std::is_base_of_v<Type, T>
         && !std::is_reference_v<T>
     )
-    Dynamic (T&& v) :
-        Dynamic(Type::CppType<T>(), reinterpret_cast<Mu*>(new T (std::move(v))))
-    { }
+    Dynamic (T&& v) : type(Type::CppType<T>()), data(reinterpret_cast<Mu*>(type.allocate())) {
+        try {
+            new (data) T (std::move(v));
+        }
+        catch (...) {
+            type.deallocate(data);
+            throw;
+        }
+    }
      // Construct with arguments.
-     // TODO: Use Type::allocate!  Type uses malloc/free, not new/delete
     template <class T, class... Args>
     static Dynamic make (Args&&... args) {
-        return Dynamic(
-            Type::CppType<T>(),
-            new T {std::forward<Args...>(args...)}
-        );
+        auto type = Type::CppType<T>();
+        void* buf = type.allocate();
+        try {
+            return Dynamic(
+                Type::CppType<T>(),
+                new (buf) T {std::forward<Args...>(args...)}
+            );
+        }
+        catch (...) {
+            type.deallocate(buf);
+            throw;
+        }
     }
      // Move assignment
     Dynamic& operator = (Dynamic&& o) {
