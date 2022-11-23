@@ -58,17 +58,14 @@ using String16 = std::u16string;
 using Str16 = std::u16string_view;
 
 namespace in {
-    template <class T, class = void>
-    struct ToString {
-        static auto to_string (T&& a) { return std::forward<T>(a); }
-    };
-    template <class T> requires (
-        !std::is_same_v<std::decay_t<T>, char>
-        && requires (T v) { std::to_string(v); }
-    )
-    struct ToString<T> {
-        static auto to_string (T&& a) { return std::to_string(std::forward<T>(a)); }
-    };
+    template <class T>
+    static auto to_string (T&& s) {
+        if constexpr (
+            !std::is_same_v<std::decay_t<T>, char>
+            && requires (T v) { std::to_string(v); }
+        ) return std::to_string(std::forward<T>(s));
+        else return std::forward<T>(s);
+    }
 }
 
  // I'm sick and tired of weirdness around string concatenation operators.
@@ -76,13 +73,13 @@ namespace in {
 template <class... Args>
 String cat (Args&&... args) {
     String r; // Should we reserve()?  Profile!
-    ((r += in::ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    ((r += in::to_string(std::forward<Args>(args))), ...);
     return r;
 }
  // Optimization to skip a copy
 template <class... Args>
 String&& cat (String&& s, Args... args) {
-    ((s += in::ToString<Args>::to_string(std::forward<Args>(args))), ...);
+    ((s += in::to_string(std::forward<Args>(args))), ...);
     return std::move(s);
 }
 
