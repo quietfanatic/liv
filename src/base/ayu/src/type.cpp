@@ -27,6 +27,9 @@ const std::type_info& Type::cpp_type () const {
 usize Type::cpp_size () const {
     return desc->cpp_size;
 }
+usize Type::cpp_align () const {
+    return desc->cpp_align;
+}
 
 void Type::default_construct (void* target) const {
     if (!desc->default_construct) throw X::CannotDefaultConstruct(*this);
@@ -41,7 +44,7 @@ void Type::destruct (Mu& p) const {
 }
 
 void* Type::allocate () const {
-    void* p = std::malloc(desc->cpp_size);
+    void* p = std::aligned_alloc(desc->cpp_align, desc->cpp_size);
     if (!p) throw std::bad_alloc();
     return p;
 }

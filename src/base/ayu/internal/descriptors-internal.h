@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdlib>
 #include <type_traits>
 #include <utility>
 
@@ -406,7 +407,8 @@ struct Description : ComparableAddress {
         constexpr_acr(ReadonlyIdentityAcr());
 
     const std::type_info* cpp_type = null;
-    size_t cpp_size = 0;
+    uint32 cpp_size = 0;
+    uint32 cpp_align = 0;
     DefaultConstructor* default_construct = null;
     Destructor* destruct = null;
 
@@ -449,8 +451,13 @@ using FullDescription = Cat<
 
 template <class T, class... Dcrs>
 constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
-    AssertAllDcrs<T, Dcrs...>{};
     using Desc = FullDescription<T, Dcrs...>;
+
+    AssertAllDcrs<T, Dcrs...>{};
+    static_assert(
+        sizeof(T) <= uint32(-1),
+        "Cannot describe type larger the 2GB"
+    );
     static_assert(
         sizeof(Desc) < 65536,
         "AYU_DESCRIBE description is too large (>64k)"
@@ -460,15 +467,10 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
         Description{},
         dcrs...
     );
-
     auto& header = *desc.template get<Description>(0);
     header.cpp_type = &typeid(T);
     header.cpp_size = sizeof(T);
-     // Some stdlibs are missing aligned_alloc so it's easier to not deal with alignment
-    static_assert(
-        alignof(T) <= alignof(std::max_align_t),
-        "Types with larger than standard alignment are not currently supported, sorry."
-    );
+    header.cpp_align = alignof(T);
     header.default_construct = default_construct_p<T>;
     header.destruct = destruct_p<T>;
     header.name = name;

@@ -51,15 +51,13 @@ struct Dynamic {
     template <class T, class... Args>
     static Dynamic make (Args&&... args) {
         auto type = Type::CppType<T>();
-        void* buf = type.allocate();
+        void* data = type.allocate();
         try {
-            return Dynamic(
-                Type::CppType<T>(),
-                new (buf) T {std::forward<Args...>(args...)}
-            );
+            new (data) T (std::forward<Args>(args)...);
+            return Dynamic(type, reinterpret_cast<Mu*>(data));
         }
         catch (...) {
-            type.deallocate(buf);
+            type.deallocate(data);
             throw;
         }
     }

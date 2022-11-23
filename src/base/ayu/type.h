@@ -34,6 +34,7 @@ struct Type {
     Str name () const;
     const std::type_info& cpp_type () const;
     usize cpp_size () const;
+    usize cpp_align () const;
     void default_construct (void* target) const;
     void destruct (Mu&) const;
      // It is not specified whether this uses new or malloc, so if you use this

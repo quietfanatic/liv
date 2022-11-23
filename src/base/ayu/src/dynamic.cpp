@@ -58,6 +58,13 @@ namespace ayu::test {
     struct NoDestructor {
         ~NoDestructor () = delete;
     };
+    struct alignas(256) WeirdAlign {
+        WeirdAlign () {
+            if (reinterpret_cast<usize>(this) & (256-1)) {
+                throw std::runtime_error("Aligned allocation didn't work");
+            }
+        }
+    };
 } using namespace ayu::test;
 
  // The things here should work without any descriptions
@@ -66,6 +73,7 @@ AYU_DESCRIBE_0(ayu::test::Test2)
 AYU_DESCRIBE_0(ayu::test::NoConstructor)
 AYU_DESCRIBE_0(ayu::test::NoCopy)
 AYU_DESCRIBE_0(ayu::test::NoDestructor)
+AYU_DESCRIBE_0(ayu::test::WeirdAlign)
 
 static tap::TestSet tests ("base/ayu/dynamic", []{
     using namespace tap;
@@ -97,6 +105,9 @@ static tap::TestSet tests ("base/ayu/dynamic", []{
         item_from_string(&d, "null");
     });
     ok(!d.has_value(), "Dynamic from_tree with null makes unhas_value Dynamic");
+    doesnt_throw([&]{
+        Dynamic::make<WeirdAlign>();
+    }, "Can allocate object with non-standard alignment");
 
     done_testing();
 });
