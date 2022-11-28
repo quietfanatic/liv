@@ -34,22 +34,26 @@ struct ComparableAddress { };
 static_assert(sizeof(ComparableAddress) == 1);
 
  // We could use [[no_unique_address]] but this is more aggressive at optimizing
- // out empty structs.
-template <size_t, class Head, bool = std::is_empty_v<Head>>
+ // out empty structs.  The size_t parameter is to prevent multiple CatHeads
+ // with the same type from conflicting with one another.
+template <size_t, class Head>
 struct CatHead;
 template <size_t i, class Head>
-struct CatHead<i, Head, false> {
+    requires (!std::is_empty_v<Head>)
+struct CatHead<i, Head> {
     Head head;
     constexpr CatHead (const Head& h) : head(h) { }
 };
 template <size_t i, class Head>
-struct CatHead<i, Head, true> {
+    requires (std::is_empty_v<Head>)
+struct CatHead<i, Head> {
      // Ideally this gets discarded by the linker?
     static Head head;
     constexpr CatHead (const Head&) { }
 };
 template <size_t i, class Head>
-Head CatHead<i, Head, true>::head {};
+    requires (std::is_empty_v<Head>)
+Head CatHead<i, Head>::head {};
 
 template <class...>
 struct Cat;
@@ -91,36 +95,6 @@ struct Cat<> {
     }
 };
 
-///// CPP TYPE TRAITS
-
-template <class T>
-using Constructor = void(void*);
-template <class T>
-using Destructor = void(T*);
-
- // Determine presence of constructors and stuff using a sfinae trick
-template <class T>
-constexpr Constructor<T>* default_construct_p = null;
-template <class T> requires (requires { new (null) T; })
-constexpr Constructor<T>* default_construct_p<T>
-    = [](void* target){ new (target) T; };
-
-template <class T, class = void>
-constexpr Destructor<T>* destroy_p = null;
-template <class T> requires (requires (T& v) { v.~T(); })
-constexpr Destructor<T>* destroy_p<T>
-    = [](T* v){ v->~T(); };
-
- // No SFINAE because these are only used if values() is specified, and
- // values() absolutely requires them.
-template <class T>
-constexpr bool(* compare_p )(const T&, const T&) =
-    [](const T& a, const T& b) { return a == b; };
-
-template <class T>
-constexpr void(* assign_p )(T&, const T&) =
-    [](T& a, const T& b) { a = b; };
-
 ///// IDENTITY ACCESSORS
 
  // These are dummy accessors for use in Reference.  There are two of them per
@@ -139,11 +113,8 @@ struct IdentityAcr : Accessor {
     static Mu* _address (const Accessor*, Mu& from) {
         return &from;
     }
-    static Mu* _inverse_address (const Accessor*, Mu& to) {
-        return &to;
-    }
     static constexpr AccessorVT _vt = {
-        &_type, &_access, &_address, &_inverse_address
+        &_type, &_access, &_address, &_address
     };
     explicit constexpr IdentityAcr () : Accessor(&_vt, 0) { }
 };
@@ -161,15 +132,41 @@ struct ReadonlyIdentityAcr : Accessor {
     static Mu* _address (const Accessor*, Mu& from) {
         return &from;
     }
-    static Mu* _inverse_address (const Accessor*, Mu& to) {
-        return &to;
-    }
     static constexpr AccessorVT _vt = {
-        &_type, &_access, &_address, &_inverse_address
+        &_type, &_access, &_address, &_address
     };
     explicit constexpr ReadonlyIdentityAcr () : Accessor(&_vt, ACR_READONLY) { }
 };
 static_assert(sizeof(IdentityAcr) == sizeof(ReadonlyIdentityAcr));
+
+///// CPP TYPE TRAITS
+
+template <class T>
+using Constructor = void(void*);
+template <class T>
+using Destructor = void(T*);
+
+ // Determine presence of constructors and stuff using a sfinae trick
+template <class T>
+constexpr Constructor<T>* default_construct_p = null;
+template <class T> requires (requires { new (null) T; })
+constexpr Constructor<T>* default_construct_p<T>
+    = [](void* target){ new (target) T; };
+
+template <class T, class = void>
+constexpr Destructor<T>* destroy_p = null;
+template <class T> requires (requires (T& v) { v.~T(); })
+constexpr Destructor<T>* destroy_p<T> = [](T* v){ v->~T(); };
+
+ // No SFINAE because these are only used if values() is specified, and
+ // values() absolutely requires them.
+template <class T>
+constexpr bool(* compare_p )(const T&, const T&) =
+    [](const T& a, const T& b) { return a == b; };
+
+template <class T>
+constexpr void(* assign_p )(T&, const T&) =
+    [](T& a, const T& b) { a = b; };
 
 ///// DESCRIPTION HEADER
 
@@ -211,13 +208,13 @@ template <class T>
 struct Descriptor : ComparableAddress { };
 template <class T>
 struct AttachedDescriptor : Descriptor<T> {
-     // Emit this into the static data
-    template <class Self>
-    static constexpr Self make_static (const Self& self) { return self; }
     constexpr uint16 get_offset (DescriptionFor<T>& header) {
         return static_cast<ComparableAddress*>(this)
              - static_cast<ComparableAddress*>(&header);
     }
+     // Emit this into the static data
+    template <class Self>
+    static constexpr Self make_static (const Self& self) { return self; }
 };
 template <class T>
 struct DetachedDescriptor : Descriptor<T> {
@@ -450,11 +447,11 @@ struct DestroyDcr : DetachedDescriptor<T> {
 ///// MAKING DESCRIPTIONS
 
 template <class F>
-constexpr void map_variadic (F) { }
+constexpr void for_variadic (F) { }
 template <class F, class Arg, class... Args>
-constexpr void map_variadic (F f, Arg arg, Args... args) {
+constexpr void for_variadic (F f, Arg arg, Args... args) {
     f(arg);
-    map_variadic(f, args...);
+    for_variadic(f, args...);
 }
 
 template <class T, class... Dcrs>
@@ -469,7 +466,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
 
     static_assert(
         sizeof(T) <= uint32(-1),
-        "Cannot describe type larger the 2GB"
+        "Cannot describe type larger the 4GB"
     );
     static_assert(
         sizeof(Desc) < 65536,
@@ -486,7 +483,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     header.cpp_align = alignof(T);
     header.name = name;
 
-    map_variadic([&]<class Dcr>(const Dcr& dcr){
+    for_variadic([&]<class Dcr>(const Dcr& dcr){
         if constexpr (std::is_base_of_v<DefaultConstructDcr<T>, Dcr>) {
             if (header.default_construct != default_construct_p<T>) {
                 throw "Multiple default_construct descriptors in AYU_DESCRIBE description";
@@ -495,7 +492,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
         }
         else if constexpr (std::is_base_of_v<DestroyDcr<T>, Dcr>) {
             if (header.destroy != destroy_p<T>) {
-                throw "Multiple default_construct descriptors in AYU_DESCRIBE description";
+                throw "Multiple destroy descriptors in AYU_DESCRIBE description";
             }
             header.destroy = dcr.f;
         }
