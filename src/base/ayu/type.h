@@ -36,7 +36,7 @@ struct Type {
     usize cpp_size () const;
     usize cpp_align () const;
     void default_construct (void* target) const;
-    void destruct (Mu&) const;
+    void destroy (Mu*) const;
      // It is not specified whether this uses new or malloc, so if you use this
      // to allocate space for an object, you must use deallocate() to deallocate
      // it.
@@ -177,9 +177,9 @@ namespace X {
         CannotDefaultConstruct (Type t) : type(t) { }
     };
      // Tried to construct or destroy a type that has no destructor.
-    struct CannotDestruct : TypeError {
+    struct CannotDestroy : TypeError {
         Type type;
-        CannotDestruct (Type t) : type(t) { }
+        CannotDestroy (Type t) : type(t) { }
     };
      // Tried to coerce between types that can't be coerced.
     struct CannotCoerce : TypeError {

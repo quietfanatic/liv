@@ -49,6 +49,10 @@ namespace ayu::test {
     struct NoConstructor {
         NoConstructor () = delete;
     };
+    struct CustomConstructor {
+        CustomConstructor () = delete;
+        ~CustomConstructor () = delete;
+    };
 
     struct NoCopy {
         NoCopy () { }
@@ -75,6 +79,11 @@ AYU_DESCRIBE_0(ayu::test::NoCopy)
 AYU_DESCRIBE_0(ayu::test::NoDestructor)
 AYU_DESCRIBE_0(ayu::test::WeirdAlign)
 
+AYU_DESCRIBE(ayu::test::CustomConstructor,
+    default_construct([](void*){ }),
+    destroy([](CustomConstructor*){ })
+)
+
 static tap::TestSet tests ("base/ayu/dynamic", []{
     using namespace tap;
     Dynamic d;
@@ -90,9 +99,13 @@ static tap::TestSet tests ("base/ayu/dynamic", []{
     throws<X::CannotDefaultConstruct>([&]{
         Dynamic(Type::CppType<NoConstructor>());
     }, "X::CannotDefaultConstruct");
-    throws<X::CannotDestruct>([&]{
+    throws<X::CannotDestroy>([&]{
         d = Dynamic(Type::CppType<NoDestructor>());
     }, "Cannot construct type without destructor");
+
+    doesnt_throw([&]{
+        d = Dynamic(Type::CppType<CustomConstructor>());
+    }, "Can construct type with externally-supplied constructor/destructor");
 
     d = int32(4);
     is(item_to_tree(&d), tree_from_string("[int32 4]"), "Dynamic to_tree works");

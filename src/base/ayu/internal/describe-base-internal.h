@@ -26,6 +26,15 @@ constexpr auto _AYU_DescribeBase<T>::init (void(* f )(T&)) {
 }
 
 template <class T>
+constexpr auto _AYU_DescribeBase<T>::default_construct (void(* f )(void*)) {
+    return in::DefaultConstructDcr<T>{{}, f};
+}
+template <class T>
+constexpr auto _AYU_DescribeBase<T>::destroy (void(* f )(T*)) {
+    return in::DestroyDcr<T>{{}, f};
+}
+
+template <class T>
 template <class... Values>
 constexpr auto _AYU_DescribeBase<T>::values (const Values&... vs) {
     return in::ValuesDcrWith<T, Values...>(vs...);

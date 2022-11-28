@@ -129,7 +129,7 @@ struct ElemsDcrPrivate : ElemsDcr<Mu> {
     }
 };
 
-struct DescriptionPrivate : Description {
+struct DescriptionPrivate : DescriptionFor<Mu> {
     static const DescriptionPrivate* get (Type t) {
         return static_cast<const DescriptionPrivate*>(t.desc);
     }

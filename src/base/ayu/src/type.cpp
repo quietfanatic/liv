@@ -32,15 +32,17 @@ usize Type::cpp_align () const {
 }
 
 void Type::default_construct (void* target) const {
+    auto desc = in::DescriptionPrivate::get(*this);
     if (!desc->default_construct) throw X::CannotDefaultConstruct(*this);
-     // Don't allow constructing objects that can't be destructed
-    if (!desc->destruct) throw X::CannotDestruct(*this);
+     // Don't allow constructing objects that can't be destroyed
+    if (!desc->destroy) throw X::CannotDestroy(*this);
     desc->default_construct(target);
 }
 
-void Type::destruct (Mu& p) const {
-    if (!desc->destruct) throw X::CannotDestruct(*this);
-    desc->destruct(p);
+void Type::destroy (Mu* p) const {
+    auto desc = in::DescriptionPrivate::get(*this);
+    if (!desc->destroy) throw X::CannotDestroy(*this);
+    desc->destroy(p);
 }
 
 void* Type::allocate () const {
@@ -54,16 +56,17 @@ void Type::deallocate (void* p) const {
 }
 
 Mu* Type::default_new () const {
+    auto desc = in::DescriptionPrivate::get(*this);
      // Throw before allocating
     if (!desc->default_construct) throw X::CannotDefaultConstruct(*this);
-    if (!desc->destruct) throw X::CannotDestruct(*this);
+    if (!desc->destroy) throw X::CannotDestroy(*this);
     void* p = allocate();
     desc->default_construct(p);
     return (Mu*)p;
 }
 
 void Type::delete_ (Mu* p) const {
-    destruct(*p);
+    destroy(p);
     deallocate(p);
 }
 
@@ -216,16 +219,6 @@ bool is_valid_type (const Description* desc) {
     return false;
 }
 
-void dump_descriptions () {
-    for (auto& p : registry().by_cpp_type) {
-        std::cerr << p.second->cpp_type->name() << ": "
-                  << get_description_name(p.second) << " "
-                  << p.second->cpp_size << " "
-                  << p.second->default_construct << " "
-                  << p.second->destruct << std::endl;
-    }
-}
-
 std::string get_demangled_name (const std::type_info& t) {
 #if __has_include(<cxxabi.h>)
     int status;
@@ -283,10 +276,10 @@ AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
         elem(&X::CannotDefaultConstruct::type)
     )
 )
-AYU_DESCRIBE(ayu::X::CannotDestruct,
+AYU_DESCRIBE(ayu::X::CannotDestroy,
     elems(
         elem(base<X::TypeError>(), inherit),
-        elem(&X::CannotDestruct::type)
+        elem(&X::CannotDestroy::type)
     )
 )
 AYU_DESCRIBE(ayu::X::CannotCoerce,

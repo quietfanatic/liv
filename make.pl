@@ -57,6 +57,12 @@ sub c_rule {
             @{$_[1]}, @opts,
             '-o', $_[0][0];
     }, {fork => 1};
+    rule "$to.s", $from, sub {
+        ensure_path($_[0][0]);
+        run qw(g++ -std=c++20 -S),
+            @{$_[1]}, grep($_ ne '-ggdb', @opts),
+            '-o', $_[0][0];
+    }, {fork => 1};
 }
 
 sub cpp_rule {
@@ -65,6 +71,12 @@ sub cpp_rule {
         ensure_path($_[0][0]);
         run qw(g++ -std=c++20 -c),
             @{$_[1]}, @opts,
+            '-o', $_[0][0];
+    }, {fork => 1};
+    rule "$to.s", $from, sub {
+        ensure_path($_[0][0]);
+        run qw(g++ -std=c++20 -S),
+            @{$_[1]}, grep($_ ne '-ggdb', @opts),
             '-o', $_[0][0];
     }, {fork => 1};
 }

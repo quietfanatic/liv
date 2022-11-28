@@ -93,13 +93,23 @@ struct _AYU_DescribeBase {
      // For compound types, this will be called first on all the child items in
      // order, then on the parent item.
     static constexpr auto init (void(* f )(T&));
-
      // Make this type behave like another type.  `accessor` must be the result
      // of one of the accessor functions in the ACCESSOR section below.  If both
      // delegate() and other descriptors are specified, some behaviors may be
      // overridden by those other descriptors (TODO: document the particulars).
     template <class Acr>
     static constexpr auto delegate (const Acr& accessor);
+     // Specify custom behavior for default construction.  You shouldn't need
+     // to use this unless for some reason the type's default constructor is not
+     // visible where you're declaring the AYU_DESCRIPTION.  The function will
+     // be passed a void* pointing to an allocated buffer with sizeof(T) and
+     // alignof(T), and must construct an object of type T, such as by using
+     // placement new.
+    static constexpr auto default_construct (void(* f )(void*));
+     // Specify custom behavior for destruction, in case the item's destructor
+     // is not visible from here.  You should destroy the pointed-to object, but
+     // do not delete/free it.  It will be deallocated automatically.
+    static constexpr auto destroy (void(* f )(T*));
 
     ///// DESCRIPTORS FOR ENUM-LIKE TYPES
 

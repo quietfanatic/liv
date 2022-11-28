@@ -78,7 +78,7 @@ struct DocumentData {
     ~DocumentData () {
         while (items.next != &items) {
             auto header = static_cast<DocumentItemHeader*>(items.next);
-            if (header->type) header->type.destruct(*header->data());
+            if (header->type) header->type.destroy(header->data());
             header->~DocumentItemHeader();
             free(header);
         }
@@ -157,7 +157,7 @@ void Document::delete_ (Type t, Mu* p) {
 #endif
     auto header = (DocumentItemHeader*)p - 1;
     if (header->type != t) throw X::DocumentDeleteWrongType(header->type, t);
-    if (header->type) header->type.destruct(*p);
+    if (header->type) header->type.destroy(p);
     header->~DocumentItemHeader();
     free(header);
 }
@@ -165,7 +165,7 @@ void Document::delete_ (Type t, Mu* p) {
 void Document::delete_named (const String& name) {
     auto ref = DocumentItemRef{data, name};
     if (auto header = ref.header()) {
-        if (header->type) header->type.destruct(*header->data());
+        if (header->type) header->type.destroy(header->data());
         header->~DocumentItemHeader();
         free(header);
         return;
@@ -223,7 +223,7 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
             [](DocumentItemRef& v, Type t){
                 if (auto header = v.header()) {
                     if (header->type) {
-                        header->type.destruct(*header->data());
+                        header->type.destroy(header->data());
                     }
                      // This is a very bad idea which should work.
                      // (cast to void* to silence warning)

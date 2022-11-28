@@ -76,22 +76,11 @@ struct Cat<Head, Tail...> : CatHead<sizeof...(Tail), Head>, Cat<Tail...> {
         }
         else return Cat<Tail...>::template get<T>(n);
     }
-
-    template <class T>
-    static constexpr uint16 count () {
-        return Cat<Tail...>::template count<T>()
-            + (std::is_base_of<T, Head>::value ? 1 : 0);
-    }
 };
 
 template <>
 struct Cat<> {
     constexpr Cat () { }
-
-    template <class T>
-    static constexpr uint16 count () {
-        return 0;
-    }
     template <class T>
     constexpr T* get (uint16) {
         return null;
@@ -104,21 +93,23 @@ struct Cat<> {
 
 ///// CPP TYPE TRAITS
 
-using DefaultConstructor = void(void*);
-using Destructor = void(Mu&);
+template <class T>
+using Constructor = void(void*);
+template <class T>
+using Destructor = void(T*);
 
  // Determine presence of constructors and stuff using a sfinae trick
 template <class T>
-constexpr DefaultConstructor* default_construct_p = null;
+constexpr Constructor<T>* default_construct_p = null;
 template <class T> requires (requires { new (null) T; })
-constexpr DefaultConstructor* default_construct_p<T>
+constexpr Constructor<T>* default_construct_p<T>
     = [](void* target){ new (target) T; };
 
 template <class T, class = void>
-constexpr Destructor* destruct_p = null;
+constexpr Destructor<T>* destroy_p = null;
 template <class T> requires (requires (T& v) { v.~T(); })
-constexpr Destructor* destruct_p<T>
-    = [](Mu& v){ reinterpret_cast<T&>(v).~T(); };
+constexpr Destructor<T>* destroy_p<T>
+    = [](T* v){ v->~T(); };
 
  // No SFINAE because these are only used if values() is specified, and
  // values() absolutely requires them.
@@ -129,224 +120,6 @@ constexpr bool(* compare_p )(const T&, const T&) =
 template <class T>
 constexpr void(* assign_p )(T&, const T&) =
     [](T& a, const T& b) { a = b; };
-
-///// DESCRIPTORS
-
-template <class T>
-struct Descriptor : ComparableAddress { };
-
-template <class T>
-struct NameDcr : Descriptor<T> {
-    Str(* f )();
-};
-
-template <class T>
-struct ToTreeDcr : Descriptor<T> {
-    Tree(* f )(const T&);
-};
-
-template <class T>
-struct FromTreeDcr : Descriptor<T> {
-    void(* f )(T&, const Tree&);
-};
-
-template <class T>
-struct SwizzleDcr : Descriptor<T> {
-    void(* f )(T&, const Tree&);
-};
-
-template <class T>
-struct InitDcr : Descriptor<T> {
-    void(* f )(T&);
-};
-
-enum ValueForm {
-    VFNULL,
-    VFBOOL,
-    VFINT64,
-    VFDOUBLE,
-    VFSTR
-};
-
-template <class T>
-struct ValueDcr : ComparableAddress {
-    uint8 form;
-    bool pointer;
-};
-
-template <class T, class VF, bool pointer>
-struct ValueDcrWith;
-
-template <class T, class VF>
-struct ValueDcrWith<T, VF, false> : ValueDcr<T> {
-    VF name;
-    alignas(void*) T value;
-    constexpr ValueDcrWith (uint8 f, VF n, const T& v) :
-        ValueDcr<T>{{}, f, false},
-        name(n),
-        value(v)
-    { }
-};
-
-template <class T, class VF>
-struct ValueDcrWith<T, VF, true> : ValueDcr<T> {
-    VF name;
-    const T* ptr;
-    constexpr ValueDcrWith (uint8 f, VF n, const T* p) :
-        ValueDcr<T>{{}, f, true},
-        name(n),
-        ptr(p)
-    { }
-};
-
-template <class T>
-struct ValuesDcr : Descriptor<T> {
-    bool(* compare )(const T&, const T&);
-    void(* assign )(T&, const T&);
-    uint16 n_values;
-};
-template <class T, class... Values>
-struct ValuesDcrWith : ValuesDcr<T> {
-    uint16 offsets [sizeof...(Values)] {};
-    Cat<Values...> values;
-    constexpr ValuesDcrWith (const Values&... vs) :
-        ValuesDcr<T>{{}, compare_p<T>, assign_p<T>, sizeof...(Values)},
-        values(vs...)
-    {
-        for (uint i = 0; i < sizeof...(Values); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(
-                values.template get<ValueDcr<T>>(i)
-            ) - static_cast<const ComparableAddress*>(this);
-        }
-    }
-    constexpr ValuesDcrWith (
-        bool(* compare )(const T&, const T&),
-        void(* assign )(T&, const T&),
-        const Values&... vs
-    ) :
-        ValuesDcr<T>{{}, compare, assign, sizeof...(Values)},
-        values(vs...)
-    {
-        for (uint i = 0; i < sizeof...(Values); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(
-                values.template get<ValueDcr<T>>(i)
-            ) - static_cast<const ComparableAddress*>(this);
-        }
-    }
-};
-
-template <class T>
-struct AttrDcr : ComparableAddress {
-    Str key;
-};
-template <class T, class Acr>
-struct AttrDcrWith : AttrDcr<T> {
-    Acr acr;
-    constexpr AttrDcrWith (Str k, const Acr& a) :
-        AttrDcr<T>{{}, k},
-        acr(constexpr_acr(a))
-    { }
-};
-
-template <class T>
-struct AttrsDcr : Descriptor<T> {
-    uint16 n_attrs;
-};
-
-template <class T, class... Attrs>
-struct AttrsDcrWith : AttrsDcr<T> {
-    uint16 offsets [sizeof...(Attrs)] {};
-    Cat<Attrs...> attrs;
-    constexpr AttrsDcrWith (const Attrs&... as) :
-        AttrsDcr<T>{{}, uint16(sizeof...(Attrs))},
-        attrs(as...)
-    {
-        for (uint i = 0; i < sizeof...(Attrs); i++) {
-            offsets[i] = static_cast<ComparableAddress*>(
-                attrs.template get<AttrDcr<T>>(i)
-            ) - static_cast<ComparableAddress*>(this);
-        }
-    }
-};
-
-template <class T>
-struct ElemDcr : ComparableAddress { };
-template <class T, class Acr>
-struct ElemDcrWith : ElemDcr<T> {
-    Acr acr;
-    constexpr ElemDcrWith (const Acr& a) :
-        acr(constexpr_acr(a))
-    { }
-};
-
-template <class T>
-struct ElemsDcr : Descriptor<T> {
-    uint16 n_elems;
-};
-
-template <class T, class... Elems>
-struct ElemsDcrWith : ElemsDcr<T> {
-    uint16 offsets [sizeof...(Elems)] {};
-    Cat<Elems...> elems;
-    constexpr ElemsDcrWith (const Elems&... es) :
-        ElemsDcr<T>{{}, uint16(sizeof...(Elems))},
-        elems(es...)
-    {
-        for (uint i = 0; i < sizeof...(Elems); i++) {
-            offsets[i] = static_cast<const ComparableAddress*>(
-                elems.template get<ElemDcr<T>>(i)
-            ) - static_cast<const ComparableAddress*>(this);
-        }
-    }
-};
-
-template <class T>
-struct KeysDcr : Descriptor<T> { };
-template <class T, class Acr>
-struct KeysDcrWith : KeysDcr<T> {
-    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-    static_assert(std::is_same_v<
-        typename Acr::AccessorToType, std::vector<String>
-    >);
-    Acr acr;
-    constexpr KeysDcrWith (const Acr& a) :
-        acr(constexpr_acr(a))
-    { }
-};
-
-template <class T>
-struct AttrFuncDcr : Descriptor<T> {
-    Reference(* f )(T&, Str);
-};
-
-template <class T>
-struct LengthDcr : Descriptor<T> { };
-template <class T, class Acr>
-struct LengthDcrWith : LengthDcr<T> {
-    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-    static_assert(std::is_same_v<typename Acr::AccessorToType, usize>);
-    Acr acr;
-    constexpr LengthDcrWith (const Acr& a) :
-        acr(constexpr_acr(a))
-    { }
-};
-
-template <class T>
-struct ElemFuncDcr : Descriptor<T> {
-    Reference(* f )(T&, size_t);
-};
-
-template <class T>
-struct DelegateDcr : Descriptor<T> {
-};
-template <class T, class Acr>
-struct DelegateDcrWith : DelegateDcr<T> {
-    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-    Acr acr;
-    constexpr DelegateDcrWith (const Acr& a) :
-        acr(constexpr_acr(a))
-    { }
-};
 
 ///// IDENTITY ACCESSORS
 
@@ -409,9 +182,6 @@ struct Description : ComparableAddress {
     const std::type_info* cpp_type = null;
     uint32 cpp_size = 0;
     uint32 cpp_align = 0;
-    DefaultConstructor* default_construct = null;
-    Destructor* destruct = null;
-
     Str name;
 
     uint16 name_offset = 0;
@@ -429,31 +199,274 @@ struct Description : ComparableAddress {
     uint16 delegate_offset = 0;
 };
 
-///// MAKING DESCRIPTIONS
+template <class T>
+struct DescriptionFor : Description {
+    Constructor<T>* default_construct = default_construct_p<T>;
+    Destructor<T>* destroy = destroy_p<T>;
+};
 
-template <class T, class...>
-struct AssertAllDcrs;
-template <class T, class Head, class... Tail>
-struct AssertAllDcrs<T, Head, Tail...> {
-    static_assert(
-        std::is_base_of_v<Descriptor<T>, Head>,
-        "Element in AYU_DESCRIBE description is not a descriptor for this type"
-    );
+///// DESCRIPTORS
+
+template <class T>
+struct Descriptor : ComparableAddress { };
+template <class T>
+struct AttachedDescriptor : Descriptor<T> {
+     // Emit this into the static data
+    template <class Self>
+    static constexpr Self make_static (const Self& self) { return self; }
+    constexpr uint16 get_offset (DescriptionFor<T>& header) {
+        return static_cast<ComparableAddress*>(this)
+             - static_cast<ComparableAddress*>(&header);
+    }
 };
 template <class T>
-struct AssertAllDcrs<T> { };
+struct DetachedDescriptor : Descriptor<T> {
+     // Omit this from the static data
+    template <class Self>
+    static constexpr ComparableAddress make_static (const Self&) { return {}; }
+};
+
+template <class T>
+struct NameDcr : AttachedDescriptor<T> {
+    Str(* f )();
+};
+
+template <class T>
+struct ToTreeDcr : AttachedDescriptor<T> {
+    Tree(* f )(const T&);
+};
+
+template <class T>
+struct FromTreeDcr : AttachedDescriptor<T> {
+    void(* f )(T&, const Tree&);
+};
+
+template <class T>
+struct SwizzleDcr : AttachedDescriptor<T> {
+    void(* f )(T&, const Tree&);
+};
+
+template <class T>
+struct InitDcr : AttachedDescriptor<T> {
+    void(* f )(T&);
+};
+
+enum ValueForm {
+    VFNULL,
+    VFBOOL,
+    VFINT64,
+    VFDOUBLE,
+    VFSTR
+};
+
+template <class T>
+struct ValueDcr : ComparableAddress {
+    uint8 form;
+    bool pointer;
+};
+
+template <class T, class VF, bool pointer>
+struct ValueDcrWith;
+
+template <class T, class VF>
+struct ValueDcrWith<T, VF, false> : ValueDcr<T> {
+    VF name;
+    alignas(void*) T value;
+    constexpr ValueDcrWith (uint8 f, VF n, const T& v) :
+        ValueDcr<T>{{}, f, false},
+        name(n),
+        value(v)
+    { }
+};
+
+template <class T, class VF>
+struct ValueDcrWith<T, VF, true> : ValueDcr<T> {
+    VF name;
+    const T* ptr;
+    constexpr ValueDcrWith (uint8 f, VF n, const T* p) :
+        ValueDcr<T>{{}, f, true},
+        name(n),
+        ptr(p)
+    { }
+};
+
+template <class T>
+struct ValuesDcr : AttachedDescriptor<T> {
+    bool(* compare )(const T&, const T&);
+    void(* assign )(T&, const T&);
+    uint16 n_values;
+};
+template <class T, class... Values>
+struct ValuesDcrWith : ValuesDcr<T> {
+    uint16 offsets [sizeof...(Values)] {};
+    Cat<Values...> values;
+    constexpr ValuesDcrWith (const Values&... vs) :
+        ValuesDcr<T>{{}, compare_p<T>, assign_p<T>, sizeof...(Values)},
+        values(vs...)
+    {
+        for (uint i = 0; i < sizeof...(Values); i++) {
+            offsets[i] = static_cast<const ComparableAddress*>(
+                values.template get<ValueDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
+        }
+    }
+    constexpr ValuesDcrWith (
+        bool(* compare )(const T&, const T&),
+        void(* assign )(T&, const T&),
+        const Values&... vs
+    ) :
+        ValuesDcr<T>{{}, compare, assign, sizeof...(Values)},
+        values(vs...)
+    {
+        for (uint i = 0; i < sizeof...(Values); i++) {
+            offsets[i] = static_cast<const ComparableAddress*>(
+                values.template get<ValueDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
+        }
+    }
+};
+
+template <class T>
+struct AttrDcr : ComparableAddress {
+    Str key;
+};
+template <class T, class Acr>
+struct AttrDcrWith : AttrDcr<T> {
+    Acr acr;
+    constexpr AttrDcrWith (Str k, const Acr& a) :
+        AttrDcr<T>{{}, k},
+        acr(constexpr_acr(a))
+    { }
+};
+
+template <class T>
+struct AttrsDcr : AttachedDescriptor<T> {
+    uint16 n_attrs;
+};
+
+template <class T, class... Attrs>
+struct AttrsDcrWith : AttrsDcr<T> {
+    uint16 offsets [sizeof...(Attrs)] {};
+    Cat<Attrs...> attrs;
+    constexpr AttrsDcrWith (const Attrs&... as) :
+        AttrsDcr<T>{{}, uint16(sizeof...(Attrs))},
+        attrs(as...)
+    {
+        for (uint i = 0; i < sizeof...(Attrs); i++) {
+            offsets[i] = static_cast<ComparableAddress*>(
+                attrs.template get<AttrDcr<T>>(i)
+            ) - static_cast<ComparableAddress*>(this);
+        }
+    }
+};
+
+template <class T>
+struct ElemDcr : ComparableAddress { };
+template <class T, class Acr>
+struct ElemDcrWith : ElemDcr<T> {
+    Acr acr;
+    constexpr ElemDcrWith (const Acr& a) :
+        acr(constexpr_acr(a))
+    { }
+};
+
+template <class T>
+struct ElemsDcr : AttachedDescriptor<T> {
+    uint16 n_elems;
+};
+
+template <class T, class... Elems>
+struct ElemsDcrWith : ElemsDcr<T> {
+    uint16 offsets [sizeof...(Elems)] {};
+    Cat<Elems...> elems;
+    constexpr ElemsDcrWith (const Elems&... es) :
+        ElemsDcr<T>{{}, uint16(sizeof...(Elems))},
+        elems(es...)
+    {
+        for (uint i = 0; i < sizeof...(Elems); i++) {
+            offsets[i] = static_cast<const ComparableAddress*>(
+                elems.template get<ElemDcr<T>>(i)
+            ) - static_cast<const ComparableAddress*>(this);
+        }
+    }
+};
+
+template <class T>
+struct KeysDcr : AttachedDescriptor<T> { };
+template <class T, class Acr>
+struct KeysDcrWith : KeysDcr<T> {
+    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
+    static_assert(std::is_same_v<
+        typename Acr::AccessorToType, std::vector<String>
+    >);
+    Acr acr;
+    constexpr KeysDcrWith (const Acr& a) :
+        acr(constexpr_acr(a))
+    { }
+};
+
+template <class T>
+struct AttrFuncDcr : AttachedDescriptor<T> {
+    Reference(* f )(T&, Str);
+};
+
+template <class T>
+struct LengthDcr : AttachedDescriptor<T> { };
+template <class T, class Acr>
+struct LengthDcrWith : LengthDcr<T> {
+    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
+    static_assert(std::is_same_v<typename Acr::AccessorToType, usize>);
+    Acr acr;
+    constexpr LengthDcrWith (const Acr& a) :
+        acr(constexpr_acr(a))
+    { }
+};
+
+template <class T>
+struct ElemFuncDcr : AttachedDescriptor<T> {
+    Reference(* f )(T&, size_t);
+};
+
+template <class T>
+struct DelegateDcr : AttachedDescriptor<T> { };
+template <class T, class Acr>
+struct DelegateDcrWith : DelegateDcr<T> {
+    static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
+    Acr acr;
+    constexpr DelegateDcrWith (const Acr& a) :
+        acr(constexpr_acr(a))
+    { }
+};
+
+template <class T>
+struct DefaultConstructDcr : DetachedDescriptor<T> {
+    void(* f )(void*);
+};
+template <class T>
+struct DestroyDcr : DetachedDescriptor<T> {
+    void(* f )(T*);
+};
+
+///// MAKING DESCRIPTIONS
+
+template <class F>
+constexpr void map_variadic (F) { }
+template <class F, class Arg, class... Args>
+constexpr void map_variadic (F f, Arg arg, Args... args) {
+    f(arg);
+    map_variadic(f, args...);
+}
 
 template <class T, class... Dcrs>
 using FullDescription = Cat<
-    Description,
-    Dcrs...
+    DescriptionFor<T>,
+    decltype(Dcrs::make_static(std::declval<Dcrs>()))...
 >;
 
 template <class T, class... Dcrs>
 constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
     using Desc = FullDescription<T, Dcrs...>;
 
-    AssertAllDcrs<T, Dcrs...>{};
     static_assert(
         sizeof(T) <= uint32(-1),
         "Cannot describe type larger the 2GB"
@@ -464,45 +477,54 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     );
 
     Desc desc (
-        Description{},
-        dcrs...
+        DescriptionFor<T>{},
+        Dcrs::make_static(dcrs)...
     );
-    auto& header = *desc.template get<Description>(0);
+    auto& header = *desc.template get<DescriptionFor<T>>(0);
     header.cpp_type = &typeid(T);
     header.cpp_size = sizeof(T);
     header.cpp_align = alignof(T);
-    header.default_construct = default_construct_p<T>;
-    header.destruct = destruct_p<T>;
     header.name = name;
 
-     // template lambdas please?
-#define AYU_APPLY_OFFSET(dcr_name, dcr_type) \
-    { \
-        constexpr uint16 count = Desc::template count<dcr_type<T>>(); \
-        static_assert( \
-            count <= 1, \
-            "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description" \
-        ); \
-        if constexpr (count) { \
-            header.dcr_name##_offset = static_cast<ComparableAddress*>( \
-                desc.template get<dcr_type<T>>(0) \
-            ) - static_cast<ComparableAddress*>(&header); \
-        } \
-    }
-    AYU_APPLY_OFFSET(name, NameDcr)
-    AYU_APPLY_OFFSET(to_tree, ToTreeDcr)
-    AYU_APPLY_OFFSET(from_tree, FromTreeDcr)
-    AYU_APPLY_OFFSET(swizzle, SwizzleDcr)
-    AYU_APPLY_OFFSET(init, InitDcr)
-    AYU_APPLY_OFFSET(values, ValuesDcr)
-    AYU_APPLY_OFFSET(attrs, AttrsDcr)
-    AYU_APPLY_OFFSET(elems, ElemsDcr)
-    AYU_APPLY_OFFSET(keys, KeysDcr)
-    AYU_APPLY_OFFSET(attr_func, AttrFuncDcr)
-    AYU_APPLY_OFFSET(length, LengthDcr)
-    AYU_APPLY_OFFSET(elem_func, ElemFuncDcr)
-    AYU_APPLY_OFFSET(delegate, DelegateDcr)
-#undef AYU_APPLY_OFFSET
+    map_variadic([&]<class Dcr>(const Dcr& dcr){
+        if constexpr (std::is_base_of_v<DefaultConstructDcr<T>, Dcr>) {
+            if (header.default_construct != default_construct_p<T>) {
+                throw "Multiple default_construct descriptors in AYU_DESCRIBE description";
+            }
+            header.default_construct = dcr.f;
+        }
+        else if constexpr (std::is_base_of_v<DestroyDcr<T>, Dcr>) {
+            if (header.destroy != destroy_p<T>) {
+                throw "Multiple default_construct descriptors in AYU_DESCRIBE description";
+            }
+            header.destroy = dcr.f;
+        }
+#define AYU_ATTACHED_DCR(dcr_type, dcr_name) \
+        else if constexpr (std::is_base_of_v<dcr_type<T>, Dcr>) { \
+            if (header.dcr_name##_offset) { \
+                throw "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description"; \
+            } \
+            header.dcr_name##_offset = \
+                desc.template get<dcr_type<T>>(0)->get_offset(header); \
+        }
+        AYU_ATTACHED_DCR(NameDcr, name)
+        AYU_ATTACHED_DCR(ToTreeDcr, to_tree)
+        AYU_ATTACHED_DCR(FromTreeDcr, from_tree)
+        AYU_ATTACHED_DCR(SwizzleDcr, swizzle)
+        AYU_ATTACHED_DCR(InitDcr, init)
+        AYU_ATTACHED_DCR(ValuesDcr, values)
+        AYU_ATTACHED_DCR(AttrsDcr, attrs)
+        AYU_ATTACHED_DCR(ElemsDcr, elems)
+        AYU_ATTACHED_DCR(KeysDcr, keys)
+        AYU_ATTACHED_DCR(AttrFuncDcr, attr_func)
+        AYU_ATTACHED_DCR(LengthDcr, length)
+        AYU_ATTACHED_DCR(ElemFuncDcr, elem_func)
+        AYU_ATTACHED_DCR(DelegateDcr, delegate)
+#undef AYU_ATTACHED_DCR
+        else {
+            throw "Element in AYU_DESCRIBE description is not a descriptor for this type";
+        }
+    }, dcrs...);
 
     return desc;
 }
