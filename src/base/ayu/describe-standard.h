@@ -32,6 +32,7 @@ AYU_DESCRIBE_TEMPLATE(
         desc::value(ayu::null, std::optional<T>())
     ),
     desc::delegate(desc::template ref_func<T>(
+     // This aggressively de-nulls the optional.  Is that what we want to do?
         [](std::optional<T>& v)->T&{
             if (!v) v.emplace();
             return *v;
@@ -50,12 +51,11 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    desc::length(desc::template value_funcs<ayu::usize>(
-        [](const std::vector<T>& v){ return v.size(); },
-        [](std::vector<T>& v, ayu::usize l){ v.resize(l); }
-    )),
+    desc::length(desc::template value_methods<
+        ayu::usize, &std::vector<T>::size, &std::vector<T>::resize
+    >()),
     desc::elem_func([](std::vector<T>& v, ayu::usize i){
-        return ayu::Reference(&v.at(i));
+        return i < v.size() ? ayu::Reference(&v[i]) : ayu::Reference();
     })
 )
 
@@ -90,7 +90,10 @@ AYU_DESCRIBE_TEMPLATE(
         }
     )),
     desc::attr_func([](std::unordered_map<std::string, T>& v, ayu::Str k){
-        return ayu::Reference(&v.at(std::string(k)));
+        auto iter = v.find(k);
+        return iter != v.end()
+            ? ayu::Reference(&iter->second)
+            : ayu::Reference();
     })
 )
 

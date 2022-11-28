@@ -157,7 +157,7 @@ AYU_DESCRIBE(glow::Program,
     attrs(
         attr("shaders", &Program::shaders)
     ),
-    init([](Program& v){ v.link(); })
+    init<&Program::link>()
 )
 
 AYU_DESCRIBE(glow::X::ShaderCompileFailed,

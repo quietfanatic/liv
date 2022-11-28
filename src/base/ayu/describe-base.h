@@ -74,7 +74,12 @@ struct _AYU_DescribeBase {
      // available for more complex types if necessary.  The type will already
      // have been default-constructed (or constructed by its parent's default
      // constructor).  Deserialization of items without default constructors is
-     // not yet implemented.
+     // not yet implemented.  You may specify from_tree along with attrs and/or
+     // elems, but the from_tree process will ignore the attrs and elems and
+     // will not recursively call their swizzle or init descriptors.
+     //
+     // TODO: Add construct_from_tree for types that refuse to be default
+     // constructed no matter what.
     static constexpr auto from_tree (void(* f )(T&, const Tree&));
      // If your type needs extra work to link it to other items after
      // from_tree() has been called on all of them, use this function.  As an
@@ -505,6 +510,76 @@ struct _AYU_DescribeBase {
         Reference(* f )(T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
+
+    ///// METHOD ACCESSORS
+     // These are syntax sugar for the _func(s) accessors which use methods
+     // instead of functions.  They aren't first-class citizens because C++'s
+     // method pointers are kinda scuffed.  Example usage:
+     // value_methods<
+     //     usize, &std::vector<T>::size, &std::vector<T>::resize
+     // >()
+    using T3 = std::conditional_t<
+        std::is_class_v<T> || std::is_union_v<T>,
+        T, Mu
+    >;
+     // ref_method
+    template <class M, M&(T3::* get )()>
+    static constexpr auto ref_method () {
+        return ref_func<M>(
+            [](const T& v) -> M& { return (v.*get)(); }
+        );
+    }
+     // const_ref_method
+    template <class M, const M&(T3::* get )()const>
+    static constexpr auto const_ref_method () {
+        return const_ref_func<M>(
+            [](const T& v) -> const M& { return (v.*get)(); }
+        );
+    }
+     // const_ref_methods
+    template <class M, const M&(T3::* get )()const, void(T3::* set )(const M&)>
+    static constexpr auto const_ref_methods () {
+        return const_ref_funcs<M>(
+            [](const T& v) -> const M& { return (v.*get)(); },
+            [](T& v, const M& m){ (v.*set)(m); }
+        );
+    }
+     // value_method
+    template <class M, M(T3::* get )()const>
+    static constexpr auto value_method () {
+        return value_func<M>(
+            [](const T& v) -> M { return (v.*get)(); }
+        );
+    }
+     // value_methods
+    template <class M, M(T3::* get )()const, void(T3::* set )(M)>
+    static constexpr auto value_methods () {
+        return value_funcs<M>(
+            [](const T& v) -> M { return (v.*get)(); },
+            [](T& v, M m){ (v.*set)(m); }
+        );
+    }
+     // mixed_methods
+    template <class M, M(T3::* get )()const, void(T3::* set )(const M&)>
+    static constexpr auto mixed_methods () {
+        return mixed_funcs<M>(
+            [](const T& v) -> M { return (v.*get)(); },
+            [](T& v, const M& m){ (v.*set)(m); }
+        );
+    }
+     // reference_method.  I doubt you'll ever need this but here it is.
+    template <Reference (T3::* get )()>
+    static constexpr auto reference_method () {
+        return reference_func(
+            [](const T& v) -> Reference { return (v.*get)(); }
+        );
+    }
+     // And an overload for init() (a descriptor, not an accessor, but this
+     // seems convenient, as a lot of class-like types have a method for this.
+    template <void(T3::* m )()>
+    static constexpr auto init () {
+        return init([](T& v){ (v.*m)(); });
+    }
 
     ///// INTERNAL
 
