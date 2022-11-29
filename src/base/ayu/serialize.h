@@ -28,15 +28,24 @@ void item_from_string (const Reference&, Str src);
 void item_from_file (const Reference&, Str filename);
 
 ///// ACCESS OPERATIONS
- // Get a list of the keys in a object-like item
+ // Get a list of the keys in an object-like item and pass them to a callback.
+ // The Strs might not outlive the callback, so if you need to keep them around,
+ // copy them or use item_get_keys instead.
+void item_read_keys (
+    const Reference&,
+    Callback<void(const std::vector<Str>&)> cb
+);
+ // Get a list of the keys in a object-like item.  This will copy all the
+ // strings, so if you're concerned about performance, use item_read_keys
+ // instead.
 std::vector<String> item_get_keys (const Reference&);
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
-void item_set_keys (const Reference&, const std::vector<String>&);
+void item_set_keys (const Reference&, const std::vector<Str>&);
  // Get an attribute of an object-like item by its key, or empty Reference if
- // the attribute doesn't exist
+ // the attribute doesn't exist.
 Reference item_maybe_attr (const Reference&, Str);
- // Throws if the attribute doesn't exist
+ // Throws if the attribute doesn't exist.
 Reference item_attr (const Reference&, Str);
 
  // Get the length of an array-like item.
@@ -47,7 +56,7 @@ void item_set_length (const Reference&, usize);
  // Get an element of an array-like item by its index.  Returns an empty
  // Reference if te element doesn't exist.
 Reference item_maybe_elem (const Reference&, usize);
- // Throws if the element doesn't exist
+ // Throws if the element doesn't exist.
 Reference item_elem (const Reference&, usize);
 
 ///// LOCATION OPERATIONS
@@ -196,6 +205,12 @@ namespace ayu::X {
     struct ElemNotFound : SerError {
         usize index;
         ElemNotFound (const Reference& r, usize i) : SerError(r), index(i) { }
+    };
+     // The accessor given to a keys() descriptor did not serialize to an array
+     // of strings.
+    struct InvalidKeysType : SerError {
+        Type type;
+        InvalidKeysType (const Reference& r, Type t) : SerError(r), type(t) { }
     };
      // Tried to transform a Reference into a path, but a global scan could not
      // find where the Reference pointed to.

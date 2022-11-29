@@ -57,6 +57,14 @@ using Str = std::string_view;
 using String16 = std::u16string;
 using Str16 = std::u16string_view;
 
+using Array = std::vector<Tree>;
+using Pair = std::pair<String, Tree>;
+using Object = std::vector<Pair>;
+
+using iri::IRI;
+
+///// STRINGS
+
 namespace in {
     template <class T>
     static auto to_string (T&& s) {
@@ -82,12 +90,6 @@ String&& cat (String&& s, Args... args) {
     ((s += in::to_string(std::forward<Args>(args))), ...);
     return std::move(s);
 }
-
-using Array = std::vector<Tree>;
-using Pair = std::pair<String, Tree>;
-using Object = std::vector<Pair>;
-
-using iri::IRI;
 
 ///// CALLBACKS
 

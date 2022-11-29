@@ -198,12 +198,16 @@ struct _AYU_DescribeBase {
         in::AttrFlags flags = in::AttrFlags(0)
     );
      // Use this for items that may have a variable number of attributes.
-     // `accessor` must be output of one of the accessor functions with a
-     // child type of std::vector<String>.
+     // `accessor` must be the output of one of the accessor functions (see
+     // ACCESSORS), and its child type can be anything that serializes to an
+     // array of strings, but serialization will be fastest if its type is
+     // std::vector<Str> (AKA std::vector<std::string_view>).
      //
      // During serialization, the list of keys will be determined with
      // `accessor`'s read operation, and for each key, the attribute's value
-     // will be set using either the attrs() or attr_func() descriptors.
+     // will be set using either the attrs() or attr_func() descriptors.  If the
+     // keys type is std::vector<Str>, the strings the Strs point to must live
+     // at least as long as this item itself.
      //
      // During deserialization, `accessor`'s write operation will be called with
      // the list of keys provided in the Tree, and it should throw
@@ -213,7 +217,8 @@ struct _AYU_DescribeBase {
      // will be called, and the list of provided keys must match exactly or an
      // exception will be thrown.  It is acceptable to ignore the provided list
      // of keys and instead clear the item and later autovivify attributes given
-     // to attr_func().
+     // to attr_func().  If the keys are of type Str (AKA std::string_view), you
+     // may need to copy them to take ownership.
     template <class Acr>
     static constexpr auto keys (const Acr& accessor);
      // Provide a way to read or write arbitrary attributes.  The function is

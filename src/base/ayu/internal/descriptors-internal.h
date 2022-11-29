@@ -404,9 +404,6 @@ struct KeysDcr : AttachedDescriptor<T> { };
 template <class T, class Acr>
 struct KeysDcrWith : KeysDcr<T> {
     static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-    static_assert(std::is_same_v<
-        typename Acr::AccessorToType, std::vector<String>
-    >);
     Acr acr;
     constexpr KeysDcrWith (const Acr& a) :
         acr(constexpr_acr(a))
@@ -423,6 +420,7 @@ struct LengthDcr : AttachedDescriptor<T> { };
 template <class T, class Acr>
 struct LengthDcrWith : LengthDcr<T> {
     static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
+     // TODO: allow other integer-like types here
     static_assert(std::is_same_v<typename Acr::AccessorToType, usize>);
     Acr acr;
     constexpr LengthDcrWith (const Acr& a) :

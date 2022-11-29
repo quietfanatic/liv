@@ -28,12 +28,22 @@ AYU_DESCRIBE_SCALAR(int64)
 AYU_DESCRIBE_SCALAR(uint64)
 AYU_DESCRIBE_SCALAR(float)
 AYU_DESCRIBE_SCALAR(double)
- // Str and const char* are not describable because they're reference types, so
- // their ownership is ambiguous.  Possibly we should relax this restriction,
- // because they could be useful for keys().
 AYU_DESCRIBE_SCALAR(std::string)
 AYU_DESCRIBE_SCALAR(std::u16string)
 #undef AYU_DESCRIBE_SCALAR
+
+ // Str AKA string_view is a reference-like type so it can't be deserialized
+ // because the data structure containing it would most likely outlive the tree
+ // it came from.  However, allowing it to be serialized could be useful.  Plus
+ // giving this a description means that std::vector<Str> can be used as the
+ // type for keys().
+AYU_DESCRIBE(std::string_view,
+    to_tree([](const Str& v){ return Tree(v); })
+)
+ // Same story with const char*
+AYU_DESCRIBE(const char*,
+    to_tree([](const char* const& v){ return Tree(v); })
+)
 
 AYU_DESCRIBE(iri::IRI,
     delegate(mixed_funcs<String>(

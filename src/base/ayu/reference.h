@@ -64,6 +64,9 @@ struct Reference {
     }
      // Construct from type and abstract pointer.  Used by serialize.
     Reference (Type t, Mu* p) : Reference(p, &t.desc->identity_acr) { }
+    Reference (Type t, const Mu* p) : Reference(
+        const_cast<Mu*>(p), &t.desc->readonly_identity_acr
+    ) { }
      // Construct from a pointer.
     template <class T>
     Reference (T* p) : Reference(
@@ -234,12 +237,13 @@ struct Reference {
     }
 
      // Shortcuts for serialize functions
+     // TODO: Get rid of these.
     Tree to_tree () const;
     void from_tree (Tree t) const;
      // If this reference is got through value_funcs or somesuch, then calling
      // these a bunch of times may be slow.
     std::vector<String> get_keys () const;
-    void set_keys (const std::vector<String>& ks) const;
+    void set_keys (const std::vector<Str>& ks) const;
     Reference maybe_attr (Str key) const;
     Reference attr (Str key) const;
     usize get_length () const;
@@ -333,7 +337,7 @@ namespace ayu {
 inline Tree Reference::to_tree () const { return item_to_tree(*this); }
 inline void Reference::from_tree (Tree t) const { item_from_tree(*this, t); }
 inline std::vector<String> Reference::get_keys () const { return item_get_keys(*this); }
-inline void Reference::set_keys (const std::vector<String>& ks) const { item_set_keys(*this, ks); }
+inline void Reference::set_keys (const std::vector<Str>& ks) const { item_set_keys(*this, ks); }
 inline Reference Reference::maybe_attr (Str key) const { return item_maybe_attr(*this, key); }
 inline Reference Reference::attr (Str key) const { return item_attr(*this, key); }
 inline usize Reference::get_length () const { return item_get_length(*this); }

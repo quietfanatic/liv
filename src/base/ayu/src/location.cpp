@@ -114,6 +114,8 @@ Location::Location (const IRI& iri) {
                         if (ptr == 0) {
                             throw X::GenericError("Index segment too big?"s);
                         }
+                         // "Warning: index may be used uninitialized in this
+                         // function."  Why?
                         self = Location(self, index);
                     }
                     segment_start = i+1;

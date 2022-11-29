@@ -12,6 +12,8 @@ namespace ayu {
  // destruction for any type as long as it has an AYU_DESCRIBE declaration.
  //
  // The default value will cause null derefs if you do anything with it.
+ //
+ // TODO: Document that Types cannot be used before main() begins.
 struct Type {
     const in::Description* desc;
 

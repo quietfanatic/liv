@@ -20,6 +20,7 @@ namespace in {
 ///// TO_TREE
 
 Tree item_to_tree (const Reference& item) {
+     // TODO: do everything inside item.read()
     try {
         auto desc = DescriptionPrivate::get(item.type());
         if (auto to_tree = desc->to_tree()) {
@@ -41,16 +42,22 @@ Tree item_to_tree (const Reference& item) {
         }
         switch (desc->preference()) {
             case Description::PREFER_OBJECT: {
+                 // TODO: If this item is unaddressable, do all of this inside
+                 // item.read().
                 Object o;
-                for (auto& k : item_get_keys(item)) {
-                    Reference attr = item_attr(item, k);
-                    if (!attr.readonly()) {
-                        o.emplace_back(k, item_to_tree(attr));
+                item_read_keys(item, [&](const std::vector<Str>& ks){
+                    for (auto& k : ks) {
+                        Reference attr = item_attr(item, k);
+                        if (!attr.readonly()) {
+                            o.emplace_back(k, item_to_tree(attr));
+                        }
                     }
-                }
+                });
                 return Tree(std::move(o));
             }
             case Description::PREFER_ARRAY: {
+                 // TODO: If this item is unaddressable, do all this inside
+                 // item.read().
                 usize l = item_get_length(item);
                 Array a;
                 for (usize i = 0; i < l; i++) {
@@ -142,9 +149,10 @@ static void item_populate (const Reference& item, const Tree& tree) {
      // Now the behavior depends on what kind of tree we've been given
     switch (tree.form()) {
         case OBJECT: {
-             // This'll be pretty inefficient for copying accessors but w/e
+             // This'll be pretty inefficient for copying accessors but there's
+             // not much else we can do.
             if (desc->accepts_object()) {
-                std::vector<String> ks;
+                std::vector<Str> ks;
                 for (auto& p : tree.data->as_known<Object>()) {
                     ks.emplace_back(p.first);
                 }
@@ -272,29 +280,85 @@ void item_from_file (
 ///// ATTR OPERATIONS
 
 namespace in {
-static void add_key (std::vector<String>& ks, Str k) {
-     // TODO: reduce string construction overall
+struct OwnedStringNode {
+    std::string s;
+    std::unique_ptr<OwnedStringNode> next;
+};
+ // StrVector behaves just like a std::vector<Str>, but has extra storage in
+ // case it needs to take ownership of any strings.  Ideally, the storage will
+ // be unused and remain empty.
+struct StrVector : std::vector<Str> {
+    using std::vector<Str>::vector;
+     // Moving a std::string might invalidate its Str, so we can't keep them in
+     // a resizable std::vector.  Just use a singly-linked list because we don't
+     // actually need to DO anything with these, we just need to keep them
+     // around.
+    std::unique_ptr<OwnedStringNode> owned_strings;
+};
+
+static void collect_key_str (StrVector& ks, Str k) {
+     // This'll end up being N^2.  TODO: Test whether including an unordered_set
+     // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
+static void collect_key_string (StrVector& ks, String&& k) {
+    for (auto ksk : ks) if (k == ksk) return;
+    ks.owned_strings = std::make_unique<OwnedStringNode>(
+        std::move(k), std::move(ks.owned_strings)
+    );
+    ks.emplace_back(ks.owned_strings->s);
+}
 
-static void item_collect_keys (const Reference& item, std::vector<String>& ks) {
+static void item_collect_keys (const Reference& item, StrVector& ks) {
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->keys_acr()) {
-        item.chain(acr).read([&](const Mu& ksv){
-            for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
-                add_key(ks, k);
-            }
-        });
+        Reference keys_ref = item.chain(acr);
+         // Don't allow quick keys for non-addressable references, because they
+         // could be created on the fly, which would invalidate their Strs when
+         // .read() returns.  If we're calling get_keys on a non-adressable
+         // reference, then we're already in a fairly worst-case performance
+         // scenario, so deoptimizing a little won't change much.
+         //
+         // Compare Type not std::type_info, since std::type_info can require a
+         // string comparison.
+        static Type type_vector_str = Type::CppType<std::vector<Str>>();
+        if (item.address() && keys_ref.type() == type_vector_str) {
+             // Optimize for std::vector<Str>
+            keys_ref.read([&](const Mu& ksv){
+                for (auto& k : reinterpret_cast<const std::vector<Str>&>(ksv)) {
+                    collect_key_str(ks, k);
+                }
+            });
+        }
+        else {
+             // General case, any type that serializes to an array of strings.
+             // Do a read and then call item_to_tree on the result, because the
+             // order of the keys might not be constant.  TODO: Move this check
+             // into item_to_tree.
+            keys_ref.read([&](const Mu& ksv){
+                auto tree = item_to_tree(Reference(keys_ref.type(), &ksv));
+                if (tree.form() != ARRAY) {
+                    throw X::InvalidKeysType(item, keys_ref.type());
+                }
+                for (Tree& e : tree.data->as_known<Array>()) {
+                    if (e.form() != STRING) {
+                        throw X::InvalidKeysType(item, keys_ref.type());
+                    }
+                    collect_key_string(ks, std::move(e.data->as_known<String>()));
+                }
+            });
+        }
     }
     else if (auto attrs = desc->attrs()) {
+         // TODO: Optimize for the case where there are no inherited attrs
         for (uint16 i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
             if (acr->attr_flags & ATTR_INHERIT) {
                 item_collect_keys(item.chain(acr), ks);
             }
-            else add_key(ks, attr->key);
+            else collect_key_str(ks, attr->key);
         }
     }
     else if (auto acr = desc->delegate_acr()) {
@@ -302,10 +366,27 @@ static void item_collect_keys (const Reference& item, std::vector<String>& ks) {
     }
     else throw X::NoAttrs(item);
 }
+} // namespace in
 
-static bool claim_key (std::vector<String>& ks, Str k) {
-     // This algorithm overall is pretty inefficient, we may be able to speed it
-     // up by setting a flag if there are no inherited attrs.
+void item_read_keys (
+    const Reference& item,
+    Callback<void(const std::vector<Str>&)> cb
+) {
+    StrVector ks;
+    item_collect_keys(item, ks);
+    cb(ks);
+}
+std::vector<String> item_get_keys (const Reference& item) {
+    StrVector ks;
+    item_collect_keys(item, ks);
+    return std::vector<String>(ks.begin(), ks.end());
+}
+
+namespace in {
+static bool claim_key (std::vector<Str>& ks, Str k) {
+     // This algorithm overall is O(N^3), we may be able to speed it up by
+     // setting a flag if there are no inherited attrs, or maybe by using an
+     // unordered_set?
     for (auto it = ks.begin(); it != ks.end(); it++) {
         if (*it == k) {
             ks.erase(it);
@@ -317,36 +398,89 @@ static bool claim_key (std::vector<String>& ks, Str k) {
 
 static void item_claim_keys (
     const Reference& item,
-    std::vector<String>& ks,
+    std::vector<Str>& ks,
     bool optional
 ) {
+    static Type type_vector_str = Type::CppType<std::vector<Str>>();
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->keys_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
-             // Note: don't use chain because it can include a modify op.
-             // TODO: make this not necessary?
-            return item.write([&](Mu& v){
-                acr->write(v, [&](Mu& ksv){
-                    reinterpret_cast<std::vector<String>&>(ksv) = std::move(ks);
-                    ks.clear();
+             // Since we're passing null to acr->type(), we won't be able to use
+             // quick keys for a dynamically typed acr, but I don't know why
+             // you'd use reference_func() in keys() in the first place.
+            if (acr->type(null) == type_vector_str) {
+                 // Note: don't use chain because it can include a modify op.
+                item.write([&](Mu& v){
+                    acr->write(v, [&](Mu& ksv){
+                        reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
+                        ks.clear(); // Unnecessary after move?
+                    });
                 });
-            });
+            }
+            else {
+                 // General case.  This will probably be slow.
+                Array a (ks.size());
+                for (usize i = 0; i < ks.size(); i++) {
+                    a[i] = Tree(ks[i]);
+                }
+                 // Manually follow the reference instead of using chain.  The
+                 // reason for this is that if we call item_from_tree, it first
+                 // calls item_set_length.  Since the keys ref is almost
+                 // certainly unaddressable, this will cause an array of empty
+                 // strings to be written to the object's keys.  In the case of
+                 // std::unordered_map, this will give the map one element with
+                 // a key of "".  Then when item_from_tree calls item_elem, it
+                 // will throw ElemNotFound for all indexes > 0.
+                 // TODO: Do this unwrapping in item_from_tree instead of here,
+                 // to avoid similar problems in other scenarios.
+                item.write([&](Mu& v){
+                    acr->write(v, [&](Mu& ksv){
+                        item_from_tree(
+                            Reference(acr->type(&v), &ksv),
+                            Tree(std::move(a))
+                        );
+                    });
+                });
+                ks.clear();
+            }
         }
         else {
              // For readonly keys, get the keys and compare them.
-            std::vector<String> expected;
-            item.chain(acr).read([&](const Mu& ksv){
-                expected = reinterpret_cast<const std::vector<String>&>(ksv);
-            });
-            for (auto& e : expected) {
-                if (claim_key(ks, e)) optional = false;
-                else if (!optional) throw X::MissingAttr(item, e);
+            Reference keys_ref = item.chain(acr);
+            if (keys_ref.type() == type_vector_str) {
+                 // Optimize for std::vector<Str>
+                std::vector<Str> expected;
+                keys_ref.read([&](const Mu& ksv){
+                    expected = reinterpret_cast<const std::vector<Str>&>(ksv);
+                });
+                for (auto& k : expected) {
+                    if (claim_key(ks, k)) optional = false;
+                    else if (!optional) throw X::MissingAttr(item, k);
+                }
+                return;
+            }
+            else {
+                 // General case.  This will probably be slow.
+                auto tree = item_to_tree(keys_ref);
+                if (tree.form() != ARRAY) {
+                    throw X::InvalidKeysType(item, keys_ref.type());
+                }
+                for (auto& e : tree.data->as_known<Array>()) {
+                    if (e.form() != STRING) {
+                        throw X::InvalidKeysType(item, keys_ref.type());
+                    }
+                    Str k = e.data->as_known<String>();
+                    if (claim_key(ks, k)) optional = false;
+                    else if (!optional) throw X::MissingAttr(item, k);
+                }
             }
             return;
         }
     }
     else if (auto attrs = desc->attrs()) {
          // Prioritize direct attrs
+         // Note, we're using std::string as an optimization for bool[], it's
+         // not actually text.
         std::string claimed_inherited (attrs->n_attrs, false);
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
@@ -386,14 +520,8 @@ static void item_claim_keys (
 }
 } // namespace in
 
-std::vector<String> item_get_keys (const Reference& item) {
-    std::vector<String> ks;
-    item_collect_keys(item, ks);
-    return ks;
-}
-
-void item_set_keys (const Reference& item, const std::vector<String>& ks) {
-    std::vector<String> claimed = ks;
+void item_set_keys (const Reference& item, const std::vector<Str>& ks) {
+    std::vector<Str> claimed = ks;
     item_claim_keys(item, claimed, false);
     if (!claimed.empty()) {
         throw X::UnwantedAttr(item, claimed[0]);
@@ -766,6 +894,12 @@ AYU_DESCRIBE(ayu::X::ElemNotFound,
         elem(&X::ElemNotFound::index)
     )
 )
+AYU_DESCRIBE(ayu::X::InvalidKeysType,
+    elems(
+        elem(base<X::SerError>(), inherit),
+        elem(&X::InvalidKeysType::type)
+    )
+)
 AYU_DESCRIBE(ayu::X::UnresolvedReference,
     delegate(base<X::SerError>()),
     elems(elem(&X::UnresolvedReference::type))
@@ -838,7 +972,12 @@ namespace ayu::test {
         std::vector<int> xs;
     };
 
+     // Test usage of keys() with type std::vector<String>
     struct AttrsTest {
+        std::unordered_map<String, int> xs;
+    };
+     // Test usage of keys() with type std::vector<Str>
+    struct AttrsTest2 {
         std::unordered_map<String, int> xs;
     };
 
@@ -943,12 +1082,32 @@ AYU_DESCRIBE(ayu::test::AttrsTest,
         },
         [](AttrsTest& v, const std::vector<String>& ks){
             v.xs.clear();
-            for (auto k : ks) {
+            for (auto& k : ks) {
                 v.xs.emplace(k, 0);
             }
         }
     )),
     attr_func([](AttrsTest& v, Str k){
+        return Reference(&v.xs.at(String(k)));
+    })
+)
+AYU_DESCRIBE(ayu::test::AttrsTest2,
+    keys(mixed_funcs<std::vector<Str>>(
+        [](const AttrsTest2& v){
+            std::vector<Str> r;
+            for (auto& p : v.xs) {
+                r.emplace_back(p.first);
+            }
+            return r;
+        },
+        [](AttrsTest2& v, const std::vector<Str>& ks){
+            v.xs.clear();
+            for (auto& k : ks) {
+                v.xs.emplace(k, 0);
+            }
+        }
+    )),
+    attr_func([](AttrsTest2& v, Str k){
         return Reference(&v.xs.at(String(k)));
     })
 )
@@ -1150,7 +1309,8 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     is(est.xs.at(3), 4, "item_from_tree works with elem_func");
 
     auto ast = AttrsTest{{{"a", 11}, {"b", 22}}};
-    std::vector<String> keys = item_get_keys(&ast);
+    std::vector<String> keys_string = item_get_keys(&ast);
+    std::vector<Str> keys (keys_string.begin(), keys_string.end());
     is(keys.size(), 2u, "item_get_keys (size)");
     ok((keys[0] == "a" && keys[1] == "b") || (keys[0] == "b" && keys[1] == "a"),
         "item_get_keys (contents)"
@@ -1163,7 +1323,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     throws<std::out_of_range>([&]{
         item_attr(&ast, "c");
     }, "item_attr can throw on missing key (from user-defined function)");
-    keys = std::vector<String>{"c", "d"};
+    keys = std::vector<Str>{"c", "d"};
     item_set_keys(&ast, keys);
     is(ast.xs.find("a"), ast.xs.end(), "item_set_keys removed key");
     is(ast.xs.at("c"), 0, "item_set_keys added key");
@@ -1176,6 +1336,35 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_from_string(&ast, "{e:88,f:34}");
     }, "item_from_tree with keys and attr_func doesn't throw");
     is(ast.xs.at("f"), 34, "item_from_tree works with attr_func");
+
+    auto ast2 = AttrsTest2{{{"a", 11}, {"b", 22}}};
+    item_read_keys(&ast2, [&](const std::vector<Str>& ks){
+        is(ks.size(), 2u, "item_read_keys (size)");
+        ok((ks[0] == "a" && ks[1] == "b") || (ks[0] == "b" && ks[1] == "a"),
+            "item_read_keys (contents)"
+        );
+    });
+    answer = 0;
+    doesnt_throw([&]{
+        item_attr(&ast2, "b").read_as<int>([&](const int& v){ answer = v; });
+    }, "item_attr and Reference::read_as");
+    is(answer, 22, "item_attr gives correct answer");
+    throws<std::out_of_range>([&]{
+        item_attr(&ast2, "c");
+    }, "item_attr can throw on missing key (from user-defined function)");
+    keys = std::vector<Str>{"c", "d"};
+    item_set_keys(&ast2, keys);
+    is(ast2.xs.find("a"), ast2.xs.end(), "item_set_keys removed key");
+    is(ast2.xs.at("c"), 0, "item_set_keys added key");
+    doesnt_throw([&]{
+        item_attr(&ast2, "d").write_as<int>([](int& v){ v = 999; });
+    }, "item_attr and Reference::write_as");
+    is(ast2.xs.at("d"), 999, "writing to attr works");
+    is(item_to_tree(&ast2), tree_from_string("{c:0,d:999}"), "item_to_tree with keys and attr_func");
+    doesnt_throw([&]{
+        item_from_string(&ast2, "{e:88,f:34}");
+    }, "item_from_tree with keys and attr_func doesn't throw");
+    is(ast2.xs.at("f"), 34, "item_from_tree works with attr_func");
 
     auto dt = DelegateTest{{4, 5, 6}};
     is(item_to_tree(&dt), tree_from_string("[4 5 6]"), "item_to_tree with delegate");
