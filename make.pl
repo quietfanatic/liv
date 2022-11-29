@@ -27,9 +27,14 @@ my %configs = (
         strip => 0,
     },
     opt => {
-        compile_opts => [qw(-Os -DNDEBUG -flto)],
-        link_opts => [qw(-flto)],
+        compile_opts => [qw(-Os -DNDEBUG -flto -ggdb)],
+        link_opts => [qw(-flto -ggdb)],
         strip => 1,
+    },
+    pro => {
+        compile_opts => [qw(-Og -DNDEBUG -flto -finline-small-functions -pg)],
+        link_opts => [qw(-flto -pg)],
+        strip => 0,
     },
     rel => {
         compile_opts => [qw(-Os -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
@@ -239,6 +244,7 @@ for my $cfg (keys %configs) {
 phony 'debug', 'out/deb/build';
 phony 'optimized', 'out/opt/build';
 phony 'release', 'out/rel/build';
+phony 'profile', 'out/pro/build';
 phony 'test', 'out/deb/test';
 defaults 'test';
 
