@@ -40,7 +40,7 @@ Tree item_to_tree (const Reference& item) {
             if (r.has_value()) return r;
         }
         switch (desc->preference()) {
-            case OBJECT: {
+            case Description::PREFER_OBJECT: {
                 Object o;
                 for (auto& k : item_get_keys(item)) {
                     Reference attr = item_attr(item, k);
@@ -50,7 +50,7 @@ Tree item_to_tree (const Reference& item) {
                 }
                 return Tree(std::move(o));
             }
-            case ARRAY: {
+            case Description::PREFER_ARRAY: {
                 usize l = item_get_length(item);
                 Array a;
                 for (usize i = 0; i < l; i++) {
@@ -273,6 +273,7 @@ void item_from_file (
 
 namespace in {
 static void add_key (std::vector<String>& ks, Str k) {
+     // TODO: reduce string construction overall
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
@@ -637,6 +638,7 @@ void recursive_scan_resource (
     recursive_scan(res.get_value(), Location(res), cb);
 }
 
+ // TODO: Skip atomic types T if AYU_DESCRIBE for T* has not been instantiated
 void recursive_scan (
     const Reference& item, Location loc,
     Callback<void(const Reference&, Location)> cb
@@ -646,13 +648,13 @@ void recursive_scan (
 
     auto desc = DescriptionPrivate::get(item.type());
     switch (desc->preference()) {
-        case OBJECT: {
+        case Description::PREFER_OBJECT: {
             for (auto& k : item_get_keys(item)) {
                 recursive_scan(item_attr(item, k), Location(loc, k), cb);
             }
             return;
         }
-        case ARRAY: {
+        case Description::PREFER_ARRAY: {
             usize l = item_get_length(item);
             for (usize i = 0; i < l; i++) {
                 recursive_scan(item_elem(item, i), Location(loc, i), cb);

@@ -179,7 +179,18 @@ struct Description : ComparableAddress {
     const std::type_info* cpp_type = null;
     uint32 cpp_size = 0;
     uint32 cpp_align = 0;
+     // TODO: Merge this with the name dcr?
     Str name;
+
+     // Do some property calculations ahead of time
+    enum Flags {
+        PREFER_ARRAY = 1 << 0,
+        PREFER_OBJECT = 1 << 1,
+        PREFERENCE = PREFER_ARRAY | PREFER_OBJECT,
+//        NO_INHERIT_ATTRS = 1 << 2,
+//        NO_INHERIT_ELEMS = 1 << 3,
+    };
+    uint16 flags = 0;
 
     uint16 name_offset = 0;
     uint16 to_tree_offset = 0;
@@ -496,28 +507,70 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
             }
             header.destroy = dcr.f;
         }
-#define AYU_ATTACHED_DCR(dcr_type, dcr_name) \
-        else if constexpr (std::is_base_of_v<dcr_type<T>, Dcr>) { \
+        else if constexpr (std::is_base_of_v<NameDcr<T>, Dcr>) {
+#define AYU_APPLY_OFFSET(dcr_type, dcr_name) \
             if (header.dcr_name##_offset) { \
                 throw "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description"; \
             } \
             header.dcr_name##_offset = \
-                desc.template get<dcr_type<T>>(0)->get_offset(header); \
+                desc.template get<dcr_type<T>>(0)->get_offset(header);
+            AYU_APPLY_OFFSET(NameDcr, name)
         }
-        AYU_ATTACHED_DCR(NameDcr, name)
-        AYU_ATTACHED_DCR(ToTreeDcr, to_tree)
-        AYU_ATTACHED_DCR(FromTreeDcr, from_tree)
-        AYU_ATTACHED_DCR(SwizzleDcr, swizzle)
-        AYU_ATTACHED_DCR(InitDcr, init)
-        AYU_ATTACHED_DCR(ValuesDcr, values)
-        AYU_ATTACHED_DCR(AttrsDcr, attrs)
-        AYU_ATTACHED_DCR(ElemsDcr, elems)
-        AYU_ATTACHED_DCR(KeysDcr, keys)
-        AYU_ATTACHED_DCR(AttrFuncDcr, attr_func)
-        AYU_ATTACHED_DCR(LengthDcr, length)
-        AYU_ATTACHED_DCR(ElemFuncDcr, elem_func)
-        AYU_ATTACHED_DCR(DelegateDcr, delegate)
-#undef AYU_ATTACHED_DCR
+        else if constexpr (std::is_base_of_v<ToTreeDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(ToTreeDcr, to_tree)
+        }
+        else if constexpr (std::is_base_of_v<FromTreeDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(FromTreeDcr, from_tree)
+        }
+        else if constexpr (std::is_base_of_v<SwizzleDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(SwizzleDcr, swizzle)
+        }
+        else if constexpr (std::is_base_of_v<InitDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(InitDcr, init)
+        }
+        else if constexpr (std::is_base_of_v<ValuesDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(ValuesDcr, values)
+        }
+        else if constexpr (std::is_base_of_v<AttrsDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(AttrsDcr, attrs)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_OBJECT;
+            }
+        }
+        else if constexpr (std::is_base_of_v<ElemsDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(ElemsDcr, elems)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_ARRAY;
+            }
+        }
+        else if constexpr (std::is_base_of_v<KeysDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(KeysDcr, keys)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_OBJECT;
+            }
+        }
+        else if constexpr (std::is_base_of_v<AttrFuncDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(AttrFuncDcr, attr_func)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_OBJECT;
+            }
+        }
+        else if constexpr (std::is_base_of_v<LengthDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(LengthDcr, length)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_ARRAY;
+            }
+        }
+        else if constexpr (std::is_base_of_v<ElemFuncDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(ElemFuncDcr, elem_func)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_ARRAY;
+            }
+        }
+        else if constexpr (std::is_base_of_v<DelegateDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(DelegateDcr, delegate)
+        }
+#undef AYU_APPLY_OFFSET
         else {
             throw "Element in AYU_DESCRIBE description is not a descriptor for this type";
         }

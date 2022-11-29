@@ -179,22 +179,9 @@ struct DescriptionPrivate : DescriptionFor<Mu> {
      // Figure out whether this description prefers being serialized as an array
      // or as an object.  Whichever has a related facet specified first will
      // be picked.
-    Form preference () const {
-        uint16 smallest_offset = 0;
-        Form preferred = NULLFORM;
-        for (auto off : {attrs_offset, keys_offset, attr_func_offset}) {
-            if (off && (!smallest_offset || off < smallest_offset)) {
-                smallest_offset = off;
-                preferred = OBJECT;
-            }
-        }
-        for (auto off : {elems_offset, length_offset, elem_func_offset}) {
-            if (off && (!smallest_offset || off < smallest_offset)) {
-                smallest_offset = off;
-                preferred = ARRAY;
-            }
-        }
-        return preferred;
+    uint16 preference () const {
+         // We've bumped this calculation up to compile-time.
+        return flags & PREFERENCE;
     }
 };
 
