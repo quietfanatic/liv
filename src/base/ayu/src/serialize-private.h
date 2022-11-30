@@ -37,7 +37,10 @@ inline std::vector<InitOp> init_ops;
 
 void do_swizzles ();
 void do_inits ();
-void item_populate (const Reference& item, const Tree& tree);
+void inner_from_tree (
+    const DescriptionPrivate* desc, Mu& item, const Tree& tree,
+    const Reference* unaddressable_ref, TempLocation* loc
+);
 
  ///// Attr operations
 struct OwnedStringNode {

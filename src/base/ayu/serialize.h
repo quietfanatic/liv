@@ -138,7 +138,7 @@ namespace ayu::X {
      // the tree's form.
     struct InvalidForm : SerError {
         Tree tree;
-        InvalidForm (const Reference& r, Tree t) : SerError(r), tree(t) { }
+        InvalidForm (Location&& l, Tree t) : SerError(std::move(l)), tree(t) { }
     };
      // Tried to serialize an item using a values() descriptor, but no value()
      // entry was found for the item's current value.
@@ -149,7 +149,7 @@ namespace ayu::X {
      // entry was found that matched the provided name.
     struct NoValueForName : SerError {
         Tree tree;
-        NoValueForName (const Reference& r, Tree t) : SerError(r), tree(t) { }
+        NoValueForName (Location&& l, Tree t) : SerError(std::move(l)), tree(t) { }
     };
      // Tried to deserialize an item from an object tree, but the tree is
      // an attribute that the item requires.

@@ -128,28 +128,53 @@ void in::do_inits () {
     }
 }
 
-void in::item_populate (const Reference& item, const Tree& tree) {
-    auto desc = DescriptionPrivate::get(item.type());
+void in::inner_from_tree (
+    const DescriptionPrivate* desc, Mu& item, const Tree& tree,
+    const Reference* unaddressable_ref, TempLocation* loc
+) {
      // If description has a from_tree, just use that.
     if (auto from_tree = desc->from_tree()) {
-        item.write([&](Mu& v){
-            from_tree->f(v, tree);
-        });
+        from_tree->f(item, tree);
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
     switch (tree.form()) {
         case OBJECT: {
-             // This'll be pretty inefficient for copying accessors but there's
-             // not much else we can do.
             if (desc->accepts_object()) {
                 std::vector<Str> ks;
                 for (auto& p : tree.data->as_known<Object>()) {
                     ks.emplace_back(p.first);
                 }
-                item_set_keys(item, ks);
+                 // TODO: inner this too
+                Reference ref (desc, &item);
+                item_set_keys(ref, ks);
                 for (auto& p : tree.data->as_known<Object>()) {
-                    item_populate(item_attr(item, p.first), p.second);
+                    Reference attr = item_attr(ref, p.first);
+                    auto attr_desc = DescriptionPrivate::get(attr.type());
+                    auto attr_loc = KeyTempLocation(loc, p.first);
+                    if (unaddressable_ref) {
+                        auto attr_ur = item_attr(*unaddressable_ref, p.first);
+                        attr.write([&](Mu& v){
+                            inner_from_tree(
+                                attr_desc, v, p.second,
+                                &attr_ur, &attr_loc
+                            );
+                        });
+                    }
+                    else if (Mu* address = attr.address()) {
+                        inner_from_tree(
+                            attr_desc, *address, p.second,
+                            null, &attr_loc
+                        );
+                    }
+                    else {
+                        attr.write([&](Mu& v){
+                            inner_from_tree(
+                                attr_desc, v, p.second,
+                                &attr, &attr_loc
+                            );
+                        });
+                    }
                 }
                 goto done;
             }
@@ -157,10 +182,36 @@ void in::item_populate (const Reference& item, const Tree& tree) {
         }
         case ARRAY: {
             if (desc->accepts_array()) {
+                Reference ref (desc, &item);
                 auto& a = tree.data->as_known<Array>();
-                item_set_length(item, a.size());
+                item_set_length(ref, a.size());
                 for (usize i = 0; i < a.size(); i++) {
-                    item_populate(item_elem(item, i), a[i]);
+                    auto elem = item_elem(ref, i);
+                    auto elem_desc = DescriptionPrivate::get(elem.type());
+                    auto elem_loc = IndexTempLocation(loc, i);
+                    if (unaddressable_ref) {
+                        auto elem_ur = item_elem(*unaddressable_ref, i);
+                        elem.write([&](Mu& v){
+                            inner_from_tree(
+                                elem_desc, v, a[i],
+                                &elem_ur, &elem_loc
+                            );
+                        });
+                    }
+                    else if (Mu* address = elem.address()) {
+                        inner_from_tree(
+                            elem_desc, *address, a[i],
+                            null, &elem_loc
+                        );
+                    }
+                    else {
+                        elem.write([&](Mu& v){
+                            inner_from_tree(
+                                elem_desc, v, a[i],
+                                &elem, &elem_loc
+                            );
+                        });
+                    }
                 }
                 goto done;
             }
@@ -174,11 +225,8 @@ void in::item_populate (const Reference& item, const Tree& tree) {
              // All other tree types support the values descriptor
             if (auto values = desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
-                    auto r = values->value(i)->tree_to_value(tree);
-                    if (r) {
-                        item.write([&](Mu& v){
-                            values->assign(v, *r);
-                        });
+                    if (const Mu* v = values->value(i)->tree_to_value(tree)) {
+                        values->assign(item, *v);
                         goto done;
                     }
                 }
@@ -189,7 +237,22 @@ void in::item_populate (const Reference& item, const Tree& tree) {
     }
      // Nothing matched, so use delegate
     if (auto acr = desc->delegate_acr()) {
-        item_populate(item.chain(acr), tree);
+        auto del_desc = DescriptionPrivate::get(acr->type(&item));
+        if (unaddressable_ref) {
+            auto del_ur = unaddressable_ref->chain(acr);
+            acr->write(item, [&](Mu& v){
+                inner_from_tree(del_desc, v, tree, &del_ur, loc);
+            });
+        }
+        else if (Mu* address = acr->address(item)) {
+            inner_from_tree(del_desc, *address, tree, null, loc);
+        }
+        else {
+            acr->write(item, [&](Mu& v){
+                auto del_ur = Reference(&item, acr);
+                inner_from_tree(del_desc, v, tree, &del_ur, loc);
+            });
+        }
         goto done;
     }
      // Still nothing?  Allow swizzle with no from_tree.
@@ -197,32 +260,53 @@ void in::item_populate (const Reference& item, const Tree& tree) {
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong
     if (tree.form() == OBJECT && (desc->values() || desc->accepts_array())) {
-        throw X::InvalidForm(item, tree);
+        throw X::InvalidForm(make_permanent(loc), tree);
     }
     else if (tree.form() == ARRAY && (desc->values() || desc->accepts_object())) {
-        throw X::InvalidForm(item, tree);
+        throw X::InvalidForm(make_permanent(loc), tree);
     }
     else if (desc->accepts_array() || desc->accepts_object()) {
-        throw X::InvalidForm(item, tree);
+        throw X::InvalidForm(make_permanent(loc), tree);
     }
-    else if (desc->values()) throw X::NoValueForName(item, tree);
-    else throw X::CannotFromTree(item);
+    else if (desc->values()) {
+        throw X::NoValueForName(make_permanent(loc), tree);
+    }
+    else {
+        throw X::CannotFromTree(make_permanent(loc));
+    }
 
     done:
      // Now register swizzle and init ops.  We're doing it now instead of before
      // to make sure that children get swizzled and initted before their parent.
     if (auto swizzle = desc->swizzle()) {
-        swizzle_ops.emplace_back(swizzle->f, item, tree, current_resource());
+        swizzle_ops.emplace_back(
+            swizzle->f,
+            unaddressable_ref ? *unaddressable_ref : Reference(desc, &item),
+            tree, current_resource()
+        );
     }
     if (auto init = desc->init()) {
-        init_ops.emplace_back(init->f, item, current_resource());
+        init_ops.emplace_back(
+            init->f,
+            unaddressable_ref ? *unaddressable_ref : Reference(desc, &item),
+            current_resource()
+        );
     }
 }
 
 void item_from_tree (const Reference& item, const Tree& tree) {
     static bool in_from_tree = false;
+    auto desc = DescriptionPrivate::get(item.type());
+    auto loc = RootTempLocation(Resource());
     if (in_from_tree) {
-        item_populate(item, tree);
+        if (Mu* address = item.address()) {
+            inner_from_tree(desc, *address, tree, null, &loc);
+        }
+        else {
+            item.write([&](Mu& v){
+                inner_from_tree(desc, v, tree, item, &loc);
+            });
+        }
     }
     else {
         if (!swizzle_ops.empty() || !init_ops.empty()) {
@@ -230,7 +314,14 @@ void item_from_tree (const Reference& item, const Tree& tree) {
         }
         in_from_tree = true;
         try {
-            item_populate(item, tree);
+            if (Mu* address = item.address()) {
+                inner_from_tree(desc, *address, tree, null, &loc);
+            }
+            else {
+                item.write([&](Mu& v){
+                    inner_from_tree(desc, v, tree, item, &loc);
+                });
+            }
             do_swizzles();
             do_inits();
             in_from_tree = false;

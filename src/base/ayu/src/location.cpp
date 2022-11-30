@@ -267,7 +267,7 @@ AYU_DESCRIBE(ayu::Location,
         }
          // deserializing Location from array is deprecated
         v = Location();
-        if (t.form() != ARRAY) throw X::InvalidForm(&v, t);
+        if (t.form() != ARRAY) throw X::InvalidForm(Location(), t);
         const Array& a = t.data->as_known<Array>();
         if (a.size() == 0) return;
         v = Location(Resource(Str(a[0])));
