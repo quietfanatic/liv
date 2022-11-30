@@ -83,26 +83,17 @@ struct DocumentData {
     }
 };
 
- // TODO: I think this can be replaced with a simple pointer to the header, no?
- // Because when we set the keys, we actually allocate the header, so it exists,
- // and when we're deserializing a DocumentItemRef, we realloc the header in the
- // second elem's setter, at which point we can update the pointer in this
- // DocumentItemRef.
 struct DocumentItemRef {
-    DocumentData* doc;
-    String name;
-     // This is gonna be all sorts of inefficient, but we'll be able to
-     // optimize it later if we need to by putting a temporary map in
-     // DocumentData, or by caching the pointer here and invalidating it
-     // with a version number.
-     //
-     // Or just do the above TODO.
-    DocumentItemHeader* header () const {
+    DocumentItemHeader* header;
+    DocumentItemRef (DocumentData* doc, Str name) {
         for (auto link = doc->items.next; link != &doc->items; link = link->next) {
             auto h = static_cast<DocumentItemHeader*>(link);
-            if (h->name() == name) return h;
+            if (h->name() == name) {
+                header = h;
+                return;
+            }
         }
-        return null;
+        header = null;
     }
 };
 
@@ -123,8 +114,8 @@ void* Document::allocate_named (Type t, Str name) {
 
     if (name.empty()) throw X::DocumentInvalidName(String(name));
     if (id == usize(-1) && name[0] == '_') throw X::DocumentInvalidName(String(name));
-    auto ref = DocumentItemRef{data, String(name)};
-    if (ref.header()) throw X::DocumentDuplicateName(String(name));
+    auto ref = DocumentItemRef(data, String(name));
+    if (ref.header) throw X::DocumentDuplicateName(String(name));
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
@@ -158,11 +149,13 @@ void Document::delete_ (Type t, Mu* p) {
 }
 
 void Document::delete_named (Str name) {
-    auto ref = DocumentItemRef{data, String(name)};
-    if (auto header = ref.header()) {
-        if (header->type) header->type.destroy(header->data());
-        header->~DocumentItemHeader();
-        free(header);
+    auto ref = DocumentItemRef(data, String(name));
+    if (ref.header) {
+        if (ref.header->type) {
+            ref.header->type.destroy(ref.header->data());
+        }
+        ref.header->~DocumentItemHeader();
+        free(ref.header);
         return;
     }
     else throw X::DocumentDeleteMissing(String(name));
@@ -200,8 +193,8 @@ AYU_DESCRIBE(ayu::Document,
             return Reference(&v.data->next_id);
         }
         else {
-            auto ref = DocumentItemRef{v.data, String(k)};
-            if (ref.header()) return Reference(v, variable(std::move(ref)));
+            auto ref = DocumentItemRef(v.data, String(k));
+            if (ref.header) return Reference(v, variable(std::move(ref)));
             else return Reference();
         }
     })
@@ -213,32 +206,31 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
     elems(
         elem(value_funcs<Type>(
             [](const DocumentItemRef& v){
-                return v.header()->type;
+                return v.header->type;
             },
             [](DocumentItemRef& v, Type t){
-                if (auto header = v.header()) {
-                    if (header->type) {
-                        header->type.destroy(header->data());
-                    }
-                     // This is a very bad idea which should work.
-                     // (cast to void* to silence warning)
-                     // (note: if instead we call ~DocumentItemHeader without
-                     //  first cleaning prev and next, it will reorder items in
-                     //  the document.)
-                    header = (DocumentItemHeader*)realloc(
-                        (void*)header, sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0)
-                    );
-                    header->prev->next = header;
-                    header->next->prev = header;
-                    header->type = t;
-                    if (header->type) header->type.default_construct(header + 1);
+                if (v.header->type) {
+                    v.header->type.destroy(v.header->data());
+                }
+                 // This is a very bad idea which should work.
+                 // (cast to void* to silence warning)
+                 // (note: if instead we call ~DocumentItemHeader without
+                 //  first cleaning prev and next, it will reorder items in
+                 //  the document.)
+                v.header = (DocumentItemHeader*)realloc(
+                    (void*)v.header, sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0)
+                );
+                v.header->prev->next = v.header;
+                v.header->next->prev = v.header;
+                v.header->type = t;
+                if (v.header->type) {
+                    v.header->type.default_construct(v.header->data());
                 }
             }
         )),
         elem(reference_func([](DocumentItemRef& v){
-            auto header = v.header();
-            if (header->type) {
-                return Reference(header->type, header->data());
+            if (v.header->type) {
+                return Reference(v.header->type, v.header->data());
             }
             else return Reference();
         }, anchored_to_grandparent))
