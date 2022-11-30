@@ -1,25 +1,26 @@
-#include "../serialize.h"
+#include "serialize-private.h"
 
 #include <cassert>
 #include "../describe.h"
 #include "../parse.h"
-#include "../reference.h"
-#include "../resource.h"
-#include "tree-private.h"
-#include "descriptors-private.h"
-#include "location-private.h"
 #include "resource-private.h"
 
 namespace ayu {
 using namespace in;
 
+///// TO_TREE
 namespace in {
     static int64 diagnostic_serialization = 0;
 }
+DiagnosticSerialization::DiagnosticSerialization () {
+    diagnostic_serialization += 1;
+}
+DiagnosticSerialization::~DiagnosticSerialization () {
+    diagnostic_serialization -= 1;
+    assert(diagnostic_serialization >= 0);
+}
 
-///// TO_TREE
-namespace in {
-Tree inner_to_tree (
+Tree in::inner_to_tree (
     const DescriptionPrivate* desc, const Mu& item, TempLocation* loc
 ) {
     try {
@@ -90,7 +91,6 @@ Tree inner_to_tree (
         else throw;
     }
 }
-} // namespace in
 Tree item_to_tree (const Reference& item) {
     auto desc = DescriptionPrivate::get(item.type());
      // TODO: Make a current-item: scheme
@@ -104,31 +104,7 @@ Tree item_to_tree (const Reference& item) {
 
 ///// FROM_TREE
 
-namespace in {
-
-struct SwizzleOp {
-    using FP = void(*)(Mu&, const Tree&);
-    FP f;
-    Reference item;
-    Tree tree;
-    Resource current_resource;
-    SwizzleOp (FP f, const Reference& r, const Tree& t, Resource res) :
-        f(f), item(r), tree(t), current_resource(res)
-    { }
-};
-struct InitOp {
-    using FP = void(*)(Mu&);
-    FP f;
-    Reference item;
-    Resource current_resource;
-    InitOp (FP f, const Reference& r, Resource res) :
-        f(f), item(r), current_resource(res)
-    { }
-};
-static std::vector<SwizzleOp> swizzle_ops;
-static std::vector<InitOp> init_ops;
-
-static void do_swizzles () {
+void in::do_swizzles () {
     while (!swizzle_ops.empty()) {
         auto swizzles = std::move(swizzle_ops);
         for (auto& op : swizzles) {
@@ -139,7 +115,7 @@ static void do_swizzles () {
         }
     }
 }
-static void do_inits () {
+void in::do_inits () {
     while (!init_ops.empty()) {
         auto inits = std::move(init_ops);
         for (auto& op : inits) {
@@ -152,7 +128,7 @@ static void do_inits () {
     }
 }
 
-static void item_populate (const Reference& item, const Tree& tree) {
+void in::item_populate (const Reference& item, const Tree& tree) {
     auto desc = DescriptionPrivate::get(item.type());
      // If description has a from_tree, just use that.
     if (auto from_tree = desc->from_tree()) {
@@ -242,7 +218,6 @@ static void item_populate (const Reference& item, const Tree& tree) {
         init_ops.emplace_back(init->f, item, current_resource());
     }
 }
-} // namespace in
 
 void item_from_tree (const Reference& item, const Tree& tree) {
     static bool in_from_tree = false;
@@ -294,30 +269,13 @@ void item_from_file (
 
 ///// ATTR OPERATIONS
 
-namespace in {
-struct OwnedStringNode {
-    std::string s;
-    std::unique_ptr<OwnedStringNode> next;
-};
- // StrVector behaves just like a std::vector<Str>, but has extra storage in
- // case it needs to take ownership of any strings.  Ideally, the storage will
- // be unused and remain empty.
-struct StrVector : std::vector<Str> {
-    using std::vector<Str>::vector;
-     // Moving a std::string might invalidate its Str, so we can't keep them in
-     // a resizable std::vector.  Just use a singly-linked list because we don't
-     // actually need to DO anything with these, we just need to keep them
-     // around.
-    std::unique_ptr<OwnedStringNode> owned_strings;
-};
-
-static void collect_key_str (StrVector& ks, Str k) {
+void in::collect_key_str (StrVector& ks, Str k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
-static void collect_key_string (StrVector& ks, String&& k) {
+void in::collect_key_string (StrVector& ks, String&& k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.owned_strings = std::make_unique<OwnedStringNode>(
         std::move(k), std::move(ks.owned_strings)
@@ -325,7 +283,7 @@ static void collect_key_string (StrVector& ks, String&& k) {
     ks.emplace_back(ks.owned_strings->s);
 }
 
-static void item_collect_keys (const Reference& item, StrVector& ks) {
+void in::item_collect_keys (const Reference& item, StrVector& ks) {
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->keys_acr()) {
         Reference keys_ref = item.chain(acr);
@@ -392,7 +350,6 @@ static void item_collect_keys (const Reference& item, StrVector& ks) {
     }
     else throw X::NoAttrs(item);
 }
-} // namespace in
 
 void item_read_keys (
     const Reference& item,
@@ -408,8 +365,7 @@ std::vector<String> item_get_keys (const Reference& item) {
     return std::vector<String>(ks.begin(), ks.end());
 }
 
-namespace in {
-static bool claim_key (std::vector<Str>& ks, Str k) {
+bool in::claim_key (std::vector<Str>& ks, Str k) {
      // This algorithm overall is O(N^3), we may be able to speed it up by
      // setting a flag if there are no inherited attrs, or maybe by using an
      // unordered_set?
@@ -422,7 +378,7 @@ static bool claim_key (std::vector<Str>& ks, Str k) {
     return false;
 }
 
-static void item_claim_keys (
+void in::item_claim_keys (
     const Reference& item,
     std::vector<Str>& ks,
     bool optional
@@ -569,7 +525,6 @@ static void item_claim_keys (
     }
     else throw X::NoAttrs(item);
 }
-} // namespace in
 
 void item_set_keys (const Reference& item, const std::vector<Str>& ks) {
     std::vector<Str> claimed = ks;
@@ -651,8 +606,7 @@ usize item_get_length (const Reference& item) {
     else throw X::NoElems(item);
 }
 
-namespace in {
-void item_claim_length (const Reference& item, usize& claimed, usize len) {
+void in::item_claim_length (const Reference& item, usize& claimed, usize len) {
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->length_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
@@ -691,7 +645,6 @@ void item_claim_length (const Reference& item, usize& claimed, usize len) {
         item_claim_length(item.chain(acr), claimed, len);
     }
     else throw X::NoElems(item);
-}
 }
 
 void item_set_length (const Reference& item, usize len) {
@@ -746,7 +699,7 @@ Reference item_elem (const Reference& item, usize index) {
     else throw X::ElemNotFound(item, index);
 }
 
-///// REFERENCES AND PATHS
+///// REFERENCES AND LOCATIONS
 
 Reference reference_from_location (Location loc) {
     if (!loc) return Reference();
@@ -765,8 +718,10 @@ Reference reference_from_location (Location loc) {
     else AYU_INTERNAL_UGUU();
 }
 
-static std::unordered_map<Reference, Location> location_cache;
-static usize keep_location_count = 0;
+namespace in {
+    static std::unordered_map<Reference, Location> location_cache;
+    static usize keep_location_count = 0;
+}
 
 KeepLocationCache::KeepLocationCache () {
     keep_location_count++;
@@ -850,14 +805,6 @@ void recursive_scan (
 }
 
 ///// DIAGNOSTIC HELP
-
-DiagnosticSerialization::DiagnosticSerialization () {
-    diagnostic_serialization += 1;
-}
-DiagnosticSerialization::~DiagnosticSerialization () {
-    diagnostic_serialization -= 1;
-    assert(diagnostic_serialization >= 0);
-}
 
 ///// ERRORS
 
