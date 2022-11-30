@@ -32,7 +32,7 @@ struct Document {
 
      // This may be linear over the number of items in the document.
     template <class T, class... Args>
-    T* new_named (const String& name, Args&&... args) {
+    T* new_named (Str name, Args&&... args) {
         void* p = allocate_named(Type::CppType<T>(), name);
         try {
             return new (p) T (std::forward<Args...>(args...));
@@ -50,9 +50,9 @@ struct Document {
     }
 
     void* allocate (Type);
-    void* allocate_named (Type, const String&);
+    void* allocate_named (Type, Str);
     void delete_ (Type, Mu*);
-    void delete_named (const String&);
+    void delete_named (Str);
 
     void deallocate (void* p);
 };
@@ -64,13 +64,13 @@ namespace X {
      // Tried to create a document item with an illegal name.
     struct DocumentInvalidName : DocumentError {
         String name;
-        DocumentInvalidName (const String& n) : name(n) { }
+        DocumentInvalidName (String&& n) : name(std::move(n)) { }
     };
      // Tried to create a document item with a name that's already in use in
      // this document.
     struct DocumentDuplicateName : DocumentError {
         String name;
-        DocumentDuplicateName (const String& n) : name(n) { }
+        DocumentDuplicateName (String&& n) : name(std::move(n)) { }
     };
      // Tried to delete a document item, but the wrong type was given during
      // deletion.
@@ -88,7 +88,7 @@ namespace X {
      // this document.
     struct DocumentDeleteMissing : DocumentError {
         String name;
-        DocumentDeleteMissing (const String& n) : name(n) { }
+        DocumentDeleteMissing (String&& n) : name(std::move(n)) { }
     };
 }
 

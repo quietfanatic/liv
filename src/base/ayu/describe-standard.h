@@ -72,16 +72,16 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    desc::keys(desc::template mixed_funcs<std::vector<std::string>>(
+    desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
         [](const std::unordered_map<std::string, T>& v){
-            std::vector<std::string> r;
+            std::vector<std::string_view> r;
             for (auto& p : v) {
                 r.emplace_back(p.first);
             }
             return r;
         },
         [](std::unordered_map<std::string, T>& v,
-           const std::vector<std::string>& ks
+           const std::vector<std::string_view>& ks
         ){
             v.clear();
             for (auto& k : ks) {

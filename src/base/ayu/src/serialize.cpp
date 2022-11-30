@@ -319,36 +319,47 @@ static void item_collect_keys (const Reference& item, StrVector& ks) {
          // .read() returns.  If we're calling get_keys on a non-adressable
          // reference, then we're already in a fairly worst-case performance
          // scenario, so deoptimizing a little won't change much.
-         //
-         // Compare Type not std::type_info, since std::type_info can require a
-         // string comparison.
-        static Type type_vector_str = Type::CppType<std::vector<Str>>();
-        if (item.address() && keys_ref.type() == type_vector_str) {
-             // Optimize for std::vector<Str>
-            keys_ref.read([&](const Mu& ksv){
-                for (auto& k : reinterpret_cast<const std::vector<Str>&>(ksv)) {
-                    collect_key_str(ks, k);
-                }
-            });
+        if (item.address()) {
+             // Compare Type not std::type_info, since std::type_info can require a
+             // string comparison.
+            static Type type_vector_str = Type::CppType<std::vector<Str>>();
+            static Type type_vector_string = Type::CppType<std::vector<String>>();
+            if (keys_ref.type() == type_vector_str) {
+                 // Optimize for std::vector<Str>
+                keys_ref.read([&](const Mu& ksv){
+                    for (auto& k : reinterpret_cast<const std::vector<Str>&>(ksv)) {
+                        collect_key_str(ks, k);
+                    }
+                });
+                return;
+            }
+            else if (keys_ref.type() == type_vector_string) {
+                 // Capitulate to std::vector<String> too.
+                keys_ref.read([&](const Mu& ksv){
+                     // TODO: Flag accessor if it can be moved from?
+                    for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
+                        collect_key_string(ks, String(k));
+                    }
+                });
+                return;
+            }
         }
-        else {
-             // General case, any type that serializes to an array of strings.
-             // Do a read and then call item_to_tree on the result, because the
-             // order of the keys might not be constant.  TODO: Move this check
-             // into item_to_tree.
-            keys_ref.read([&](const Mu& ksv){
-                auto tree = item_to_tree(Reference(keys_ref.type(), &ksv));
-                if (tree.form() != ARRAY) {
+         // General case, any type that serializes to an array of strings.
+         // Do a read and then call item_to_tree on the result, because the
+         // order of the keys might not be constant.  TODO: Move this check
+         // into item_to_tree.
+        keys_ref.read([&](const Mu& ksv){
+            auto tree = item_to_tree(Reference(keys_ref.type(), &ksv));
+            if (tree.form() != ARRAY) {
+                throw X::InvalidKeysType(item, keys_ref.type());
+            }
+            for (Tree& e : tree.data->as_known<Array>()) {
+                if (e.form() != STRING) {
                     throw X::InvalidKeysType(item, keys_ref.type());
                 }
-                for (Tree& e : tree.data->as_known<Array>()) {
-                    if (e.form() != STRING) {
-                        throw X::InvalidKeysType(item, keys_ref.type());
-                    }
-                    collect_key_string(ks, std::move(e.data->as_known<String>()));
-                }
-            });
-        }
+                collect_key_string(ks, std::move(e.data->as_known<String>()));
+            }
+        });
     }
     else if (auto attrs = desc->attrs()) {
          // TODO: Optimize for the case where there are no inherited attrs
@@ -402,18 +413,29 @@ static void item_claim_keys (
     bool optional
 ) {
     static Type type_vector_str = Type::CppType<std::vector<Str>>();
+    static Type type_vector_string = Type::CppType<std::vector<String>>();
     auto desc = DescriptionPrivate::get(item.type());
     if (auto acr = desc->keys_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
              // Since we're passing null to acr->type(), we won't be able to use
              // quick keys for a dynamically typed acr, but I don't know why
              // you'd use reference_func() in keys() in the first place.
-            if (acr->type(null) == type_vector_str) {
+            Type keys_type = acr->type(null);
+            if (keys_type == type_vector_str) {
                  // Note: don't use chain because it can include a modify op.
                 item.write([&](Mu& v){
                     acr->write(v, [&](Mu& ksv){
                         reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
                         ks.clear(); // Unnecessary after move?
+                    });
+                });
+            }
+            else if (keys_type == type_vector_string) {
+                item.write([&](Mu& v){
+                    acr->write(v, [&](Mu& ksv){
+                        reinterpret_cast<std::vector<String>&>(ksv) =
+                            std::vector<String>(ks.begin(), ks.end());
+                        ks.clear();
                     });
                 });
             }
@@ -447,11 +469,25 @@ static void item_claim_keys (
         else {
              // For readonly keys, get the keys and compare them.
             Reference keys_ref = item.chain(acr);
-            if (keys_ref.type() == type_vector_str) {
+            Type keys_type = keys_ref.type();
+            if (keys_type == type_vector_str) {
                  // Optimize for std::vector<Str>
                 std::vector<Str> expected;
                 keys_ref.read([&](const Mu& ksv){
+                     // TODO: Flag accessors that can be moved from?
                     expected = reinterpret_cast<const std::vector<Str>&>(ksv);
+                });
+                for (auto& k : expected) {
+                    if (claim_key(ks, k)) optional = false;
+                    else if (!optional) throw X::MissingAttr(item, k);
+                }
+                return;
+            }
+            else if (keys_type == type_vector_string) {
+                 // Capitulate for std::vector<String> too
+                std::vector<String> expected;
+                keys_ref.read([&](const Mu& ksv){
+                    expected = reinterpret_cast<const std::vector<String>&>(ksv);
                 });
                 for (auto& k : expected) {
                     if (claim_key(ks, k)) optional = false;
