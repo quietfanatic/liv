@@ -1,4 +1,4 @@
-#include "../location.h"
+#include "location-private.h"
 
 #include <charconv>
 #include "../describe.h"
@@ -9,14 +9,6 @@
 
 namespace ayu {
 namespace in {
-
-enum LocationForm {
-    ROOT,
-    KEY,
-    INDEX,
-     // Internal for lazy error throwing
-    ERROR_LOC,
-};
 
 struct LocationData : RefCounted {
     uint8 form;
@@ -49,6 +41,21 @@ struct ErrorLocation : LocationData {
     ErrorLocation (std::exception_ptr&& e) :
         LocationData(ERROR_LOC), error(std::move(e)) { }
 };
+
+Location make_permanent (TempLocation* t) {
+    switch (t->form) {
+        case ROOT: return Location(static_cast<RootTempLocation*>(t)->resource);
+        case KEY: return Location(
+            make_permanent(static_cast<KeyTempLocation*>(t)->parent),
+            static_cast<KeyTempLocation*>(t)->key
+        );
+        case INDEX: return Location(
+            make_permanent(static_cast<IndexTempLocation*>(t)->parent),
+            static_cast<IndexTempLocation*>(t)->index
+        );
+        default: AYU_INTERNAL_UGUU();
+    }
+}
 
 Location make_error_location (std::exception_ptr&& e) {
     return Location(new ErrorLocation(std::move(e)));
@@ -107,15 +114,13 @@ Location::Location (const IRI& iri) {
                          // Ignore
                     }
                     else {
-                        usize index;
+                        usize index = -1;
                         auto [ptr, ec] = std::from_chars(
                             segment.begin(), segment.end(), index
                         );
                         if (ptr == 0) {
                             throw X::GenericError("Index segment too big?"s);
                         }
-                         // "Warning: index may be used uninitialized in this
-                         // function."  Why?
                         self = Location(self, index);
                     }
                     segment_start = i+1;

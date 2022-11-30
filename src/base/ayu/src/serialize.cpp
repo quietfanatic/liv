@@ -18,62 +18,66 @@ namespace in {
 }
 
 ///// TO_TREE
-
-Tree item_to_tree (const Reference& item) {
-     // TODO: do everything inside item.read()
+namespace in {
+Tree inner_to_tree (
+    const DescriptionPrivate* desc, const Mu& item, TempLocation* loc
+) {
     try {
-        auto desc = DescriptionPrivate::get(item.type());
         if (auto to_tree = desc->to_tree()) {
-            Tree r;
-            item.read([&](const Mu& v){
-                r = to_tree->f(v);
-            });
-            return r;
+            return to_tree->f(item);
         }
         if (auto values = desc->values()) {
-            Tree r;
-            item.read([&](const Mu& v){
-                for (uint i = 0; i < values->n_values; i++) {
-                    r = values->value(i)->value_to_tree(values, v);
-                    if (r.has_value()) return;
-                }
-            });
-            if (r.has_value()) return r;
+            for (uint i = 0; i < values->n_values; i++) {
+                Tree r = values->value(i)->value_to_tree(values, item);
+                if (r.has_value()) return r;
+            }
         }
         switch (desc->preference()) {
             case Description::PREFER_OBJECT: {
-                 // TODO: If this item is unaddressable, do all of this inside
-                 // item.read().
                 Object o;
-                item_read_keys(item, [&](const std::vector<Str>& ks){
+                auto ref = Reference(desc, &item);
+                 // TODO: inner this too
+                item_read_keys(ref, [&](const std::vector<Str>& ks){
                     for (auto& k : ks) {
-                        Reference attr = item_attr(item, k);
-                        if (!attr.readonly()) {
-                            o.emplace_back(k, item_to_tree(attr));
-                        }
+                        Reference attr = item_attr(ref, k);
+                        if (attr.readonly()) continue;
+                        auto attr_desc = DescriptionPrivate::get(attr.type());
+                        auto attr_loc = KeyTempLocation(loc, k);
+                        attr.read([&](const Mu& v){
+                            o.emplace_back(k, inner_to_tree(attr_desc, v, &attr_loc));
+                        });
                     }
                 });
                 return Tree(std::move(o));
             }
             case Description::PREFER_ARRAY: {
-                 // TODO: If this item is unaddressable, do all this inside
-                 // item.read().
-                usize l = item_get_length(item);
                 Array a;
+                auto ref = Reference(desc, &item);
+                usize l = item_get_length(ref);
                 for (usize i = 0; i < l; i++) {
-                    Reference elem = item_elem(item, i);
-                    if (!elem.readonly()) {
-                        a.emplace_back(item_to_tree(elem));
-                    }
+                    Reference elem = item_elem(ref, i);
+                    if (elem.readonly()) continue;
+                    auto elem_desc = DescriptionPrivate::get(elem.type());
+                    auto elem_loc = IndexTempLocation(loc, i);
+                    elem.read([&](const Mu& v){
+                        a.emplace_back(inner_to_tree(elem_desc, v, &elem_loc));
+                    });
                 }
                 return Tree(std::move(a));
             }
             default: {
                 if (auto acr = desc->delegate_acr()) {
-                    return item_to_tree(item.chain(acr));
+                    auto del_desc = DescriptionPrivate::get(acr->type(&item));
+                    Tree r;
+                    acr->read(item, [&](const Mu& v){
+                        r = inner_to_tree(del_desc, v, loc);
+                    });
+                    return r;
                 }
-                else if (desc->values()) throw X::NoNameForValue(item);
-                else throw X::CannotToTree(item);
+                else if (desc->values()) {
+                    throw X::NoNameForValue(make_permanent(loc));
+                }
+                else throw X::CannotToTree(make_permanent(loc));
             }
         }
     }
@@ -85,6 +89,17 @@ Tree item_to_tree (const Reference& item) {
         }
         else throw;
     }
+}
+} // namespace in
+Tree item_to_tree (const Reference& item) {
+    auto desc = DescriptionPrivate::get(item.type());
+     // TODO: Make a current-item: scheme
+    auto loc = RootTempLocation(Resource());
+    Tree r;
+    item.read([&](const Mu& v){
+        r = inner_to_tree(desc, v, &loc);
+    });
+    return r;
 }
 
 ///// FROM_TREE
