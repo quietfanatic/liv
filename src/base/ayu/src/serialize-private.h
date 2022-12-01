@@ -1,3 +1,4 @@
+#pragma once
 #include "../serialize.h"
 
 #include "../reference.h"
@@ -69,6 +70,11 @@ void collect_keys (
 
 bool claim_key (std::vector<Str>& ks, Str k);
 void item_claim_keys (const Reference& item, std::vector<Str>& ks, bool optional);
+
+Reference inner_attr (
+    const DescriptionPrivate* desc, const Mu& item, Str k,
+    const Reference* unaddressable_ref, TempLocation* loc
+);
 
  ///// Elem operations
 void item_claim_length (const Reference& item, usize& claimed, usize len);

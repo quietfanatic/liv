@@ -1,4 +1,4 @@
-#include "../internal/accessors-internal.h"
+#include "accessors-private.h"
 
 #include "../reference.h"
 
@@ -80,6 +80,110 @@ Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     auto ref = self->f(from);
     assert(ref.type());
     return ref.address();
+}
+
+Type ChainAcr::_type (const Accessor* acr, const Mu* v) {
+    auto self = static_cast<const ChainAcr*>(acr);
+     // Most accessors ignore the parameter, so we can usually skip the
+     // read operation on a.
+    Type r = self->b->type(null);
+    if (!r) {
+        if (!v) return Type();
+        self->a->read(*v, [&](const Mu& av){
+            r = self->b->type(&av);
+        });
+    }
+    return r;
+}
+void ChainAcr::_access (
+    const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb
+) {
+    auto self = static_cast<const ChainAcr*>(acr);
+    switch (op) {
+        case ACR_READ: {
+            return self->a->access(ACR_READ, v, [&](Mu& m){
+                self->b->access(ACR_READ, m, cb);
+            });
+        }
+        case ACR_WRITE: {
+             // Have to use modify instead of write here, or other parts of the item
+             //  will get clobbered.  Hope that we don't go down this code path a lot.
+            return self->a->access(ACR_MODIFY, v, [&](Mu& m){
+                self->b->access(ACR_WRITE, m, cb);
+            });
+        }
+        case ACR_MODIFY: {
+            return self->a->access(ACR_MODIFY, v, [&](Mu& m){
+                self->b->access(ACR_MODIFY, m, cb);
+            });
+        }
+    }
+}
+Mu* ChainAcr::_address (const Accessor* acr, Mu& v) {
+    auto self = static_cast<const ChainAcr*>(acr);
+    if (self->b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT) {
+        Mu* r = null;
+        self->a->access(ACR_READ, v, [&](const Mu& av){
+            r = self->b->address(const_cast<Mu&>(av));
+        });
+        return r;
+    }
+    else if (auto aa = self->a->address(v)) {
+         // We shouldn't get to this codepath but here it is anyway
+        return self->b->address(*aa);
+    }
+    else return null;
+}
+void ChainAcr::_destroy (Accessor* acr) {
+    auto self = static_cast<const ChainAcr*>(acr);
+    self->a->dec(); self->b->dec();
+}
+ChainAcr::ChainAcr (const Accessor* a, const Accessor* b) :
+    Accessor(
+        &_vt,
+         // Readonly if either accessor is readonly
+        ((a->accessor_flags & ACR_READONLY)
+       | (b->accessor_flags & ACR_READONLY))
+         // Anchored to grandparent if both are anchored to grandparent.
+      | ((a->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT)
+       & (b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT))
+    ), a(a), b(b)
+{
+    a->inc(); b->inc();
+}
+
+Type AttrFuncAcr::_type (const Accessor* acr, const Mu* v) {
+    if (!v) return Type();
+    auto self = static_cast<const AttrFuncAcr*>(acr);
+    return self->fp(const_cast<Mu&>(*v), self->key).type();
+}
+void AttrFuncAcr::_access (
+    const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb
+) {
+    auto self = static_cast<const AttrFuncAcr*>(acr);
+    self->fp(v, self->key).access(op, cb);
+}
+Mu* AttrFuncAcr::_address (const Accessor* acr, Mu& v) {
+    auto self = static_cast<const AttrFuncAcr*>(acr);
+    return self->fp(v, self->key).address();
+}
+void AttrFuncAcr::_destroy (Accessor* acr) {
+    auto self = static_cast<const AttrFuncAcr*>(acr);
+    self->~AttrFuncAcr();
+}
+
+Type ElemFuncAcr::_type (const Accessor* acr, const Mu* v) {
+    if (!v) return Type();
+    auto self = static_cast<const ElemFuncAcr*>(acr);
+    return self->fp(const_cast<Mu&>(*v), self->index).type();
+}
+void ElemFuncAcr::_access (const Accessor* acr, AccessOp op, Mu& v, Callback<void(Mu&)> cb) {
+    auto self = static_cast<const ElemFuncAcr*>(acr);
+    self->fp(v, self->index).access(op, cb);
+}
+Mu* ElemFuncAcr::_address (const Accessor* acr, Mu& v) {
+    auto self = static_cast<const ElemFuncAcr*>(acr);
+    return self->fp(v, self->index).address();
 }
 
 } using namespace ayu::in;
