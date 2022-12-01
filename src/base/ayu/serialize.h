@@ -210,7 +210,7 @@ namespace ayu::X {
      // of strings.
     struct InvalidKeysType : SerError {
         Type type;
-        InvalidKeysType (const Reference& r, Type t) : SerError(r), type(t) { }
+        InvalidKeysType (Location&& l, Type t) : SerError(std::move(l)), type(t) { }
     };
      // Tried to transform a Reference into a path, but a global scan could not
      // find where the Reference pointed to.

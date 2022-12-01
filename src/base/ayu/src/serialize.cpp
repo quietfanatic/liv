@@ -37,18 +37,20 @@ Tree in::inner_to_tree (
             case Description::PREFER_OBJECT: {
                 Object o;
                 auto ref = Reference(desc, &item);
-                 // TODO: inner this too
-                item_read_keys(ref, [&](const std::vector<Str>& ks){
-                    for (auto& k : ks) {
-                        Reference attr = item_attr(ref, k);
-                        if (attr.readonly()) continue;
-                        auto attr_desc = DescriptionPrivate::get(attr.type());
-                        auto attr_loc = KeyTempLocation(loc, k);
-                        attr.read([&](const Mu& v){
-                            o.emplace_back(k, inner_to_tree(attr_desc, v, &attr_loc));
-                        });
-                    }
-                });
+                StrVector ks;
+                 // Pass null for unaddressable_ref because it's only used to
+                 // ensure ks lasts longer than item, but we aren't keeping ks
+                 // around.
+                collect_keys(desc, item, ks, null, loc);
+                for (auto& k : ks) {
+                    Reference attr = item_attr(ref, k);
+                    if (attr.readonly()) continue;
+                    auto attr_desc = DescriptionPrivate::get(attr.type());
+                    auto attr_loc = KeyTempLocation(loc, k);
+                    attr.read([&](const Mu& v){
+                        o.emplace_back(k, inner_to_tree(attr_desc, v, &attr_loc));
+                    });
+                }
                 return Tree(std::move(o));
             }
             case Description::PREFER_ARRAY: {
@@ -374,32 +376,35 @@ void in::collect_key_string (StrVector& ks, String&& k) {
     ks.emplace_back(ks.owned_strings->s);
 }
 
-void in::item_collect_keys (const Reference& item, StrVector& ks) {
-    auto desc = DescriptionPrivate::get(item.type());
+void in::collect_keys (
+    const DescriptionPrivate* desc, const Mu& item, StrVector& ks,
+    const Reference* unaddressable_ref, TempLocation* loc
+) {
+    Mu& mut_item = const_cast<Mu&>(item);
     if (auto acr = desc->keys_acr()) {
-        Reference keys_ref = item.chain(acr);
+        auto keys_desc = DescriptionPrivate::get(acr->type(&item));
          // Don't allow quick keys for non-addressable references, because they
          // could be created on the fly, which would invalidate their Strs when
          // .read() returns.  If we're calling get_keys on a non-adressable
          // reference, then we're already in a fairly worst-case performance
          // scenario, so deoptimizing a little won't change much.
-        if (item.address()) {
+        if (!unaddressable_ref) {
              // Compare Type not std::type_info, since std::type_info can require a
              // string comparison.
             static Type type_vector_str = Type::CppType<std::vector<Str>>();
             static Type type_vector_string = Type::CppType<std::vector<String>>();
-            if (keys_ref.type() == type_vector_str) {
+            if (keys_desc == type_vector_str) {
                  // Optimize for std::vector<Str>
-                keys_ref.read([&](const Mu& ksv){
+                acr->read(item, [&](const Mu& ksv){
                     for (auto& k : reinterpret_cast<const std::vector<Str>&>(ksv)) {
                         collect_key_str(ks, k);
                     }
                 });
                 return;
             }
-            else if (keys_ref.type() == type_vector_string) {
+            else if (keys_desc == type_vector_string) {
                  // Capitulate to std::vector<String> too.
-                keys_ref.read([&](const Mu& ksv){
+                acr->read(item, [&](const Mu& ksv){
                      // TODO: Flag accessor if it can be moved from?
                     for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
                         collect_key_string(ks, String(k));
@@ -412,14 +417,14 @@ void in::item_collect_keys (const Reference& item, StrVector& ks) {
          // Do a read and then call item_to_tree on the result, because the
          // order of the keys might not be constant.  TODO: Move this check
          // into item_to_tree.
-        keys_ref.read([&](const Mu& ksv){
-            auto tree = item_to_tree(Reference(keys_ref.type(), &ksv));
+        acr->read(item, [&](const Mu& ksv){
+            auto tree = item_to_tree(Reference(keys_desc, &ksv));
             if (tree.form() != ARRAY) {
-                throw X::InvalidKeysType(item, keys_ref.type());
+                throw X::InvalidKeysType(make_permanent(loc), keys_desc);
             }
             for (Tree& e : tree.data->as_known<Array>()) {
                 if (e.form() != STRING) {
-                    throw X::InvalidKeysType(item, keys_ref.type());
+                    throw X::InvalidKeysType(make_permanent(loc), keys_desc);
                 }
                 collect_key_string(ks, std::move(e.data->as_known<String>()));
             }
@@ -431,29 +436,72 @@ void in::item_collect_keys (const Reference& item, StrVector& ks) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
             if (acr->attr_flags & ATTR_INHERIT) {
-                item_collect_keys(item.chain(acr), ks);
+                auto attr_desc = DescriptionPrivate::get(acr->type(&item));
+                auto attr_loc = KeyTempLocation(loc, attr->key);
+                if (unaddressable_ref) {
+                    Reference attr_ur = unaddressable_ref->chain(acr);
+                    acr->read(item, [&](const Mu& v){
+                        collect_keys(attr_desc, v, ks, &attr_ur, &attr_loc);
+                    });
+                }
+                else if (Mu* address = acr->address(mut_item)) {
+                    collect_keys(attr_desc, *address, ks, null, &attr_loc);
+                }
+                else {
+                    Reference attr_ur = Reference(&mut_item, acr);
+                    acr->read(item, [&](const Mu& v){
+                        collect_keys(attr_desc, v, ks, &attr_ur, &attr_loc);
+                    });
+                }
             }
             else collect_key_str(ks, attr->key);
         }
     }
     else if (auto acr = desc->delegate_acr()) {
-        return item_collect_keys(item.chain(acr), ks);
+        auto del_desc = DescriptionPrivate::get(acr->type(&item));
+        if (unaddressable_ref) {
+            Reference del_ur = unaddressable_ref->chain(acr);
+            acr->read(item, [&](const Mu& v){
+                collect_keys(del_desc, v, ks, &del_ur, loc);
+            });
+        }
+        else if (Mu* address = acr->address(mut_item)) {
+            collect_keys(del_desc, *address, ks, null, loc);
+        }
+        else {
+            Reference del_ur = Reference(&mut_item, acr);
+            acr->read(item, [&](const Mu& v){
+                collect_keys(del_desc, v, ks, &del_ur, loc);
+            });
+        }
     }
-    else throw X::NoAttrs(item);
+    else throw X::NoAttrs(make_permanent(loc));
 }
 
 void item_read_keys (
     const Reference& item,
     Callback<void(const std::vector<Str>&)> cb
 ) {
+    auto desc = DescriptionPrivate::get(item.type());
+     // TODO: get this from caller
+    auto loc = RootTempLocation(Resource());
     StrVector ks;
-    item_collect_keys(item, ks);
+    if (Mu* address = item.address()) {
+        collect_keys(desc, *address, ks, null, &loc);
+    }
+    else {
+        item.read([&](const Mu& v){
+            collect_keys(desc, v, ks, &item, &loc);
+        });
+    }
     cb(ks);
 }
 std::vector<String> item_get_keys (const Reference& item) {
-    StrVector ks;
-    item_collect_keys(item, ks);
-    return std::vector<String>(ks.begin(), ks.end());
+    std::vector<String> r;
+    item_read_keys(item, [&](const std::vector<Str>& ks){
+        r = std::vector<String>(ks.begin(), ks.end());
+    });
+    return r;
 }
 
 bool in::claim_key (std::vector<Str>& ks, Str k) {
@@ -561,11 +609,12 @@ void in::item_claim_keys (
                  // General case.  This will probably be slow.
                 auto tree = item_to_tree(keys_ref);
                 if (tree.form() != ARRAY) {
-                    throw X::InvalidKeysType(item, keys_ref.type());
+                     // TODO: have location
+                    throw X::InvalidKeysType(Location(), keys_ref.type());
                 }
                 for (auto& e : tree.data->as_known<Array>()) {
                     if (e.form() != STRING) {
-                        throw X::InvalidKeysType(item, keys_ref.type());
+                        throw X::InvalidKeysType(Location(), keys_ref.type());
                     }
                     Str k = e.data->as_known<String>();
                     if (claim_key(ks, k)) optional = false;

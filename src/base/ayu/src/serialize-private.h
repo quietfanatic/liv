@@ -62,7 +62,11 @@ struct StrVector : std::vector<Str> {
 void collect_key_str (StrVector& ks, Str k);
 void collect_key_string (StrVector& ks, String&& k);
 
-void item_collect_keys (const Reference& item, StrVector& ks);
+void collect_keys (
+    const DescriptionPrivate* desc, const Mu& item, StrVector& ks,
+    const Reference* unaddressable_ref, TempLocation* loc
+);
+
 bool claim_key (std::vector<Str>& ks, Str k);
 void item_claim_keys (const Reference& item, std::vector<Str>& ks, bool optional);
 
