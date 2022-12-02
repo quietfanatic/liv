@@ -95,6 +95,13 @@ String&& cat (String&& s, Args... args) {
 
  // A super lightweight callback class with reference semantics (std::function
  // has value semantics and can be copied and moved, so it's way bigger.)
+ // The most we can reduce this to is two function calls (four uninlined), but
+ // with a gnu extension allowing you to coerce a method pointer into a function
+ // pointer, we could theoretically reduce this to one call (TODO: do that).
+ // I mean, using a method pointer itself would be one call but C++ method
+ // pointers are kind of bad.
+ // THEORETICALLY theoretically, if we knew details on how the compiler
+ // implements method pointers we could do it for any compiler.  No.
 template <class> struct CallbackV;
 template <class Ret, class... Args>
 struct CallbackV<Ret(Args...)> {

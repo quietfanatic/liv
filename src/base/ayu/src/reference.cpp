@@ -28,7 +28,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
-        else throw X::AttrNotFound(*this, k);
+        else throw X::AttrNotFound(reference_to_location(*this), k);
     }
     else {
          // Extra read just to check if the func returns null Reference.
@@ -36,7 +36,9 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
          //  scenario, so one more check isn't gonna make much difference.
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
-            if (!ref) throw X::AttrNotFound(*this, k);
+            if (!ref) {
+                throw X::AttrNotFound(reference_to_location(*this), k);
+            }
         });
         return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, k)));
     }
@@ -46,12 +48,14 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
     if (auto a = address()) {
         auto r = f(*a, i);
         if (r) return r;
-        else throw X::ElemNotFound(*this, i);
+        else throw X::ElemNotFound(reference_to_location(*this), i);
     }
     else {
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), i);
-            if (!ref) throw X::ElemNotFound(*this, i);
+            if (!ref) {
+                throw X::ElemNotFound(reference_to_location(*this), i);
+            }
         });
         return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
     }

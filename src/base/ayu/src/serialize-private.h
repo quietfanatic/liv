@@ -5,15 +5,14 @@
 #include "../resource.h"
 #include "descriptors-private.h"
 #include "location-private.h"
+#include "traversal-private.h"
 
 namespace ayu::in {
 
- ///// to_tree
-Tree inner_to_tree (
-    const DescriptionPrivate* desc, const Mu& item, TempLocation* loc
-);
+///// TO_TREE
+Tree ser_to_tree (const Traversal&);
 
- ///// from_tree
+///// FROM_TREE
 struct SwizzleOp {
     using FP = void(*)(Mu&, const Tree&);
     FP f;
@@ -36,21 +35,18 @@ struct InitOp {
 inline std::vector<SwizzleOp> swizzle_ops;
 inline std::vector<InitOp> init_ops;
 
-void do_swizzles ();
-void do_inits ();
-void inner_from_tree (
-    const DescriptionPrivate* desc, Mu& item, const Tree& tree,
-    const Reference* unaddressable_ref, TempLocation* loc
-);
+void ser_do_swizzles ();
+void ser_do_inits ();
+void ser_from_tree (const Traversal&, const Tree&);
 
- ///// Attr operations
+///// ATTR OPERATIONS
+ // StrVector behaves just like a std::vector<Str>, but has extra storage in
+ // case it needs to take ownership of any strings.  Ideally, the storage will
+ // be unused and remain empty.
 struct OwnedStringNode {
     std::string s;
     std::unique_ptr<OwnedStringNode> next;
 };
- // StrVector behaves just like a std::vector<Str>, but has extra storage in
- // case it needs to take ownership of any strings.  Ideally, the storage will
- // be unused and remain empty.
 struct StrVector : std::vector<Str> {
     using std::vector<Str>::vector;
      // Moving a std::string might invalidate its Str, so we can't keep them in
@@ -60,23 +56,30 @@ struct StrVector : std::vector<Str> {
     std::unique_ptr<OwnedStringNode> owned_strings;
 };
 
-void collect_key_str (StrVector& ks, Str k);
-void collect_key_string (StrVector& ks, String&& k);
+ // Implement get_keys by adding keys to a StrVector
+void ser_collect_key_str (StrVector&, Str);
+void ser_collect_key_string (StrVector&, String&&);
+void ser_collect_keys (const Traversal&, StrVector&);
 
-void collect_keys (
-    const DescriptionPrivate* desc, const Mu& item, StrVector& ks,
-    const Reference* unaddressable_ref, TempLocation* loc
-);
+ // Implement set_keys by removing keys from a std::vector<Str>
+bool ser_claim_key (std::vector<Str>&, Str);
+void ser_claim_keys (const Traversal&, std::vector<Str>&, bool optional);
+void ser_set_keys (const Traversal&, std::vector<Str>&&);
 
-bool claim_key (std::vector<Str>& ks, Str k);
-void item_claim_keys (const Reference& item, std::vector<Str>& ks, bool optional);
-
-Reference inner_attr (
-    const DescriptionPrivate* desc, const Mu& item, Str k,
-    const Reference* unaddressable_ref, TempLocation* loc
-);
+ // If the attr isn't found, returns false and doesn't call the callback
+bool ser_maybe_attr (const Traversal&, Str, AccessOp, TravCallback);
+ // Throws if the attr isn't found
+void ser_attr (const Traversal&, Str, AccessOp, TravCallback);
 
  ///// Elem operations
-void item_claim_length (const Reference& item, usize& claimed, usize len);
+usize ser_get_length (const Traversal&);
+ // Implement set_length by counting up used length
+void ser_claim_length (const Traversal&, usize& claimed, usize len);
+void ser_set_length (const Traversal&, usize);
+
+ // If elem is out of range, returns false and doesn't call the callback
+bool ser_maybe_elem (const Traversal&, usize, AccessOp, TravCallback);
+ // Throws if elem is out of bounds
+void ser_elem (const Traversal&, usize, AccessOp, TravCallback);
 
 } // namespace ayu::in

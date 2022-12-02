@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "location.h"
+#include "parse.h"
 #include "print.h"
 #include "tree.h"
 #include "type.h"
@@ -22,10 +23,20 @@ Tree item_to_tree (const Reference&);
 void item_from_tree (const Reference&, const Tree&);
 
 ///// MAIN OPERATION SHORTCUTS
-String item_to_string (const Reference&, PrintOptions opts = 0);
-void item_to_file (const Reference&, Str filename, PrintOptions opts = 0);
-void item_from_string (const Reference&, Str src);
-void item_from_file (const Reference&, Str filename);
+inline String item_to_string (const Reference& item, PrintOptions opts = 0) {
+    return tree_to_string(item_to_tree(item), opts);
+}
+inline void item_to_file (
+    const Reference& item, Str filename, PrintOptions opts = 0
+) {
+    return tree_to_file(item_to_tree(item), filename, opts);
+}
+inline void item_from_string (const Reference& item, Str src) {
+    return item_from_tree(item, tree_from_string(src));
+}
+inline void item_from_file (const Reference& item, Str filename) {
+    return item_from_tree(item, tree_from_file(filename));
+}
 
 ///// ACCESS OPERATIONS
  // Get a list of the keys in an object-like item and pass them to a callback.
@@ -155,13 +166,13 @@ namespace ayu::X {
      // an attribute that the item requires.
     struct MissingAttr : SerError {
         String key;
-        MissingAttr (const Reference& r, Str k) : SerError(r), key(k) { }
+        MissingAttr (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
     };
      // Tried to deserialize an item from an object tree, but the item rejected
      // one of the attributes in the tree.
     struct UnwantedAttr : SerError {
         String key;
-        UnwantedAttr (const Reference& r, Str k) : SerError(r), key(k) { }
+        UnwantedAttr (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
     };
      // Tried to deserialize an item from an array tree, but the array has too
      // few elements for the item.
@@ -171,8 +182,8 @@ namespace ayu::X {
     struct TooShort : SerError {
         usize min;
         usize got;
-        TooShort (const Reference& r, usize m, usize g) :
-            SerError(r), min(m), got(g)
+        TooShort (Location&& l, usize m, usize g) :
+            SerError(std::move(l)), min(m), got(g)
         { }
     };
      // Tried to deserialize an item from an array tree, but the array has too
@@ -180,8 +191,8 @@ namespace ayu::X {
     struct TooLong : SerError {
         usize max;
         usize got;
-        TooLong (const Reference& r, usize m, usize g) :
-            SerError(r), max(m), got(g)
+        TooLong (Location&& l, usize m, usize g) :
+            SerError(std::move(l)), max(m), got(g)
         { }
     };
      // Tried to treat an item like it has attributes, but it does not support
@@ -198,13 +209,13 @@ namespace ayu::X {
      // with the given key.
     struct AttrNotFound : SerError {
         String key;
-        AttrNotFound (const Reference& r, Str k) : SerError(r), key(k) { }
+        AttrNotFound (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
     };
      // Tried to get an element from an item, but it doesn't have an element
      // with the given index.
     struct ElemNotFound : SerError {
         usize index;
-        ElemNotFound (const Reference& r, usize i) : SerError(r), index(i) { }
+        ElemNotFound (Location&& l, usize i) : SerError(std::move(l)), index(i) { }
     };
      // The accessor given to a keys() descriptor did not serialize to an array
      // of strings.

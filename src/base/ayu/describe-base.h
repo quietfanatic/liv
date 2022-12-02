@@ -191,6 +191,7 @@ struct _AYU_DescribeBase {
      //   of the child item's attributes are included, but if any of the child
      //   item's attributes are included, then all of its other non-optional
      //   attributes must also be included.
+     //   TODO: rename this to include
     template <class Acr>
     static constexpr auto attr (
         Str key,

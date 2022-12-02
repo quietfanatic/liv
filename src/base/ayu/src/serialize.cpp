@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include "../describe.h"
-#include "../parse.h"
 #include "resource-private.h"
 
 namespace ayu {
@@ -20,67 +19,65 @@ DiagnosticSerialization::~DiagnosticSerialization () {
     assert(diagnostic_serialization >= 0);
 }
 
-Tree in::inner_to_tree (
-    const DescriptionPrivate* desc, const Mu& item, TempLocation* loc
-) {
+Tree in::ser_to_tree (const Traversal& trav) {
     try {
-        if (auto to_tree = desc->to_tree()) {
-            return to_tree->f(item);
+        if (auto to_tree = trav.desc->to_tree()) {
+            return to_tree->f(*trav.item);
         }
-        if (auto values = desc->values()) {
+        if (auto values = trav.desc->values()) {
             for (uint i = 0; i < values->n_values; i++) {
-                Tree r = values->value(i)->value_to_tree(values, item);
+                Tree r = values->value(i)->value_to_tree(values, *trav.item);
                 if (r.has_value()) return r;
             }
         }
-        switch (desc->preference()) {
+        switch (trav.desc->preference()) {
             case Description::PREFER_OBJECT: {
                 Object o;
-                auto ref = Reference(desc, &item);
                 StrVector ks;
-                 // Pass null for unaddressable_ref because it's only used to
-                 // ensure ks lasts longer than item, but we aren't keeping ks
-                 // around.
-                collect_keys(desc, item, ks, null, loc);
+                ser_collect_keys(trav, ks);
                 for (auto& k : ks) {
-                    Reference attr = item_attr(ref, k);
-                    if (attr.readonly()) continue;
-                    auto attr_desc = DescriptionPrivate::get(attr.type());
-                    auto attr_loc = KeyTempLocation(loc, k);
-                    attr.read([&](const Mu& v){
-                        o.emplace_back(k, inner_to_tree(attr_desc, v, &attr_loc));
+                    ser_attr(
+                        trav, k, ACR_READ, [&](const Traversal& child)
+                    {
+                         // Don't serialize readonly attributes, because they
+                         // can't be deserialized.
+                        if (!child.readonly) {
+                            o.emplace_back(k, ser_to_tree(child));
+                        }
                     });
                 }
                 return Tree(std::move(o));
             }
             case Description::PREFER_ARRAY: {
                 Array a;
-                auto ref = Reference(desc, &item);
-                usize l = item_get_length(ref);
+                usize l = ser_get_length(trav);
                 for (usize i = 0; i < l; i++) {
-                    Reference elem = item_elem(ref, i);
-                    if (elem.readonly()) continue;
-                    auto elem_desc = DescriptionPrivate::get(elem.type());
-                    auto elem_loc = IndexTempLocation(loc, i);
-                    elem.read([&](const Mu& v){
-                        a.emplace_back(inner_to_tree(elem_desc, v, &elem_loc));
+                    ser_elem(
+                        trav, i, ACR_READ, [&](const Traversal& child)
+                    {
+                         // Readonly elems are problematic, because they can't
+                         // just be skipped without changing the order of other
+                         // elems.  We should probably just forbid them.
+                         // TODO: do that.
+                        a.emplace_back(ser_to_tree(child));
                     });
                 }
                 return Tree(std::move(a));
             }
             default: {
-                if (auto acr = desc->delegate_acr()) {
-                    auto del_desc = DescriptionPrivate::get(acr->type(&item));
+                if (auto acr = trav.desc->delegate_acr()) {
                     Tree r;
-                    acr->read(item, [&](const Mu& v){
-                        r = inner_to_tree(del_desc, v, loc);
+                    trav_delegate(
+                        trav, acr, ACR_READ, [&](const Traversal& child)
+                    {
+                        r = ser_to_tree(child);
                     });
                     return r;
                 }
-                else if (desc->values()) {
-                    throw X::NoNameForValue(make_permanent(loc));
+                else if (trav.desc->values()) {
+                    throw X::NoNameForValue(trav_location(trav));
                 }
-                else throw X::CannotToTree(make_permanent(loc));
+                else throw X::CannotToTree(trav_location(trav));
             }
         }
     }
@@ -93,127 +90,53 @@ Tree in::inner_to_tree (
         else throw;
     }
 }
+ // TODO: Add location parameter
 Tree item_to_tree (const Reference& item) {
-    auto desc = DescriptionPrivate::get(item.type());
-     // TODO: Make a current-item: scheme
-    auto loc = RootTempLocation(Resource());
     Tree r;
-    item.read([&](const Mu& v){
-        r = inner_to_tree(desc, v, &loc);
+    trav_start(
+        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
+    {
+        r = ser_to_tree(trav);
     });
     return r;
 }
 
 ///// FROM_TREE
-
-void in::do_swizzles () {
-    while (!swizzle_ops.empty()) {
-        auto swizzles = std::move(swizzle_ops);
-        for (auto& op : swizzles) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v, op.tree);
-            });
-        }
-    }
-}
-void in::do_inits () {
-    while (!init_ops.empty()) {
-        auto inits = std::move(init_ops);
-        for (auto& op : inits) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v);
-            });
-            do_swizzles();
-        }
-    }
-}
-
-void in::inner_from_tree (
-    const DescriptionPrivate* desc, Mu& item, const Tree& tree,
-    const Reference* unaddressable_ref, TempLocation* loc
-) {
+void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
      // If description has a from_tree, just use that.
-    if (auto from_tree = desc->from_tree()) {
-        from_tree->f(item, tree);
+    if (auto from_tree = trav.desc->from_tree()) {
+        from_tree->f(*trav.item, tree);
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
     switch (tree.form()) {
         case OBJECT: {
-            if (desc->accepts_object()) {
+            if (trav.desc->accepts_object()) {
+                auto& o = tree.data->as_known<Object>();
                 std::vector<Str> ks;
-                for (auto& p : tree.data->as_known<Object>()) {
+                for (auto& p : o) {
                     ks.emplace_back(p.first);
                 }
-                 // TODO: inner this too
-                Reference ref (desc, &item);
-                item_set_keys(ref, ks);
-                for (auto& p : tree.data->as_known<Object>()) {
-                    Reference attr = item_attr(ref, p.first);
-                    auto attr_desc = DescriptionPrivate::get(attr.type());
-                    auto attr_loc = KeyTempLocation(loc, p.first);
-                    if (unaddressable_ref) {
-                        auto attr_ur = item_attr(*unaddressable_ref, p.first);
-                        attr.write([&](Mu& v){
-                            inner_from_tree(
-                                attr_desc, v, p.second,
-                                &attr_ur, &attr_loc
-                            );
-                        });
-                    }
-                    else if (Mu* address = attr.address()) {
-                        inner_from_tree(
-                            attr_desc, *address, p.second,
-                            null, &attr_loc
-                        );
-                    }
-                    else {
-                        attr.write([&](Mu& v){
-                            inner_from_tree(
-                                attr_desc, v, p.second,
-                                &attr, &attr_loc
-                            );
-                        });
-                    }
+                ser_set_keys(trav, std::move(ks));
+                for (auto& p : o) {
+                    ser_attr(
+                        trav, p.first, ACR_WRITE, [&](const Traversal& child)
+                    {
+                        ser_from_tree(child, p.second);
+                    });
                 }
                 goto done;
             }
             else break;
         }
         case ARRAY: {
-            if (desc->accepts_array()) {
-                Reference ref (desc, &item);
+            if (trav.desc->accepts_array()) {
                 auto& a = tree.data->as_known<Array>();
-                item_set_length(ref, a.size());
+                ser_set_length(trav, a.size());
                 for (usize i = 0; i < a.size(); i++) {
-                    auto elem = item_elem(ref, i);
-                    auto elem_desc = DescriptionPrivate::get(elem.type());
-                    auto elem_loc = IndexTempLocation(loc, i);
-                    if (unaddressable_ref) {
-                        auto elem_ur = item_elem(*unaddressable_ref, i);
-                        elem.write([&](Mu& v){
-                            inner_from_tree(
-                                elem_desc, v, a[i],
-                                &elem_ur, &elem_loc
-                            );
-                        });
-                    }
-                    else if (Mu* address = elem.address()) {
-                        inner_from_tree(
-                            elem_desc, *address, a[i],
-                            null, &elem_loc
-                        );
-                    }
-                    else {
-                        elem.write([&](Mu& v){
-                            inner_from_tree(
-                                elem_desc, v, a[i],
-                                &elem, &elem_loc
-                            );
-                        });
-                    }
+                    ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
+                        ser_from_tree(child, a[i]);
+                    });
                 }
                 goto done;
             }
@@ -225,10 +148,10 @@ void in::inner_from_tree (
         }
         default: {
              // All other tree types support the values descriptor
-            if (auto values = desc->values()) {
+            if (auto values = trav.desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
                     if (const Mu* v = values->value(i)->tree_to_value(tree)) {
-                        values->assign(item, *v);
+                        values->assign(*trav.item, *v);
                         goto done;
                     }
                 }
@@ -238,77 +161,97 @@ void in::inner_from_tree (
         }
     }
      // Nothing matched, so use delegate
-    if (auto acr = desc->delegate_acr()) {
-        auto del_desc = DescriptionPrivate::get(acr->type(&item));
-        if (unaddressable_ref) {
-            auto del_ur = unaddressable_ref->chain(acr);
-            acr->write(item, [&](Mu& v){
-                inner_from_tree(del_desc, v, tree, &del_ur, loc);
-            });
-        }
-        else if (Mu* address = acr->address(item)) {
-            inner_from_tree(del_desc, *address, tree, null, loc);
-        }
-        else {
-            acr->write(item, [&](Mu& v){
-                auto del_ur = Reference(&item, acr);
-                inner_from_tree(del_desc, v, tree, &del_ur, loc);
-            });
-        }
+    if (auto acr = trav.desc->delegate_acr()) {
+        trav_delegate(
+            trav, acr, ACR_WRITE, [&](const Traversal& child)
+        {
+            ser_from_tree(child, tree);
+        });
         goto done;
     }
      // Still nothing?  Allow swizzle with no from_tree.
-    if (desc->swizzle()) goto done;
+    if (trav.desc->swizzle()) goto done;
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong
-    if (tree.form() == OBJECT && (desc->values() || desc->accepts_array())) {
-        throw X::InvalidForm(make_permanent(loc), tree);
+    if (tree.form() == OBJECT &&
+        (trav.desc->values() || trav.desc->accepts_array())
+    ) {
+        throw X::InvalidForm(trav_location(trav), tree);
     }
-    else if (tree.form() == ARRAY && (desc->values() || desc->accepts_object())) {
-        throw X::InvalidForm(make_permanent(loc), tree);
+    else if (tree.form() == ARRAY &&
+        (trav.desc->values() || trav.desc->accepts_object())
+    ) {
+        throw X::InvalidForm(trav_location(trav), tree);
     }
-    else if (desc->accepts_array() || desc->accepts_object()) {
-        throw X::InvalidForm(make_permanent(loc), tree);
+    else if (trav.desc->accepts_array() || trav.desc->accepts_object()) {
+        throw X::InvalidForm(trav_location(trav), tree);
     }
-    else if (desc->values()) {
-        throw X::NoValueForName(make_permanent(loc), tree);
+    else if (trav.desc->values()) {
+        throw X::NoValueForName(trav_location(trav), tree);
     }
     else {
-        throw X::CannotFromTree(make_permanent(loc));
+        throw X::CannotFromTree(trav_location(trav));
     }
 
     done:
-     // Now register swizzle and init ops.  We're doing it now instead of before
-     // to make sure that children get swizzled and initted before their parent.
-    if (auto swizzle = desc->swizzle()) {
-        swizzle_ops.emplace_back(
-            swizzle->f,
-            unaddressable_ref ? *unaddressable_ref : Reference(desc, &item),
-            tree, current_resource()
-        );
+     // Now register swizzle and init ops.  We're doing it now instead of at the
+     // beginning to make sure that children get swizzled and initted before
+     // their parent.
+    auto swizzle = trav.desc->swizzle();
+    auto init = trav.desc->init();
+    if (swizzle || init) {
+        Reference ref = trav_reference(trav);
+        if (swizzle) {
+            swizzle_ops.emplace_back(
+                swizzle->f, ref, tree, current_resource()
+            );
+        }
+        if (init) {
+            init_ops.emplace_back(
+                init->f, ref, current_resource()
+            );
+        }
     }
-    if (auto init = desc->init()) {
-        init_ops.emplace_back(
-            init->f,
-            unaddressable_ref ? *unaddressable_ref : Reference(desc, &item),
-            current_resource()
-        );
+}
+
+void in::ser_do_swizzles () {
+     // Swizzling might add more swizzle ops.  It'd be weird, but it's possible
+     // and we should support it.
+    while (!swizzle_ops.empty()) {
+         // Explicitly assign to clear swizzle_ops
+        auto swizzles = std::move(swizzle_ops);
+        for (auto& op : swizzles) {
+            PushCurrentResource p (op.current_resource);
+            op.item.modify([&](Mu& v){
+                op.f(v, op.tree);
+            });
+        }
+    }
+}
+void in::ser_do_inits () {
+     // Initting might add some more init ops.
+    while (!init_ops.empty()) {
+        auto inits = std::move(init_ops);
+        for (auto& op : inits) {
+            PushCurrentResource p (op.current_resource);
+            op.item.modify([&](Mu& v){
+                op.f(v);
+            });
+             // Initting might even add more swizzle ops.
+            ser_do_swizzles();
+        }
     }
 }
 
 void item_from_tree (const Reference& item, const Tree& tree) {
     static bool in_from_tree = false;
-    auto desc = DescriptionPrivate::get(item.type());
-    auto loc = RootTempLocation(Resource());
     if (in_from_tree) {
-        if (Mu* address = item.address()) {
-            inner_from_tree(desc, *address, tree, null, &loc);
-        }
-        else {
-            item.write([&](Mu& v){
-                inner_from_tree(desc, v, tree, item, &loc);
-            });
-        }
+         // If we're reentering, swizzles and inits will be done later.
+        trav_start(
+            item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
+        {
+            ser_from_tree(trav, tree);
+        });
     }
     else {
         if (!swizzle_ops.empty() || !init_ops.empty()) {
@@ -316,16 +259,13 @@ void item_from_tree (const Reference& item, const Tree& tree) {
         }
         in_from_tree = true;
         try {
-            if (Mu* address = item.address()) {
-                inner_from_tree(desc, *address, tree, null, &loc);
-            }
-            else {
-                item.write([&](Mu& v){
-                    inner_from_tree(desc, v, tree, item, &loc);
-                });
-            }
-            do_swizzles();
-            do_inits();
+            trav_start(
+                item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
+            {
+                ser_from_tree(trav, tree);
+            });
+            ser_do_swizzles();
+            ser_do_inits();
             in_from_tree = false;
         }
         catch (...) {
@@ -337,38 +277,14 @@ void item_from_tree (const Reference& item, const Tree& tree) {
     }
 }
 
-///// SHORTCUTS
-
-String item_to_string (
-    const Reference& item, PrintOptions opts
-) {
-    return tree_to_string(item_to_tree(item), opts);
-}
-void item_to_file (
-    const Reference& item, Str filename, PrintOptions opts
-) {
-    return tree_to_file(item_to_tree(item), filename, opts);
-}
-void item_from_string (
-    const Reference& item, Str src
-) {
-    return item_from_tree(item, tree_from_string(src));
-}
-void item_from_file (
-    const Reference& item, Str filename
-) {
-    return item_from_tree(item, tree_from_file(filename));
-}
-
 ///// ATTR OPERATIONS
-
-void in::collect_key_str (StrVector& ks, Str k) {
+void in::ser_collect_key_str (StrVector& ks, Str k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
-void in::collect_key_string (StrVector& ks, String&& k) {
+void in::ser_collect_key_string (StrVector& ks, String&& k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.owned_strings = std::make_unique<OwnedStringNode>(
         std::move(k), std::move(ks.owned_strings)
@@ -376,138 +292,114 @@ void in::collect_key_string (StrVector& ks, String&& k) {
     ks.emplace_back(ks.owned_strings->s);
 }
 
-void in::collect_keys (
-    const DescriptionPrivate* desc, const Mu& item, StrVector& ks,
-    const Reference* unaddressable_ref, TempLocation* loc
-) {
-    Mu& mut_item = const_cast<Mu&>(item);
-    if (auto acr = desc->keys_acr()) {
-        auto keys_desc = DescriptionPrivate::get(acr->type(&item));
-         // Don't allow quick keys for non-addressable references, because they
-         // could be created on the fly, which would invalidate their Strs when
-         // .read() returns.  If we're calling get_keys on a non-adressable
-         // reference, then we're already in a fairly worst-case performance
-         // scenario, so deoptimizing a little won't change much.
-        if (!unaddressable_ref) {
-             // Compare Type not std::type_info, since std::type_info can require a
-             // string comparison.
-            static Type type_vector_str = Type::CppType<std::vector<Str>>();
-            static Type type_vector_string = Type::CppType<std::vector<String>>();
-            if (keys_desc == type_vector_str) {
-                 // Optimize for std::vector<Str>
-                acr->read(item, [&](const Mu& ksv){
-                    for (auto& k : reinterpret_cast<const std::vector<Str>&>(ksv)) {
-                        collect_key_str(ks, k);
+void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
+    if (auto acr = trav.desc->keys_acr()) {
+        Type keys_type = acr->type(trav.item);
+         // Compare Type not std::type_info, since std::type_info can require a
+         // string comparison.
+        static Type type_vector_str = Type::CppType<std::vector<Str>>();
+        static Type type_vector_string = Type::CppType<std::vector<String>>();
+        if (keys_type == type_vector_str) {
+             // Optimize for std::vector<Str>
+            acr->read(*trav.item, [&](const Mu& ksv){
+                auto& str_ksv = reinterpret_cast<const std::vector<Str>&>(ksv);
+                 // If this item is not addressable, it may be dynamically
+                 // generated, which means the Strs may go out of scope before
+                 // we get a chance to use them, so copy them.
+                if (trav.addressable) {
+                    for (auto& k : str_ksv) {
+                        ser_collect_key_str(ks, k);
                     }
-                });
-                return;
-            }
-            else if (keys_desc == type_vector_string) {
-                 // Capitulate to std::vector<String> too.
-                acr->read(item, [&](const Mu& ksv){
-                     // TODO: Flag accessor if it can be moved from?
-                    for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
-                        collect_key_string(ks, String(k));
-                    }
-                });
-                return;
-            }
-        }
-         // General case, any type that serializes to an array of strings.
-         // Do a read and then call item_to_tree on the result, because the
-         // order of the keys might not be constant.  TODO: Move this check
-         // into item_to_tree.
-        acr->read(item, [&](const Mu& ksv){
-            auto tree = item_to_tree(Reference(keys_desc, &ksv));
-            if (tree.form() != ARRAY) {
-                throw X::InvalidKeysType(make_permanent(loc), keys_desc);
-            }
-            for (Tree& e : tree.data->as_known<Array>()) {
-                if (e.form() != STRING) {
-                    throw X::InvalidKeysType(make_permanent(loc), keys_desc);
                 }
-                collect_key_string(ks, std::move(e.data->as_known<String>()));
-            }
-        });
+                else {
+                    for (auto& k : str_ksv) {
+                        ser_collect_key_string(ks, String(k));
+                    }
+                }
+            });
+        }
+        else if (keys_type == type_vector_string) {
+             // Capitulate to std::vector<String> too.
+            acr->read(*trav.item, [&](const Mu& ksv){
+                 // TODO: Flag accessor if it can be moved from?
+                for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
+                    ser_collect_key_string(ks, String(k));
+                }
+            });
+        }
+        else {
+             // General case, any type that serializes to an array of strings.
+            acr->read(*trav.item, [&](const Mu& ksv){
+                 // We might be able to optimize this more, but it's not that
+                 // important.
+                auto tree = item_to_tree(Reference(keys_type, &ksv));
+                if (tree.form() != ARRAY) {
+                    throw X::InvalidKeysType(trav_location(trav), keys_type);
+                }
+                for (Tree& e : tree.data->as_known<Array>()) {
+                    if (e.form() != STRING) {
+                        throw X::InvalidKeysType(trav_location(trav), keys_type);
+                    }
+                    ser_collect_key_string(
+                        ks, std::move(e.data->as_known<String>())
+                    );
+                }
+            });
+        }
     }
-    else if (auto attrs = desc->attrs()) {
+    else if (auto attrs = trav.desc->attrs()) {
          // TODO: Optimize for the case where there are no inherited attrs
         for (uint16 i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
+             // TODO: Parents inheriting children is weird so let's rename
+             // the inherit flag
             if (acr->attr_flags & ATTR_INHERIT) {
-                auto attr_desc = DescriptionPrivate::get(acr->type(&item));
-                auto attr_loc = KeyTempLocation(loc, attr->key);
-                if (unaddressable_ref) {
-                    Reference attr_ur = unaddressable_ref->chain(acr);
-                    acr->read(item, [&](const Mu& v){
-                        collect_keys(attr_desc, v, ks, &attr_ur, &attr_loc);
-                    });
-                }
-                else if (Mu* address = acr->address(mut_item)) {
-                    collect_keys(attr_desc, *address, ks, null, &attr_loc);
-                }
-                else {
-                    Reference attr_ur = Reference(&mut_item, acr);
-                    acr->read(item, [&](const Mu& v){
-                        collect_keys(attr_desc, v, ks, &attr_ur, &attr_loc);
-                    });
-                }
+                trav_attr(
+                    trav, acr, attr->key, ACR_READ, [&](const Traversal& child)
+                {
+                    ser_collect_keys(child, ks);
+                });
             }
-            else collect_key_str(ks, attr->key);
+            else ser_collect_key_str(ks, attr->key);
         }
     }
-    else if (auto acr = desc->delegate_acr()) {
-        auto del_desc = DescriptionPrivate::get(acr->type(&item));
-        if (unaddressable_ref) {
-            Reference del_ur = unaddressable_ref->chain(acr);
-            acr->read(item, [&](const Mu& v){
-                collect_keys(del_desc, v, ks, &del_ur, loc);
-            });
-        }
-        else if (Mu* address = acr->address(mut_item)) {
-            collect_keys(del_desc, *address, ks, null, loc);
-        }
-        else {
-            Reference del_ur = Reference(&mut_item, acr);
-            acr->read(item, [&](const Mu& v){
-                collect_keys(del_desc, v, ks, &del_ur, loc);
-            });
-        }
+    else if (auto acr = trav.desc->delegate_acr()) {
+        trav_delegate(trav, acr, ACR_READ, [&](const Traversal& child){
+            ser_collect_keys(child, ks);
+        });
     }
-    else throw X::NoAttrs(make_permanent(loc));
+    else throw X::NoAttrs(trav_location(trav));
 }
 
 void item_read_keys (
     const Reference& item,
     Callback<void(const std::vector<Str>&)> cb
 ) {
-    auto desc = DescriptionPrivate::get(item.type());
-     // TODO: get this from caller
-    auto loc = RootTempLocation(Resource());
     StrVector ks;
-    if (Mu* address = item.address()) {
-        collect_keys(desc, *address, ks, null, &loc);
-    }
-    else {
-        item.read([&](const Mu& v){
-            collect_keys(desc, v, ks, &item, &loc);
-        });
-    }
+    trav_start(
+        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
+    {
+        ser_collect_keys(trav, ks);
+    });
     cb(ks);
 }
 std::vector<String> item_get_keys (const Reference& item) {
-    std::vector<String> r;
-    item_read_keys(item, [&](const std::vector<Str>& ks){
-        r = std::vector<String>(ks.begin(), ks.end());
+    StrVector ks;
+    trav_start(
+        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
+    {
+        ser_collect_keys(trav, ks);
     });
-    return r;
+    return std::vector<String>(ks.begin(), ks.end());
 }
 
-bool in::claim_key (std::vector<Str>& ks, Str k) {
+bool in::ser_claim_key (std::vector<Str>& ks, Str k) {
      // This algorithm overall is O(N^3), we may be able to speed it up by
      // setting a flag if there are no inherited attrs, or maybe by using an
      // unordered_set?
+     // TODO: Just use a bool array for claiming instead of erasing from
+     // the vector.
     for (auto it = ks.begin(); it != ks.end(); it++) {
         if (*it == k) {
             ks.erase(it);
@@ -517,122 +409,72 @@ bool in::claim_key (std::vector<Str>& ks, Str k) {
     return false;
 }
 
-void in::item_claim_keys (
-    const Reference& item,
+void in::ser_claim_keys (
+    const Traversal& trav,
     std::vector<Str>& ks,
     bool optional
 ) {
-    static Type type_vector_str = Type::CppType<std::vector<Str>>();
-    static Type type_vector_string = Type::CppType<std::vector<String>>();
-    auto desc = DescriptionPrivate::get(item.type());
-    if (auto acr = desc->keys_acr()) {
+    if (auto acr = trav.desc->keys_acr()) {
+        Type keys_type = acr->type(trav.item);
         if (!(acr->accessor_flags & ACR_READONLY)) {
-             // Since we're passing null to acr->type(), we won't be able to use
-             // quick keys for a dynamically typed acr, but I don't know why
-             // you'd use reference_func() in keys() in the first place.
-            Type keys_type = acr->type(null);
+            static Type type_vector_str = Type::CppType<std::vector<Str>>();
+            static Type type_vector_string = Type::CppType<std::vector<String>>();
             if (keys_type == type_vector_str) {
-                 // Note: don't use chain because it can include a modify op.
-                item.write([&](Mu& v){
-                    acr->write(v, [&](Mu& ksv){
-                        reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
-                        ks.clear(); // Unnecessary after move?
-                    });
+                 // Optimize for std::vector<Str>
+                acr->write(*trav.item, [&](Mu& ksv){
+                    reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
                 });
             }
             else if (keys_type == type_vector_string) {
-                item.write([&](Mu& v){
-                    acr->write(v, [&](Mu& ksv){
-                        reinterpret_cast<std::vector<String>&>(ksv) =
-                            std::vector<String>(ks.begin(), ks.end());
-                        ks.clear();
-                    });
+                 // Compromise for std::vector<String> too
+                acr->write(*trav.item, [&](Mu& ksv){
+                    reinterpret_cast<std::vector<String>&>(ksv) =
+                        std::vector<String>(ks.begin(), ks.end());
                 });
             }
             else {
-                 // General case.  This will probably be slow.
+                 // General case: call item_from_tree on the keys.  This will
+                 // be slow.
                 Array a (ks.size());
                 for (usize i = 0; i < ks.size(); i++) {
                     a[i] = Tree(ks[i]);
                 }
-                 // Manually follow the reference instead of using chain.  The
-                 // reason for this is that if we call item_from_tree, it first
-                 // calls item_set_length.  Since the keys ref is almost
-                 // certainly unaddressable, this will cause an array of empty
-                 // strings to be written to the object's keys.  In the case of
-                 // std::unordered_map, this will give the map one element with
-                 // a key of "".  Then when item_from_tree calls item_elem, it
-                 // will throw ElemNotFound for all indexes > 0.
-                 // TODO: Do this unwrapping in item_from_tree instead of here,
-                 // to avoid similar problems in other scenarios.
-                item.write([&](Mu& v){
-                    acr->write(v, [&](Mu& ksv){
-                        item_from_tree(
-                            Reference(acr->type(&v), &ksv),
-                            Tree(std::move(a))
-                        );
-                    });
+                acr->write(*trav.item, [&](Mu& ksv){
+                    item_from_tree(
+                        Reference(keys_type, &ksv), Tree(std::move(a))
+                    );
                 });
-                ks.clear();
             }
+            ks.clear();
         }
         else {
              // For readonly keys, get the keys and compare them.
-            Reference keys_ref = item.chain(acr);
-            Type keys_type = keys_ref.type();
-            if (keys_type == type_vector_str) {
-                 // Optimize for std::vector<Str>
-                std::vector<Str> expected;
-                keys_ref.read([&](const Mu& ksv){
-                     // TODO: Flag accessors that can be moved from?
-                    expected = reinterpret_cast<const std::vector<Str>&>(ksv);
-                });
-                for (auto& k : expected) {
-                    if (claim_key(ks, k)) optional = false;
-                    else if (!optional) throw X::MissingAttr(item, k);
+             // TODO: This can probably be optimized more
+            StrVector ks;
+            ser_collect_keys(trav, ks);
+            for (auto k : ks) {
+                if (ser_claim_key(ks, k)) {
+                    optional = false;
                 }
-                return;
-            }
-            else if (keys_type == type_vector_string) {
-                 // Capitulate for std::vector<String> too
-                std::vector<String> expected;
-                keys_ref.read([&](const Mu& ksv){
-                    expected = reinterpret_cast<const std::vector<String>&>(ksv);
-                });
-                for (auto& k : expected) {
-                    if (claim_key(ks, k)) optional = false;
-                    else if (!optional) throw X::MissingAttr(item, k);
-                }
-                return;
-            }
-            else {
-                 // General case.  This will probably be slow.
-                auto tree = item_to_tree(keys_ref);
-                if (tree.form() != ARRAY) {
-                     // TODO: have location
-                    throw X::InvalidKeysType(Location(), keys_ref.type());
-                }
-                for (auto& e : tree.data->as_known<Array>()) {
-                    if (e.form() != STRING) {
-                        throw X::InvalidKeysType(Location(), keys_ref.type());
-                    }
-                    Str k = e.data->as_known<String>();
-                    if (claim_key(ks, k)) optional = false;
-                    else if (!optional) throw X::MissingAttr(item, k);
+                else if (!optional) {
+                    throw X::MissingAttr(trav_location(trav), k);
                 }
             }
             return;
         }
     }
-    else if (auto attrs = desc->attrs()) {
+    else if (auto attrs = trav.desc->attrs()) {
          // Prioritize direct attrs
-         // Note, we're using std::string as an optimization for bool[], it's
-         // not actually text.
-        std::string claimed_inherited (attrs->n_attrs, false);
+         // I don't think it's possible for n_attrs to be large enough to
+         // overflow the trav...right?  The max description size is 64K and an
+         // attr always consumes at least 14 bytes, so the max n_attrs is
+         // something like 4500.  TODO: enforce a reasonable max n_attrs in
+         // descriptors-internal.h.
+        bool claimed_inherited [attrs->n_attrs];
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
-            if (claim_key(ks, attr->key)) {
+            if (ser_claim_key(ks, attr->key)) {
                  // If any attrs are given, all required attrs must be given
                  // (only matters if this item is an inherited attr)
                  // TODO: this should fail a test depending on the order of attrs
@@ -641,8 +483,11 @@ void in::item_claim_keys (
                     claimed_inherited[i] = true;
                 }
             }
-            else if (!(optional || (acr->attr_flags & (ATTR_OPTIONAL|ATTR_INHERIT)))) {
-                throw X::MissingAttr(item, attr->key);
+            else if (optional || acr->attr_flags & (ATTR_OPTIONAL|ATTR_INHERIT)) {
+                 // Allow omitting optional or inherited attrs
+            }
+            else {
+                throw X::MissingAttr(trav_location(trav), attr->key);
             }
         }
          // Then check inherited attrs
@@ -652,194 +497,323 @@ void in::item_claim_keys (
             if (acr->attr_flags & ATTR_INHERIT) {
                  // Skip if attribute was given directly, uncollapsed
                 if (!claimed_inherited[i]) {
-                    item_claim_keys(
-                        item.chain(acr), ks,
-                        optional || (acr->attr_flags & ATTR_OPTIONAL)
-                    );
+                    trav_attr(
+                        trav, acr, attr->key, ACR_WRITE,
+                        [&](const Traversal& child)
+                    {
+                        ser_claim_keys(
+                            child, ks,
+                            optional || acr->attr_flags & ATTR_OPTIONAL
+                        );
+                    });
                 }
             }
         }
     }
-    else if (auto acr = desc->delegate_acr()) {
-        return item_claim_keys(item.chain(acr), ks, optional);
+    else if (auto acr = trav.desc->delegate_acr()) {
+        trav_delegate(trav, acr, ACR_WRITE, [&](const Traversal& child){
+            ser_claim_keys(child, ks, optional);
+        });
     }
-    else throw X::NoAttrs(item);
+    else throw X::NoAttrs(trav_location(trav));
+}
+
+void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
+    ser_claim_keys(trav, ks, false);
+    if (!ks.empty()) {
+        throw X::UnwantedAttr(trav_location(trav), ks[0]);
+    }
 }
 
 void item_set_keys (const Reference& item, const std::vector<Str>& ks) {
-    std::vector<Str> claimed = ks;
-    item_claim_keys(item, claimed, false);
-    if (!claimed.empty()) {
-        throw X::UnwantedAttr(item, claimed[0]);
+    trav_start(
+        item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
+    {
+        auto ks_copy = ks;
+        ser_set_keys(trav, std::move(ks_copy));
+    });
+}
+
+bool in::ser_maybe_attr (
+    const Traversal& trav, Str key, AccessOp op, TravCallback cb
+) {
+    if (auto attrs = trav.desc->attrs()) {
+         // Note: This will likely be called once for each attr, making it
+         // O(N^2) over the number of attrs.  If we want we could optimize for
+         // large N by keeping a temporary map...somewhere
+         //
+         // First check direct attrs
+        for (uint i = 0; i < attrs->n_attrs; i++) {
+            auto attr = attrs->attr(i);
+            if (attr->key == key) {
+                trav_attr(trav, attr->acr(), key, op, cb);
+                return true;
+            }
+        }
+         // Then inherited attrs
+        for (uint i = 0; i < attrs->n_attrs; i++) {
+            auto attr = attrs->attr(i);
+            auto acr = attr->acr();
+            bool found = false;
+            if (acr->attr_flags & ATTR_INHERIT) {
+                 // Change op to modify so we don't clobber the other attrs of
+                 // the inherited item.  Hopefully it won't matter, because
+                 // inheriting through a non-addressable reference will be
+                 // pretty slow no matter what.  Perhaps if we really wanted to
+                 // optimize this, then in claim_keys we could build up a
+                 // structure mirroring the inheritance diagram and follow it,
+                 // instead of just keeping the flat list of keys.
+                AccessOp inherit_op = op == ACR_WRITE ? ACR_MODIFY : op;
+                trav_attr(
+                    trav, acr, attr->key, inherit_op,
+                    [&](const Traversal& child)
+                {
+                    found = ser_maybe_attr(child, key, op, cb);
+                });
+                if (found) return true;
+            }
+        }
+         // Attr not found, fall through
+    }
+    if (auto attr_func = trav.desc->attr_func()) {
+        if (Reference ref = attr_func->f(*trav.item, key)) {
+            trav_attr_func(trav, std::move(ref), attr_func->f, key, op, cb);
+            return true;
+        }
+         // Fallthrough
+    }
+    if (trav.desc->accepts_object()) {
+         // Don't fallback to delegate if we support attributes but didn't find
+         // one.
+        return false;
+    }
+    else if (auto acr = trav.desc->delegate_acr()) {
+        bool r;
+        AccessOp del_op = op == ACR_WRITE ? ACR_MODIFY : op;
+        trav_delegate(trav, acr, del_op, [&](const Traversal& child){
+            r = ser_maybe_attr(child, key, op, cb);
+        });
+        return r;
+    }
+    else throw X::NoAttrs(trav_location(trav));
+}
+void in::ser_attr (
+    const Traversal& trav, Str key, AccessOp op, TravCallback cb
+) {
+    if (!ser_maybe_attr(trav, key, op, cb)) {
+        throw X::AttrNotFound(trav_location(trav), key);
     }
 }
 
 Reference item_maybe_attr (const Reference& item, Str key) {
-    auto desc = DescriptionPrivate::get(item.type());
-    if (desc->accepts_object()) {
-        if (auto attrs = desc->attrs()) {
-             // Note: This will likely be called once for each attr, making it
-             // O(N^2) over the number of attrs.  If we want we could optimize for
-             // large N by keeping a temporary map...somewhere
-             //
-             // First check direct attrs
-            for (uint i = 0; i < attrs->n_attrs; i++) {
-                auto attr = attrs->attr(i);
-                auto acr = attr->acr();
-                if (attr->key == key) {
-                    return item.chain(acr);
-                }
-            }
-             // Then inherited attrs
-            for (uint i = 0; i < attrs->n_attrs; i++) {
-                auto attr = attrs->attr(i);
-                auto acr = attr->acr();
-                if (acr->attr_flags & ATTR_INHERIT) {
-                    Reference sub = item_maybe_attr(item.chain(acr), key);
-                    if (sub) return sub;
-                }
-            }
-        }
-        if (auto attr_func = desc->attr_func()) {
-            return item.chain_attr_func(attr_func->f, key);
-        }
-        else return Reference();
-    }
-    else if (auto acr = desc->delegate_acr()) {
-        return item_maybe_attr(item.chain(acr), key);
-    }
-    else throw X::NoAttrs(item);
+    Reference r;
+     // Is ACR_READ correct here?  Will we instead have to chain up the
+     // reference from the start?
+    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+        ser_maybe_attr(trav, key, ACR_READ, [&](const Traversal& child){
+            r = trav_reference(child);
+        });
+    });
+    return r;
 }
 Reference item_attr (const Reference& item, Str key) {
-    Reference r = item_maybe_attr(item, key);
-    if (r) return r;
-    else throw X::AttrNotFound(item, key);
+    if (Reference r = item_maybe_attr(item, key)) {
+        return r;
+    }
+    else throw X::AttrNotFound(Location(Resource()), key);
 }
 
 ///// ELEM OPERATIONS
 
-usize item_get_length (const Reference& item) {
-    auto desc = DescriptionPrivate::get(item.type());
-    if (auto acr = desc->length_acr()) {
-        usize l;
-        item.read([&](const Mu& v){
-            acr->read(v, [&](const Mu& lv){
-                l = reinterpret_cast<const usize&>(lv);
-            });
+usize in::ser_get_length (const Traversal& trav) {
+    usize len;
+    if (auto acr = trav.desc->length_acr()) {
+         // TODO: support other integral types besides usize
+        acr->read(*trav.item, [&](const Mu& lv){
+            len = reinterpret_cast<const usize&>(lv);
         });
-        return l;
     }
-    else if (auto elems = desc->elems()) {
-        usize l = 0;
+    else if (auto elems = trav.desc->elems()) {
+        len = 0;
         for (usize i = 0; i < elems->n_elems; i++) {
             auto acr = elems->elem(i)->acr();
             if (acr->attr_flags & ATTR_INHERIT) {
-                l += item_get_length(item.chain(acr));
+                trav_elem(
+                    trav, acr, i, ACR_READ, [&](const Traversal& child)
+                {
+                    len += ser_get_length(child);
+                });
             }
-            else l += 1;
+            else len += 1;
         }
-        return l;
     }
-    else if (auto acr = desc->delegate_acr()) {
-        return item_get_length(item.chain(acr));
+    else if (auto acr = trav.desc->delegate_acr()) {
+        trav_delegate(trav, acr, ACR_READ, [&](const Traversal& child){
+            len = ser_get_length(child);
+        });
     }
-    else throw X::NoElems(item);
+    else throw X::NoElems(trav_location(trav));
+    return len;
 }
 
-void in::item_claim_length (const Reference& item, usize& claimed, usize len) {
-    auto desc = DescriptionPrivate::get(item.type());
-    if (auto acr = desc->length_acr()) {
+usize item_get_length (const Reference& item) {
+    usize len;
+    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+        len = ser_get_length(trav);
+    });
+    return len;
+}
+
+void in::ser_claim_length (const Traversal& trav, usize& claimed, usize len) {
+    if (auto acr = trav.desc->length_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
-             // Note: don't use chain because it can include a modify op.
-             // TODO: make this not necessary?
             usize remaining = (claimed <= len ? len - claimed : 0);
-            item.write([&](Mu& v){
-                acr->write(v, [&](Mu& lv){
-                    reinterpret_cast<usize&>(lv) = remaining;
-                });
+            acr->write(*trav.item, [&](Mu& lv){
+                reinterpret_cast<usize&>(lv) = remaining;
             });
             claimed += remaining;
         }
         else {
              // For readonly length, just claim the returned length
             usize expected;
-            item.chain(acr).read([&](const Mu& lv){
+            acr->read(*trav.item, [&](const Mu& lv){
                 expected = reinterpret_cast<const usize&>(lv);
             });
             claimed += expected;
         }
     }
-    else if (auto elems = desc->elems()) {
+    else if (auto elems = trav.desc->elems()) {
         for (usize i = 0; i < elems->n_elems; i++) {
             auto acr = elems->elem(i)->acr();
             if (claimed >= len && acr->attr_flags & ATTR_OPTIONAL) {
                 continue;
             }
             if (acr->attr_flags & ATTR_INHERIT) {
-                item_claim_length(item.chain(acr), claimed, len);
+                trav_elem(
+                    trav, acr, i, ACR_WRITE, [&](const Traversal& child)
+                {
+                    ser_claim_length(child, claimed, len);
+                });
             }
             else claimed += 1;
         }
     }
-    else if (auto acr = desc->delegate_acr()) {
-        item_claim_length(item.chain(acr), claimed, len);
+    else if (auto acr = trav.desc->delegate_acr()) {
+        trav_delegate(trav, acr, ACR_WRITE, [&](const Traversal& child){
+            ser_claim_length(child, claimed, len);
+        });
     }
-    else throw X::NoElems(item);
+    else throw X::NoElems(trav_location(trav));
+}
+
+void in::ser_set_length (const Traversal& trav, usize len) {
+    usize claimed = 0;
+    ser_claim_length(trav, claimed, len);
+    if (claimed > len) {
+        throw X::TooShort(trav_location(trav), claimed, len);
+    }
+    if (claimed < len) {
+        throw X::TooLong(trav_location(trav), claimed, len);
+    }
 }
 
 void item_set_length (const Reference& item, usize len) {
-    usize claimed = 0;
-    item_claim_length(item, claimed, len);
-    if (claimed > len) {
-        throw X::TooShort(item, claimed, len);
-    }
-    if (claimed < len) {
-        throw X::TooLong(item, claimed, len);
-    }
+    trav_start(
+        item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
+    {
+        ser_set_length(trav, len);
+    });
 }
 
-Reference item_maybe_elem (const Reference& item, usize index) {
-    auto desc = DescriptionPrivate::get(item.type());
-    if (desc->accepts_array()) {
-        if (auto elems = desc->elems()) {
-             // Including inheritance in this mix turns this from constant-time
-             // to linear time, and thus serializing from linear time into
-             // squared time.  We should probably have set a flag somewhere if
-             // there no inherited elems so we can skip this loop.
-            usize offset = 0;
-            for (usize i = 0; i < elems->n_elems && offset <= index; i++) {
-                auto acr = elems->elem(i)->acr();
-                if (acr->attr_flags & ATTR_INHERIT) {
-                    usize len = item_get_length(item.chain(acr));
-                    if (index - offset < len) {
-                        return item_maybe_elem(item.chain(acr), index - offset);
+bool in::ser_maybe_elem (
+    const Traversal& trav, usize index, AccessOp op, TravCallback cb
+) {
+    if (auto elems = trav.desc->elems()) {
+         // Including inheritance in this mix turns this from constant-time
+         // to linear time, and thus serializing from linear time into
+         // squared time.  We should probably have set a flag somewhere if
+         // there no inherited elems so we can skip this loop.
+        usize offset = 0;
+        for (usize i = 0; i < elems->n_elems && offset <= index; i++) {
+            auto acr = elems->elem(i)->acr();
+            if (acr->attr_flags & ATTR_INHERIT) {
+                bool found;
+                 // Change op to modify so we don't clobber the other elems of
+                 // the inherited item.
+                AccessOp inherit_op = op == ACR_WRITE ? ACR_MODIFY : op;
+                trav_elem(
+                    trav, acr, i, inherit_op, [&](const Traversal& child)
+                {
+                    usize len = ser_get_length(child);
+                    found = index - offset < len;
+                    if (found) {
+                         // Throw if inherited elem says it doesn't have an attr
+                         // that's within its reported length.
+                        ser_elem(child, index - offset, op, cb);
                     }
-                    offset += len;
-                }
-                else {
-                    if (offset == index) return item.chain(acr);
-                    offset += 1;
-                }
+                    else offset += len;
+                });
+                if (found) return true;
             }
-            return Reference();
+            else {
+                if (offset == index) {
+                    trav_elem(trav, acr, i, op, cb);
+                    return true;
+                }
+                offset += 1;
+            }
         }
-        else if (auto elem_func = desc->elem_func()) {
-            return item.chain_elem_func(elem_func->f, index);
+         // Elem out of bounds, fall through to elem_func
+    }
+    if (auto elem_func = trav.desc->elem_func()) {
+        if (Reference ref = elem_func->f(*trav.item, index)) {
+            trav_elem_func(trav, std::move(ref), elem_func->f, index, op, cb);
+            return true;
         }
-        else return Reference();
+         // Fall through
     }
-    else if (auto acr = desc->delegate_acr()) {
-        return item_maybe_elem(item.chain(acr), index);
+    if (trav.desc->accepts_array()) {
+         // Don't fall back to delegate if we support an array but didn't find
+         // an element.
+        return false;
     }
-    else throw X::NoElems(item);
+    else if (auto acr = trav.desc->delegate_acr()) {
+        AccessOp del_op = op == ACR_WRITE ? ACR_MODIFY : op;
+        bool found;
+        trav_delegate(trav, acr, del_op, [&](const Traversal& child){
+            found = ser_maybe_elem(child, index, op, cb);
+        });
+        return found;
+    }
+    else throw X::NoElems(trav_location(trav));
+}
+void in::ser_elem (
+    const Traversal& trav, usize index, AccessOp op, TravCallback cb
+) {
+    if (!ser_maybe_elem(trav, index, op, cb)) {
+        throw X::ElemNotFound(trav_location(trav), index);
+    }
+}
+Reference item_maybe_elem (const Reference& item, usize index) {
+    Reference r;
+     // Is ACR_READ correct here?  Will we have to chain up the reference from
+     // the start?
+    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+        ser_maybe_elem(trav, index, ACR_READ, [&](const Traversal& child){
+            r = trav_reference(child);
+        });
+    });
+    return r;
 }
 Reference item_elem (const Reference& item, usize index) {
-    Reference r = item_maybe_elem(item, index);
-    if (r) return r;
-    else throw X::ElemNotFound(item, index);
+    if (Reference r = item_maybe_elem(item, index)) {
+        return r;
+    }
+    else throw X::ElemNotFound(Location(Resource()), index);
 }
 
 ///// REFERENCES AND LOCATIONS
+ // TODO: turn these into continuation-passing form like ser_*
 
 Reference reference_from_location (Location loc) {
     if (!loc) return Reference();
@@ -940,21 +914,6 @@ void recursive_scan (
                 recursive_scan(item.chain(acr), loc, cb);
             }
             return;
-        }
-    }
-}
-
-///// DIAGNOSTIC HELP
-
-///// ERRORS
-
-namespace X {
-    SerError::SerError (const Reference& item) {
-        try {
-            location = reference_to_location(item);
-        }
-        catch (std::exception& e) {
-            location = make_error_location(std::current_exception());
         }
     }
 }

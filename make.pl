@@ -138,6 +138,7 @@ my @modules = qw(
     base/ayu/src/resource
     base/ayu/src/resource-scheme
     base/ayu/src/serialize
+    base/ayu/src/traversal
     base/ayu/src/tree
     base/ayu/src/type
     base/control/command
