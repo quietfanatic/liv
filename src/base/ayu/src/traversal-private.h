@@ -44,9 +44,17 @@ using TravCallback = Callback<void(const Traversal&)>;
 void trav_start (const Reference&, const Location&, AccessOp, TravCallback);
 void trav_delegate (const Traversal&, const Accessor*, AccessOp, TravCallback);
 void trav_attr (const Traversal&, const Accessor*, Str, AccessOp, TravCallback);
-void trav_attr_func (const Traversal&, Reference, Reference(*)(Mu&, Str), Str, AccessOp, TravCallback);
-void trav_elem (const Traversal&, const Accessor*, usize, AccessOp, TravCallback);
-void trav_elem_func (const Traversal&, Reference, Reference(*)(Mu&, usize), usize, AccessOp, TravCallback);
+void trav_attr_func (
+    const Traversal&, Reference, Reference(*)(Mu&, Str), Str,
+    AccessOp, TravCallback
+);
+void trav_elem (
+    const Traversal&, const Accessor*, usize, AccessOp, TravCallback
+);
+void trav_elem_func (
+    const Traversal&, Reference, Reference(*)(Mu&, usize), usize,
+    AccessOp, TravCallback
+);
 
 Reference trav_reference (const Traversal&);
 Location trav_location (const Traversal&);

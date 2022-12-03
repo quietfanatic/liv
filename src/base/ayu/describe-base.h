@@ -276,16 +276,12 @@ struct _AYU_DescribeBase {
      //   will not be called (normally X::WrongLength will be thrown).  This
      //   flag is ignored if there are any elements after this one which are not
      //   optional (this might be a compile-time error later).
-     //   - inherit: This element's elements will be directly included in the
-     //   array representation of the item, after all the elements before and
-     //   before all the elements after.  If the element has variable length
-     //   (has a non-readonly length descriptor), it will claim all the rest of
-     //   the elements in the array, so it must be the last element in the list.
-     //   As with attrs, if both inherit and optional are specified, then either
-     //   none or all of the inherited type's (non-optional) elements must be
-     //   provided.  Unlike with attrs, there is no way to ignore inheritance
-     //   when deserializing.  The behavior of inherited elements is subtle and
-     //   may have surprising edge cases, so be wary of overusing them.
+     //   - inherit: Unlike with attrs, this doesn't do much; all it does is
+     //   allow casting between this item and the element.  Earlier prototypes
+     //   of this library allowed inherited elements to be flattened into the
+     //   array representation of the parent item, but the behavior and
+     //   implementation were unbelievably complicated, all just to save a few
+     //   square brackets.
     template <class Acr>
     static constexpr auto elem (
         const Acr& accessor,

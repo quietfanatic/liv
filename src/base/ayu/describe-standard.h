@@ -160,11 +160,8 @@ AYU_DESCRIBE_TEMPLATE(
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
         if (tree.form() == ayu::STRING) {
             auto s = ayu::Str(tree);
-            if (s.size() < n) {
-                throw ayu::X::TooShort(&v, n, s.size());
-            }
-            if (s.size() > n) {
-                throw ayu::X::TooLong(&v, n, s.size());
+            if (s.size() != n) {
+                throw ayu::X::WrongLength(&v, n, n, s.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = s[i];
@@ -172,11 +169,8 @@ AYU_DESCRIBE_TEMPLATE(
         }
         else if (tree.form() == ayu::ARRAY) {
             const auto& a = ayu::Array(tree);
-            if (a.size() < n) {
-                throw ayu::X::TooShort(&v, n, a.size());
-            }
-            if (a.size() > n) {
-                throw ayu::X::TooLong(&v, n, a.size());
+            if (a.size() != n) {
+                throw ayu::X::WrongLength(&v, n, n, a.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = char(a[i]);

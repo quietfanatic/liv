@@ -107,7 +107,7 @@ void ChainAcr::_access (
         }
         case ACR_WRITE: {
              // Have to use modify instead of write here, or other parts of the item
-             //  will get clobbered.  Hope that we don't go down this code path a lot.
+             // will get clobbered.  Hope that we don't go down this code path a lot.
             return self->a->access(ACR_MODIFY, v, [&](Mu& m){
                 self->b->access(ACR_WRITE, m, cb);
             });

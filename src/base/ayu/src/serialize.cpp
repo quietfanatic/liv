@@ -624,34 +624,25 @@ Reference item_attr (const Reference& item, Str key, const Location& loc) {
 ///// ELEM OPERATIONS
 
 usize in::ser_get_length (const Traversal& trav) {
-    usize len;
     if (auto acr = trav.desc->length_acr()) {
+        usize len;
          // TODO: support other integral types besides usize
         acr->read(*trav.item, [&](const Mu& lv){
             len = reinterpret_cast<const usize&>(lv);
         });
+        return len;
     }
     else if (auto elems = trav.desc->elems()) {
-        len = 0;
-        for (usize i = 0; i < elems->n_elems; i++) {
-            auto acr = elems->elem(i)->acr();
-            if (acr->attr_flags & ATTR_INHERIT) {
-                trav_elem(
-                    trav, acr, i, ACR_READ, [&](const Traversal& child)
-                {
-                    len += ser_get_length(child);
-                });
-            }
-            else len += 1;
-        }
+        return elems->n_elems;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
+        usize len;
         trav_delegate(trav, acr, ACR_READ, [&](const Traversal& child){
             len = ser_get_length(child);
         });
+        return len;
     }
     else throw X::NoElems(trav_location(trav));
-    return len;
 }
 
 usize item_get_length (const Reference& item, const Location& loc) {
@@ -662,57 +653,45 @@ usize item_get_length (const Reference& item, const Location& loc) {
     return len;
 }
 
-void in::ser_claim_length (const Traversal& trav, usize& claimed, usize len) {
+void in::ser_set_length (const Traversal& trav, usize len) {
     if (auto acr = trav.desc->length_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
-            usize remaining = (claimed <= len ? len - claimed : 0);
             acr->write(*trav.item, [&](Mu& lv){
-                reinterpret_cast<usize&>(lv) = remaining;
+                reinterpret_cast<usize&>(lv) = len;
             });
-            claimed += remaining;
         }
         else {
-             // For readonly length, just claim the returned length
+             // For readonly length, just check that the provided length matches
             usize expected;
             acr->read(*trav.item, [&](const Mu& lv){
                 expected = reinterpret_cast<const usize&>(lv);
             });
-            claimed += expected;
+            if (len != expected) {
+                throw X::WrongLength(
+                    trav_location(trav), expected, expected, len
+                );
+            }
         }
     }
     else if (auto elems = trav.desc->elems()) {
-        for (usize i = 0; i < elems->n_elems; i++) {
-            auto acr = elems->elem(i)->acr();
-            if (claimed >= len && acr->attr_flags & ATTR_OPTIONAL) {
-                continue;
+        usize min = elems->n_elems;
+         // Scan backwards for optional elements
+        while (min > 0) {
+            if (elems->elem(min-1)->acr()->attr_flags & ATTR_OPTIONAL) {
+                min -= 1;
             }
-            if (acr->attr_flags & ATTR_INHERIT) {
-                trav_elem(
-                    trav, acr, i, ACR_WRITE, [&](const Traversal& child)
-                {
-                    ser_claim_length(child, claimed, len);
-                });
-            }
-            else claimed += 1;
+            else break;
+        }
+        if (len < min || len > elems->n_elems) {
+            throw X::WrongLength(trav_location(trav), min, elems->n_elems, len);
         }
     }
     else if (auto acr = trav.desc->delegate_acr()) {
         trav_delegate(trav, acr, ACR_WRITE, [&](const Traversal& child){
-            ser_claim_length(child, claimed, len);
+            ser_set_length(child, len);
         });
     }
     else throw X::NoElems(trav_location(trav));
-}
-
-void in::ser_set_length (const Traversal& trav, usize len) {
-    usize claimed = 0;
-    ser_claim_length(trav, claimed, len);
-    if (claimed > len) {
-        throw X::TooShort(trav_location(trav), claimed, len);
-    }
-    if (claimed < len) {
-        throw X::TooLong(trav_location(trav), claimed, len);
-    }
 }
 
 void item_set_length (const Reference& item, usize len, const Location& loc) {
@@ -727,39 +706,10 @@ bool in::ser_maybe_elem (
     const Traversal& trav, usize index, AccessOp op, TravCallback cb
 ) {
     if (auto elems = trav.desc->elems()) {
-         // Including inheritance in this mix turns this from constant-time
-         // to linear time, and thus serializing from linear time into
-         // squared time.  We should probably have set a flag somewhere if
-         // there no inherited elems so we can skip this loop.
-        usize offset = 0;
-        for (usize i = 0; i < elems->n_elems && offset <= index; i++) {
-            auto acr = elems->elem(i)->acr();
-            if (acr->attr_flags & ATTR_INHERIT) {
-                bool found;
-                 // Change op to modify so we don't clobber the other elems of
-                 // the inherited item.
-                AccessOp inherit_op = op == ACR_WRITE ? ACR_MODIFY : op;
-                trav_elem(
-                    trav, acr, i, inherit_op, [&](const Traversal& child)
-                {
-                    usize len = ser_get_length(child);
-                    found = index - offset < len;
-                    if (found) {
-                         // Throw if inherited elem says it doesn't have an attr
-                         // that's within its reported length.
-                        ser_elem(child, index - offset, op, cb);
-                    }
-                    else offset += len;
-                });
-                if (found) return true;
-            }
-            else {
-                if (offset == index) {
-                    trav_elem(trav, acr, i, op, cb);
-                    return true;
-                }
-                offset += 1;
-            }
+        if (index < elems->n_elems) {
+            auto acr = elems->elem(index)->acr();
+            trav_elem(trav, acr, index, op, cb);
+            return true;
         }
          // Elem out of bounds, fall through to elem_func
     }
@@ -796,8 +746,8 @@ Reference item_maybe_elem (
     const Reference& item, usize index, const Location& loc
 ) {
     Reference r;
-     // Is ACR_READ correct here?  Will we have to chain up the reference from
-     // the start?
+     // TODO: We probably don't need to set up a whole traversal stack for this,
+     // now that we've removed inherited elems.
     trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         ser_maybe_elem(trav, index, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
@@ -959,18 +909,12 @@ AYU_DESCRIBE(ayu::X::UnwantedAttr,
         elem(&X::UnwantedAttr::key)
     )
 )
-AYU_DESCRIBE(ayu::X::TooShort,
+AYU_DESCRIBE(ayu::X::WrongLength,
     attrs(
         attr("ayu::X::SerError", base<X::SerError>(), inherit),
-        attr("min", &X::TooShort::min),
-        attr("got", &X::TooShort::got)
-    )
-)
-AYU_DESCRIBE(ayu::X::TooLong,
-    attrs(
-        attr("ayu::X::SerError", base<X::SerError>(), inherit),
-        attr("max", &X::TooLong::max),
-        attr("got", &X::TooLong::got)
+        attr("min", &X::WrongLength::min),
+        attr("max", &X::WrongLength::max),
+        attr("got", &X::WrongLength::got)
     )
 )
 AYU_DESCRIBE(ayu::X::NoAttrs,
@@ -1057,14 +1001,6 @@ namespace ayu::test {
         void foo ();
     };
 
-    struct ElemInheritTest {
-        float a;
-        ElemTest et1;
-        float b;
-        ElemTest et2;
-        float c;
-    };
-
     struct ElemsTest {
         std::vector<int> xs;
     };
@@ -1144,15 +1080,6 @@ AYU_DESCRIBE(ayu::test::ElemTest,
         elem(member(&ElemTest::x)),
         elem(&ElemTest::y),
         elem(member(&ElemTest::z))
-    )
-)
-AYU_DESCRIBE(ayu::test::ElemInheritTest,
-    elems(
-        elem(&ElemInheritTest::a),
-        elem(&ElemInheritTest::et1, inherit),
-        elem(&ElemInheritTest::b, optional),
-        elem(&ElemInheritTest::et2, inherit|optional),
-        elem(&ElemInheritTest::c, optional)
     )
 )
 AYU_DESCRIBE(ayu::test::ElemsTest,
@@ -1344,39 +1271,15 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     Tree from_tree_et1 = tree_from_string("[3.5 4.5 5.5]");
     item_from_tree(&et, from_tree_et1);
     is(et.y, 4.5, "item_from_tree with elems descriptor");
-    throws<X::TooShort>([&]{
+    throws<X::WrongLength>([&]{
         item_from_string(&et, "[6.5 7.5]");
     }, "item_from_tree throws on too short array with elems descriptor");
-    throws<X::TooLong>([&]{
+    throws<X::WrongLength>([&]{
         item_from_string(&et, "[6.5 7.5 8.5 9.5]");
     }, "item_from_tree throws on too long array with elems descriptor");
     throws<X::InvalidForm>([&]{
         item_from_string(&et, "{x:1.1 y:2.2}");
     }, "item_from_tree throws X::InvalidForm when trying to make elems thing from object");
-
-    auto eit = ElemInheritTest{0xa, {1, 2, 3}, 0xb, {4, 5, 6}, 0xc};
-    is(*(float*)item_elem(&eit, 7), 6, "item_elem with inherited elems");
-    is(*(float*)item_elem(&eit, 8), 0xc, "item_elem with inherited elems");
-    ok(!item_maybe_elem(&eit, 9).type(), "item_elem out of range with inherited elems");
-    Tree eitt = item_to_tree(&eit);
-    is(eitt, tree_from_string("[0xa 1 2 3 0xb 4 5 6 0xc]"), "item_to_tree with inherited elems");
-    Tree from_tree_eit1 = tree_from_string("[0xaa 11 22 33 0xbb 44 55 66 0xcc]");
-    item_from_tree(&eit, from_tree_eit1);
-    is(eit.c, 0xcc, "item_from_tree with inherited elems");
-    is(eit.et2.y, 55, "item_from_tree with inherited elems (inherited elem)");
-    Tree from_tree_eit2 = tree_from_string("[0xaaa 111 222 333]");
-    item_from_tree(&eit, from_tree_eit2);
-    is(eit.a, 0xaaa, "item_from_tree with optional elems (provided)");
-    is(eit.b, 0xbb, "item_from_tree with optional elems (unprovided)");
-    throws<X::TooShort>([&]{
-        item_from_string(&eit, "[1 2 3]");
-    }, "item_from_tree throws on too short array with inherited elems");
-    throws<X::TooLong>([&]{
-        item_from_string(&eit, "[0xa 1 2 3 0xb 4 5 6 0xc 0xd]");
-    }, "item_from_tree throws on too long array with inherited elems");
-    throws<X::TooShort>([&]{
-        item_from_string(&eit, "[0xa 1 2 3 0xb 4]");
-    }, "item_from_tree throws on partially provided optional inherited element");
 
     auto est = ElemsTest{{1, 3, 6, 10, 15, 21}};
     is(item_get_length(&est), 6u, "item_get_length");

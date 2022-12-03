@@ -201,15 +201,13 @@ namespace ayu::X {
         UnwantedAttr (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
     };
      // Tried to deserialize an item from an array tree, but the array has too
-     // few elements for the item.
-     // KNOWN BUG: If an inherited element containing optional elements is
-     // followed by a non-optional element, the reported minimum length may be
-     // incorrect.
-    struct TooShort : SerError {
+     // few or too many elements for the item.
+    struct WrongLength : SerError {
         usize min;
+        usize max;
         usize got;
-        TooShort (Location&& l, usize m, usize g) :
-            SerError(std::move(l)), min(m), got(g)
+        WrongLength (Location&& l, usize min, usize max, usize g) :
+            SerError(std::move(l)), min(min), max(max), got(g)
         { }
     };
      // Tried to deserialize an item from an array tree, but the array has too
