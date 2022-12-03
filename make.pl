@@ -21,9 +21,11 @@ my @link_opts = qw(
 #    -lmingw32 -lSDL2main -lSDL2
 #));
 
+$ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
 my %configs = (
     deb => {
-        compile_opts => [qw(-finline-small-functions -ggdb)],
+        compile_opts => [qw(-finline-small-functions -ggdb), '-fsanitize=address,undefined'],
+        link_opts => ['-fsanitize=address,undefined'],
         strip => 0,
     },
     opt => {

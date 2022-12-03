@@ -82,10 +82,10 @@ Location::Location (Resource res) :
 { }
 Location::Location (Location p, String&& k) :
     data(new KeyLocation(p, std::move(k)))
-{ *p.data; } // Segfault early if p is empty
+{ }
 Location::Location (Location p, usize i) :
     data(new IndexLocation(p, i))
-{ *p.data; }
+{ }
 
 Location::Location (const IRI& iri) {
     if (!iri) return;
