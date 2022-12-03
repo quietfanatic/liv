@@ -14,28 +14,41 @@
 namespace ayu {
 
 ////// MAIN OPERATIONS
- // Convert an item to a tree.
-Tree item_to_tree (const Reference&);
+ // Convert an item to a tree.  The optional location should match the
+ // reference's location if provided.
+Tree item_to_tree (
+    const Reference&, const Location& loc = Location()
+);
  // Write to an item from a tree.  If an exception is thrown, the item may be
  // left in an incomplete state, so if you're worried about that, construct a
  // fresh item, call item_from_tree on that, and then move it onto the original
  // item (this is what ayu::reload() on resources does).
-void item_from_tree (const Reference&, const Tree&);
+void item_from_tree (
+    const Reference&, const Tree&, const Location& loc = Location()
+);
 
 ///// MAIN OPERATION SHORTCUTS
-inline String item_to_string (const Reference& item, PrintOptions opts = 0) {
-    return tree_to_string(item_to_tree(item), opts);
+inline String item_to_string (
+    const Reference& item, PrintOptions opts = 0,
+    const Location& loc = Location()
+) {
+    return tree_to_string(item_to_tree(item, loc), opts);
 }
 inline void item_to_file (
-    const Reference& item, Str filename, PrintOptions opts = 0
+    const Reference& item, Str filename, PrintOptions opts = 0,
+    const Location& loc = Location()
 ) {
-    return tree_to_file(item_to_tree(item), filename, opts);
+    return tree_to_file(item_to_tree(item, loc), filename, opts);
 }
-inline void item_from_string (const Reference& item, Str src) {
-    return item_from_tree(item, tree_from_string(src));
+inline void item_from_string (
+    const Reference& item, Str src, const Location& loc = Location()
+) {
+    return item_from_tree(item, tree_from_string(src), loc);
 }
-inline void item_from_file (const Reference& item, Str filename) {
-    return item_from_tree(item, tree_from_file(filename));
+inline void item_from_file (
+    const Reference& item, Str filename, const Location& loc = Location()
+) {
+    return item_from_tree(item, tree_from_file(filename), loc);
 }
 
 ///// ACCESS OPERATIONS
@@ -44,31 +57,44 @@ inline void item_from_file (const Reference& item, Str filename) {
  // copy them or use item_get_keys instead.
 void item_read_keys (
     const Reference&,
-    Callback<void(const std::vector<Str>&)> cb
+    Callback<void(const std::vector<Str>&)> cb,
+    const Location& loc = Location()
 );
  // Get a list of the keys in a object-like item.  This will copy all the
  // strings, so if you're concerned about performance, use item_read_keys
  // instead.
-std::vector<String> item_get_keys (const Reference&);
+std::vector<String> item_get_keys (
+    const Reference&, const Location& loc = Location()
+);
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
-void item_set_keys (const Reference&, const std::vector<Str>&);
+void item_set_keys (
+    const Reference&, const std::vector<Str>&,
+    const Location& loc = Location()
+);
  // Get an attribute of an object-like item by its key, or empty Reference if
  // the attribute doesn't exist.
-Reference item_maybe_attr (const Reference&, Str);
+Reference item_maybe_attr (
+    const Reference&, Str, const Location& loc = Location());
  // Throws if the attribute doesn't exist.
-Reference item_attr (const Reference&, Str);
+Reference item_attr (const Reference&, Str, const Location& loc = Location());
 
  // Get the length of an array-like item.
-usize item_get_length (const Reference&);
+usize item_get_length (const Reference&, const Location& loc = Location());
  // Set the length of an array-like item.  This may clear some or all of the
  // contents of the item.
-void item_set_length (const Reference&, usize);
+void item_set_length (
+    const Reference&, usize, const Location& loc = Location()
+);
  // Get an element of an array-like item by its index.  Returns an empty
  // Reference if te element doesn't exist.
-Reference item_maybe_elem (const Reference&, usize);
+Reference item_maybe_elem (
+    const Reference&, usize, const Location& loc = Location()
+);
  // Throws if the element doesn't exist.
-Reference item_elem (const Reference&, usize);
+Reference item_elem (
+    const Reference&, usize, const Location& loc = Location()
+);
 
 ///// LOCATION OPERATIONS
  // Convert a Location to a Reference.  This will not have to do any scanning,

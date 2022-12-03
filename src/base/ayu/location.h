@@ -28,7 +28,8 @@ namespace ayu {
 struct Location {
     in::RCP<in::LocationData, in::delete_LocationData> data;
     constexpr explicit Location (in::LocationData* p = null) : data(p) { }
-     // Trying to do anything with the empty location will segfault.
+     // The empty location is treated as the location of an anonymous item, and
+     // can't be transformed into a reference.
     explicit operator bool () const { return !!data; }
      // Constructs a root location from a Resource.
     explicit Location (Resource);

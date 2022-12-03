@@ -139,7 +139,11 @@ IRI Location::as_iri () const {
     if (!*this) return IRI();
     String fragment;
     for (const Location* l = this; l; l = l->parent()) {
-        switch (l->data->form) {
+        if (!l->data) {
+            if (fragment.empty()) return IRI("anonymous-item:"sv);
+            else return IRI(cat("anonymous-item:"sv, "#", fragment));
+        }
+        else switch (l->data->form) {
             case ROOT: {
                 const IRI& base = static_cast<RootLocation*>(
                     l->data.p
@@ -176,13 +180,14 @@ IRI Location::as_iri () const {
 }
 
 const Resource* Location::resource () const {
-    if (data->form == ROOT) {
+    if (data && data->form == ROOT) {
         return &static_cast<RootLocation*>(data.p)->resource;
     }
     else return null;
 }
 
 const Location* Location::parent () const {
+    if (!data) return null;
     switch (data->form) {
         case ROOT: return null;
         case KEY: return &static_cast<KeyLocation*>(data.p)->parent;
@@ -192,6 +197,7 @@ const Location* Location::parent () const {
     }
 }
 const String* Location::key () const {
+    if (!data) return null;
     switch (data->form) {
         case KEY: return &static_cast<KeyLocation*>(data.p)->key;
         case ERROR_LOC: rethrow(*this);
@@ -199,6 +205,7 @@ const String* Location::key () const {
     }
 }
 const usize* Location::index () const {
+    if (!data) return null;
     switch (data->form) {
         case INDEX: return &static_cast<IndexLocation*>(data.p)->index;
         case ERROR_LOC: rethrow(*this);
@@ -216,10 +223,10 @@ usize Location::length () const {
 }
 
 bool operator == (const Location& a, const Location& b) {
-    if (a.data->form == ERROR_LOC) rethrow(a);
-    if (b.data->form == ERROR_LOC) rethrow(b);
     if (a.data == b.data) return true;
     if (!a.data || !b.data) return false;
+    if (a.data->form == ERROR_LOC) rethrow(a);
+    if (b.data->form == ERROR_LOC) rethrow(b);
     if (a.data->form != b.data->form) return false;
     switch (a.data->form) {
         case ROOT: {

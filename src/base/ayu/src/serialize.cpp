@@ -91,11 +91,9 @@ Tree in::ser_to_tree (const Traversal& trav) {
     }
 }
  // TODO: Add location parameter
-Tree item_to_tree (const Reference& item) {
+Tree item_to_tree (const Reference& item, const Location& loc) {
     Tree r;
-    trav_start(
-        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
-    {
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         r = ser_to_tree(trav);
     });
     return r;
@@ -243,13 +241,13 @@ void in::ser_do_inits () {
     }
 }
 
-void item_from_tree (const Reference& item, const Tree& tree) {
+void item_from_tree (
+    const Reference& item, const Tree& tree, const Location& loc
+) {
     static bool in_from_tree = false;
     if (in_from_tree) {
          // If we're reentering, swizzles and inits will be done later.
-        trav_start(
-            item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
-        {
+        trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
             ser_from_tree(trav, tree);
         });
     }
@@ -259,9 +257,7 @@ void item_from_tree (const Reference& item, const Tree& tree) {
         }
         in_from_tree = true;
         try {
-            trav_start(
-                item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
-            {
+            trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
                 ser_from_tree(trav, tree);
             });
             ser_do_swizzles();
@@ -374,21 +370,20 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
 
 void item_read_keys (
     const Reference& item,
-    Callback<void(const std::vector<Str>&)> cb
+    Callback<void(const std::vector<Str>&)> cb,
+    const Location& loc
 ) {
     StrVector ks;
-    trav_start(
-        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
-    {
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
     cb(ks);
 }
-std::vector<String> item_get_keys (const Reference& item) {
+std::vector<String> item_get_keys (
+    const Reference& item, const Location& loc
+) {
     StrVector ks;
-    trav_start(
-        item, Location(Resource()), ACR_READ, [&](const Traversal& trav)
-    {
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
     return std::vector<String>(ks.begin(), ks.end());
@@ -525,10 +520,11 @@ void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
     }
 }
 
-void item_set_keys (const Reference& item, const std::vector<Str>& ks) {
-    trav_start(
-        item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
-    {
+void item_set_keys (
+    const Reference& item, const std::vector<Str>& ks,
+    const Location& loc
+) {
+    trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
         auto ks_copy = ks;
         ser_set_keys(trav, std::move(ks_copy));
     });
@@ -605,22 +601,24 @@ void in::ser_attr (
     }
 }
 
-Reference item_maybe_attr (const Reference& item, Str key) {
+Reference item_maybe_attr (
+    const Reference& item, Str key, const Location& loc
+) {
     Reference r;
      // Is ACR_READ correct here?  Will we instead have to chain up the
      // reference from the start?
-    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         ser_maybe_attr(trav, key, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
         });
     });
     return r;
 }
-Reference item_attr (const Reference& item, Str key) {
+Reference item_attr (const Reference& item, Str key, const Location& loc) {
     if (Reference r = item_maybe_attr(item, key)) {
         return r;
     }
-    else throw X::AttrNotFound(Location(Resource()), key);
+    else throw X::AttrNotFound(Location(loc), key);
 }
 
 ///// ELEM OPERATIONS
@@ -656,9 +654,9 @@ usize in::ser_get_length (const Traversal& trav) {
     return len;
 }
 
-usize item_get_length (const Reference& item) {
+usize item_get_length (const Reference& item, const Location& loc) {
     usize len;
-    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         len = ser_get_length(trav);
     });
     return len;
@@ -717,9 +715,9 @@ void in::ser_set_length (const Traversal& trav, usize len) {
     }
 }
 
-void item_set_length (const Reference& item, usize len) {
+void item_set_length (const Reference& item, usize len, const Location& loc) {
     trav_start(
-        item, Location(Resource()), ACR_WRITE, [&](const Traversal& trav)
+        item, loc, ACR_WRITE, [&](const Traversal& trav)
     {
         ser_set_length(trav, len);
     });
@@ -794,22 +792,24 @@ void in::ser_elem (
         throw X::ElemNotFound(trav_location(trav), index);
     }
 }
-Reference item_maybe_elem (const Reference& item, usize index) {
+Reference item_maybe_elem (
+    const Reference& item, usize index, const Location& loc
+) {
     Reference r;
      // Is ACR_READ correct here?  Will we have to chain up the reference from
      // the start?
-    trav_start(item, Location(Resource()), ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
         ser_maybe_elem(trav, index, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
         });
     });
     return r;
 }
-Reference item_elem (const Reference& item, usize index) {
+Reference item_elem (const Reference& item, usize index, const Location& loc) {
     if (Reference r = item_maybe_elem(item, index)) {
         return r;
     }
-    else throw X::ElemNotFound(Location(Resource()), index);
+    else throw X::ElemNotFound(Location(loc), index);
 }
 
 ///// REFERENCES AND LOCATIONS
