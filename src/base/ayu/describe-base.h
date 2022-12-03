@@ -22,7 +22,11 @@
  // stringified and used exactly as it appears.
  //
  // All later parameters to AYU_DESCRIBE must be descriptors, which are
- // documented later in this file under various sections.
+ // documented later in this file under various sections.  Some of the
+ // descriptors take accessors, which define how to read and write a particular
+ // property of an item.  All functions given to descriptors and accessors
+ // should return the same results for the same items, or undesired behavior may
+ // occur.
  //
  // It is possible to declare template ayu descriptions, though it is
  // necessarily more complicated.  It requires you to manually specify a
