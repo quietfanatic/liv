@@ -88,7 +88,7 @@ void trav_attr (
     trav.key = key;
     if (Mu* address = acr->address(*parent.item)) {
         trav.item = address;
-        trav.addressable = trav.addressable;
+        trav.addressable = parent.addressable;
         cb(trav);
     }
     else {

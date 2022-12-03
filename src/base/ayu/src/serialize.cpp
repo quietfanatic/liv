@@ -465,7 +465,7 @@ void in::ser_claim_keys (
          // attr always consumes at least 14 bytes, so the max n_attrs is
          // something like 4500.  TODO: enforce a reasonable max n_attrs in
          // descriptors-internal.h.
-        bool claimed_inherited [attrs->n_attrs];
+        bool claimed_inherited [attrs->n_attrs] = {};
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
