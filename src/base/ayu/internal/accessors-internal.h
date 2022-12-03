@@ -213,7 +213,7 @@ struct MemberAcr2 : MemberAcr0 {
      //
      // Wouldn't it save space to put this in the vtable?  No!  Doing so would
      // require a different vtable for each To type, so it would likely use more
-     // space.
+     // space.  TODO: actually test this
     Type(* get_type )();
     To From::* mp;
     explicit constexpr MemberAcr2 (To From::* mp, uint8 flags = 0) :

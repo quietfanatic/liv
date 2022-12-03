@@ -75,6 +75,6 @@ inline usize hash_combine (usize a, usize b) {
     const char* function, const char* filename, uint line
 );
 #define AYU_INTERNAL_UGUU() \
-::ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
+[[unlikely]] ::ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
 
 }  // namespace ayu::in

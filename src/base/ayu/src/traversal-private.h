@@ -32,20 +32,36 @@ struct Traversal {
     bool addressable;
     bool readonly;
     TraversalType type;
-
-    template <class T>
-    const T& as () const { return static_cast<const T&>(*this); }
-    Traversal () = default;
-    Traversal (const Traversal&) = delete;
+    union {
+         // START
+        const Reference* reference;
+         // DELEGATE, ATTR, ELEM
+        const Accessor* acr;
+         // ATTR_FUNC
+        Reference(* attr_func )(Mu&, Str);
+         // ELEM_FUNC
+        Reference(* elem_func )(Mu&, usize);
+    };
+    union {
+         // START
+        const Location* location;
+         // ATTR, ATTR_FUNC
+         // Can't include Str directly because it has non-trivial constructor
+        const Str* key;
+         // ELEM, ELEM_FUNC
+        usize index;
+    };
 };
 
 using TravCallback = Callback<void(const Traversal&)>;
 
 void trav_start (const Reference&, const Location&, AccessOp, TravCallback);
 void trav_delegate (const Traversal&, const Accessor*, AccessOp, TravCallback);
-void trav_attr (const Traversal&, const Accessor*, Str, AccessOp, TravCallback);
+void trav_attr (
+    const Traversal&, const Accessor*, const Str&, AccessOp, TravCallback
+);
 void trav_attr_func (
-    const Traversal&, Reference, Reference(*)(Mu&, Str), Str,
+    const Traversal&, Reference, Reference(*)(Mu&, Str), const Str&,
     AccessOp, TravCallback
 );
 void trav_elem (

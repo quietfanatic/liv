@@ -27,8 +27,8 @@ my %configs = (
         strip => 0,
     },
     opt => {
-        compile_opts => [qw(-Os -DNDEBUG -ggdb -flto)],
-        link_opts => [qw(-ggdb -flto)],
+        compile_opts => [qw(-Os -DNDEBUG -ggdb)],
+        link_opts => [qw(-ggdb)],
         strip => 1,
     },
     pro => {
