@@ -183,7 +183,7 @@ void load (const std::vector<Resource>& reses) {
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
-            item_from_tree(&res.data->value, tree);
+            item_from_tree(&res.data->value, tree, Location(res));
         }
         for (auto res : rs) {
             res.data->state = LOADED;
@@ -248,7 +248,9 @@ void save (const std::vector<Resource>& reses) {
                 );
             }
             String filename = scheme->get_file(res.data->name);
-            auto contents = tree_to_string(item_to_tree(&res.data->value));
+            auto contents = tree_to_string(
+                item_to_tree(&res.data->value, Location(res))
+            );
             committers[i] = [
                 contents{std::move(contents)},
                 filename{std::move(filename)}
@@ -402,7 +404,7 @@ void reload (const std::vector<Resource>& reses) {
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
-            item_from_tree(&res.data->value, tree);
+            item_from_tree(&res.data->value, tree, Location(res));
         }
         for (auto res : reses) {
             res.data->state = RELOAD_VERIFYING;
