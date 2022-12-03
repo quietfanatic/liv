@@ -10,6 +10,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include "callback.h"
 
 namespace iri { struct IRI; }
 
@@ -92,40 +93,6 @@ String&& cat (String&& s, Args... args) {
 }
 
 ///// CALLBACKS
-
- // A super lightweight callback class with reference semantics (std::function
- // has value semantics and can be copied and moved, so it's way bigger.)
- // The most we can reduce this to is two function calls (four uninlined), but
- // with a gnu extension allowing you to coerce a method pointer into a function
- // pointer, we could theoretically reduce this to one call (TODO: do that).
- // I mean, using a method pointer itself would be one call but C++ method
- // pointers are kind of bad.
- // THEORETICALLY theoretically, if we knew details on how the compiler
- // implements method pointers we could do it for any compiler.  No.
-template <class> struct CallbackV;
-template <class Ret, class... Args>
-struct CallbackV<Ret(Args...)> {
-    Ret(* wrapper )(const void*, Args&&...);
-    const void* f;
-    template <class F> requires(
-        std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
-    )
-    [[gnu::always_inline]]
-    constexpr CallbackV (const F& f) :
-        wrapper([](const void* f, Args&&... args)->Ret{
-            return (*reinterpret_cast<const F*>(f))(std::forward<Args>(args)...);
-        }),
-        f(&f)
-    { }
-     // Looks like there's no way to avoid an extra copy of by-value args.
-     // (std::function does it too)
-    [[gnu::always_inline]]
-    Ret operator () (Args... args) const {
-        return wrapper(f, std::forward<Args>(args)...);
-    }
-};
-template <class Sig>
-using Callback = const CallbackV<Sig>&;
 
 ///// UTILITY
 
