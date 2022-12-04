@@ -820,7 +820,7 @@ String show_reference (const Reference& ref) {
     }
 }
 
-void recursive_scan_universe (
+void in::recursive_scan_universe (
     Callback<void(const Reference&, Location)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
@@ -828,16 +828,16 @@ void recursive_scan_universe (
     }
 }
 
-void recursive_scan_resource (
+void in::recursive_scan_resource (
     Resource res,
     Callback<void(const Reference&, Location)> cb
 ) {
     if (res.state() == UNLOADED) return;
-    recursive_scan(res.get_value(), Location(res), cb);
+    in::recursive_scan(res.get_value(), Location(res), cb);
 }
 
  // TODO: Skip atomic types T if AYU_DESCRIBE for T* has not been instantiated
-void recursive_scan (
+void in::recursive_scan (
     const Reference& item, Location loc,
     Callback<void(const Reference&, Location)> cb
 ) {

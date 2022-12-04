@@ -82,4 +82,27 @@ bool ser_maybe_elem (const Traversal&, usize, AccessOp, TravCallback);
  // Throws if elem is out of bounds
 void ser_elem (const Traversal&, usize, AccessOp, TravCallback);
 
+ ///// Scanning operations
+
+ // Scan all data visible to ayu.
+void recursive_scan_universe (
+    Callback<void(const Reference&, Location)> cb
+);
+
+ // Scan only a particular resource.  Silently does nothing if the resource is
+ // UNLOADED.  TODO: Should it throw instead?
+void recursive_scan_resource (
+    Resource res,
+    Callback<void(const Reference&, Location)> cb
+);
+
+ // Scan only data under a given reference.  base_location should be the
+ // location of base_item.
+void recursive_scan (
+    const Reference& base_item,
+    Location base_location,
+    Callback<void(const Reference&, Location)> cb
+);
+
+
 } // namespace ayu::in

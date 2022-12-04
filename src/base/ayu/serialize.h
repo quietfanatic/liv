@@ -116,30 +116,6 @@ struct KeepLocationCache {
     ~KeepLocationCache ();
 };
 
- // This is used by reference_to_location and KeepLocationCache.  You shouldn't
- // have to use this directly, but you can if you want.  This will scan all data
- // visible to ayu.  The callback will be called with:
- //   1. A reference to the currently scanned item
- //   2. The location of the currently scanned item
-void recursive_scan_universe (
-    Callback<void(const Reference&, Location)> cb
-);
-
- // Scan only a particular resource.  Silently does nothing if the resource is
- // UNLOADED.  TODO: Should it throw instead?
-void recursive_scan_resource (
-    Resource res,
-    Callback<void(const Reference&, Location)> cb
-);
-
- // Scan only data under a given reference.  base_location should be the
- // location of base_item.
-void recursive_scan (
-    const Reference& base_item,
-    Location base_location,
-    Callback<void(const Reference&, Location)> cb
-);
-
 ///// DIAGNOSTICS HELP
 
  // While this object is alive, if an exception is thrown while serializing an
