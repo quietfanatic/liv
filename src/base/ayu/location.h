@@ -66,6 +66,9 @@ inline bool operator != (const Location& a, const Location& b) {
     return !(a == b);
 }
 
- // Functions for converting locations to and from references are in serialize.h
+ // Convert a Location to a Reference.  This will not have to do any scanning,
+ // so it should be fairly quick.  Well, quicker than reference_to_location.
+ // reference_to_location is in scan.h
+Reference reference_from_location (Location);
 
 } // namespace ayu

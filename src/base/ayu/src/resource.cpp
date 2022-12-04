@@ -10,8 +10,9 @@
 #include "../print.h"
 #include "../reference.h"
 #include "../resource-scheme.h"
+#include "../scan.h"
+#include "../serialize.h"
 #include "resource-private.h"
-#include "serialize-private.h"
 
 ///// INTERNALS
 

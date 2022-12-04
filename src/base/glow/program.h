@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "../ayu/location.h"
+#include "../ayu/scan.h"
 #include "../ayu/serialize.h"
 
 namespace glow {

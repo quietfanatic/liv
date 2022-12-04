@@ -96,26 +96,6 @@ Reference item_elem (
     const Reference&, usize, const Location& loc = Location()
 );
 
-///// LOCATION OPERATIONS
- // Convert a Location to a Reference.  This will not have to do any scanning,
- // so it should be fairly quick.  Well, quicker than reference_to_location.
-Reference reference_from_location (Location);
-
- // Convert a Reference to a Location.  This will be slow by itself, since it
- // must scan all loaded resources.  If a KeepLocationCache object is alive, the
- // first call to reference_to_location will build a map of References to
- // Locations, and subsequent calls to reference_to_location will be very fast.
-Location reference_to_location (const Reference&);
-
- // While this is alive, a cache mapping references to locations will be kept,
- // making reference_to_location faster.  Do not modify any resource data while
- // keeping the location cache, since there is no way for the cache to stay
- // up-to-date.
-struct KeepLocationCache {
-    KeepLocationCache ();
-    ~KeepLocationCache ();
-};
-
 ///// DIAGNOSTICS HELP
 
  // While this object is alive, if an exception is thrown while serializing an

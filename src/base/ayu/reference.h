@@ -296,6 +296,7 @@ inline bool operator != (const Reference& a, const Reference& b) {
 namespace X {
     struct ReferenceError : Error {
         Location location;
+        ReferenceError (Location&& l) : location(l) { };
         ReferenceError (const Reference& r);
     };
      // Tried to write to a readonly reference.
@@ -344,11 +345,5 @@ inline usize Reference::get_length () const { return item_get_length(*this); }
 inline void Reference::set_length (usize l) const { item_set_length(*this, l); }
 inline Reference Reference::maybe_elem (usize index) const { return item_maybe_elem(*this, index); }
 inline Reference Reference::elem (usize index) const { return item_elem(*this, index); }
-
-namespace X {
-    inline ReferenceError::ReferenceError (const Reference& r) :
-        location(reference_to_location(r))
-    { }
-}
 
 } // namespace ayu

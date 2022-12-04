@@ -4,6 +4,7 @@
 #include "../describe.h"
 #include "../dynamic.h"
 #include "../resource.h"
+#include "../scan.h"
 #include "../serialize.h"
 
 namespace ayu {
@@ -59,6 +60,12 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
         });
         return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
     }
+}
+
+namespace X {
+    ReferenceError::ReferenceError (const Reference& r) :
+        location(reference_to_location(r))
+    { }
 }
 
 } using namespace ayu;

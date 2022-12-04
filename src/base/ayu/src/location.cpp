@@ -248,6 +248,23 @@ bool operator == (const Location& a, const Location& b) {
     }
 }
 
+Reference reference_from_location (Location loc) {
+    if (!loc) return Reference();
+    if (auto parent = loc.parent()) {
+        if (auto key = loc.key()) {
+            return reference_from_location(*parent).attr(*key);
+        }
+        else if (auto index = loc.index()) {
+            return reference_from_location(*parent).elem(*index);
+        }
+        else AYU_INTERNAL_UGUU();
+    }
+    else if (auto res = loc.resource()) {
+        return res->ref();
+    }
+    else AYU_INTERNAL_UGUU();
+}
+
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::Location,

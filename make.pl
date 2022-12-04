@@ -75,6 +75,7 @@ my @sources = (qw(
     base/ayu/src/reference.cpp
     base/ayu/src/resource.cpp
     base/ayu/src/resource-scheme.cpp
+    base/ayu/src/scan.cpp
     base/ayu/src/serialize.cpp
     base/ayu/src/traversal.cpp
     base/ayu/src/tree.cpp
