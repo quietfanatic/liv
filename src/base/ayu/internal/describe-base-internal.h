@@ -36,6 +36,7 @@ constexpr auto _AYU_DescribeBase<T>::destroy (void(* f )(T*)) {
 
 template <class T>
 template <class... Values>
+    requires (requires (T v) { v == v; v = v; })
 constexpr auto _AYU_DescribeBase<T>::values (const Values&... vs) {
     return in::ValuesDcrWith<T, Values...>(vs...);
 }
@@ -50,22 +51,23 @@ constexpr auto _AYU_DescribeBase<T>::values_custom (
 }
 template <class T>
 template <class N>
-constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
+    requires (requires (T v) { T(std::move(v)); })
+constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
     if constexpr (std::is_null_pointer_v<N>) {
-        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, v);
+        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, std::move(v));
     }
     else if constexpr (std::is_same_v<N, bool>) {
-        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, v);
+        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, std::move(v));
     }
     else if constexpr (std::is_integral_v<N>) {
-        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, v);
+        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, std::move(v));
     }
     else if constexpr (std::is_floating_point_v<N>) {
-        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
+        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, std::move(v));
     }
     else {
          // Assume something convertible to Str (std::string_view)
-        return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, v);
+        return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, std::move(v));
     }
 }
 template <class T>
@@ -181,6 +183,7 @@ constexpr auto _AYU_DescribeBase<T>::const_member (
 }
 template <class T>
 template <class B>
+    requires (requires (T* t, B* b) { b = t; t = static_cast<T*>(b); })
 constexpr auto _AYU_DescribeBase<T>::base (
     in::AccessorFlags flags
 ) {
@@ -213,6 +216,7 @@ constexpr auto _AYU_DescribeBase<T>::const_ref_funcs (
 }
 template <class T>
 template <class M>
+    requires (requires (M m) { M(std::move(m)); })
 constexpr auto _AYU_DescribeBase<T>::value_func (
     M(* f )(const T&),
     in::AccessorFlags flags
@@ -221,6 +225,7 @@ constexpr auto _AYU_DescribeBase<T>::value_func (
 }
 template <class T>
 template <class M>
+    requires (requires (M m) { M(std::move(m)); })
 constexpr auto _AYU_DescribeBase<T>::value_funcs (
     M(* g )(const T&),
     void(* s )(T&, M),
@@ -230,6 +235,7 @@ constexpr auto _AYU_DescribeBase<T>::value_funcs (
 }
 template <class T>
 template <class M>
+    requires (requires (M m) { M(std::move(m)); })
 constexpr auto _AYU_DescribeBase<T>::mixed_funcs (
     M(* g )(const T&),
     void(* s )(T&, const M&),
@@ -240,30 +246,21 @@ constexpr auto _AYU_DescribeBase<T>::mixed_funcs (
 
 template <class T>
 template <class M>
+    requires (requires (T t, M m) { t = m; m = t; })
 constexpr auto _AYU_DescribeBase<T>::assignable (
     in::AccessorFlags flags
 ) {
     return in::AssignableAcr2<T, M>(flags);
 }
 
- // This one is not constexpr, so it is only valid in attr_func, elem_func,
- // or reference_func.
 template <class T>
 template <class M>
-auto _AYU_DescribeBase<T>::variable (
+    requires (requires (M m) { M(std::move(m)); })
+constexpr auto _AYU_DescribeBase<T>::constant (
     M&& v,
     in::AccessorFlags flags
 ) {
-    return in::VariableAcr2<T, M>(std::move(v), flags);
-}
-
-template <class T>
-template <class M>
-constexpr auto _AYU_DescribeBase<T>::constant (
-    const M& v,
-    in::AccessorFlags flags
-) {
-    return in::ConstantAcr2<T, M>(v, flags);
+    return in::ConstantAcr2<T, M>(std::move(v), flags);
 }
 template <class T>
 template <class M>
@@ -273,6 +270,19 @@ constexpr auto _AYU_DescribeBase<T>::constant_pointer (
 ) {
     return in::ConstantPointerAcr2<T, M>(p, flags);
 }
+
+ // This one is not constexpr, so it is only valid in attr_func, elem_func,
+ // or reference_func.
+template <class T>
+template <class M>
+    requires (requires (M m) { M(std::move(m)); m.~M(); })
+auto _AYU_DescribeBase<T>::variable (
+    M&& v,
+    in::AccessorFlags flags
+) {
+    return in::VariableAcr2<T, M>(std::move(v), flags);
+}
+
 template <class T>
 constexpr auto _AYU_DescribeBase<T>::reference_func (
     Reference(* f )(T&),

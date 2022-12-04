@@ -144,6 +144,7 @@ struct _AYU_DescribeBase {
      // like "id" and "fliph" that refer to specific matrixes, and still allow
      // an arbitrary matrix to be specified with a list of numbers.
     template <class... Values>
+        requires (requires (T v) { v == v; v = v; })
     static constexpr auto values (const Values&... vs);
      // This is just like values(), but will use the provided compare and assign
      // functions instead of operator== and operator=, so this type doesn't have
@@ -155,9 +156,10 @@ struct _AYU_DescribeBase {
         const Values&... vs
     );
      // Specify a named value for use in values(...).  The value must be
-     // constexpr copy constructible.
+     // constexpr copy or move constructible.
     template <class N>
-    static constexpr auto value (const N& name, const T& value);
+        requires (requires (T v) { T(std::move(v)); })
+    static constexpr auto value (const N& name, T&& value);
      // Specify a named value for use in values(...).  The value must be a
      // pointer to an item of this type, which doesn't have to be constexpr, but
      // it must be initialized before you call any AYU serialization functions.
@@ -390,6 +392,7 @@ struct _AYU_DescribeBase {
      // reference to the derived class.  This accessor is addressable and
      // reverse_addressable.
     template <class B>
+        requires (requires (T* t, B* b) { b = t; t = static_cast<T*>(b); })
     static constexpr auto base (
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
@@ -431,6 +434,7 @@ struct _AYU_DescribeBase {
      // This makes a readonly accessor from a function that returns a child item
      // by value.  It is not addressable.
     template <class M>
+        requires (requires (M m) { M(std::move(m)); })
     static constexpr auto value_func (
         M(* f )(const T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
@@ -438,6 +442,7 @@ struct _AYU_DescribeBase {
      // This makes a read-write accessor from two functions that read and write
      // a child item by value.  It is not addressable.
     template <class M>
+        requires (requires (M m) { M(std::move(m)); })
     static constexpr auto value_funcs (
         M(* g )(const T&),
         void(* s )(T&, M),
@@ -449,34 +454,36 @@ struct _AYU_DescribeBase {
      // if the child item is something like a std::vector that's generated on
      // the fly, and is useful for the keys() descriptor.
     template <class M>
+        requires (requires (M m) { M(std::move(m)); })
     static constexpr auto mixed_funcs (
         M(* g )(const T&),
         void(* s )(T&, const M&),
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
-     // This makes an accessor to any child item such that
-     //     Parent parent = child;
-     // and
-     //     Child child = parent;
-     // are valid.  It is not addressable.
+     // This makes an accessor to any child item such that the parent and child
+     // types can be assigned to eachother with operator=.  It is not
+     // addressable.
      //
      // I'm not sure how useful this is since you can just use value_funcs
      // instead, but here it is.
     template <class M>
+        requires (requires (T t, M m) { t = m; m = t; })
     static constexpr auto assignable (
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
      // This makes a readonly accessor which always returns a constant.  The
-     // provided constant must be constexpr copy constructible.  This accessor
-     // is not addressable, though theoretically it could be made to be.
+     // provided constant must be constexpr copy or move constructible.  This
+     // accessor is not addressable, though theoretically it could be made to
+     // be.
     template <class M>
+        requires (requires (M m) { M(std::move(m)); })
     static constexpr auto constant (
-        const M& v,
+        M&& v,
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
      // Makes a readonly accessor which always returns a constant.  The pointed-
      // to constant does not need to be constexpr or even copy-constructible,
-     // but it must be initialized before calling aany AYU serialization
+     // but it must be initialized before calling any AYU serialization
      // functions.  This accessor is addressable.
     template <class M>
     static constexpr auto constant_pointer (
@@ -495,6 +502,7 @@ struct _AYU_DescribeBase {
      // anchored_to_grandparent (but don't specify anchored_to_grandparent on
      // this accessor, specify it on accessors to its children).
     template <class M>
+        requires (requires (M m) { M(std::move(m)); m.~M(); })
     static auto variable (
         M&& v,
         in::AccessorFlags flags = in::AccessorFlags(0)
