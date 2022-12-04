@@ -7,7 +7,7 @@ struct ChainAcr : Accessor {
     const Accessor* a;
     const Accessor* b;
     static Type _type (const Accessor*, const Mu*);
-    static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)> cb);
+    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static void _destroy (Accessor*);
      // Theoretically we could define inverse_address for this, but we'll never
@@ -24,7 +24,7 @@ struct AttrFuncAcr : Accessor {
      // TODO: Can we replace some of these with Str?
     String key;
     static Type _type (const Accessor*, const Mu*);
-    static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor* acr, Mu& v);
     static void _destroy (Accessor* acr);
     static constexpr AccessorVT _vt = {
@@ -39,7 +39,7 @@ struct ElemFuncAcr : Accessor {
     Reference(* fp )(Mu&, usize);
     size_t index;
     static Type _type (const Accessor*, const Mu*);
-    static void _access (const Accessor*, AccessOp, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor* acr, Mu& v);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
     ElemFuncAcr (Reference(* fp )(Mu&, usize), usize i)

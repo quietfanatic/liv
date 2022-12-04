@@ -106,7 +106,7 @@ struct IdentityAcr : Accessor {
         return Type(reinterpret_cast<const Description*>(acr));
     }
     static void _access (
-        const Accessor*, AccessOp, Mu& from, Callback<void(Mu&)> cb
+        const Accessor*, AccessMode, Mu& from, Callback<void(Mu&)> cb
     ) {
         cb(from);
     }
@@ -124,9 +124,9 @@ struct ReadonlyIdentityAcr : Accessor {
         return Type(reinterpret_cast<const Description*>(acr - 1));
     }
     static void _access (
-        const Accessor*, AccessOp op, Mu& from, Callback<void(Mu&)> cb
+        const Accessor*, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
     ) {
-        if (op != ACR_READ) throw X::WriteReadonlyAccessor();
+        if (mode != ACR_READ) throw X::WriteReadonlyAccessor();
         cb(from);
     }
     static Mu* _address (const Accessor*, Mu& from) {

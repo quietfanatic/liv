@@ -67,9 +67,9 @@ void ser_claim_keys (const Traversal&, std::vector<Str>&, bool optional);
 void ser_set_keys (const Traversal&, std::vector<Str>&&);
 
  // If the attr isn't found, returns false and doesn't call the callback
-bool ser_maybe_attr (const Traversal&, Str, AccessOp, TravCallback);
+bool ser_maybe_attr (const Traversal&, Str, AccessMode, TravCallback);
  // Throws if the attr isn't found
-void ser_attr (const Traversal&, Str, AccessOp, TravCallback);
+void ser_attr (const Traversal&, Str, AccessMode, TravCallback);
 
  ///// Elem operations
 usize ser_get_length (const Traversal&);
@@ -78,8 +78,8 @@ void ser_claim_length (const Traversal&, usize& claimed, usize len);
 void ser_set_length (const Traversal&, usize);
 
  // If elem is out of range, returns false and doesn't call the callback
-bool ser_maybe_elem (const Traversal&, usize, AccessOp, TravCallback);
+bool ser_maybe_elem (const Traversal&, usize, AccessMode, TravCallback);
  // Throws if elem is out of bounds
-void ser_elem (const Traversal&, usize, AccessOp, TravCallback);
+void ser_elem (const Traversal&, usize, AccessMode, TravCallback);
 
 } // namespace ayu::in

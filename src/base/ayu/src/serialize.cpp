@@ -218,10 +218,10 @@ void in::ser_do_swizzles () {
     while (!swizzle_ops.empty()) {
          // Explicitly assign to clear swizzle_ops
         auto swizzles = std::move(swizzle_ops);
-        for (auto& op : swizzles) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v, op.tree);
+        for (auto& mode : swizzles) {
+            PushCurrentResource p (mode.current_resource);
+            mode.item.modify([&](Mu& v){
+                mode.f(v, mode.tree);
             });
         }
     }
@@ -230,10 +230,10 @@ void in::ser_do_inits () {
      // Initting might add some more init ops.
     while (!init_ops.empty()) {
         auto inits = std::move(init_ops);
-        for (auto& op : inits) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v);
+        for (auto& mode : inits) {
+            PushCurrentResource p (mode.current_resource);
+            mode.item.modify([&](Mu& v){
+                mode.f(v);
             });
              // Initting might even add more swizzle ops.
             ser_do_swizzles();
@@ -531,7 +531,7 @@ void item_set_keys (
 }
 
 bool in::ser_maybe_attr (
-    const Traversal& trav, Str key, AccessOp op, TravCallback cb
+    const Traversal& trav, Str key, AccessMode mode, TravCallback cb
 ) {
     if (auto attrs = trav.desc->attrs()) {
          // Note: This will likely be called once for each attr, making it
@@ -542,7 +542,7 @@ bool in::ser_maybe_attr (
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             if (attr->key == key) {
-                trav_attr(trav, attr->acr(), key, op, cb);
+                trav_attr(trav, attr->acr(), key, mode, cb);
                 return true;
             }
         }
@@ -552,19 +552,19 @@ bool in::ser_maybe_attr (
             auto acr = attr->acr();
             bool found = false;
             if (acr->attr_flags & ATTR_INHERIT) {
-                 // Change op to modify so we don't clobber the other attrs of
+                 // Change mode to modify so we don't clobber the other attrs of
                  // the inherited item.  Hopefully it won't matter, because
                  // inheriting through a non-addressable reference will be
                  // pretty slow no matter what.  Perhaps if we really wanted to
                  // optimize this, then in claim_keys we could build up a
                  // structure mirroring the inheritance diagram and follow it,
                  // instead of just keeping the flat list of keys.
-                AccessOp inherit_op = op == ACR_WRITE ? ACR_MODIFY : op;
+                AccessMode inherit_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
                 trav_attr(
                     trav, acr, attr->key, inherit_op,
                     [&](const Traversal& child)
                 {
-                    found = ser_maybe_attr(child, key, op, cb);
+                    found = ser_maybe_attr(child, key, mode, cb);
                 });
                 if (found) return true;
             }
@@ -573,7 +573,7 @@ bool in::ser_maybe_attr (
     }
     if (auto attr_func = trav.desc->attr_func()) {
         if (Reference ref = attr_func->f(*trav.item, key)) {
-            trav_attr_func(trav, std::move(ref), attr_func->f, key, op, cb);
+            trav_attr_func(trav, std::move(ref), attr_func->f, key, mode, cb);
             return true;
         }
          // Fallthrough
@@ -585,18 +585,18 @@ bool in::ser_maybe_attr (
     }
     else if (auto acr = trav.desc->delegate_acr()) {
         bool r;
-        AccessOp del_op = op == ACR_WRITE ? ACR_MODIFY : op;
+        AccessMode del_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
         trav_delegate(trav, acr, del_op, [&](const Traversal& child){
-            r = ser_maybe_attr(child, key, op, cb);
+            r = ser_maybe_attr(child, key, mode, cb);
         });
         return r;
     }
     else throw X::NoAttrs(trav_location(trav));
 }
 void in::ser_attr (
-    const Traversal& trav, Str key, AccessOp op, TravCallback cb
+    const Traversal& trav, Str key, AccessMode mode, TravCallback cb
 ) {
-    if (!ser_maybe_attr(trav, key, op, cb)) {
+    if (!ser_maybe_attr(trav, key, mode, cb)) {
         throw X::AttrNotFound(trav_location(trav), key);
     }
 }
@@ -703,19 +703,19 @@ void item_set_length (const Reference& item, usize len, const Location& loc) {
 }
 
 bool in::ser_maybe_elem (
-    const Traversal& trav, usize index, AccessOp op, TravCallback cb
+    const Traversal& trav, usize index, AccessMode mode, TravCallback cb
 ) {
     if (auto elems = trav.desc->elems()) {
         if (index < elems->n_elems) {
             auto acr = elems->elem(index)->acr();
-            trav_elem(trav, acr, index, op, cb);
+            trav_elem(trav, acr, index, mode, cb);
             return true;
         }
          // Elem out of bounds, fall through to elem_func
     }
     if (auto elem_func = trav.desc->elem_func()) {
         if (Reference ref = elem_func->f(*trav.item, index)) {
-            trav_elem_func(trav, std::move(ref), elem_func->f, index, op, cb);
+            trav_elem_func(trav, std::move(ref), elem_func->f, index, mode, cb);
             return true;
         }
          // Fall through
@@ -726,19 +726,19 @@ bool in::ser_maybe_elem (
         return false;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
-        AccessOp del_op = op == ACR_WRITE ? ACR_MODIFY : op;
+        AccessMode del_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
         bool found;
         trav_delegate(trav, acr, del_op, [&](const Traversal& child){
-            found = ser_maybe_elem(child, index, op, cb);
+            found = ser_maybe_elem(child, index, mode, cb);
         });
         return found;
     }
     else throw X::NoElems(trav_location(trav));
 }
 void in::ser_elem (
-    const Traversal& trav, usize index, AccessOp op, TravCallback cb
+    const Traversal& trav, usize index, AccessMode mode, TravCallback cb
 ) {
-    if (!ser_maybe_elem(trav, index, op, cb)) {
+    if (!ser_maybe_elem(trav, index, mode, cb)) {
         throw X::ElemNotFound(trav_location(trav), index);
     }
 }

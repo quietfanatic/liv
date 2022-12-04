@@ -257,9 +257,9 @@ struct Reference {
     Reference chain_attr_func (Reference(*)(Mu&, Str), Str) const;
     Reference chain_elem_func (Reference(*)(Mu&, usize), usize) const;
      // Kinda internal, TODO move to internal namespace
-    void access (in::AccessOp op, Callback<void(Mu&)> cb) const {
-        if (op != in::ACR_READ) require_writeable();
-        acr->access(op, *host, cb);
+    void access (in::AccessMode mode, Callback<void(Mu&)> cb) const {
+        if (mode != in::ACR_READ) require_writeable();
+        acr->access(mode, *host, cb);
     }
 
      // Syntax sugar.

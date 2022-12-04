@@ -76,7 +76,8 @@ void item_set_keys (
  // the attribute doesn't exist.
 Reference item_maybe_attr (
     const Reference&, Str, const Location& loc = Location());
- // Throws if the attribute doesn't exist.
+ // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or
+ // null Reference.
 Reference item_attr (const Reference&, Str, const Location& loc = Location());
 
  // Get the length of an array-like item.
@@ -91,7 +92,8 @@ void item_set_length (
 Reference item_maybe_elem (
     const Reference&, usize, const Location& loc = Location()
 );
- // Throws if the element doesn't exist.
+ // Throws if the element doesn't exist.  Guaranteed not to return an empty or
+ // null Reference.
 Reference item_elem (
     const Reference&, usize, const Location& loc = Location()
 );

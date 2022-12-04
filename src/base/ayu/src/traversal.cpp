@@ -5,13 +5,14 @@
 namespace ayu::in {
 
 void trav_start (
-    const Reference& ref, const Location& loc, AccessOp op, TravCallback cb
+    const Reference& ref, const Location& loc, AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
     trav.parent = null;
     trav.desc = DescriptionPrivate::get(ref.type());
     trav.readonly = ref.readonly();
-    trav.type = START;
+    trav.only_addressable = false;
+    trav.op = START;
     trav.reference = &ref;
     trav.location = &loc;
     if (Mu* address = ref.address()) {
@@ -20,7 +21,69 @@ void trav_start (
         cb(trav);
     }
     else {
-        ref.access(op, [&](Mu& v){
+        ref.access(mode, [&](Mu& v){
+            trav.item = &v;
+            trav.addressable = false;
+            cb(trav);
+        });
+    }
+}
+
+void trav_start_addressable (
+    Mu* addr, Type type, const Location& loc, TravCallback cb
+) {
+    Traversal trav;
+    trav.parent = null;
+    trav.desc = DescriptionPrivate::get(type);
+    trav.readonly = false;
+    trav.only_addressable = true;
+    trav.op = START;
+     // Unused
+    // trav.reference = Reference(type, addr)
+    trav.location = &loc;
+    trav.item = addr;
+    trav.addressable = true;
+    cb(trav);
+}
+
+static void trav_acr (
+    Traversal& trav, const Traversal& parent, const Accessor* acr,
+    AccessMode mode, TravCallback cb
+) {
+    trav.parent = &parent;
+    trav.desc = DescriptionPrivate::get(acr->type(parent.item));
+    trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
+    trav.only_addressable = parent.only_addressable;
+    trav.acr = acr;
+    if (Mu* address = acr->address(*parent.item)) {
+        trav.item = address;
+        trav.addressable = parent.addressable;
+        cb(trav);
+    }
+    else if (!trav.only_addressable) {
+        acr->access(mode, *parent.item, [&](Mu& v){
+            trav.item = &v;
+            trav.addressable = false;
+            cb(trav);
+        });
+    }
+}
+
+static void trav_ref (
+    Traversal& trav, const Traversal& parent, const Reference& ref,
+    AccessMode mode, TravCallback cb
+) {
+    trav.parent = &parent;
+    trav.desc = DescriptionPrivate::get(ref.type());
+    trav.readonly = parent.readonly || ref.readonly();
+    trav.only_addressable = parent.only_addressable;
+    if (Mu* address = ref.address()) {
+        trav.item = address;
+        trav.addressable = parent.addressable;
+        cb(trav);
+    }
+    else if (!trav.only_addressable) {
+        ref.access(mode, [&](Mu& v){
             trav.item = &v;
             trav.addressable = false;
             cb(trav);
@@ -29,126 +92,53 @@ void trav_start (
 }
 
 void trav_delegate (
-    const Traversal& parent, const Accessor* acr, AccessOp op, TravCallback cb
+    const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(acr->type(parent.item));
-    trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
-    trav.type = DELEGATE;
-    trav.acr = acr;
-    if (Mu* address = acr->address(*parent.item)) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
-        cb(trav);
-    }
-    else {
-        acr->access(op, *parent.item, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
-            cb(trav);
-        });
-    }
+    trav.op = DELEGATE;
+    trav_acr(trav, parent, acr, mode, cb);
 }
 
 void trav_attr (
     const Traversal& parent, const Accessor* acr, const Str& key,
-    AccessOp op, TravCallback cb
+    AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(acr->type(parent.item));
-    trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
-    trav.type = ATTR;
-    trav.acr = acr;
+    trav.op = ATTR;
     trav.key = &key;
-    if (Mu* address = acr->address(*parent.item)) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
-        cb(trav);
-    }
-    else {
-        acr->access(op, *parent.item, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
-            cb(trav);
-        });
-    }
+    trav_acr(trav, parent, acr, mode, cb);
 }
 
 void trav_attr_func (
-    const Traversal& parent, Reference ref, Reference(* func )(Mu&, Str),
-    const Str& key, AccessOp op, TravCallback cb
+    const Traversal& parent, const Reference& ref,
+    Reference(* func )(Mu&, Str), const Str& key, AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(ref.type());
-    trav.readonly = parent.readonly || ref.readonly();
-    trav.type = ATTR_FUNC;
+    trav.op = ATTR_FUNC;
     trav.attr_func = func;
     trav.key = &key;
-    if (Mu* address = ref.address()) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
-        cb(trav);
-    }
-    else {
-        ref.access(op, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
-            cb(trav);
-        });
-    }
+    trav_ref(trav, parent, ref, mode, cb);
 }
 
 void trav_elem (
     const Traversal& parent, const Accessor* acr, usize index,
-    AccessOp op, TravCallback cb
+    AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(acr->type(parent.item));
-    trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
-    trav.type = ELEM;
-    trav.acr = acr;
+    trav.op = ELEM;
     trav.index = index;
-    if (Mu* address = acr->address(*parent.item)) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
-        cb(trav);
-    }
-    else {
-        acr->access(op, *parent.item, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
-            cb(trav);
-        });
-    }
+    trav_acr(trav, parent, acr, mode, cb);
 }
 
 void trav_elem_func (
-    const Traversal& parent, Reference ref, Reference(* func )(Mu&, usize),
-    usize index, AccessOp op, TravCallback cb
+    const Traversal& parent, const Reference& ref,
+    Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(ref.type());
-    trav.readonly = parent.readonly || ref.readonly();
-    trav.type = ELEM_FUNC;
+    trav.op = ELEM_FUNC;
     trav.elem_func = func;
     trav.index = index;
-    if (Mu* address = ref.address()) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
-        cb(trav);
-    }
-    else {
-        ref.access(op, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
-            cb(trav);
-        });
-    }
+    trav_ref(trav, parent, ref, mode, cb);
 }
 
 Reference trav_reference (const Traversal& trav) {
@@ -160,12 +150,12 @@ Reference trav_reference (const Traversal& trav) {
             return Reference(trav.item, &trav.desc->identity_acr);
         }
     }
-    else if (trav.type == START) {
+    else if (trav.op == START) {
         return *trav.reference;
     }
     else {
         Reference parent = trav_reference(*trav.parent);
-        switch (trav.type) {
+        switch (trav.op) {
             case DELEGATE: case ATTR: case ELEM:
                 return parent.chain(trav.acr);
             case ATTR_FUNC:
@@ -178,12 +168,12 @@ Reference trav_reference (const Traversal& trav) {
 }
 
 Location trav_location (const Traversal& trav) {
-    if (trav.type == START) {
+    if (trav.op == START) {
         return *trav.location;
     }
     else {
         Location parent = trav_location(*trav.parent);
-        switch (trav.type) {
+        switch (trav.op) {
             case DELEGATE: return parent;
             case ATTR: case ATTR_FUNC:
                 return Location(parent, *trav.key);
