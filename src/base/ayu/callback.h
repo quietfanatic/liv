@@ -18,6 +18,7 @@ struct CallbackV<Ret(Args...)> {
      // advantage of that if we can.  This is not mainly for optimization (the
      // compiler does that pretty well already), it's to clean up the stack
      // for debugging.
+     // TODO: Reject raw function pointer here
     template <class F> requires(
         std::is_same_v<std::invoke_result_t<F, Args...>, Ret>
     )

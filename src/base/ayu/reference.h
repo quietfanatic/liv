@@ -109,7 +109,7 @@ struct Reference {
         return *this;
     }
 
-    explicit operator bool () const { return host; }
+    explicit operator bool () const { assert(host || !acr); return host; }
      // Get type of referred-to item
     Type type () const { return acr ? acr->type(host) : Type(); }
 
