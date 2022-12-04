@@ -108,9 +108,7 @@ my @resources = (qw(
     base/ayu/src/test/*
     base/glow/test/*
     base/glow/texture-program.ayu
-), ["app/settings-template.ayu", "../settings-template.ayu"]
-);
-
+));
 
 ##### MISC
 
