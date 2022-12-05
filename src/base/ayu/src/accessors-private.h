@@ -6,7 +6,7 @@ namespace ayu::in {
 struct ChainAcr : Accessor {
     const Accessor* a;
     const Accessor* b;
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static void _destroy (Accessor*);
@@ -23,7 +23,7 @@ struct AttrFuncAcr : Accessor {
     Reference(* fp )(Mu&, Str);
      // TODO: Can we replace some of these with Str?
     String key;
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor* acr, Mu& v);
     static void _destroy (Accessor* acr);
@@ -38,7 +38,7 @@ struct AttrFuncAcr : Accessor {
 struct ElemFuncAcr : Accessor {
     Reference(* fp )(Mu&, usize);
     size_t index;
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor* acr, Mu& v);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};

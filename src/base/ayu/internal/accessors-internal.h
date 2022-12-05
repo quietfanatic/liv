@@ -85,10 +85,10 @@ struct AccessorVT {
     static Mu* default_address (const Accessor*, Mu&) { return null; }
     static void default_destroy (Accessor*) { }
     template <class T>
-    static Type const_type (const Accessor*, const Mu*) {
+    static Type const_type (const Accessor*, Mu*) {
         return Type::CppType<T>();
     }
-    Type(* type )(const Accessor*, const Mu*) = null;
+    Type(* type )(const Accessor*, Mu*) = null;
     void(* access )(const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>)
         = null;
     Mu*(* address )(const Accessor*, Mu&) = &default_address;
@@ -115,7 +115,7 @@ struct Accessor {
         vt(vt), accessor_flags(flags)
     { }
 
-    Type type (const Mu* from) const { return vt->type(this, from); }
+    Type type (Mu* from) const { return vt->type(this, from); }
     void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {
         assert(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
         if (mode != ACR_READ && accessor_flags & ACR_READONLY) {
@@ -123,10 +123,8 @@ struct Accessor {
         }
         vt->access(this, mode, from, cb);
     }
-    void read (const Mu& from, Callback<void(const Mu&)> cb) const {
-        access(ACR_READ, const_cast<Mu&>(from),
-            reinterpret_cast<Callback<void(Mu&)>&>(cb)
-        );
+    void read (Mu& from, Callback<void(Mu&)> cb) const {
+        access(ACR_READ, from, cb);
     }
     void write (Mu& from, Callback<void(Mu&)> cb) const {
         access(ACR_WRITE, from, cb);
@@ -192,7 +190,7 @@ struct BaseAcr2 : Accessor {
 /// member
 
 struct MemberAcr0 : Accessor {
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static Mu* _inverse_address (const Accessor*, Mu&);
@@ -229,7 +227,7 @@ struct MemberAcr2 : MemberAcr0 {
 struct RefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
@@ -251,7 +249,7 @@ struct RefFuncAcr2 : RefFuncAcr0 {
 struct ConstRefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
@@ -553,7 +551,7 @@ void ConstantAcr1<To>::_destroy_this (Accessor* acr) {
 /// constant_pointer
 
 struct ConstantPointerAcr0 : Accessor {
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
      // Should be okay addressing this.
     static Mu* _address (const Accessor*, Mu&);
@@ -580,7 +578,7 @@ struct ConstantPointerAcr2 : ConstantPointerAcr0 {
  // miss anything important.
 struct ReferenceFuncAcr1 : Accessor {
     using Accessor::Accessor;
-    static Type _type (const Accessor*, const Mu*);
+    static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};

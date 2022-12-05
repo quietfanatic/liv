@@ -64,29 +64,19 @@ struct Reference {
         if (acr) acr->inc();
     }
      // Construct from type and abstract pointer.  Used by serialize.
-    Reference (Type t, Mu* p) : Reference(p, &t.desc->identity_acr) { }
-    Reference (Type t, const Mu* p) : Reference(
-        const_cast<Mu*>(p), &t.desc->readonly_identity_acr
-    ) { }
+    Reference (Type t, Mu* p);
      // Construct from a pointer.
     template <class T>
     Reference (T* p) : Reference(
-        reinterpret_cast<Mu*>(p),
-        &Type::CppType<T>().desc->identity_acr
-    ) { }
-     // Construct from a const pointer.  Makes a readonly reference.
-    template <class T>
-    Reference (const T* p) : Reference(
-        reinterpret_cast<Mu*>(const_cast<T*>(p)),
-        &Type::CppType<T>().desc->readonly_identity_acr
+        Type::CppType<T>(), (Mu*)p
     ) { }
      // Construct from a dynamically-typed Pointer
     Reference (Pointer p) : Reference(p.type, p.address) { }
      // Construct from a Dynamic.
      // TODO: construct readonly Reference from const Dynamic?
-    Reference (Dynamic& d) : Reference(d.data, &d.type.desc->identity_acr) { }
+    Reference (Dynamic& d) : Reference(d.ptr()) { }
      // For use in attr_func and elem_func.
-     // Todo: Also check std::is_base_of
+     // TODO: Also check std::is_base_of
     template <class From, class Acr> requires (
         std::is_same_v<typename Acr::AccessorFromType, From>
     )
@@ -151,8 +141,8 @@ struct Reference {
      // Cast and read with callback
     void read_as (Type t, Callback<void(const Mu&)> cb) const {
         read([&](const Mu& v){
-            const Mu& tv = *type().cast_to(t, &v);
-            cb(tv);
+            Mu& tv = *type().cast_to(t, const_cast<Mu*>(&v));
+            cb(const_cast<const Mu&>(tv));
         });
     }
     template <class T>

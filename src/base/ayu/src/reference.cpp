@@ -1,6 +1,7 @@
 #include "../reference.h"
 
 #include "accessors-private.h"
+#include "descriptors-private.h"
 #include "../describe.h"
 #include "../dynamic.h"
 #include "../resource.h"
@@ -9,6 +10,10 @@
 
 namespace ayu {
 using namespace in;
+
+Reference::Reference (Type t, Mu* p) :
+    Reference(p, &DescriptionPrivate::get(t)->identity_acr)
+{ }
 
 void Reference::require_writeable () const {
     if (readonly()) throw X::WriteReadonlyReference(*this);

@@ -4,7 +4,7 @@
 
 namespace ayu::in {
 
-Type MemberAcr0::_type (const Accessor* acr, const Mu*) {
+Type MemberAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -28,7 +28,7 @@ Mu* MemberAcr0::_inverse_address (const Accessor* acr, Mu& to) {
     return reinterpret_cast<Mu*>(to_address - offset);
 }
 
-Type RefFuncAcr0::_type (const Accessor* acr, const Mu*) {
+Type RefFuncAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -45,7 +45,7 @@ Mu* RefFuncAcr0::_address (const Accessor* acr, Mu& from) {
     return &(self->f)(from);
 }
 
-Type ConstRefFuncAcr0::_type (const Accessor* acr, const Mu*) {
+Type ConstRefFuncAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -62,7 +62,7 @@ Mu* ConstRefFuncAcr0::_address (const Accessor* acr, Mu& from) {
     return const_cast<Mu*>(&(self->f)(from));
 }
 
-Type ConstantPointerAcr0::_type (const Accessor* acr, const Mu*) {
+Type ConstantPointerAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
     return self->get_type();
 }
@@ -75,10 +75,10 @@ void ConstantPointerAcr0::_access (
     cb(*const_cast<Mu*>(self->pointer));
 }
 
-Type ReferenceFuncAcr1::_type (const Accessor* acr, const Mu* from) {
+Type ReferenceFuncAcr1::_type (const Accessor* acr, Mu* from) {
     if (!from) return Type();
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
-    return self->f(const_cast<Mu&>(*from)).type();
+    return self->f(*from).type();
 }
 void ReferenceFuncAcr1::_access (
     const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
@@ -94,14 +94,14 @@ Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     return ref.address();
 }
 
-Type ChainAcr::_type (const Accessor* acr, const Mu* v) {
+Type ChainAcr::_type (const Accessor* acr, Mu* v) {
     auto self = static_cast<const ChainAcr*>(acr);
      // Most accessors ignore the parameter, so we can usually skip the
      // read operation on a.
     Type r = self->b->type(null);
     if (!r) {
         if (!v) return Type();
-        self->a->read(*v, [&](const Mu& av){
+        self->a->read(*v, [&](Mu& av){
             r = self->b->type(&av);
         });
     }
@@ -135,8 +135,8 @@ Mu* ChainAcr::_address (const Accessor* acr, Mu& v) {
     auto self = static_cast<const ChainAcr*>(acr);
     if (self->b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT) {
         Mu* r = null;
-        self->a->access(ACR_READ, v, [&](const Mu& av){
-            r = self->b->address(const_cast<Mu&>(av));
+        self->a->access(ACR_READ, v, [&](Mu& av){
+            r = self->b->address(av);
         });
         return r;
     }
@@ -164,10 +164,10 @@ ChainAcr::ChainAcr (const Accessor* a, const Accessor* b) :
     a->inc(); b->inc();
 }
 
-Type AttrFuncAcr::_type (const Accessor* acr, const Mu* v) {
+Type AttrFuncAcr::_type (const Accessor* acr, Mu* v) {
     if (!v) return Type();
     auto self = static_cast<const AttrFuncAcr*>(acr);
-    return self->fp(const_cast<Mu&>(*v), self->key).type();
+    return self->fp(*v, self->key).type();
 }
 void AttrFuncAcr::_access (
     const Accessor* acr, AccessMode mode, Mu& v, Callback<void(Mu&)> cb
@@ -184,10 +184,10 @@ void AttrFuncAcr::_destroy (Accessor* acr) {
     self->~AttrFuncAcr();
 }
 
-Type ElemFuncAcr::_type (const Accessor* acr, const Mu* v) {
+Type ElemFuncAcr::_type (const Accessor* acr, Mu* v) {
     if (!v) return Type();
     auto self = static_cast<const ElemFuncAcr*>(acr);
-    return self->fp(const_cast<Mu&>(*v), self->index).type();
+    return self->fp(*v, self->index).type();
 }
 void ElemFuncAcr::_access (const Accessor* acr, AccessMode mode, Mu& v, Callback<void(Mu&)> cb) {
     auto self = static_cast<const ElemFuncAcr*>(acr);
@@ -223,7 +223,7 @@ static tap::TestSet tests ("base/ayu/accessors", []{
     };
     SubThing thing2 {7, 8, 9};
 
-    BaseAcr2<SubThing, Thing>{}.read(reinterpret_cast<const Mu&>(thing2), [&](const Mu& thing){
+    BaseAcr2<SubThing, Thing>{}.read(reinterpret_cast<Mu&>(thing2), [&](Mu& thing){
         is(reinterpret_cast<const Thing&>(thing).b, 8, "BaseAcr::read");
     });
     BaseAcr2<SubThing, Thing>{}.write(reinterpret_cast<Mu&>(thing2), [&](Mu& thing){
@@ -240,7 +240,7 @@ static tap::TestSet tests ("base/ayu/accessors", []{
             reinterpret_cast<Mu*>(&t.b),
             cat(type, "::address"sv).c_str()
         );
-        acr.read(reinterpret_cast<const Mu&>(t), [&](const Mu& v){
+        acr.read(reinterpret_cast<Mu&>(t), [&](Mu& v){
             is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){
@@ -259,7 +259,7 @@ static tap::TestSet tests ("base/ayu/accessors", []{
             null,
             cat(type, "::address return null"sv).c_str()
         );
-        acr.read(reinterpret_cast<const Mu&>(t), [&](const Mu& v){
+        acr.read(reinterpret_cast<Mu&>(t), [&](Mu& v){
             is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){

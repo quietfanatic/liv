@@ -16,18 +16,22 @@
 namespace ayu {
 
 Str Type::name () const {
+    auto desc = in::DescriptionPrivate::get(*this);
     if (!desc) return Str();
     return in::get_description_name(desc);
 }
 
 const std::type_info& Type::cpp_type () const {
+    auto desc = in::DescriptionPrivate::get(*this);
     return *desc->cpp_type;
 }
 
 usize Type::cpp_size () const {
+    auto desc = in::DescriptionPrivate::get(*this);
     return desc->cpp_size;
 }
 usize Type::cpp_align () const {
+    auto desc = in::DescriptionPrivate::get(*this);
     return desc->cpp_align;
 }
 
@@ -46,6 +50,7 @@ void Type::destroy (Mu* p) const {
 }
 
 void* Type::allocate () const {
+    auto desc = in::DescriptionPrivate::get(*this);
     void* p = std::aligned_alloc(desc->cpp_align, desc->cpp_size);
     if (!p) throw std::bad_alloc();
     return p;
@@ -71,7 +76,8 @@ void Type::delete_ (Mu* p) const {
 }
 
 Mu* Type::try_upcast_to (Type to, Mu* p) const {
-    if (*this == to) return p;
+    if (!to) return null;
+    if (*this == to.remove_readonly()) return p;
     auto desc = in::DescriptionPrivate::get(*this);
 
     if (auto delegate = desc->delegate_acr())
@@ -103,7 +109,7 @@ Mu* Type::upcast_to (Type to, Mu* p) const {
 
 Mu* Type::try_downcast_to (Type to, Mu* p) const {
     if (!to) return null;
-    if (*this == to) return p;
+    if (this->remove_readonly() == to.remove_readonly()) return p;
     auto desc = in::DescriptionPrivate::get(to);
 
      // It's okay to pass null to ->type() because the only accessors that have

@@ -33,13 +33,11 @@ using uint64 = std::uint64_t;
 using usize = std::uintptr_t;
 
 using Null = std::nullptr_t;
-constexpr Null null = nullptr;
 
+ // AYU-like keywords
+constexpr Null null = nullptr;
 constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 constexpr double inf = std::numeric_limits<double>::infinity();
-
- // Unknown type that will never be defined
-struct Mu;
 
  // Defined elsewhere
 struct Document;
@@ -63,6 +61,16 @@ using Pair = std::pair<String, Tree>;
 using Object = std::vector<Pair>;
 
 using iri::IRI;
+
+ // Unknown type that will never be defined.  This has a similar role to void,
+ // except:
+ //   - You can have a reference Mu& or Mu&&.
+ //   - A pointer or reference to Mu is always supposed to refer to a
+ //     constructed item, not an unconstructed buffer.  Functions that take or
+ //     return unconstructed buffers use void* instead.
+ //   - This does not track constness (in general there shouldn't be any
+ //     const Mu&).
+struct Mu;
 
 ///// STRINGS
 

@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "internal/common-internal.h"
+#include "pointer.h"
 #include "type.h"
 
 namespace ayu {
@@ -80,12 +81,11 @@ struct Dynamic {
         assert(!!type == !!data);
         return !type;
     }
+     // Get Pointer to the value
+    Pointer ptr () { return Pointer(data, type); }
      // Runtime casting
     Mu& as (Type t) {
         return *type.cast_to(t, data);
-    }
-    const Mu& as (Type t) const {
-        return *type.cast_to(t, (const Mu*)data);
     }
     template <class T>
     std::remove_cvref_t<T>& as () {

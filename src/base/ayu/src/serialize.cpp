@@ -148,7 +148,7 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
              // All other tree types support the values descriptor
             if (auto values = trav.desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
-                    if (const Mu* v = values->value(i)->tree_to_value(tree)) {
+                    if (Mu* v = values->value(i)->tree_to_value(tree)) {
                         values->assign(*trav.item, *v);
                         goto done;
                     }
@@ -297,7 +297,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         static Type type_vector_string = Type::CppType<std::vector<String>>();
         if (keys_type == type_vector_str) {
              // Optimize for std::vector<Str>
-            acr->read(*trav.item, [&](const Mu& ksv){
+            acr->read(*trav.item, [&](Mu& ksv){
                 auto& str_ksv = reinterpret_cast<const std::vector<Str>&>(ksv);
                  // If this item is not addressable, it may be dynamically
                  // generated, which means the Strs may go out of scope before
@@ -316,7 +316,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         }
         else if (keys_type == type_vector_string) {
              // Capitulate to std::vector<String> too.
-            acr->read(*trav.item, [&](const Mu& ksv){
+            acr->read(*trav.item, [&](Mu& ksv){
                  // TODO: Flag accessor if it can be moved from?
                 for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
                     ser_collect_key_string(ks, String(k));
@@ -325,7 +325,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         }
         else {
              // General case, any type that serializes to an array of strings.
-            acr->read(*trav.item, [&](const Mu& ksv){
+            acr->read(*trav.item, [&](Mu& ksv){
                  // We might be able to optimize this more, but it's not that
                  // important.
                 auto tree = item_to_tree(Reference(keys_type, &ksv));
@@ -622,7 +622,7 @@ usize in::ser_get_length (const Traversal& trav) {
     if (auto acr = trav.desc->length_acr()) {
         usize len;
          // TODO: support other integral types besides usize
-        acr->read(*trav.item, [&](const Mu& lv){
+        acr->read(*trav.item, [&](Mu& lv){
             len = reinterpret_cast<const usize&>(lv);
         });
         return len;
@@ -658,7 +658,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
         else {
              // For readonly length, just check that the provided length matches
             usize expected;
-            acr->read(*trav.item, [&](const Mu& lv){
+            acr->read(*trav.item, [&](Mu& lv){
                 expected = reinterpret_cast<const usize&>(lv);
             });
             if (len != expected) {

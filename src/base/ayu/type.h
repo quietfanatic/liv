@@ -10,43 +10,80 @@ namespace ayu {
 
  // Represents a type known to ayu.  Provides dynamically-typed construction and
  // destruction for any type as long as it has an AYU_DESCRIBE declaration.
+ // Can represent const types (called readonly in AYU), but not reference or
+ // volatile types.
  //
  // The default value will cause null derefs if you do anything with it.
  //
  // TODO: Document that Types cannot be used before main() begins.
 struct Type {
-    const in::Description* desc;
+     // Uses a tagged pointer; the first bit determines readonly (const), and the rest
+     // points to an ayu::in::Description (which is only 
+    usize data;
 
-    constexpr Type (const in::Description* desc = null) : desc(desc) { }
-     // Can throw X::UnknownType
-    Type (const std::type_info& t) :
-        desc(in::need_description_for_type_info(t))
+    constexpr Type () : data(0) { }
+     // Construct from internal data
+    Type (const in::Description* desc, bool readonly = false) :
+        data(reinterpret_cast<usize>(desc) | readonly) { }
+     // Can throw X::UnknownType.  There is no way to extract information about
+     // constness from a std::type_info, so it must be provided as a bool.
+    Type (const std::type_info& t, bool readonly = false) :
+        Type(in::need_description_for_type_info(t), readonly)
     { }
      // Can throw X::UnknownType
     template <class T>
+        requires (!std::is_volatile_v<std::remove_reference_t<T>>)
     static Type CppType () {
-        return in::need_description_for_cpp_type<std::remove_cvref_t<T>>();
+        return Type(
+            in::need_description_for_cpp_type<
+                std::remove_const_t<std::remove_reference_t<T>>
+            >(),
+            std::is_const_v<T>
+        );
     }
      // Can throw X::TypeNotFound
-    Type (Str name) :
-        desc(in::need_description_for_name(name))
+    Type (Str name, bool readonly = false) :
+        Type(in::need_description_for_name(name), readonly)
     { }
 
-    explicit constexpr operator bool () const { return desc; }
+     // Checks if this is the empty type.
+    explicit constexpr operator bool () const { return data & ~1; }
+     // Checks if this type is readonly (const).
+    bool readonly () const { return data & 1; }
+     // Add or remove readonly bit
+    Type add_readonly () const {
+        return Type(reinterpret_cast<const in::Description*>(data & ~1), true);
+    }
+    Type remove_readonly () const {
+        return Type(reinterpret_cast<const in::Description*>(data & ~1), false);
+    }
+
+     // Get human-readable type name (whatever name was registered with
+     // AYU_DESCRIBE)
     Str name () const;
+     // Get the std::type_info& for this type.  NOTE: CONSTNESS INFO IS
+     // CURRENTLY NYI
     const std::type_info& cpp_type () const;
+     // Get the sizeof() of this type
     usize cpp_size () const;
+     // Get the alignof() of this type
     usize cpp_align () const;
+     // Construct an instance of this type in-place.  The target must have at
+     // least the required size and alignment.
     void default_construct (void* target) const;
+     // Destory an instance of this type in-place.  The memory will not be
+     // allocated.
     void destroy (Mu*) const;
+     // Allocate a buffer appropriate for containing an instance of this type.
      // It is not specified whether this uses new or malloc, so if you use this
      // to allocate space for an object, you must use deallocate() to deallocate
      // it.
     void* allocate () const;
+     // Deallocate a buffer previously allocated with allocate()
     void deallocate (void*) const;
+     // Allocate and construct an instance of this type.
     Mu* default_new () const;
-    Mu* copy_new (const Mu&) const;
-    Mu* move_new (Mu&&) const;
+     // Destruct and deallocate and instance of this type.
      // Should be called delete, but, you know
     void delete_ (Mu*) const;
 
@@ -64,29 +101,18 @@ struct Type {
      // base class can't be retrieved (goes through value_funcs or some such).
      // upcast_to will throw X::CannotCoerce (unless given null, in which case
      // it will return null).
+     //
+     // Finally, casting from non-readonly to readonly types is allowed, but not
+     // vice versa.
     Mu* try_upcast_to (Type, Mu*) const;
-    const Mu* try_upcast_to (Type t, const Mu* p) const {
-        return (const Mu*)try_upcast_to(t, (Mu*)p);
-    }
     template <class T>
     T* try_upcast_to (Mu* p) const {
         return (T*)try_upcast_to(Type::CppType<T>(), p);
     }
-    template <class T>
-    const T* try_upcast_to (const Mu* p) const {
-        return (const T*)try_upcast_to(Type::CppType<T>(), (Mu*)p);
-    }
     Mu* upcast_to (Type, Mu*) const;
-    const Mu* upcast_to (Type t, const Mu* p) const {
-        return (const Mu*)upcast_to(t, (Mu*)p);
-    }
     template <class T>
     T* upcast_to (Mu* p) const {
         return (T*)upcast_to(Type::CppType<T>(), p);
-    }
-    template <class T>
-    const T* upcast_to (const Mu* p) const {
-        return (const T*)upcast_to(Type::CppType<T>(), (Mu*)p);
     }
 
      // Cast from base class to derived class.  See upcast_to for more details.
@@ -99,64 +125,40 @@ struct Type {
      // As with C++'s static_cast, this cannot check that the pointed-to data
      // really is the derived class, and if it isn't, incorrect execution
      // may occur.
+     //
+     // Unlike upcast, downcast may cast from readonly to non-readonly.  As with
+     // C++'s const_cast, modifying the pointed-to data may cause undefined
+     // behavior.
     Mu* try_downcast_to (Type, Mu*) const;
-    const Mu* try_downcast_to (Type t, const Mu* p) const {
-        return (const Mu*)try_downcast_to(t, (Mu*)p);
-    }
     template <class T>
     T* try_downcast_to (Mu* p) const {
         return (T*)try_downcast_to(Type::CppType<T>(), p);
     }
-    template <class T>
-    const T* try_downcast_to (const Mu* p) const {
-        return (const T*)try_downcast_to(Type::CppType<T>(), (Mu*)p);
-    }
     Mu* downcast_to (Type, Mu*) const;
-    const Mu* downcast_to (Type t, const Mu* p) const {
-        return (const Mu*)downcast_to(t, (Mu*)p);
-    }
     template <class T>
     T* downcast_to (Mu* p) const {
         return (T*)downcast_to(Type::CppType<T>(), p);
     }
-    template <class T>
-    const T* downcast_to (const Mu* p) const {
-        return (const T*)downcast_to(Type::CppType<T>(), (Mu*)p);
-    }
 
      // Try upcast, then downcast.
     Mu* try_cast_to (Type, Mu*) const;
-    const Mu* try_cast_to (Type t, const Mu* p) const {
-        return (const Mu*)try_cast_to(t, (Mu*)p);
-    }
     template <class T>
     T* try_cast_to (Mu* p) const {
         return (T*)try_cast_to(Type::CppType<T>(), p);
     }
-    template <class T>
-    const T* try_cast_to (const Mu* p) const {
-        return (const T*)try_cast_to(Type::CppType<T>(), (Mu*)p);
-    }
     Mu* cast_to (Type, Mu*) const;
-    const Mu* cast_to (Type t, const Mu* p) const {
-        return (const Mu*)cast_to(t, (Mu*)p);
-    }
     template <class T>
     T* cast_to (Mu* p) const {
         return (T*)cast_to(Type::CppType<T>(), p);
-    }
-    template <class T>
-    const T* cast_to (const Mu* p) const {
-        return (const T*)cast_to(Type::CppType<T>(), (Mu*)p);
     }
 };
 
  // The same type will always have the same description pointer.
 inline bool operator == (Type a, Type b) {
-    return a.desc == b.desc;
+    return a.data == b.data;
 }
 inline bool operator != (Type a, Type b) {
-    return a.desc != b.desc;
+    return a.data != b.data;
 }
 
 namespace X {
@@ -197,7 +199,7 @@ namespace X {
 template <>
 struct std::hash<ayu::Type> {
     size_t operator () (ayu::Type t) const {
-        return hash<void*>()((void*)t.desc);
+        return hash<void*>()((void*)t.data);
     }
 };
 

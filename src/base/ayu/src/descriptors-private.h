@@ -23,26 +23,26 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             default: AYU_INTERNAL_UGUU();
         }
     }
-    const Mu* get_value () const {
+    Mu* get_value () const {
          // This looks awful but it should be pretty optimizable...
         if (pointer) switch (form) {
-            case VFNULL: return ((const ValueDcrWith<Mu, Null, true>*)this)->ptr;
-            case VFBOOL: return ((const ValueDcrWith<Mu, bool, true>*)this)->ptr;
-            case VFINT64: return ((const ValueDcrWith<Mu, int64, true>*)this)->ptr;
-            case VFDOUBLE: return ((const ValueDcrWith<Mu, double, true>*)this)->ptr;
-            case VFSTR: return ((const ValueDcrWith<Mu, Str, true>*)this)->ptr;
+            case VFNULL: return (Mu*)((const ValueDcrWith<Mu, Null, true>*)this)->ptr;
+            case VFBOOL: return (Mu*)((const ValueDcrWith<Mu, bool, true>*)this)->ptr;
+            case VFINT64: return (Mu*)((const ValueDcrWith<Mu, int64, true>*)this)->ptr;
+            case VFDOUBLE: return (Mu*)((const ValueDcrWith<Mu, double, true>*)this)->ptr;
+            case VFSTR: return (Mu*)((const ValueDcrWith<Mu, Str, true>*)this)->ptr;
             default: AYU_INTERNAL_UGUU();
         }
         else switch (form) {
-            case VFNULL: return (const Mu*)&((const ValueDcrWith<void*, Null, false>*)this)->value;
-            case VFBOOL: return (const Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->value;
-            case VFINT64: return (const Mu*)&((const ValueDcrWith<void*, int64, false>*)this)->value;
-            case VFDOUBLE: return (const Mu*)&((const ValueDcrWith<void*, double, false>*)this)->value;
-            case VFSTR: return (const Mu*)&((const ValueDcrWith<void*, Str, false>*)this)->value;
+            case VFNULL: return (Mu*)&((const ValueDcrWith<void*, Null, false>*)this)->value;
+            case VFBOOL: return (Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->value;
+            case VFINT64: return (Mu*)&((const ValueDcrWith<void*, int64, false>*)this)->value;
+            case VFDOUBLE: return (Mu*)&((const ValueDcrWith<void*, double, false>*)this)->value;
+            case VFSTR: return (Mu*)&((const ValueDcrWith<void*, Str, false>*)this)->value;
             default: AYU_INTERNAL_UGUU();
         }
     }
-    Tree value_to_tree (const ValuesDcr<Mu>* values, const Mu& v) const {
+    Tree value_to_tree (const ValuesDcr<Mu>* values, Mu& v) const {
         if (values->compare(v, *get_value())) {
             switch (form) {
                 case VFNULL: return Tree(null);
@@ -78,7 +78,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             default: AYU_INTERNAL_UGUU();
         }
     }
-    const Mu* tree_to_value (Tree tree) const {
+    Mu* tree_to_value (Tree tree) const {
         if (matches_tree(tree)) return get_value();
         else return null;
     }
@@ -131,7 +131,7 @@ struct ElemsDcrPrivate : ElemsDcr<Mu> {
 
 struct DescriptionPrivate : DescriptionFor<Mu> {
     static const DescriptionPrivate* get (Type t) {
-        return static_cast<const DescriptionPrivate*>(t.desc);
+        return reinterpret_cast<const DescriptionPrivate*>(t.data & ~1);
     }
     const ToTreeDcr<Mu>* to_tree () const {
         return offset_get<ToTreeDcr<Mu>>(this, to_tree_offset);
