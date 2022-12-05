@@ -59,7 +59,7 @@ struct Type {
     }
 
      // Get human-readable type name (whatever name was registered with
-     // AYU_DESCRIBE)
+     // AYU_DESCRIBE).  This ignores the readonly bit.
     Str name () const;
      // Get the std::type_info& for this type.  NOTE: CONSTNESS INFO IS
      // CURRENTLY NYI

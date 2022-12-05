@@ -248,10 +248,16 @@ AYU_DESCRIBE(ayu::Type,
     ),
     delegate(mixed_funcs<std::string>(
         [](const Type& v){
-            return std::string(v.name());
+            if (v.readonly()) {
+                return cat("(readonly)", v.name());
+            }
+            else return std::string(v.name());
         },
         [](Type& v, const std::string& m){
-            v = Type(m);
+            if (m.starts_with("(readonly)")) {
+                v = Type(Str(m).substr(10), true);
+            }
+            else v = Type(m);
         }
     ))
 )
