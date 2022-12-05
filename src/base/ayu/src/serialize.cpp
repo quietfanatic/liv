@@ -569,18 +569,13 @@ bool in::ser_maybe_attr (
                 if (found) return true;
             }
         }
-         // Attr not found, fall through
+        return false;
     }
-    if (auto attr_func = trav.desc->attr_func()) {
+    else if (auto attr_func = trav.desc->attr_func()) {
         if (Reference ref = attr_func->f(*trav.item, key)) {
             trav_attr_func(trav, std::move(ref), attr_func->f, key, mode, cb);
             return true;
         }
-         // Fallthrough
-    }
-    if (trav.desc->accepts_object()) {
-         // Don't fallback to delegate if we support attributes but didn't find
-         // one.
         return false;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
@@ -711,18 +706,13 @@ bool in::ser_maybe_elem (
             trav_elem(trav, acr, index, mode, cb);
             return true;
         }
-         // Elem out of bounds, fall through to elem_func
+        return false;
     }
-    if (auto elem_func = trav.desc->elem_func()) {
+    else if (auto elem_func = trav.desc->elem_func()) {
         if (Reference ref = elem_func->f(*trav.item, index)) {
             trav_elem_func(trav, std::move(ref), elem_func->f, index, mode, cb);
             return true;
         }
-         // Fall through
-    }
-    if (trav.desc->accepts_array()) {
-         // Don't fall back to delegate if we support an array but didn't find
-         // an element.
         return false;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
