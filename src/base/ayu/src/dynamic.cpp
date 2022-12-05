@@ -16,7 +16,6 @@ AYU_DESCRIBE(ayu::Dynamic,
         [](Dynamic& a, const Dynamic& b) { a = const_cast<Dynamic&&>(b); },
         value_pointer(null, &empty_dynamic)
     ),
-    length(constant<usize>(2)),
     elems(
         elem(value_funcs<Type>(
             [](const Dynamic& v){ return v.type; },

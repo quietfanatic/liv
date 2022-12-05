@@ -169,7 +169,7 @@ struct _AYU_DescribeBase {
     ///// DESCRIPTORS FOR OBJECT-LIKE TYPES
 
      // Specify a list of attributes for this item to behave like an object with
-     // a fixes set of attributes.  All arguments to this must be calls to
+     // a fixed set of attributes.  All arguments to this must be calls to
      // attr().  The attribute list may be empty, in which case the item will be
      // serialized as {}.  Attrs will be deserialized in the order they're
      // specified in the description, not in the order they're provided in the
@@ -212,9 +212,9 @@ struct _AYU_DescribeBase {
      //
      // During serialization, the list of keys will be determined with
      // `accessor`'s read operation, and for each key, the attribute's value
-     // will be set using either the attrs() or attr_func() descriptors.  If the
-     // keys type is std::vector<Str>, the strings the Strs point to must live
-     // at least as long as this item itself.
+     // will be set using either the attr_func() descriptor.  If the keys type
+     // is std::vector<Str>, the strings the Strs point to must live at least as
+     // long as this item itself.
      //
      // During deserialization, `accessor`'s write operation will be called with
      // the list of keys provided in the Tree, and it should throw
@@ -226,6 +226,9 @@ struct _AYU_DescribeBase {
      // of keys and instead clear the item and later autovivify attributes given
      // to attr_func().  If the keys are of type Str (AKA std::string_view), you
      // may need to copy them to take ownership.
+     //
+     // If keys() is present, attr_func() must also be present, and attrs() must
+     // not be present.
     template <class Acr>
     static constexpr auto keys (const Acr& accessor);
      // Provide a way to read or write arbitrary attributes.  The function is
@@ -240,10 +243,6 @@ struct _AYU_DescribeBase {
      // output of the `keys` accessor, and return an empty Reference if that
      // happens (or autovivify if you want).
      //
-     // If both attrs() and attr_func() are specified, attrs() will be used
-     // preferentially, and attr_func() will only be used for attributes that
-     // don't match any of the attr()s in attrs().
-     //
      // Be careful not to return a reference to a temporary and then use that
      // reference past the temporary's lifetime.  For AYU serialization
      // functions, the reference will only be used while the serialization
@@ -254,6 +253,9 @@ struct _AYU_DescribeBase {
      //     Foo& foo = object.get_something_by_ref("foo");
      // and it's your responsibility not to keep the reference around longer
      // than the referred item's lifetime.
+     //
+     // If attr_func() is present, keys() must also be present, and attrs() must
+     // not be present.
     static constexpr auto attr_func (Reference(* f )(T&, Str));
 
     ///// DESCRIPTORS FOR ARRAY-LIKE TYPES
@@ -307,6 +309,9 @@ struct _AYU_DescribeBase {
      // readonly, then instead its read operation will be called, and the
      // provided array Tree's length must match its output exactly or
      // X::WrongLength will be thrown.
+     //
+     // If length() is present, elem_func() must also be present, and elems()
+     // must not be present.
     static constexpr auto length (const Acr& accessor);
      // Use this to provide a way to read and write elements at arbitrary
      // indexes.  The return value must be an ayu::Reference, which can be
@@ -316,12 +321,11 @@ struct _AYU_DescribeBase {
      // what was returned by the length() accessor, in which case you should
      // return an empty or null Reference.
      //
-     // elems() and elem_func() may both be specified, in which case elem_func()
-     // will only be called if the requested index is larger than the index of
-     // the last elem() specified.
-     //
      // Make sure not to return a Reference to a temporary and then keep that
      // Reference beyond the temporary's lifetime.  See also attr_func.
+     //
+     // If elem_func() is present, length() must also be present, and elems()
+     // must not be present.
     static constexpr auto elem_func (Reference(* f )(T&, usize));
 
     ///// ACCESSORS

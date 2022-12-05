@@ -469,6 +469,14 @@ using FullDescription = Cat<
     decltype(Dcrs::make_static(std::declval<Dcrs>()))...
 >;
 
+ // Jank compile-time error messages
+static void duplicate_descriptors_in_AYU_DESCRIBE () { }
+static void element_in_AYU_DESCRIBE_is_not_a_descriptor_for_this_type () { }
+static void attrs_cannot_be_combined_with_keys_and_attr_func_in_AYU_DESCRIBE () { }
+static void keys_and_attr_func_must_be_together_in_AYU_DESCRIBE () { }
+static void elems_cannot_be_combined_with_length_and_elem_func_in_AYU_DESCRIBE () { }
+static void length_and_elem_func_must_be_together_in_AYU_DESCRIBE () { }
+
 template <class T, class... Dcrs>
 constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
     using Desc = FullDescription<T, Dcrs...>;
@@ -495,20 +503,20 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     for_variadic([&]<class Dcr>(const Dcr& dcr){
         if constexpr (std::is_base_of_v<DefaultConstructDcr<T>, Dcr>) {
             if (header.default_construct != default_construct_p<T>) {
-                throw "Multiple default_construct descriptors in AYU_DESCRIBE description";
+                duplicate_descriptors_in_AYU_DESCRIBE();
             }
             header.default_construct = dcr.f;
         }
         else if constexpr (std::is_base_of_v<DestroyDcr<T>, Dcr>) {
             if (header.destroy != destroy_p<T>) {
-                throw "Multiple destroy descriptors in AYU_DESCRIBE description";
+                throw "Multiple destroy descriptors in AYU_DESCRIBE";
             }
             header.destroy = dcr.f;
         }
         else if constexpr (std::is_base_of_v<NameDcr<T>, Dcr>) {
 #define AYU_APPLY_OFFSET(dcr_type, dcr_name) \
             if (header.dcr_name##_offset) { \
-                throw "Multiple " #dcr_name " descriptors in AYU_DESCRIBE description"; \
+                throw "Multiple " #dcr_name " descriptors in AYU_DESCRIBE"; \
             } \
             header.dcr_name##_offset = \
                 desc.template get<dcr_type<T>>(0)->get_offset(header);
@@ -535,12 +543,6 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
                 header.flags |= Description::PREFER_OBJECT;
             }
         }
-        else if constexpr (std::is_base_of_v<ElemsDcr<T>, Dcr>) {
-            AYU_APPLY_OFFSET(ElemsDcr, elems)
-            if (!(header.flags & Description::PREFERENCE)) {
-                header.flags |= Description::PREFER_ARRAY;
-            }
-        }
         else if constexpr (std::is_base_of_v<KeysDcr<T>, Dcr>) {
             AYU_APPLY_OFFSET(KeysDcr, keys)
             if (!(header.flags & Description::PREFERENCE)) {
@@ -551,6 +553,12 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
             AYU_APPLY_OFFSET(AttrFuncDcr, attr_func)
             if (!(header.flags & Description::PREFERENCE)) {
                 header.flags |= Description::PREFER_OBJECT;
+            }
+        }
+        else if constexpr (std::is_base_of_v<ElemsDcr<T>, Dcr>) {
+            AYU_APPLY_OFFSET(ElemsDcr, elems)
+            if (!(header.flags & Description::PREFERENCE)) {
+                header.flags |= Description::PREFER_ARRAY;
             }
         }
         else if constexpr (std::is_base_of_v<LengthDcr<T>, Dcr>) {
@@ -570,9 +578,29 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
         }
 #undef AYU_APPLY_OFFSET
         else {
-            throw "Element in AYU_DESCRIBE description is not a descriptor for this type";
+            element_in_AYU_DESCRIBE_is_not_a_descriptor_for_this_type();
         }
     }, dcrs...);
+    if (header.attrs_offset &&
+        (header.keys_offset || header.attr_func_offset)
+    ) {
+        attrs_cannot_be_combined_with_keys_and_attr_func_in_AYU_DESCRIBE();
+    }
+    if ((header.keys_offset && !header.attr_func_offset) ||
+        (header.attr_func_offset && !header.keys_offset)
+    ) {
+        keys_and_attr_func_must_be_together_in_AYU_DESCRIBE();
+    }
+    if (header.elems_offset &&
+        (header.length_offset || header.elem_func_offset)
+    ) {
+        elems_cannot_be_combined_with_length_and_elem_func_in_AYU_DESCRIBE();
+    }
+    if ((header.length_offset && !header.elem_func_offset) ||
+        (header.elem_func_offset && !header.length_offset)
+    ) {
+        length_and_elem_func_must_be_together_in_AYU_DESCRIBE();
+    }
 
     return desc;
 }
