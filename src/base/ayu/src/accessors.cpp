@@ -50,7 +50,8 @@ Type ConstRefFuncAcr0::_type (const Accessor* acr, const Mu*) {
     return self->get_type();
 }
 void ConstRefFuncAcr0::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, [[maybe_unused]] AccessMode mode,
+    Mu& from, Callback<void(Mu&)> cb
 ) {
     assert(mode == ACR_READ);
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
@@ -66,7 +67,8 @@ Type ConstantPointerAcr0::_type (const Accessor* acr, const Mu*) {
     return self->get_type();
 }
 void ConstantPointerAcr0::_access (
-    const Accessor* acr, AccessMode mode, Mu&, Callback<void(Mu&)> cb
+    const Accessor* acr, [[maybe_unused]] AccessMode mode,
+    Mu&, Callback<void(Mu&)> cb
 ) {
     assert(mode == ACR_READ);
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
