@@ -49,6 +49,7 @@
 #include "internal/descriptors-internal.h"
 #include "dynamic.h"
 #include "location.h"
+#include "pointer.h"
 
 namespace ayu {
 
@@ -79,6 +80,8 @@ struct Reference {
         reinterpret_cast<Mu*>(const_cast<T*>(p)),
         &Type::CppType<T>().desc->readonly_identity_acr
     ) { }
+     // Construct from a dynamically-typed Pointer
+    Reference (Pointer p) : Reference(p.type, p.address) { }
      // Construct from a Dynamic.
      // TODO: construct readonly Reference from const Dynamic?
     Reference (Dynamic& d) : Reference(d.data, &d.type.desc->identity_acr) { }
@@ -236,6 +239,11 @@ struct Reference {
         return Reference(t, acr->type(host).cast_to(t, require_address()));
     }
 
+     // Cast to pointer
+    operator Pointer () const {
+        return Pointer(require_address(), type());
+    }
+
      // Shortcuts for serialize functions
      // TODO: Get rid of these.
     Tree to_tree () const;
@@ -265,6 +273,7 @@ struct Reference {
      // Syntax sugar.
     Reference operator [] (Str key) const { return attr(key); }
     Reference operator [] (usize index) const { return elem(index); }
+
     template <class T>
     operator T* () const {
         return require_address_as<T>();

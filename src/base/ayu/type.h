@@ -55,7 +55,7 @@ struct Type {
      //  - delegate(...)
      //  - attr("name", ..., inherit)
      //  - elem(..., inherit)
-     // and recurse through those accessors.  Note also only information
+     // and recurses through those accessors.  Note also only information
      // provided through AYU_DESCRIBE will be used; C++'s native inheritance
      // system has no influence.
      //
