@@ -43,4 +43,21 @@ struct Pointer {
     operator T* () const { return upcast_to<T>(); }
 };
 
+constexpr bool operator == (const Pointer& a, const Pointer& b) {
+    return a.address == b.address && a.type == b.type;
+}
+constexpr bool operator != (const Pointer& a, const Pointer& b) {
+    return !(a == b);
+}
+
 } // namespace ayu
+
+template <>
+struct std::hash<ayu::Pointer> {
+    std::size_t operator () (const ayu::Pointer& p) {
+        return ayu::in::hash_combine(
+            std::hash<ayu::Mu*>{}(p.address),
+            std::hash<ayu::Type>{}(p.type)
+        );
+    }
+};
