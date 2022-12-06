@@ -63,7 +63,7 @@ void trav_start (const Reference&, const Location&, AccessMode, TravCallback);
  // never used for addressable items.  In only_adddressable mode, trav_*
  // functions will SILENTLY RETURN AND NOT CALL THE CALLBACK if they encounter a
  // non-addressable item.
-void trav_start_addressable (Mu*, Type, const Location&, TravCallback);
+void trav_start_addressable (Pointer, const Location&, TravCallback);
 void trav_delegate (const Traversal&, const Accessor*, AccessMode, TravCallback);
 void trav_attr (
     const Traversal&, const Accessor*, const Str&, AccessMode, TravCallback

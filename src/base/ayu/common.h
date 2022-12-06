@@ -43,6 +43,7 @@ constexpr double inf = std::numeric_limits<double>::infinity();
 struct Document;
 struct Dynamic;
 struct Location;
+struct Pointer;
 struct Reference;
 struct Resource;
 struct Tree;

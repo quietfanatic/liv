@@ -309,24 +309,27 @@ void unload (const std::vector<Resource>& reses) {
              // First build set of references to things being unloaded
             std::unordered_map<Reference, Location> ref_set;
             for (auto res : rs) {
-                recursive_scan_resource(
+                scan_resource_references(
                     res,
                     [&](const Reference& ref, Location loc) {
                         ref_set.emplace(ref, loc);
+                        return false;
                     }
                 );
             }
              // Then check if any other resources contain references in that set
             for (auto other : others) {
-                recursive_scan_resource(
+                scan_resource_references(
                     other,
                     [&](Reference ref_ref, Location loc) {
-                        if (ref_ref.type() != ref_type) return;
+                         // TODO: Check for Pointer as well
+                        if (ref_ref.type() != ref_type) return false;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = ref_set.find(ref);
                         if (iter != ref_set.end()) {
                             throw X::UnloadWouldBreak(loc, iter->second);
                         }
+                        return false;
                     }
                 );
             }
@@ -425,22 +428,24 @@ void reload (const std::vector<Resource>& reses) {
              // First build mapping of old refs to locationss
             std::unordered_map<Reference, Location> old_refs;
             for (auto res : reses) {
-                recursive_scan(
+                scan_references(
                     res.data->old_value.ptr(), Location(res),
                     [&](const Reference& ref, Location loc) {
                         old_refs.emplace(ref, loc);
+                        return false;
                     }
                 );
             }
              // Then build set of ref-refs to update.
             for (auto other : others) {
-                recursive_scan_resource(
+                scan_resource_references(
                     other,
                     [&](Reference ref_ref, Location loc) {
-                        if (ref_ref.type() != ref_type) return;
+                         // TODO: scan Pointers as well
+                        if (ref_ref.type() != ref_type) return false;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = old_refs.find(ref);
-                        if (iter == old_refs.end()) return;
+                        if (iter == old_refs.end()) return false;
                         try {
                              // reference_from_location will use new resource value
                             Reference new_ref = reference_from_location(iter->second);
@@ -450,6 +455,7 @@ void reload (const std::vector<Resource>& reses) {
                              // It's probably okay to throw away the error info
                             throw X::ReloadWouldBreak(loc, iter->second);
                         }
+                        return false;
                     }
                 );
             }

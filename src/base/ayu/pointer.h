@@ -15,6 +15,8 @@ struct Pointer {
     constexpr Pointer (Mu* a, Type t) : address(a), type(t) { }
 
     template <class T>
+        requires (!std::is_same_v<std::remove_cv_t<T>, void>
+               && !std::is_same_v<std::remove_cv_t<T>, Mu>)
     Pointer (T* a) : address((Mu*)a), type(Type::CppType<T>()) { }
 
      // Returns false if this Pointer is either (typed) null or (typeless)
@@ -76,7 +78,7 @@ struct Pointer {
 
     template <class T>
         requires (!std::is_same_v<std::remove_cv_t<T>, void>
-            && !std::is_same_v<std::remove_cv_t<T>, Mu>)
+               && !std::is_same_v<std::remove_cv_t<T>, Mu>)
     operator T* () const { return type.upcast_to<T>(address); }
 };
 
@@ -91,7 +93,7 @@ constexpr bool operator != (const Pointer& a, const Pointer& b) {
 
 template <>
 struct std::hash<ayu::Pointer> {
-    std::size_t operator () (const ayu::Pointer& p) {
+    std::size_t operator () (const ayu::Pointer& p) const {
         return ayu::in::hash_combine(
             std::hash<ayu::Mu*>{}(p.address),
             std::hash<ayu::Type>{}(p.type)

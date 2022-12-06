@@ -18,7 +18,7 @@ namespace ayu {
  // TODO: Document that Types cannot be used before main() begins.
 struct Type {
      // Uses a tagged pointer; the first bit determines readonly (const), and the rest
-     // points to an ayu::in::Description (which is only 
+     // points to an ayu::in::Description.
     usize data;
 
     constexpr Type () : data(0) { }

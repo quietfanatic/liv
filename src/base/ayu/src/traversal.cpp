@@ -30,18 +30,18 @@ void trav_start (
 }
 
 void trav_start_addressable (
-    Mu* addr, Type type, const Location& loc, TravCallback cb
+    Pointer ptr, const Location& loc, TravCallback cb
 ) {
     Traversal trav;
     trav.parent = null;
-    trav.desc = DescriptionPrivate::get(type);
+    trav.desc = DescriptionPrivate::get(ptr.type);
     trav.readonly = false;
     trav.only_addressable = true;
     trav.op = START;
-     // Unused
+     // Unneeded
     // trav.reference = Reference(type, addr)
     trav.location = &loc;
-    trav.item = addr;
+    trav.item = ptr.address;
     trav.addressable = true;
     cb(trav);
 }

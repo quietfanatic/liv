@@ -825,10 +825,6 @@ AYU_DESCRIBE(ayu::X::InvalidKeysType,
         elem(&X::InvalidKeysType::type)
     )
 )
-AYU_DESCRIBE(ayu::X::UnresolvedReference,
-    delegate(base<X::SerError>()),
-    elems(elem(&X::UnresolvedReference::type))
-)
 
 ///// TESTS
 
