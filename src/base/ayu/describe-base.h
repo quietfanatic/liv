@@ -549,54 +549,71 @@ struct _AYU_DescribeBase {
     >;
      // ref_method
     template <class M, M&(T3::* get )()>
-    static constexpr auto ref_method () {
+    static constexpr auto ref_method (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return ref_func<M>(
-            [](const T& v) -> M& { return (v.*get)(); }
+            [](const T& v) -> M& { return (v.*get)(); }, flags
         );
     }
      // const_ref_method
     template <class M, const M&(T3::* get )()const>
-    static constexpr auto const_ref_method () {
+    static constexpr auto const_ref_method (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return const_ref_func<M>(
-            [](const T& v) -> const M& { return (v.*get)(); }
+            [](const T& v) -> const M& { return (v.*get)(); }, flags
         );
     }
      // const_ref_methods
     template <class M, const M&(T3::* get )()const, void(T3::* set )(const M&)>
-    static constexpr auto const_ref_methods () {
+    static constexpr auto const_ref_methods (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return const_ref_funcs<M>(
             [](const T& v) -> const M& { return (v.*get)(); },
-            [](T& v, const M& m){ (v.*set)(m); }
+            [](T& v, const M& m){ (v.*set)(m); },
+            flags
         );
     }
      // value_method
     template <class M, M(T3::* get )()const>
-    static constexpr auto value_method () {
+    static constexpr auto value_method (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return value_func<M>(
-            [](const T& v) -> M { return (v.*get)(); }
+            [](const T& v) -> M { return (v.*get)(); }, flags
         );
     }
      // value_methods
     template <class M, M(T3::* get )()const, void(T3::* set )(M)>
-    static constexpr auto value_methods () {
+    static constexpr auto value_methods (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return value_funcs<M>(
             [](const T& v) -> M { return (v.*get)(); },
-            [](T& v, M m){ (v.*set)(m); }
+            [](T& v, M m){ (v.*set)(m); },
+            flags
         );
     }
      // mixed_methods
     template <class M, M(T3::* get )()const, void(T3::* set )(const M&)>
-    static constexpr auto mixed_methods () {
+    static constexpr auto mixed_methods (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return mixed_funcs<M>(
             [](const T& v) -> M { return (v.*get)(); },
-            [](T& v, const M& m){ (v.*set)(m); }
+            [](T& v, const M& m){ (v.*set)(m); },
+            flags
         );
     }
      // reference_method.  I doubt you'll ever need this but here it is.
     template <Reference (T3::* get )()>
-    static constexpr auto reference_method () {
+    static constexpr auto reference_method (
+        in::AccessorFlags flags = in::AccessorFlags(0)
+    ) {
         return reference_func(
-            [](const T& v) -> Reference { return (v.*get)(); }
+            [](const T& v) -> Reference { return (v.*get)(); }, flags
         );
     }
      // And an overload for init() (a descriptor, not an accessor, but this
