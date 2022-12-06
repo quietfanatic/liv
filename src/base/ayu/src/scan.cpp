@@ -197,7 +197,10 @@ Location find_reference (const Reference& item) {
                 });
                 return r;
             }
-            else return Location();
+            else {
+                std::cerr << "Warning: Reference host not found in location cache" << std::endl;
+                return Location();
+            }
         }
     }
     else {

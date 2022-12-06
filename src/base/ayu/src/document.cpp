@@ -194,7 +194,11 @@ AYU_DESCRIBE(ayu::Document,
         }
         else {
             auto ref = DocumentItemRef(v.data, String(k));
-            if (ref.header) return Reference(v, variable(std::move(ref)));
+            if (ref.header) {
+                return Reference(
+                    v, variable(std::move(ref), pass_through_addressable)
+                );
+            }
             else return Reference();
         }
     })
@@ -233,7 +237,7 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
                 return Reference(v.header->data(), v.header->type);
             }
             else return Reference();
-        }, anchored_to_grandparent))
+        }))
     )
 )
 

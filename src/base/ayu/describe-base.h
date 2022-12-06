@@ -334,7 +334,8 @@ struct _AYU_DescribeBase {
      //   - Parent type: The type of the item that the accessor is applied to
      //   (that's the type of the AYU_DESCRIBE block that you're currently in).
      //   - Child type: The type of the item that this accessor points to.
-     // Accessors have up to four operations that they support:
+     // Accessors have up to four operations that they support (internally there
+     // are more, but these are the ones you might care about):
      //   - read: Read the value of the child item from the parent item.  All
      //   accessors support this operation.
      //   - write: Write a value to the child item through the parent item.  If
@@ -352,15 +353,15 @@ struct _AYU_DescribeBase {
      //   readonly by default and this flag is ignored.  Attrs and elems with
      //   readonly accessors will not be serialized, because they can't be
      //   deserialized anyway, so there's no point.
-     //   - anchored_to_grandparent: Normally you can only take the address of a
-     //   child item if its parent is also addressable, but if the child item's
-     //   accessor has anchored_to_grandparent specified, then instead you can
-     //   take its address if its grandparent is addressable (or if its parent
-     //   also has anchored_to_grandparent, then its grandgrandparent).  If you
-     //   misuse this, you can potentially leave dangling pointers around,
-     //   leading to memory corruption, so be careful.  This is intended to be
-     //   used when the parent type is a reference-like proxy item which is
-     //   generated temporarily, but refers to non-temporary items.
+     //   - pass_through_addressable: Normally you can only take the address of
+     //   a child item if its parent is also addressable, but if the parent
+     //   item's accessor has pass_through_addressable, then instead you can
+     //   take its address if the parent's parent is addressable (or if the
+     //   parent's parent also has pass_through_addressable, it's parent's
+     //   parent's parent).  If you misuse this, you can potentially leave
+     //   dangling pointers around, risking memory corruption, so be careful.
+     //   This is intended to be used for reference-like proxy items, which are
+     //   generated temporarily but refer to non-temporary items.
 
      // This accessor gives access to a non-static data member of a class by
      // means of a pointer-to-member.  This accessor will be addressable and
@@ -503,8 +504,7 @@ struct _AYU_DescribeBase {
      // pointer directly to an ayu::Reference instead of using an accessor.
      //
      // This is intended to be used for proxy types along with
-     // anchored_to_grandparent (but don't specify anchored_to_grandparent on
-     // this accessor, specify it on accessors to its children).
+     // pass_through_addressable.
     template <class M>
         requires (requires (M m) { M(std::move(m)); m.~M(); })
     static auto variable (
@@ -536,6 +536,8 @@ struct _AYU_DescribeBase {
      // value_methods<
      //     usize, &std::vector<T>::size, &std::vector<T>::resize
      // >()
+     //
+     // TODO: Add accessor flags to these
     using T3 = std::conditional_t<
         std::is_class_v<T> || std::is_union_v<T>,
         T, Mu
@@ -604,7 +606,8 @@ struct _AYU_DescribeBase {
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
     static constexpr in::AttrFlags inherit = in::ATTR_INHERIT;
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
-    static constexpr in::AccessorFlags anchored_to_grandparent = in::ACR_ANCHORED_TO_GRANDPARENT;
+    static constexpr in::AccessorFlags pass_through_addressable =
+        in::ACR_PASS_THROUGH_ADDRESSABLE;
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
         ayu::Str name, const Dcrs&... dcrs

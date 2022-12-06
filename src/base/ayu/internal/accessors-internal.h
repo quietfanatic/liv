@@ -23,12 +23,8 @@ enum AccessorFlags {
      // Writes through this accessor will fail.  Attrs and elems with this
      // accessor will not be serialized.
     ACR_READONLY = 0x1,
-     // Normally address() is only usable if all links in an accessor chain
-     // are addressable.  However, if this is set, this accessor's address()
-     // is usable even if the accessor above it is not addressable.  This
-     // allows for reference-like objects to be accessed through value_funcs
-     // or similar, but have their derived references still be addressable.
-    ACR_ANCHORED_TO_GRANDPARENT = 0x2
+     // Children considered addressable even if this item is not addressable.
+    ACR_PASS_THROUGH_ADDRESSABLE = 0x2
 };
 constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
     return AccessorFlags(int(a)|int(b));

@@ -133,7 +133,7 @@ void ChainAcr::_access (
 }
 Mu* ChainAcr::_address (const Accessor* acr, Mu& v) {
     auto self = static_cast<const ChainAcr*>(acr);
-    if (self->b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT) {
+    if (self->a->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE) {
         Mu* r = null;
         self->a->access(ACR_READ, v, [&](Mu& av){
             r = self->b->address(av);
@@ -154,11 +154,11 @@ ChainAcr::ChainAcr (const Accessor* a, const Accessor* b) :
     Accessor(
         &_vt,
          // Readonly if either accessor is readonly
-        ((a->accessor_flags & ACR_READONLY)
-       | (b->accessor_flags & ACR_READONLY))
-         // Anchored to grandparent if both are anchored to grandparent.
-      | ((a->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT)
-       & (b->accessor_flags & ACR_ANCHORED_TO_GRANDPARENT))
+        ((a->accessor_flags & ACR_READONLY) |
+         (b->accessor_flags & ACR_READONLY)) |
+         // Pass through addressable if both are PTA
+        ((a->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE) &
+         (b->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE))
     ), a(a), b(b)
 {
     a->inc(); b->inc();
