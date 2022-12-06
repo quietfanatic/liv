@@ -218,10 +218,10 @@ void in::ser_do_swizzles () {
     while (!swizzle_ops.empty()) {
          // Explicitly assign to clear swizzle_ops
         auto swizzles = std::move(swizzle_ops);
-        for (auto& mode : swizzles) {
-            PushCurrentResource p (mode.current_resource);
-            mode.item.modify([&](Mu& v){
-                mode.f(v, mode.tree);
+        for (auto& op : swizzles) {
+            PushCurrentResource p (op.current_resource);
+            op.item.modify([&](Mu& v){
+                op.f(v, op.tree);
             });
         }
     }
@@ -230,10 +230,10 @@ void in::ser_do_inits () {
      // Initting might add some more init ops.
     while (!init_ops.empty()) {
         auto inits = std::move(init_ops);
-        for (auto& mode : inits) {
-            PushCurrentResource p (mode.current_resource);
-            mode.item.modify([&](Mu& v){
-                mode.f(v);
+        for (auto& op : inits) {
+            PushCurrentResource p (op.current_resource);
+            op.item.modify([&](Mu& v){
+                op.f(v);
             });
              // Initting might even add more swizzle ops.
             ser_do_swizzles();
@@ -580,8 +580,8 @@ bool in::ser_maybe_attr (
     }
     else if (auto acr = trav.desc->delegate_acr()) {
         bool r;
-        AccessMode del_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
-        trav_delegate(trav, acr, del_op, [&](const Traversal& child){
+        AccessMode del_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
+        trav_delegate(trav, acr, del_mode, [&](const Traversal& child){
             r = ser_maybe_attr(child, key, mode, cb);
         });
         return r;
@@ -714,9 +714,9 @@ bool in::ser_maybe_elem (
         return false;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
-        AccessMode del_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
+        AccessMode del_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
         bool found;
-        trav_delegate(trav, acr, del_op, [&](const Traversal& child){
+        trav_delegate(trav, acr, del_mode, [&](const Traversal& child){
             found = ser_maybe_elem(child, index, mode, cb);
         });
         return found;
