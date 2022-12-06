@@ -127,11 +127,10 @@ struct Resource {
      // Syntax sugar
     explicit operator bool () { return data; }
     Reference operator [] (Str key) {
-         // TODO: change to ref()[key]
-        return Reference(value())[key];
+        return ref()[key];
     }
     Reference operator [] (usize index) {
-        return Reference(value())[index];
+        return ref()[index];
     }
 };
 

@@ -95,50 +95,6 @@ struct Cat<> {
     }
 };
 
-///// IDENTITY ACCESSORS
-
- // These are dummy accessors for use in Reference.  There are two of them per
- // type, and they should never appear in AYU_DESCRIBE or be constructed.
- //
- // This relies on being in member slot 0 in Description.
-struct IdentityAcr : Accessor {
-    static Type _type (const Accessor* acr, Mu*) {
-        return Type(reinterpret_cast<const Description*>(acr));
-    }
-    static void _access (
-        const Accessor*, AccessMode, Mu& from, Callback<void(Mu&)> cb
-    ) {
-        cb(from);
-    }
-    static Mu* _address (const Accessor*, Mu& from) {
-        return &from;
-    }
-    static constexpr AccessorVT _vt = {
-        &_type, &_access, &_address, &_address
-    };
-    explicit constexpr IdentityAcr () : Accessor(&_vt, 0) { }
-};
- // This relies on being in member slot 1 in Description.
-struct ReadonlyIdentityAcr : Accessor {
-    static Type _type (const Accessor* acr, Mu*) {
-        return Type(reinterpret_cast<const Description*>(acr - 1));
-    }
-    static void _access (
-        const Accessor*, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
-    ) {
-        if (mode != ACR_READ) throw X::WriteReadonlyAccessor();
-        cb(from);
-    }
-    static Mu* _address (const Accessor*, Mu& from) {
-        return &from;
-    }
-    static constexpr AccessorVT _vt = {
-        &_type, &_access, &_address, &_address
-    };
-    explicit constexpr ReadonlyIdentityAcr () : Accessor(&_vt, ACR_READONLY) { }
-};
-static_assert(sizeof(IdentityAcr) == sizeof(ReadonlyIdentityAcr));
-
 ///// CPP TYPE TRAITS
 
 template <class T>
@@ -171,11 +127,6 @@ constexpr void(* assign_p )(T&, const T&) =
 ///// DESCRIPTION HEADER
 
 struct Description : ComparableAddress {
-     // Don't put anything before these!  See their definitions for why.
-    IdentityAcr identity_acr = constexpr_acr(IdentityAcr());
-    ReadonlyIdentityAcr readonly_identity_acr =
-        constexpr_acr(ReadonlyIdentityAcr());
-
     const std::type_info* cpp_type = null;
     uint32 cpp_size = 0;
     uint32 cpp_align = 0;

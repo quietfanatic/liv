@@ -35,7 +35,7 @@ namespace X {
                 String s = cat('[', t.name(), ' ');
                 {
                     DiagnosticSerialization ds;
-                    if (auto derived = Reference(this).try_downcast_to(t)) {
+                    if (auto derived = Pointer(this).try_downcast_to(t)) {
                         s += item_to_string(derived);
                     }
                     else {

@@ -23,7 +23,7 @@ AYU_DESCRIBE(ayu::Dynamic,
                 v = Dynamic(t);
             }
         )),
-        elem(reference_func([](Dynamic& v){ return Reference(v); }))
+        elem(reference_func([](Dynamic& v){ return Reference(v.ptr()); }))
     )
 )
 

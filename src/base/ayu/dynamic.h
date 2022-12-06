@@ -3,6 +3,9 @@
 // but not copied.  There is an empty Dynamic which has no type and no value,
 // but unlike Reference, there is no "null" Dynamic which has type and no value.
 // If there is a type there is a value, and vice versa.
+//
+// Dynamics can either be statically const (e.g. const Dynamic&) or dynamically
+// const (having a readonly type).
 #pragma once
 
 #include <cassert>
@@ -22,6 +25,7 @@ struct Dynamic {
      // The empty value will cause null derefs if you do anything with it.
     constexpr Dynamic () : type(), data(null) { }
      // Create from internal data.  Takes ownership.
+     // TODO: reverse these args
     Dynamic (Type t, Mu*&& d) : type(t), data(d) { d = null; }
      // Default construction
     explicit Dynamic (Type t) :
@@ -83,6 +87,7 @@ struct Dynamic {
     }
      // Get Pointer to the value
     Pointer ptr () { return Pointer(data, type); }
+    Pointer readonly_ptr () const { return Pointer(data, type.add_readonly()); }
      // Runtime casting
     Mu& as (Type t) {
         return *type.cast_to(t, data);

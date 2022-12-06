@@ -54,41 +54,35 @@
 namespace ayu {
 
 struct Reference {
-    Mu* const host;
+    const Pointer host;
     const in::Accessor* const acr;
 
      // The empty value will cause null derefs if you do anything with it.
     constexpr Reference () : host(null), acr(null) { }
      // Construct from internal data.
-    Reference (Mu* h, const in::Accessor* a) : host(h), acr(a) {
+    Reference (Pointer h, const in::Accessor* a) : host(h), acr(a) {
         if (acr) acr->inc();
     }
-     // Construct from type and abstract pointer.  Used by serialize.
-    Reference (Type t, Mu* p);
-     // Construct from a pointer.
+     // Construct from a Pointer.
+    constexpr Reference (Pointer p) : host(p), acr(null) { }
+     // Construct from native pointer.
     template <class T>
-    Reference (T* p) : Reference(
-        Type::CppType<T>(), (Mu*)p
-    ) { }
-     // Construct from a dynamically-typed Pointer
-    Reference (Pointer p) : Reference(p.type, p.address) { }
-     // Construct from a Dynamic.
-     // TODO: construct readonly Reference from const Dynamic?
-    Reference (Dynamic& d) : Reference(d.ptr()) { }
+        requires (!std::is_same_v<T, Mu>)
+    constexpr Reference (T* p) : host(p), acr(null) { }
+     // Construct from unknown pointer and type
+    constexpr Reference (Mu* p, Type t) : host(p, t), acr(null) { }
      // For use in attr_func and elem_func.
      // TODO: Also check std::is_base_of
     template <class From, class Acr> requires (
         std::is_same_v<typename Acr::AccessorFromType, From>
     )
-    Reference (From& h, Acr&& a) : Reference(
-        reinterpret_cast<Mu*>(&h), new Acr(a)
-    ) { }
+    Reference (From& h, Acr&& a) : Reference(&h, new Acr(a)) { }
      // Copy and move construction and assignment
     Reference (const Reference& o) : Reference(o.host, o.acr) { }
     Reference (Reference&& o) :
         host(o.host), acr(o.acr)
     {
-        const_cast<Mu*&>(o.host) = null;
+        const_cast<Pointer&>(o.host) = null;
         const_cast<const in::Accessor*&>(o.acr) = null;
     }
     Reference& operator = (const Reference& o) {
@@ -102,21 +96,27 @@ struct Reference {
         return *this;
     }
 
-    explicit operator bool () const { assert(host || !acr); return host; }
+    explicit operator bool () const { assert(host || !acr); return !!host; }
      // Get type of referred-to item
-    Type type () const { return acr ? acr->type(host) : Type(); }
+    Type type () const { return acr ? acr->type(host.address) : host.type; }
 
-     // Writing to this reference throws if this is true
-    bool readonly () const { return acr->accessor_flags & in::ACR_READONLY; }
+     // Writing through this reference throws if this is true
+    bool readonly () const {
+        if (host.type.readonly()) return true;
+        else if (acr) return acr->accessor_flags & in::ACR_READONLY;
+        else return false;
+    }
      // Throws X::WriteReadonlyReference if readonly()
     void require_writeable () const;
 
      // Returns null if this reference is not addressable.
     Mu* address () const {
-        return acr->address(*host);
+        return acr ? acr->address(*host.address) : host.address;
     }
      // Can throw X::CannotCoerce, even if the result is null.
-    Mu* address_as (Type t) const { return type().cast_to(t, address()); }
+    Mu* address_as (Type t) const {
+        return type().cast_to(t, address());
+    }
     template <class T>
     T* address_as () const {
         if constexpr (!std::is_const_v<T>) {
@@ -128,26 +128,28 @@ struct Reference {
      // the return of address() is null.
     Mu* require_address () const;
      // Can throw either X::CannotCoerce or X::UnaddressableReference
-    Mu* require_address_as (Type t) const { return type().cast_to(t, require_address()); }
+    Mu* require_address_as (Type t) const {
+        return type().cast_to(t, require_address());
+    }
     template <class T>
     T* require_address_as () const {
         return (T*)require_address_as(Type::CppType<T>());
     }
 
      // Read with callback
-    void read (Callback<void(const Mu&)> cb) const {
-        access(in::ACR_READ, reinterpret_cast<Callback<void(Mu&)>&>(cb));
+    void read (Callback<void(Mu&)> cb) const {
+        access(in::ACR_READ, cb);
     }
      // Cast and read with callback
-    void read_as (Type t, Callback<void(const Mu&)> cb) const {
-        read([&](const Mu& v){
-            Mu& tv = *type().cast_to(t, const_cast<Mu*>(&v));
-            cb(const_cast<const Mu&>(tv));
+    void read_as (Type t, Callback<void(Mu&)> cb) const {
+        read([&](Mu& v){
+            Mu& tv = *type().cast_to(t, &v);
+            cb(tv);
         });
     }
     template <class T>
-    void read_as (Callback<void(const T&)> cb) const {
-        read_as(Type::CppType<T>(), reinterpret_cast<Callback<void(const Mu&)>&>(cb));
+    void read_as (Callback<void(T&)> cb) const {
+        read_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
     }
      // Write with callback
     void write (Callback<void(Mu&)> cb) const { access(in::ACR_WRITE, cb); }
@@ -159,6 +161,7 @@ struct Reference {
         });
     }
     template <class T>
+        requires (!std::is_const_v<T>)
     void write_as (Callback<void(T&)> cb) const {
         write_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
     }
@@ -172,6 +175,7 @@ struct Reference {
         });
     }
     template <class T>
+        requires (!std::is_const_v<T>)
     void modify_as (Callback<void(T&)> cb) const {
         modify_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
     }
@@ -192,41 +196,38 @@ struct Reference {
             return r;
         }
     }
-     // Assign to the referenced item with lvalue or rvalue ref.  Preferentially
-     // uses address if it's available.
+     // Assign to the referenced item with rvalue ref.  Preferentially uses
+     // address if it's available.
     template <class T>
+        requires (!std::is_const_v<T>)
     void set_as (T&& new_v) {
         if (Mu* a = address()) {
             require_writeable();
             *reinterpret_cast<T*>(
                 type().cast_to(Type::CppType<T>(), a)
-            ) = std::forward<T>(new_v);
+            ) = std::move(new_v);
         }
         else {
             write_as<T>([&](T& v){
-                v = std::forward<T>(new_v);
+                v = std::move(new_v);
             });
         }
     }
-
-     // Shortcuts for casting functions from type.h
-    Reference try_upcast_to (Type t) {
-        return Reference(t, acr->type(host).try_upcast_to(t, address()));
-    }
-    Reference upcast_to (Type t) {
-        return Reference(t, acr->type(host).upcast_to(t, require_address()));
-    }
-    Reference try_downcast_to (Type t) {
-        return Reference(t, acr->type(host).try_downcast_to(t, address()));
-    }
-    Reference downcast_to (Type t) {
-        return Reference(t, acr->type(host).downcast_to(t, require_address()));
-    }
-    Reference try_cast_to (Type t) {
-        return Reference(t, acr->type(host).try_cast_to(t, address()));
-    }
-    Reference cast_to (Type t) {
-        return Reference(t, acr->type(host).cast_to(t, require_address()));
+     // Assign to the referenced item with lvalue ref.
+    template <class T>
+        requires (!std::is_const_v<T>)
+    void set_as (const T& new_v) {
+        if (Mu* a = address()) {
+            require_writeable();
+            *reinterpret_cast<T*>(
+                type().cast_to(Type::CppType<T>(), a)
+            ) = new_v;
+        }
+        else {
+            write_as<T>([&](T& v){
+                v = new_v;
+            });
+        }
     }
 
      // Cast to pointer
@@ -257,7 +258,12 @@ struct Reference {
      // Kinda internal, TODO move to internal namespace
     void access (in::AccessMode mode, Callback<void(Mu&)> cb) const {
         if (mode != in::ACR_READ) require_writeable();
-        acr->access(mode, *host, cb);
+        if (acr) {
+            acr->access(mode, *host.address, cb);
+        }
+        else {
+            cb(*host.address);
+        }
     }
 
      // Syntax sugar.
@@ -323,7 +329,7 @@ struct std::hash<ayu::Reference> {
             hash<ayu::Type>()(r.type())
         );
         else return ayu::in::hash_combine(
-            hash<void*>()((void*)r.host),
+            hash<ayu::Pointer>()(r.host),
             hash<void*>()((void*)r.acr)
         );
     }

@@ -11,10 +11,6 @@
 namespace ayu {
 using namespace in;
 
-Reference::Reference (Type t, Mu* p) :
-    Reference(p, &DescriptionPrivate::get(t)->identity_acr)
-{ }
-
 void Reference::require_writeable () const {
     if (readonly()) throw X::WriteReadonlyReference(*this);
 }
@@ -26,8 +22,12 @@ Mu* Reference::require_address () const {
 }
 
 Reference Reference::chain (const Accessor* o_acr) const {
-    if (auto a = address()) return Reference(a, o_acr);
-    else return Reference(host, new ChainAcr(acr, o_acr));
+    if (auto a = address()) {
+        return Reference(Pointer(a, type()), o_acr);
+    }
+    else {
+        return Reference(host, new ChainAcr(acr, o_acr));
+    }
 }
 
 Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {

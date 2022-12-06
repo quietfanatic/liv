@@ -8,14 +8,14 @@
 namespace ayu {
 
 struct Pointer {
-    Mu* address = null;
+    Mu* address;
     Type type;
 
-    constexpr Pointer () { }
+    constexpr Pointer (Null n = null) : address(n) { }
     constexpr Pointer (Mu* a, Type t) : address(a), type(t) { }
 
     template <class T>
-    Pointer (T* a) : address(a), type(Type::CppType<T>()) { }
+    Pointer (T* a) : address((Mu*)a), type(Type::CppType<T>()) { }
 
      // Returns false if this Pointer is either (typed) null or (typeless)
      // empty.
@@ -26,21 +26,58 @@ struct Pointer {
         return !!type;
     }
 
+    Pointer try_upcast_to (Type t) const {
+        return Pointer(type.try_upcast_to(t, address), t);
+    }
     template <class T>
-    T* try_upcast_to () const { return type.try_upcast_to<T>(address); }
+    T* try_upcast_to () const {
+        return type.try_upcast_to<T>(address);
+    }
+
+    Pointer upcast_to (Type t) const {
+        return Pointer(type.upcast_to(t, address), t);
+    }
     template <class T>
-    T* upcast_to () const { return type.upcast_to<T>(address); }
+    T* upcast_to () const {
+        return type.upcast_to<T>(address);
+    }
+
+    Pointer try_downcast_to (Type t) const {
+        return Pointer(type.try_downcast_to(t, address), t);
+    }
     template <class T>
-    T* try_downcast_to () const { return type.try_downcast_to<T>(address); }
+    T* try_downcast_to () const {
+        return type.try_downcast_to<T>(address);
+    }
+
+    Pointer downcast_to (Type t) const {
+        return Pointer(type.downcast_to(t, address), t);
+    }
     template <class T>
-    T* downcast_to () const { return type.downcast_to<T>(address); }
+    T* downcast_to () const {
+        return type.downcast_to<T>(address);
+    }
+
+    Pointer try_cast_to (Type t) const {
+        return Pointer(type.try_cast_to(t, address), t);
+    }
     template <class T>
-    T* try_cast_to () const { return type.try_cast_to<T>(address); }
+    T* try_cast_to () const {
+        return type.try_cast_to<T>(address);
+    }
+
+    Pointer cast_to (Type t) const {
+        return Pointer(type.cast_to(t, address), t);
+    }
     template <class T>
-    T* cast_to () const { return type.cast_to<T>(address); }
+    T* cast_to () const {
+        return type.cast_to<T>(address);
+    }
 
     template <class T>
-    operator T* () const { return upcast_to<T>(); }
+        requires (!std::is_same_v<std::remove_cv_t<T>, void>
+            && !std::is_same_v<std::remove_cv_t<T>, Mu>)
+    operator T* () const { return type.upcast_to<T>(address); }
 };
 
 constexpr bool operator == (const Pointer& a, const Pointer& b) {

@@ -143,12 +143,9 @@ void trav_elem_func (
 
 Reference trav_reference (const Traversal& trav) {
     if (trav.addressable) {
-        if (trav.readonly) {
-            return Reference(trav.item, &trav.desc->readonly_identity_acr);
-        }
-        else {
-            return Reference(trav.item, &trav.desc->identity_acr);
-        }
+        return Pointer(trav.item,
+            trav.readonly ? Type(trav.desc).add_readonly() : trav.desc
+        );
     }
     else if (trav.op == START) {
         return *trav.reference;

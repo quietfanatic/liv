@@ -152,11 +152,11 @@ void Resource::set_value (Dynamic&& value) const {
 }
 
 Reference Resource::ref () const {
-    return value();
+    return value().ptr();
 }
 Reference Resource::get_ref () const {
     if (data->state == UNLOADED) return Reference();
-    else return get_value();
+    else return get_value().ptr();
 }
 
 ///// RESOURCE OPERATIONS
@@ -426,7 +426,7 @@ void reload (const std::vector<Resource>& reses) {
             std::unordered_map<Reference, Location> old_refs;
             for (auto res : reses) {
                 recursive_scan(
-                    res.data->old_value, Location(res),
+                    res.data->old_value.ptr(), Location(res),
                     [&](const Reference& ref, Location loc) {
                         old_refs.emplace(ref, loc);
                     }

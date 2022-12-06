@@ -58,7 +58,7 @@ void recursive_scan_resource (
     Callback<void(const Reference&, Location)> cb
 ) {
     if (res.state() == UNLOADED) return;
-    recursive_scan(res.get_value(), Location(res), cb);
+    recursive_scan(res.get_value().ptr(), Location(res), cb);
 }
 
  // TODO: Skip atomic types T if AYU_DESCRIBE for T* has not been instantiated

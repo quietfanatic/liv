@@ -328,7 +328,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
             acr->read(*trav.item, [&](Mu& ksv){
                  // We might be able to optimize this more, but it's not that
                  // important.
-                auto tree = item_to_tree(Reference(keys_type, &ksv));
+                auto tree = item_to_tree(Pointer(&ksv, keys_type));
                 if (tree.form() != ARRAY) {
                     throw X::InvalidKeysType(trav_location(trav), keys_type);
                 }
@@ -436,7 +436,7 @@ void in::ser_claim_keys (
                 }
                 acr->write(*trav.item, [&](Mu& ksv){
                     item_from_tree(
-                        Reference(keys_type, &ksv), Tree(std::move(a))
+                        Pointer(&ksv, keys_type), Tree(std::move(a))
                     );
                 });
             }
