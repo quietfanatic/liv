@@ -92,11 +92,14 @@ bool scan_pointers (
     Callback<bool(Pointer, const Location&)> cb
 ) {
     bool r = false;
-    trav_start_addressable(base_item, base_loc, [&](const Traversal& trav){
+    trav_start(base_item, base_loc, true, ACR_READ, [&](const Traversal& trav){
         r = scan_trav(
             trav, base_loc, [&](const Traversal& trav, const Location& loc)
         {
-            return cb(Pointer(trav.item, trav.desc), loc);
+            if (trav.addressable) {
+                return cb(Pointer(trav.address, trav.desc), loc);
+            }
+            else return false;
         });
     });
     return r;
@@ -107,7 +110,7 @@ bool scan_references (
     Callback<bool(const Reference&, const Location&)> cb
 ) {
     bool r = false;
-    trav_start(base_item, base_loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(base_item, base_loc, false, ACR_READ, [&](const Traversal& trav){
         r = scan_trav(
             trav, base_loc, [&](const Traversal& trav, const Location& loc)
         {

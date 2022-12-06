@@ -22,11 +22,11 @@ DiagnosticSerialization::~DiagnosticSerialization () {
 Tree in::ser_to_tree (const Traversal& trav) {
     try {
         if (auto to_tree = trav.desc->to_tree()) {
-            return to_tree->f(*trav.item);
+            return to_tree->f(*trav.address);
         }
         if (auto values = trav.desc->values()) {
             for (uint i = 0; i < values->n_values; i++) {
-                Tree r = values->value(i)->value_to_tree(values, *trav.item);
+                Tree r = values->value(i)->value_to_tree(values, *trav.address);
                 if (r.has_value()) return r;
             }
         }
@@ -93,7 +93,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
  // TODO: Add location parameter
 Tree item_to_tree (const Reference& item, const Location& loc) {
     Tree r;
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         r = ser_to_tree(trav);
     });
     return r;
@@ -103,7 +103,7 @@ Tree item_to_tree (const Reference& item, const Location& loc) {
 void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
      // If description has a from_tree, just use that.
     if (auto from_tree = trav.desc->from_tree()) {
-        from_tree->f(*trav.item, tree);
+        from_tree->f(*trav.address, tree);
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
@@ -149,7 +149,7 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
             if (auto values = trav.desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
                     if (Mu* v = values->value(i)->tree_to_value(tree)) {
-                        values->assign(*trav.item, *v);
+                        values->assign(*trav.address, *v);
                         goto done;
                     }
                 }
@@ -247,7 +247,7 @@ void item_from_tree (
     static bool in_from_tree = false;
     if (in_from_tree) {
          // If we're reentering, swizzles and inits will be done later.
-        trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
+        trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
             ser_from_tree(trav, tree);
         });
     }
@@ -257,7 +257,7 @@ void item_from_tree (
         }
         in_from_tree = true;
         try {
-            trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
+            trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
                 ser_from_tree(trav, tree);
             });
             ser_do_swizzles();
@@ -290,14 +290,14 @@ void in::ser_collect_key_string (StrVector& ks, String&& k) {
 
 void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
     if (auto acr = trav.desc->keys_acr()) {
-        Type keys_type = acr->type(trav.item);
+        Type keys_type = acr->type(trav.address);
          // Compare Type not std::type_info, since std::type_info can require a
          // string comparison.
         static Type type_vector_str = Type::CppType<std::vector<Str>>();
         static Type type_vector_string = Type::CppType<std::vector<String>>();
         if (keys_type == type_vector_str) {
              // Optimize for std::vector<Str>
-            acr->read(*trav.item, [&](Mu& ksv){
+            acr->read(*trav.address, [&](Mu& ksv){
                 auto& str_ksv = reinterpret_cast<const std::vector<Str>&>(ksv);
                  // If this item is not addressable, it may be dynamically
                  // generated, which means the Strs may go out of scope before
@@ -316,7 +316,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         }
         else if (keys_type == type_vector_string) {
              // Capitulate to std::vector<String> too.
-            acr->read(*trav.item, [&](Mu& ksv){
+            acr->read(*trav.address, [&](Mu& ksv){
                  // TODO: Flag accessor if it can be moved from?
                 for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
                     ser_collect_key_string(ks, String(k));
@@ -325,7 +325,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         }
         else {
              // General case, any type that serializes to an array of strings.
-            acr->read(*trav.item, [&](Mu& ksv){
+            acr->read(*trav.address, [&](Mu& ksv){
                  // We might be able to optimize this more, but it's not that
                  // important.
                 auto tree = item_to_tree(Pointer(&ksv, keys_type));
@@ -374,7 +374,7 @@ void item_read_keys (
     const Location& loc
 ) {
     StrVector ks;
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
     cb(ks);
@@ -383,7 +383,7 @@ std::vector<String> item_get_keys (
     const Reference& item, const Location& loc
 ) {
     StrVector ks;
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
     return std::vector<String>(ks.begin(), ks.end());
@@ -410,19 +410,19 @@ void in::ser_claim_keys (
     bool optional
 ) {
     if (auto acr = trav.desc->keys_acr()) {
-        Type keys_type = acr->type(trav.item);
+        Type keys_type = acr->type(trav.address);
         if (!(acr->accessor_flags & ACR_READONLY)) {
             static Type type_vector_str = Type::CppType<std::vector<Str>>();
             static Type type_vector_string = Type::CppType<std::vector<String>>();
             if (keys_type == type_vector_str) {
                  // Optimize for std::vector<Str>
-                acr->write(*trav.item, [&](Mu& ksv){
+                acr->write(*trav.address, [&](Mu& ksv){
                     reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
                 });
             }
             else if (keys_type == type_vector_string) {
                  // Compromise for std::vector<String> too
-                acr->write(*trav.item, [&](Mu& ksv){
+                acr->write(*trav.address, [&](Mu& ksv){
                     reinterpret_cast<std::vector<String>&>(ksv) =
                         std::vector<String>(ks.begin(), ks.end());
                 });
@@ -434,7 +434,7 @@ void in::ser_claim_keys (
                 for (usize i = 0; i < ks.size(); i++) {
                     a[i] = Tree(ks[i]);
                 }
-                acr->write(*trav.item, [&](Mu& ksv){
+                acr->write(*trav.address, [&](Mu& ksv){
                     item_from_tree(
                         Pointer(&ksv, keys_type), Tree(std::move(a))
                     );
@@ -524,7 +524,7 @@ void item_set_keys (
     const Reference& item, const std::vector<Str>& ks,
     const Location& loc
 ) {
-    trav_start(item, loc, ACR_WRITE, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
         auto ks_copy = ks;
         ser_set_keys(trav, std::move(ks_copy));
     });
@@ -572,7 +572,7 @@ bool in::ser_maybe_attr (
         return false;
     }
     else if (auto attr_func = trav.desc->attr_func()) {
-        if (Reference ref = attr_func->f(*trav.item, key)) {
+        if (Reference ref = attr_func->f(*trav.address, key)) {
             trav_attr_func(trav, std::move(ref), attr_func->f, key, mode, cb);
             return true;
         }
@@ -602,7 +602,7 @@ Reference item_maybe_attr (
     Reference r;
      // Is ACR_READ correct here?  Will we instead have to chain up the
      // reference from the start?
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_maybe_attr(trav, key, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
         });
@@ -622,7 +622,7 @@ usize in::ser_get_length (const Traversal& trav) {
     if (auto acr = trav.desc->length_acr()) {
         usize len;
          // TODO: support other integral types besides usize
-        acr->read(*trav.item, [&](Mu& lv){
+        acr->read(*trav.address, [&](Mu& lv){
             len = reinterpret_cast<const usize&>(lv);
         });
         return len;
@@ -642,7 +642,7 @@ usize in::ser_get_length (const Traversal& trav) {
 
 usize item_get_length (const Reference& item, const Location& loc) {
     usize len;
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         len = ser_get_length(trav);
     });
     return len;
@@ -651,14 +651,14 @@ usize item_get_length (const Reference& item, const Location& loc) {
 void in::ser_set_length (const Traversal& trav, usize len) {
     if (auto acr = trav.desc->length_acr()) {
         if (!(acr->accessor_flags & ACR_READONLY)) {
-            acr->write(*trav.item, [&](Mu& lv){
+            acr->write(*trav.address, [&](Mu& lv){
                 reinterpret_cast<usize&>(lv) = len;
             });
         }
         else {
              // For readonly length, just check that the provided length matches
             usize expected;
-            acr->read(*trav.item, [&](Mu& lv){
+            acr->read(*trav.address, [&](Mu& lv){
                 expected = reinterpret_cast<const usize&>(lv);
             });
             if (len != expected) {
@@ -690,9 +690,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
 }
 
 void item_set_length (const Reference& item, usize len, const Location& loc) {
-    trav_start(
-        item, loc, ACR_WRITE, [&](const Traversal& trav)
-    {
+    trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
         ser_set_length(trav, len);
     });
 }
@@ -709,7 +707,7 @@ bool in::ser_maybe_elem (
         return false;
     }
     else if (auto elem_func = trav.desc->elem_func()) {
-        if (Reference ref = elem_func->f(*trav.item, index)) {
+        if (Reference ref = elem_func->f(*trav.address, index)) {
             trav_elem_func(trav, std::move(ref), elem_func->f, index, mode, cb);
             return true;
         }
@@ -738,7 +736,7 @@ Reference item_maybe_elem (
     Reference r;
      // TODO: We probably don't need to set up a whole traversal stack for this,
      // now that we've removed inherited elems.
-    trav_start(item, loc, ACR_READ, [&](const Traversal& trav){
+    trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_maybe_elem(trav, index, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
         });

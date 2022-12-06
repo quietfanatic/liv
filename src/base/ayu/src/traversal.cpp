@@ -5,45 +5,30 @@
 namespace ayu::in {
 
 void trav_start (
-    const Reference& ref, const Location& loc, AccessMode mode, TravCallback cb
+    const Reference& ref, const Location& loc, bool only_addressable,
+    AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
     trav.parent = null;
+    trav.address = ref.address();
     trav.desc = DescriptionPrivate::get(ref.type());
     trav.readonly = ref.readonly();
-    trav.only_addressable = false;
+    trav.addressable = !!trav.address;
+    trav.children_addressable = !!trav.address ||
+        ref.acr->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE;
+    trav.only_addressable = only_addressable;
     trav.op = START;
     trav.reference = &ref;
     trav.location = &loc;
-    if (Mu* address = ref.address()) {
-        trav.item = address;
-        trav.addressable = true;
+    if (trav.address) {
         cb(trav);
     }
-    else {
+    else if (!trav.only_addressable || trav.children_addressable) {
         ref.access(mode, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
+            trav.address = &v;
             cb(trav);
         });
     }
-}
-
-void trav_start_addressable (
-    Pointer ptr, const Location& loc, TravCallback cb
-) {
-    Traversal trav;
-    trav.parent = null;
-    trav.desc = DescriptionPrivate::get(ptr.type);
-    trav.readonly = false;
-    trav.only_addressable = true;
-    trav.op = START;
-     // Unneeded
-    // trav.reference = Reference(type, addr)
-    trav.location = &loc;
-    trav.item = ptr.address;
-    trav.addressable = true;
-    cb(trav);
 }
 
 static void trav_acr (
@@ -51,19 +36,25 @@ static void trav_acr (
     AccessMode mode, TravCallback cb
 ) {
     trav.parent = &parent;
-    trav.desc = DescriptionPrivate::get(acr->type(parent.item));
+    trav.address = acr->address(*parent.address);
+    trav.desc = DescriptionPrivate::get(acr->type(parent.address));
     trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
+    if (parent.children_addressable) {
+        trav.addressable = !!trav.address;
+        trav.children_addressable = !!trav.address ||
+            acr->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE;
+    }
+    else {
+        trav.addressable = trav.children_addressable = false;
+    }
     trav.only_addressable = parent.only_addressable;
     trav.acr = acr;
-    if (Mu* address = acr->address(*parent.item)) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
+    if (trav.address) {
         cb(trav);
     }
-    else if (!trav.only_addressable) {
-        acr->access(mode, *parent.item, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
+    else if (!trav.only_addressable || trav.children_addressable) {
+        acr->access(mode, *parent.address, [&](Mu& v){
+            trav.address = &v;
             cb(trav);
         });
     }
@@ -74,18 +65,24 @@ static void trav_ref (
     AccessMode mode, TravCallback cb
 ) {
     trav.parent = &parent;
+    trav.address = ref.address();
     trav.desc = DescriptionPrivate::get(ref.type());
     trav.readonly = parent.readonly || ref.readonly();
+    if (parent.children_addressable) {
+        trav.addressable = !!trav.address;
+        trav.children_addressable = !!trav.address ||
+            ref.acr->accessor_flags & ACR_PASS_THROUGH_ADDRESSABLE;
+    }
+    else {
+        trav.addressable = trav.children_addressable = false;
+    }
     trav.only_addressable = parent.only_addressable;
-    if (Mu* address = ref.address()) {
-        trav.item = address;
-        trav.addressable = parent.addressable;
+    if (trav.address) {
         cb(trav);
     }
-    else if (!trav.only_addressable) {
+    else if (!trav.only_addressable || trav.children_addressable) {
         ref.access(mode, [&](Mu& v){
-            trav.item = &v;
-            trav.addressable = false;
+            trav.address = &v;
             cb(trav);
         });
     }
@@ -143,7 +140,8 @@ void trav_elem_func (
 
 Reference trav_reference (const Traversal& trav) {
     if (trav.addressable) {
-        return Pointer(trav.item,
+        return Pointer(
+            trav.address,
             trav.readonly ? Type(trav.desc).add_readonly() : trav.desc
         );
     }

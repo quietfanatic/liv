@@ -41,7 +41,9 @@ struct KeepLocationCache {
  // depth-first search, but they may do a breadth-first search in the future.
 
  // Scans all visible addressable items under the given address of the given
- // type.  Skips unaddressable items.
+ // type.  Skips unaddressable items.  Does not call the callback on items with
+ // pass_through_addressable set, but does call it on their children (if those
+ // children are addressable).
  //   base_item: Pointer to the item to start scanning at.
  //   base_loc: Location of the base item, or Location() if you don't care.
  //   cb: Is called for each addressable item with its pointer and location

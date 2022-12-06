@@ -25,14 +25,20 @@ enum TraversalOp : uint8 {
 };
 struct Traversal {
     const Traversal* parent;
+    Mu* address;
     const DescriptionPrivate* desc;
-    Mu* item;
+     // Type can keep track of readonly, but DescriptionPrivate* can't, so keep
+     // track of it here.
+    bool readonly;
      // If this item has a stable address, then trav_reference() can use the
      // address directly instead of having to chain from parent.
     bool addressable;
-    bool readonly;
-     // Only traverse addressable items.  If an unaddressable item is
-     // encountered, the traversal's callback will not be called.
+     // Set if this item has pass_through_addressable AND parent->addressable is
+     // true.
+    bool children_addressable;
+     // Only traverse addressable items.  If an unaddressable and
+     // non-pass-through item is encountered, the traversal's callback will not
+     // be called.
     bool only_addressable;
     TraversalOp op;
     union {
@@ -58,12 +64,12 @@ struct Traversal {
 
 using TravCallback = Callback<void(const Traversal&)>;
 
-void trav_start (const Reference&, const Location&, AccessMode, TravCallback);
- // Only traverses addressable items.  Does not take an AccessMode because it is
- // never used for addressable items.  In only_adddressable mode, trav_*
- // functions will SILENTLY RETURN AND NOT CALL THE CALLBACK if they encounter a
- // non-addressable item.
-void trav_start_addressable (Pointer, const Location&, TravCallback);
+ // If only_addressable is true, will skip over any items that aren't
+ // addressable and don't have pass_through_addressable.
+void trav_start (
+    const Reference&, const Location&, bool only_addressable,
+    AccessMode, TravCallback
+);
 void trav_delegate (const Traversal&, const Accessor*, AccessMode, TravCallback);
 void trav_attr (
     const Traversal&, const Accessor*, const Str&, AccessMode, TravCallback
