@@ -235,29 +235,32 @@ void save (const std::vector<Resource>& reses) {
         }
          // Serialize all before writing to disk
         std::vector<std::function<void()>> committers (reses.size());
-        for (usize i = 0; i < reses.size(); i++) {
-            Resource res = reses[i];
-            PushCurrentResource p (res);
-            if (!res.data->value.has_value()) {
-                throw X::EmptyResourceValue(String(res.data->name.spec()));
-            }
-            auto scheme = universe().require_scheme(res.data->name);
-            if (!scheme->accepts_type(res.data->value.type)) {
-                throw X::UnacceptableResourceType(
-                    String(res.data->name.spec()),
-                    res.data->value.type
+        {
+            KeepLocationCache klc;
+            for (usize i = 0; i < reses.size(); i++) {
+                Resource res = reses[i];
+                PushCurrentResource p (res);
+                if (!res.data->value.has_value()) {
+                    throw X::EmptyResourceValue(String(res.data->name.spec()));
+                }
+                auto scheme = universe().require_scheme(res.data->name);
+                if (!scheme->accepts_type(res.data->value.type)) {
+                    throw X::UnacceptableResourceType(
+                        String(res.data->name.spec()),
+                        res.data->value.type
+                    );
+                }
+                String filename = scheme->get_file(res.data->name);
+                auto contents = tree_to_string(
+                    item_to_tree(&res.data->value, Location(res))
                 );
+                committers[i] = [
+                    contents{std::move(contents)},
+                    filename{std::move(filename)}
+                ]{
+                    string_to_file(contents, filename);
+                };
             }
-            String filename = scheme->get_file(res.data->name);
-            auto contents = tree_to_string(
-                item_to_tree(&res.data->value, Location(res))
-            );
-            committers[i] = [
-                contents{std::move(contents)},
-                filename{std::move(filename)}
-            ]{
-                string_to_file(contents, filename);
-            };
         }
         for (auto res : reses) {
             res.data->state = SAVE_COMMITTING;
