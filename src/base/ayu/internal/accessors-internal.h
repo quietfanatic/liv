@@ -24,7 +24,9 @@ enum AccessorFlags {
      // accessor will not be serialized.
     ACR_READONLY = 0x1,
      // Children considered addressable even if this item is not addressable.
-    ACR_PASS_THROUGH_ADDRESSABLE = 0x2
+    ACR_PASS_THROUGH_ADDRESSABLE = 0x2,
+     // Consider this ACR unaddressable even if it normally would be.
+    ACR_UNADDRESSABLE = 0x4,
 };
 constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
     return AccessorFlags(int(a)|int(b));
@@ -128,7 +130,10 @@ struct Accessor {
     void modify (Mu& from, Callback<void(Mu&)> cb) const {
         access(ACR_MODIFY, from, cb);
     }
-    Mu* address (Mu& from) const { return vt->address(this, from); }
+    Mu* address (Mu& from) const {
+        if (accessor_flags & ACR_UNADDRESSABLE) return null;
+        return vt->address(this, from);
+    }
     Mu* inverse_address (Mu& to) const {
         return vt->inverse_address(this, to);
     }

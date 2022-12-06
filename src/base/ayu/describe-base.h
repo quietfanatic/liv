@@ -362,6 +362,11 @@ struct _AYU_DescribeBase {
      //   dangling pointers around, risking memory corruption, so be careful.
      //   This is intended to be used for reference-like proxy items, which are
      //   generated temporarily but refer to non-temporary items.
+     //   - unaddressable: Consider items accessed through this accessor to be
+     //   unaddressable, even if they look like they should be addressable.  You
+     //   shouldn't need to use this unless the parent has
+     //   pass_through_addressable, or for some reason you're returning
+     //   References to items with unstable addresses in attr_func or elem_func.
 
      // This accessor gives access to a non-static data member of a class by
      // means of a pointer-to-member.  This accessor will be addressable and
@@ -608,6 +613,7 @@ struct _AYU_DescribeBase {
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
     static constexpr in::AccessorFlags pass_through_addressable =
         in::ACR_PASS_THROUGH_ADDRESSABLE;
+    static constexpr in::AccessorFlags unaddressable = in::ACR_UNADDRESSABLE;
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
         ayu::Str name, const Dcrs&... dcrs
