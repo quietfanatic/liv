@@ -25,7 +25,7 @@ using namespace std::string_literals;
 namespace internal {
     struct TestSetData {
         std::string name;
-        std::function<void()> code;
+        void(* code )();
     };
 }
 static std::vector<std::unique_ptr<TestSetData>>& testers () {
@@ -33,7 +33,7 @@ static std::vector<std::unique_ptr<TestSetData>>& testers () {
     return testers;
 }
 
-TestSet::TestSet (const std::string& name, const std::function<void()>& code) {
+TestSet::TestSet (const std::string& name, void(* code )()) {
     testers().emplace_back(new TestSetData{name, code});
 }
 
@@ -80,7 +80,7 @@ bool ok (bool succeeded, const std::string& name) {
     print(m + "\n");
     return succeeded;
 }
-bool try_ok (const std::function<bool()>& code, const std::string& name) {
+bool try_ok (Callback<bool()> code, const std::string& name) {
     return fail_on_throw([&]{
         return ok(code(), name);
     }, name);
@@ -104,7 +104,7 @@ bool is_strcmp(const char* got, const char* expected, const std::string& name) {
         return false;
     }
 }
-bool try_is_strcmp(const std::function<const char*()>& code, const char* expected, const std::string& name) {
+bool try_is_strcmp(Callback<const char*()> code, const char* expected, const std::string& name) {
     return fail_on_throw([&]{
         return is_strcmp(code(), expected, name);
     }, name);
@@ -114,7 +114,7 @@ bool isnt_strcmp(const char* got, const char* unexpected, const std::string& nam
     else if (!got || !unexpected) return fail(name);
     else return ok(0 != strcmp(got, unexpected), name);
 }
-bool try_isnt_strcmp(const std::function<const char*()>& code, const char* unexpected, const std::string& name) {
+bool try_isnt_strcmp(Callback<const char*()> code, const char* unexpected, const std::string& name) {
     return fail_on_throw([&]{
         return isnt_strcmp(code(), unexpected, name);
     }, name);
@@ -143,13 +143,13 @@ bool within (double got, double range, double expected, const std::string& name)
         return false;
     }
 }
-bool try_within (const std::function<double()>& code, double range, double expected, const std::string& name) {
+bool try_within (Callback<double()> code, double range, double expected, const std::string& name) {
     return fail_on_throw([&]{
         return within(code(), range, expected, name);
     }, name);
 }
 
-bool doesnt_throw (const std::function<void()>& code, const std::string& name) {
+bool doesnt_throw (Callback<void()> code, const std::string& name) {
     return fail_on_throw([&]{
         code();
         return pass(name);
@@ -167,7 +167,7 @@ void todo (unsigned num, const std::string& excuse) {
     num_to_todo = num;
     todo_excuse = excuse;
 }
-void todo (const std::string& excuse, const std::function<void()> code) {
+void todo (const std::string& excuse, Callback<void()> code) {
     auto old_excuse = todo_excuse;
     auto old_block_todo = block_todo;
     todo_excuse = excuse;
@@ -279,7 +279,7 @@ namespace internal {
 #endif
     }
 
-    bool fail_on_throw(const std::function<bool()>& code, const std::string& name) {
+    bool fail_on_throw(Callback<bool()> code, const std::string& name) {
         try {
             return code();
         }

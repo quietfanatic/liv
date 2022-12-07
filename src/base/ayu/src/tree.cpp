@@ -282,7 +282,7 @@ static tap::TestSet tests ("base/ayu/tree", []{
     isnt(Tree(3), Tree(3.1), "Compare integers with floats (!=)");
     is(Tree(0.0/0.0), Tree(0.0/0.0), "Tree of NAN equals Tree of NAN");
     is(Str(Tree("asdf")), "asdf"sv, "Round-trip strings");
-    throws<X::WrongForm>([]{ return int(Tree("0")); }, "Can't convert string to integer");
+    throws<X::WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
     try_is<int>([]{ return int(Tree(3.0)); }, 3, "Convert floating to integer");
     try_is<double>([]{ return double(Tree(3)); }, 3.0, "Convert integer to floating");
     throws<X::CantRepresent>([]{
