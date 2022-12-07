@@ -480,10 +480,11 @@ void reload (const std::vector<Resource>& reses) {
         for (auto res : reses) {
             res.data->state = LOADED;
         }
+        throw;
     }
      // Commit step
-    for (auto& [ref_ref, new_ref] : updates) {
-        try {
+    try {
+        for (auto& [ref_ref, new_ref] : updates) {
             if (auto a = ref_ref.address()) {
                 reinterpret_cast<Reference&>(*a) = new_ref;
             }
@@ -491,21 +492,21 @@ void reload (const std::vector<Resource>& reses) {
                 reinterpret_cast<Reference&>(v) = new_ref;
             });
         }
-        catch (std::exception& e) {
-            unrecoverable_exception(e, "while updating references for reload"sv);
-        }
+    }
+    catch (std::exception& e) {
+        unrecoverable_exception(e, "while updating references for reload"sv);
     }
      // Destruct step
     for (auto res : reses) {
         res.data->state = RELOAD_COMMITTING;
     }
-    for (auto res : reses) {
-        try {
+    try {
+        for (auto res : reses) {
             res.data->value = Dynamic();
         }
-        catch (std::exception& e) {
-            unrecoverable_exception(e, "while destructing old values for reload"sv);
-        }
+    }
+    catch (std::exception& e) {
+        unrecoverable_exception(e, "while destructing old values for reload"sv);
     }
     for (auto res : reses) {
         res.data->state = LOADED;
