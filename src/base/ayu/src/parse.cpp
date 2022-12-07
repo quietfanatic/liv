@@ -35,7 +35,8 @@ struct Parser {
     { }
 
      // Utility
-    int look (int i = 0) { return p+i >= end ? EOF : p[i]; }
+    [[gnu::always_inline]]
+    int look (int i = 0) { return p+i >= end ? EOF : uint8(p[i]); }
 
      // Error reporting
     char show_hex_digit (int d) {
@@ -164,34 +165,29 @@ struct Parser {
     Tree got_number () {
         Str word = got_word();
          // Detect special numbers
-        if (word == "+nan"sv) {
-            return Tree(std::numeric_limits<double>::quiet_NaN());
-        }
-        if (word == "+inf"sv) {
-            return Tree(std::numeric_limits<double>::infinity());
-        }
-        if (word == "-inf"sv) {
-            return Tree(-std::numeric_limits<double>::infinity());
+        if (word.size() == 4) {
+            if (word[0] == '+' && word[1] == 'n' && word[2] == 'a' && word[3] == 'n') {
+                return Tree(std::numeric_limits<double>::quiet_NaN());
+            }
+            if (word[0] == '+' && word[1] == 'i' && word[2] == 'n' && word[3] == 'f') {
+                return Tree(std::numeric_limits<double>::infinity());
+            }
+            if (word[0] == '-' && word[1] == 'i' && word[2] == 'n' && word[3] == 'f') {
+                return Tree(-std::numeric_limits<double>::infinity());
+            }
         }
          // Detect sign
         bool minus = false;
         switch (word[0]) {
-            case '+': {
-                word = word.substr(1);
-                if (word.empty() || !std::isdigit(word[0])) {
-                    throw error("Malformed number"sv);
-                }
-                break;
-            }
-            case '-': {
+            case '-':
                 minus = true;
-                word = word.substr(1);
+                [[fallthrough]];
+            case '+':
+                word = Str(word.data()+1, word.size()-1);
                 if (word.empty() || !std::isdigit(word[0])) {
                     throw error("Malformed number"sv);
                 }
                 break;
-            }
-            default: break;
         }
          // Detect hex prefix
         bool hex = false;
@@ -199,7 +195,7 @@ struct Parser {
          && (word[1] == 'x' || word[1] == 'X')
         ) {
             hex = true;
-            word = word.substr(2);
+            word = Str(word.data()+2, word.size()-2);
         }
          // Try integer
         {
@@ -367,10 +363,19 @@ struct Parser {
             case EOF: throw error("Expected term but ran into end of document"sv);
             case ANY_WORD_STARTER: {
                 Str word = got_word();
-                if (word == "null"sv) return Tree(null);
-                else if (word == "true"sv) return Tree(true);
-                else if (word == "false"sv) return Tree(false);
-                else return Tree(word);
+                if (word.size() == 4) {
+                    if (word[0] == 'n' && word[1] == 'u' &&
+                        word[2] == 'l' && word[3] == 'l'
+                    ) return Tree(null);
+                    if (word[0] == 't' && word[1] == 'r' &&
+                        word[2] == 'u' && word[3] == 'e'
+                    ) return Tree(true);
+                }
+                if (word.size() == 5 && word[0] == 'f' &&
+                    word[1] == 'a' && word[2] == 'l' &&
+                    word[3] == 's' && word[4] == 'e'
+                ) return Tree(false);
+                return Tree(word);
             }
 
             case ANY_DECIMAL_DIGIT:
