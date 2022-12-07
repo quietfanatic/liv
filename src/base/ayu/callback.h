@@ -4,6 +4,10 @@
 
 namespace ayu {
 
+template <class F, class Ret, class... Args>
+concept IsMFP = requires { &F::operator(); } &&
+    std::is_same_v<std::invoke_result_t<F, Args...>, Ret>;
+
  // A super lightweight callback class with reference semantics (std::function
  // has value semantics and can be copied and moved, so it's way bigger.)
 template <class> struct CallbackV;
@@ -20,7 +24,7 @@ struct CallbackV<Ret(Args...)> {
      // for debugging.
      // TODO: Reject raw function pointer here
     template <class F> requires(
-        std::is_same_v<std::invoke_result_t<F, Args...>, Ret>
+        IsMFP<F, Ret, Args...>
     )
     [[gnu::always_inline]]
     constexpr CallbackV (const F& f) :
@@ -28,7 +32,7 @@ struct CallbackV<Ret(Args...)> {
         f(&f)
     { }
     template <class F> requires(
-        !std::is_same_v<std::invoke_result_t<F, Args...>, Ret> &&
+        !IsMFP<F, Ret, Args...> && 
         std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
     )
     [[gnu::always_inline]]
