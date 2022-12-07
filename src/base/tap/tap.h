@@ -124,10 +124,6 @@ bool try_isnt (Callback<A()> code, const B& unexpected, const std::string& name 
 bool isnt_strcmp(const char* got, const char* unexpected, const std::string& name = "");
 bool try_isnt_strcmp(Callback<const char*()> code, const char* unexpected, const std::string& name = "");
 
- // There isn't enough of a use case for isnt() to justify coding it, since unlike
- // is(), printing out got and expected isn't particularly useful.
- // Just use ok(a != b, "a isn't b");
-
  // Tests that got is within +/- range of expected.
 bool within (double got, double range, double expected, const std::string& name = "");
 bool try_within (Callback<double()> code, double range, double expected, const std::string& name = "");
