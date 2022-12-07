@@ -31,10 +31,10 @@ my %configs = (
         opts => [qw(-ggdb)],
     },
     opt => {
-        opts => [qw(-Os -DNDEBUG -ggdb -flto)],
+        opts => [qw(-O3 -DNDEBUG -ggdb -flto)],
     },
     val => {
-        opts => [qw(-Os -DNDEBUG -ggdb)],
+        opts => [qw(-O3 -DNDEBUG -ggdb)],
     },
     san => {
         opts => [qw(-ggdb), '-fsanitize=address,undefined', '-fno-sanitize=enum'],
@@ -47,7 +47,7 @@ my %configs = (
         opts => [qw(-Og -DNDEBUG -flto -pg)],
     },
     rel => {
-        opts => [qw(-Os -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
+        opts => [qw(-O3 -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
         strip => 1,
     },
 );
