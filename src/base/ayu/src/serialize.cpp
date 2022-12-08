@@ -908,6 +908,11 @@ namespace ayu::test {
     };
     enum ScalarElemTest : uint8 {
     };
+    struct InternalRefTest {
+        int a;
+        int b;
+        int* p;
+    };
 } using namespace ayu::test;
 
 AYU_DESCRIBE(ayu::test::ToTreeTest,
@@ -1053,23 +1058,37 @@ AYU_DESCRIBE(ayu::test::ScalarElemTest,
         ))
     )
 )
+AYU_DESCRIBE(ayu::test::InternalRefTest,
+    attrs(
+        attr("a", &InternalRefTest::a),
+        attr("b", &InternalRefTest::b),
+        attr("p", &InternalRefTest::p)
+    )
+)
 
 static tap::TestSet tests ("base/ayu/serialize", []{
     using namespace tap;
     ok(get_description_by_type_info(typeid(MemberTest)), "Description was registered");
 
+    auto try_to_tree = [](Reference item, Str tree, Str name){
+        try_is<Tree, Tree>(
+            [&item]{ return item_to_tree(item); },
+            tree_from_string(tree),
+            String(name)
+        );
+    };
+
     auto ttt = ToTreeTest{5};
-    Tree tttt = item_to_tree(&ttt);
-    is(tttt, Tree(5), "item_to_tree works with to_tree descriptor");
+    try_to_tree(&ttt, "5", "item_to_tree works with to_tree descriptor");
 
     ValuesTest vtt = VTA;
-    is(item_to_tree(&vtt), tree_from_string("\"vta\""), "item_to_tree works with string value");
+    try_to_tree(&vtt, "\"vta\"", "item_to_tree works with string value");
     vtt = VTNULL;
-    is(item_to_tree(&vtt), tree_from_string("null"), "item_to_tree works with null value");
+    try_to_tree(&vtt, "null", "item_to_tree works with null value");
     vtt = VTZERO;
-    is(item_to_tree(&vtt), tree_from_string("0"), "item_to_tree works with int value");
+    try_to_tree(&vtt, "0", "item_to_tree works with int value");
     vtt = VTNAN;
-    is(item_to_tree(&vtt), tree_from_string("+nan"), "item_to_tree works with double value");
+    try_to_tree(&vtt, "+nan", "item_to_tree works with double value");
     vtt = ValuesTest(999);
     doesnt_throw([&]{ item_from_string(&vtt, "\"vta\""); });
     is(vtt, VTA, "item_from_tree works with string value");
@@ -1180,7 +1199,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_elem(&est, 8).write_as<int>([](int& v){ v = 99; });
     }, "item_elem and Reference::write_as");
     is(est.xs.at(8), 99, "writing to elem works");
-    is(item_to_tree(&est), tree_from_string("[1 3 6 10 15 0 0 0 99]"), "item_to_tree with length and elem_func");
+    try_to_tree(&est, "[1 3 6 10 15 0 0 0 99]", "item_to_tree with length and elem_func");
     doesnt_throw([&]{
         item_from_string(&est, "[5 2 0 4]");
     }, "item_from_tree with length and elem_func doesn't throw");
@@ -1209,7 +1228,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_attr(&ast, "d").write_as<int>([](int& v){ v = 999; });
     }, "item_attr and Reference::write_as");
     is(ast.xs.at("d"), 999, "writing to attr works");
-    is(item_to_tree(&ast), tree_from_string("{c:0,d:999}"), "item_to_tree with keys and attr_func");
+    try_to_tree(&ast, "{c:0,d:999}", "item_to_tree with keys and attr_func");
     doesnt_throw([&]{
         item_from_string(&ast, "{e:88,f:34}");
     }, "item_from_tree with keys and attr_func doesn't throw");
@@ -1238,14 +1257,14 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_attr(&ast2, "d").write_as<int>([](int& v){ v = 999; });
     }, "item_attr and Reference::write_as");
     is(ast2.xs.at("d"), 999, "writing to attr works");
-    is(item_to_tree(&ast2), tree_from_string("{c:0,d:999}"), "item_to_tree with keys and attr_func");
+    try_to_tree(&ast2, "{c:0,d:999}", "item_to_tree with keys and attr_func");
     doesnt_throw([&]{
         item_from_string(&ast2, "{e:88,f:34}");
     }, "item_from_tree with keys and attr_func doesn't throw");
     is(ast2.xs.at("f"), 34, "item_from_tree works with attr_func");
 
     auto dt = DelegateTest{{4, 5, 6}};
-    is(item_to_tree(&dt), tree_from_string("[4 5 6]"), "item_to_tree with delegate");
+    try_to_tree(&dt, "[4 5 6]", "item_to_tree with delegate");
     doesnt_throw([&]{
         item_from_string(&dt, "[7 8 9]");
     });
@@ -1253,7 +1272,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     is(item_elem(&dt, 2).address_as<float>(), &dt.et.z, "item_elem works with delegate");
 
     std::vector<ToTreeTest> tttv {{444}, {333}};
-    is(item_to_tree(&tttv), tree_from_string("[444 333]"), "template describe on std::vector works");
+    try_to_tree(&tttv, "[444 333]", "template describe on std::vector works");
     doesnt_throw([&]{
         item_from_string(&tttv, "[222 111 666 555]");
     });
@@ -1277,12 +1296,21 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     is(nit.it_val, 56, "Children get init() before parent");
 
     ScalarElemTest set = ScalarElemTest(0xab);
-    is(item_to_tree(&set), tree_from_string("[0xa 0xb]"), "Can use elems() on scalar type (to_tree)");
+    try_to_tree(&set, "[0xa 0xb]", "Can use elems() on scalar type (to_tree)");
     doesnt_throw([&]{
         item_from_string(&set, "[0xc 0xd]");
     });
     is(set, ScalarElemTest(0xcd), "Can use elems() on scalar type (from_tree)");
 
+    todo([&]{
+        InternalRefTest irt = {3, 4, null};
+        irt.p = &irt.a;
+        try_to_tree(&irt, "{a:3 b:4 p:#a}", "Can serialize item with internal refs");
+        doesnt_throw([&]{
+            item_from_string(&irt, "{a:5 b:6 p:#b}");
+        });
+        is(irt.p, &irt.b, "Can deserialize item with internal refs");
+    }, "internal references without resource system nyi");
     done_testing();
 });
 #endif

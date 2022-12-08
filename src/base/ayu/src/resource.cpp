@@ -26,6 +26,25 @@ namespace in {
         ResourceState state = UNLOADED;
     };
 
+    inline void verify_tree_for_scheme (
+        Resource res,
+        const ResourceScheme* scheme,
+        const Tree& tree
+    ) {
+        if (tree.form() == NULLFORM) {
+            throw X::EmptyResourceValue(String(res.name().spec()));
+        }
+        const Array& array = Array(tree);
+        if (array.size() == 2) {
+            Type type = Type(Str(array[0]));
+            if (!scheme->accepts_type(type)) {
+                throw X::UnacceptableResourceType(
+                    String(res.name().spec()), type
+                );
+            }
+        }
+    }
+
 } using namespace in;
 
 Str show_ResourceState (ResourceState state) {
