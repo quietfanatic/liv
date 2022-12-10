@@ -48,8 +48,8 @@ AYU_DESCRIBE(const char*,
 AYU_DESCRIBE(iri::IRI,
     delegate(mixed_funcs<String>(
         [](const iri::IRI& v) {
-            if (auto res = current_resource()) {
-                return v.spec_relative_to(res.name());
+            if (auto loc = current_location()) {
+                return v.spec_relative_to(loc.as_iri());
             }
             else return v.spec();
         },
@@ -59,8 +59,8 @@ AYU_DESCRIBE(iri::IRI,
                 v = iri::IRI();
             }
             else {
-                if (auto res = current_resource()) {
-                    v = iri::IRI(s, res.name());
+                if (auto loc = current_location()) {
+                    v = iri::IRI(s, loc.as_iri());
                 }
                 else {
                     v = iri::IRI(s);

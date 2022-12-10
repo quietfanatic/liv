@@ -60,7 +60,12 @@ struct Traversal {
          // ELEM, ELEM_FUNC
         usize index;
     };
+     // Just updates current_traversal
+    Traversal();
+    ~Traversal();
 };
+
+inline const Traversal* current_traversal = null;
 
 using TravCallback = Callback<void(const Traversal&)>;
 

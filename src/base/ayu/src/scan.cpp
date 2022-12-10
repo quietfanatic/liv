@@ -5,9 +5,9 @@
 #include "../pointer.h"
 #include "../reference.h"
 #include "descriptors-private.h"
-#include "resource-private.h"
-#include "traversal-private.h"
 #include "serialize-private.h"
+#include "traversal-private.h"
+#include "universe-private.h"
 
 namespace ayu {
 namespace in {
@@ -237,7 +237,7 @@ Location reference_to_location (const Reference& item) {
     else throw X::ReferenceNotFound(item.type());
 }
 
-} // namespace ayu
+} using namespace ayu;
 
 AYU_DESCRIBE(ayu::X::ReferenceNotFound,
     delegate(base<X::Error>()),

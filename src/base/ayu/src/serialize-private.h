@@ -6,6 +6,7 @@
 #include "descriptors-private.h"
 #include "location-private.h"
 #include "traversal-private.h"
+#include "universe-private.h"
 
 namespace ayu::in {
 
@@ -18,18 +19,18 @@ struct SwizzleOp {
     FP f;
     Reference item;
     Tree tree;
-    Resource current_resource;
-    SwizzleOp (FP f, const Reference& r, const Tree& t, Resource res) :
-        f(f), item(r), tree(t), current_resource(res)
+    Location loc;
+    SwizzleOp (FP f, const Reference& r, const Tree& t) :
+        f(f), item(r), tree(t), loc(trav_location(*current_traversal))
     { }
 };
 struct InitOp {
     using FP = void(*)(Mu&);
     FP f;
     Reference item;
-    Resource current_resource;
-    InitOp (FP f, const Reference& r, Resource res) :
-        f(f), item(r), current_resource(res)
+    Location loc;
+    InitOp (FP f, const Reference& r) :
+        f(f), item(r), loc(trav_location(*current_traversal))
     { }
 };
 inline std::vector<SwizzleOp> swizzle_ops;

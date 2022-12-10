@@ -98,6 +98,12 @@ Reference item_elem (
     const Reference&, usize, const Location& loc = Location()
 );
 
+///// MISC
+
+ // If a serialization operation is active, get the Location of an item currently
+ // being processed.
+Location current_location ();
+
 ///// DIAGNOSTICS HELP
 
  // While this object is alive, if an exception is thrown while serializing an

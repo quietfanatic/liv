@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include "../describe.h"
-#include "resource-private.h"
 
 namespace ayu {
 using namespace in;
@@ -200,40 +199,40 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
     if (swizzle || init) {
         Reference ref = trav_reference(trav);
         if (swizzle) {
-            swizzle_ops.emplace_back(
-                swizzle->f, ref, tree, current_resource()
-            );
+            swizzle_ops.emplace_back(swizzle->f, ref, tree);
         }
         if (init) {
-            init_ops.emplace_back(
-                init->f, ref, current_resource()
-            );
+            init_ops.emplace_back(init->f, ref);
         }
     }
 }
 
 void in::ser_do_swizzles () {
-     // Swizzling might add more swizzle ops.  It'd be weird, but it's possible
-     // and we should support it.
+     // Swizzling might add more swizzle ops; this will happen if we're
+     // swizzling a pointer which points to a separate resource; that resource
+     // will be load()ed in op.f.
     while (!swizzle_ops.empty()) {
          // Explicitly assign to clear swizzle_ops
         auto swizzles = std::move(swizzle_ops);
         for (auto& op : swizzles) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v, op.tree);
+            trav_start(
+                op.item, op.loc, false, ACR_MODIFY, [&](const Traversal& trav)
+            {
+                op.f(*trav.address, op.tree);
             });
         }
     }
 }
 void in::ser_do_inits () {
-     // Initting might add some more init ops.
+     // Initting might add some more init ops.  It'd be weird, but it's allowed
+     // for an init() to load another resource.
     while (!init_ops.empty()) {
         auto inits = std::move(init_ops);
         for (auto& op : inits) {
-            PushCurrentResource p (op.current_resource);
-            op.item.modify([&](Mu& v){
-                op.f(v);
+            trav_start(
+                op.item, op.loc, false, ACR_MODIFY, [&](const Traversal& trav)
+            {
+                op.f(*trav.address);
             });
              // Initting might even add more swizzle ops.
             ser_do_swizzles();
@@ -748,6 +747,15 @@ Reference item_elem (const Reference& item, usize index, const Location& loc) {
         return r;
     }
     else throw X::ElemNotFound(Location(loc), index);
+}
+
+///// MISC
+
+Location current_location () {
+    if (current_traversal) {
+        return trav_location(*current_traversal);
+    }
+    else return Location();
 }
 
 } using namespace ayu;

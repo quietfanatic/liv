@@ -4,12 +4,19 @@
 
 namespace ayu::in {
 
+Traversal::Traversal () : parent(current_traversal) {
+    current_traversal = this;
+}
+Traversal::~Traversal () {
+    assert(current_traversal == this);
+    current_traversal = parent;
+}
+
 void trav_start (
     const Reference& ref, const Location& loc, bool only_addressable,
     AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
-    trav.parent = null;
     trav.address = ref.address();
     trav.desc = DescriptionPrivate::get(ref.type());
     trav.readonly = ref.readonly();
@@ -35,7 +42,6 @@ static void trav_acr (
     Traversal& trav, const Traversal& parent, const Accessor* acr,
     AccessMode mode, TravCallback cb
 ) {
-    trav.parent = &parent;
     trav.address = acr->address(*parent.address);
     trav.desc = DescriptionPrivate::get(acr->type(parent.address));
     trav.readonly = parent.readonly || acr->accessor_flags & ACR_READONLY;
@@ -64,7 +70,6 @@ static void trav_ref (
     Traversal& trav, const Traversal& parent, const Reference& ref,
     AccessMode mode, TravCallback cb
 ) {
-    trav.parent = &parent;
     trav.address = ref.address();
     trav.desc = DescriptionPrivate::get(ref.type());
     trav.readonly = parent.readonly || ref.readonly();
@@ -91,6 +96,7 @@ static void trav_ref (
 void trav_delegate (
     const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallback cb
 ) {
+    assert(&parent == current_traversal);
     Traversal trav;
     trav.op = DELEGATE;
     trav_acr(trav, parent, acr, mode, cb);
@@ -100,6 +106,7 @@ void trav_attr (
     const Traversal& parent, const Accessor* acr, const Str& key,
     AccessMode mode, TravCallback cb
 ) {
+    assert(&parent == current_traversal);
     Traversal trav;
     trav.op = ATTR;
     trav.key = &key;
@@ -110,6 +117,7 @@ void trav_attr_func (
     const Traversal& parent, const Reference& ref,
     Reference(* func )(Mu&, Str), const Str& key, AccessMode mode, TravCallback cb
 ) {
+    assert(&parent == current_traversal);
     Traversal trav;
     trav.op = ATTR_FUNC;
     trav.attr_func = func;
@@ -121,6 +129,7 @@ void trav_elem (
     const Traversal& parent, const Accessor* acr, usize index,
     AccessMode mode, TravCallback cb
 ) {
+    assert(&parent == current_traversal);
     Traversal trav;
     trav.op = ELEM;
     trav.index = index;
@@ -131,6 +140,7 @@ void trav_elem_func (
     const Traversal& parent, const Reference& ref,
     Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallback cb
 ) {
+    assert(&parent == current_traversal);
     Traversal trav;
     trav.op = ELEM_FUNC;
     trav.elem_func = func;

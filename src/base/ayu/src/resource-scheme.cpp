@@ -4,9 +4,10 @@
 #include <vector>
 #include "../describe.h"
 #include "char-cases-private.h"
-#include "resource-private.h"
+#include "universe-private.h"
 
 namespace ayu {
+using namespace in;
 
 void ResourceScheme::activate () const {
     auto& schemes = universe().schemes;
@@ -34,7 +35,7 @@ void ResourceScheme::deactivate () const {
     schemes.erase(scheme_name);
 }
 
-} // namespace ayu
+} using namespace ayu;
 
 ///// AYU DESCRIPTIONS
 

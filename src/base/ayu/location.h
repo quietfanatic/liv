@@ -59,6 +59,9 @@ struct Location {
     const usize* index () const;
      // Returns 1 for root, plus 1 for every key or index in the list.
     usize length () const;
+
+     // Walks all the way to the root and returns its Resource, if any
+    const Resource* root_resource () const;
 };
 
 bool operator == (const Location& a, const Location& b);

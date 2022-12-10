@@ -222,6 +222,17 @@ usize Location::length () const {
     return r;
 }
 
+const Resource* Location::root_resource () const {
+    if (!data) return null;
+    switch (data->form) {
+        case ROOT: return &static_cast<RootLocation*>(data.p)->resource;
+        case INDEX: return static_cast<IndexLocation*>(data.p)->parent.root_resource();
+        case KEY: return static_cast<KeyLocation*>(data.p)->parent.root_resource();
+        case ERROR_LOC: rethrow(*this);
+        default: AYU_INTERNAL_UGUU();
+    }
+}
+
 bool operator == (const Location& a, const Location& b) {
     if (a.data == b.data) return true;
     if (!a.data || !b.data) return false;
@@ -268,45 +279,14 @@ Reference reference_from_location (Location loc) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::Location,
-    to_tree([](const Location& v){
-        if (v) {
-            IRI iri = v.as_iri();
-            return item_to_tree(&iri);
+    delegate(mixed_funcs<IRI>(
+        [](const Location& v){
+            return v.as_iri();
+        },
+        [](Location& v, const IRI& m){
+            v = Location(m);
         }
-        else return Tree("");
-    }),
-    from_tree([](Location& v, const Tree& t){
-        if (t.form() == STRING) {
-            IRI iri;
-            item_from_tree(&iri, t);
-            v = Location(iri);
-            return;
-        }
-         // deserializing Location from array is deprecated
-        v = Location();
-        if (t.form() != ARRAY) throw X::InvalidForm(Location(), t);
-        const Array& a = t.data->as_known<Array>();
-        if (a.size() == 0) return;
-        v = Location(Resource(Str(a[0])));
-        for (usize i = 1; i < a.size(); i++) {
-            switch (a[i].form()) {
-                case STRING:
-                    v = Location(v, a[i].data->as_known<String>());
-                    break;
-                case NUMBER:
-                    v = Location(v, int64(a[i]));
-                    break;
-                case ERROR: {
-                    std::rethrow_exception(
-                        a[i].data->as_known<std::exception_ptr>()
-                    );
-                }
-                default: {
-                    throw X::GenericError("Location element is not string or integer"s);
-                }
-            }
-        }
-    })
+    ))
 );
 
 // TODO: tests

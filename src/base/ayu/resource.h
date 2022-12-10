@@ -9,11 +9,12 @@
  // Resource names are an IRI.
  //
  // Resources can have no name, in which case they are anonymous.  Anonymous
- // resources cannot be reloaded or saved, but they can be unloaded.  Anonymous
- // resources can contain references to named resources, and those references
- // will be updated if those resources are reloaded.  Named resources cannot
- // be saved if they contain references to anonymous resources, because there's
- // no way to serialize that reference as a path.
+ // resources cannot be reloaded or saved, and they can be unloaded but once
+ // they are unloaded they can never be loaded again.  Anonymous resources can
+ // contain references to named resources, and those references will be updated
+ // if those resources are reloaded.  Named resources cannot be saved if they
+ // contain references to anonymous resources, because there's no way to
+ // serialize that reference as a path.
  //
  // So, if you have global variables that reference things in resources, make
  // those global variables anonymous resources, and they will be automatically

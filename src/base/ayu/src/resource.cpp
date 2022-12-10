@@ -12,19 +12,12 @@
 #include "../resource-scheme.h"
 #include "../scan.h"
 #include "../serialize.h"
-#include "resource-private.h"
+#include "universe-private.h"
 
 ///// INTERNALS
 
 namespace ayu {
 namespace in {
-
-    struct ResourceData {
-        IRI name;
-        Dynamic value {};
-        Dynamic old_value {};  // Used when reloading
-        ResourceState state = UNLOADED;
-    };
 
     inline void verify_tree_for_scheme (
         Resource res,
@@ -198,7 +191,6 @@ void load (const std::vector<Resource>& reses) {
             res.data->state = LOAD_CONSTRUCTING;
         }
         for (auto res : rs) {
-            PushCurrentResource p (res);
             auto scheme = universe().require_scheme(res.data->name);
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
@@ -258,7 +250,6 @@ void save (const std::vector<Resource>& reses) {
             KeepLocationCache klc;
             for (usize i = 0; i < reses.size(); i++) {
                 Resource res = reses[i];
-                PushCurrentResource p (res);
                 if (!res.data->value.has_value()) {
                     throw X::EmptyResourceValue(String(res.data->name.spec()));
                 }
@@ -425,7 +416,6 @@ void reload (const std::vector<Resource>& reses) {
     try {
          // Construct step
         for (auto res : reses) {
-            PushCurrentResource p (res);
             auto scheme = universe().require_scheme(res.data->name);
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
@@ -533,20 +523,17 @@ void reload (const std::vector<Resource>& reses) {
 }
 
 String resource_filename (Resource res) {
-    PushCurrentResource p (res);
     auto scheme = universe().require_scheme(res.data->name);
     return scheme->get_file(res.data->name);
 }
 
 void remove_source (Resource res) {
-    PushCurrentResource p (res);
     auto scheme = universe().require_scheme(res.data->name);
     String filename = scheme->get_file(res.data->name);
     remove_utf8(filename.c_str());
 }
 
 bool source_exists (Resource res) {
-    PushCurrentResource p (res);
     auto scheme = universe().require_scheme(res.data->name);
     String filename = scheme->get_file(res.data->name);
     if (std::FILE* f = fopen_utf8(filename.c_str())) {
@@ -557,7 +544,10 @@ bool source_exists (Resource res) {
 }
 
 Resource current_resource () {
-    return universe().current_resource;
+    if (auto res = current_location().root_resource()) {
+        return *res;
+    }
+    else return Resource();
 }
 
 std::vector<Resource> loaded_resources () {
@@ -569,16 +559,6 @@ std::vector<Resource> loaded_resources () {
     return r;
 }
 
-///// INTERNALS
-
-namespace in {
-
-Universe& universe () {
-    static Universe r;
-    return r;
-}
-
-} using namespace in;
 } using namespace ayu;
 
 ///// DESCRIPTIONS
@@ -700,7 +680,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{ remove_source(output); }, "Can call remove_source twice");
     Location loc;
     doesnt_throw([&]{
-        item_from_string(&loc, "[\"" + input.name().spec() + "\" bar 1]");
+        item_from_string(&loc, input.name().spec() + "#bar/1");
     }, "Can read location from tree");
     Reference ref;
     doesnt_throw([&]{
