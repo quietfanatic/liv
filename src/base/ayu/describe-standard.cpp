@@ -48,8 +48,11 @@ AYU_DESCRIBE(const char*,
 AYU_DESCRIBE(iri::IRI,
     delegate(mixed_funcs<String>(
         [](const iri::IRI& v) {
-            if (auto loc = current_location()) {
-                return v.spec_relative_to(loc.as_iri());
+             // current_location().as_iri() would be more intentful, but also
+             // slower since it does a bunch of string concatenation to build
+             // the IRI fragment, which we don't need.
+            if (auto res = current_location().root_resource()) {
+                return v.spec_relative_to(res->name());
             }
             else return v.spec();
         },
@@ -59,8 +62,8 @@ AYU_DESCRIBE(iri::IRI,
                 v = iri::IRI();
             }
             else {
-                if (auto loc = current_location()) {
-                    v = iri::IRI(s, loc.as_iri());
+                if (auto res = current_location().root_resource()) {
+                    v = iri::IRI(s, res->name());
                 }
                 else {
                     v = iri::IRI(s);
