@@ -22,6 +22,9 @@ using iri::IRI;
  //
  // If no ResourceSchemes are active, then a default resource scheme with the
  // name "file" will be used, which maps resource names to files on disk.
+ //
+ // ResourceSchemes are allowed to be constructed at init time, but you can't
+ // manipulate any Types until main() starts.
 struct ResourceScheme {
      // Must be a valid scheme name matching [a-z][a-z0-9+.-]*
     const String scheme_name;

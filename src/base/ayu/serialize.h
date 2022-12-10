@@ -1,6 +1,8 @@
 // This module contains the meat of the serialization functionality of this
 // library, implementing algorithms to transform objects to and from trees,
 // based on the information in their descriptions.
+//
+// Serialization functions cannot be used until main() starts.
 
 #pragma once
 

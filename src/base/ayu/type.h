@@ -15,7 +15,8 @@ namespace ayu {
  //
  // The default value will cause null derefs if you do anything with it.
  //
- // TODO: Document that Types cannot be used before main() begins.
+ // Types cannot be constructed or used until main() starts (except the empty
+ // Type).
 struct Type {
      // Uses a tagged pointer; the first bit determines readonly (const), and the rest
      // points to an ayu::in::Description.

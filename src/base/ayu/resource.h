@@ -14,11 +14,14 @@
  // contain references to named resources, and those references will be updated
  // if those resources are reloaded.  Named resources cannot be saved if they
  // contain references to anonymous resources, because there's no way to
- // serialize that reference as a path.
+ // serialize that reference as a path.  TODO: actually implement this
  //
  // So, if you have global variables that reference things in resources, make
  // those global variables anonymous resources, and they will be automatically
  // updated whenever the resource is reloaded.
+ //
+ // The Resource class itself can be constructed at init time, but Resources
+ // cannot be loaded or have their value set until main() starts.
 
 #pragma once
 

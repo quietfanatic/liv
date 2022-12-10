@@ -6,6 +6,9 @@
 //
 // Dynamics can either be statically const (e.g. const Dynamic&) or dynamically
 // const (having a readonly type).
+//
+// Dynamics cannot be constructed until main() starts (except for the empty
+// Dynamic).
 #pragma once
 
 #include <cassert>

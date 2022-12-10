@@ -39,6 +39,9 @@
 // differentiate them, call .type(), which will return the empty Type for the
 // empty Reference.  .address() will return null for null References and
 // segfault for the empty Reference.
+//
+// References cannot be constructed until main() starts (except for the typeless
+// empty Reference).
 
 #pragma once
 
@@ -58,7 +61,7 @@ struct Reference {
     const in::Accessor* const acr;
 
      // The empty value will cause null derefs if you do anything with it.
-    constexpr Reference () : host(null), acr(null) { }
+    constexpr Reference (Null n = null) : host(n), acr(n) { }
      // Construct from internal data.
     Reference (Pointer h, const in::Accessor* a) : host(h), acr(a) {
         if (acr) acr->inc();
@@ -68,9 +71,9 @@ struct Reference {
      // Construct from native pointer.
     template <class T>
         requires (!std::is_same_v<T, Mu>)
-    constexpr Reference (T* p) : host(p), acr(null) { }
+    Reference (T* p) : host(p), acr(null) { }
      // Construct from unknown pointer and type
-    constexpr Reference (Mu* p, Type t) : host(p, t), acr(null) { }
+    Reference (Mu* p, Type t) : host(p, t), acr(null) { }
      // For use in attr_func and elem_func.
      // TODO: Also check std::is_base_of
     template <class From, class Acr> requires (

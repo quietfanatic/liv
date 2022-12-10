@@ -6,7 +6,6 @@
 #include "descriptors-private.h"
 #include "location-private.h"
 #include "traversal-private.h"
-#include "universe-private.h"
 
 namespace ayu::in {
 

@@ -1,5 +1,8 @@
 // An ayu::Pointer is a runtime-typed pointer.  It is trivially copyable and
 // destructable, and can be casted from and to native pointers.
+//
+// Pointers cannot be constructed until main() starts (except for the typeless
+// empty Pointer).
 
 #pragma once
 #include <cassert>
@@ -12,7 +15,7 @@ struct Pointer {
     Type type;
 
     constexpr Pointer (Null n = null) : address(n) { }
-    constexpr Pointer (Mu* a, Type t) : address(a), type(t) { }
+    Pointer (Mu* a, Type t) : address(a), type(t) { }
 
     template <class T>
         requires (!std::is_same_v<std::remove_cv_t<T>, void>
