@@ -6,10 +6,13 @@
 #pragma once
 
 #include <array>
+#include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -97,6 +100,136 @@ AYU_DESCRIBE_TEMPLATE(
     })
 )
 
+ // std::map with strings for keys.  We might add a more general map description
+ // later.
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::map<std::string, T>),
+    desc::name([]{
+        using namespace std::literals;
+        static ayu::String r = ayu::cat(
+            "std::map<std::string, "sv, ayu::Type::CppType<T>().name(), '>'
+        );
+        return ayu::Str(r);
+    }),
+    desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
+        [](const std::map<std::string, T>& v){
+            std::vector<std::string_view> r;
+            for (auto& p : v) {
+                r.emplace_back(p.first);
+            }
+            return r;
+        },
+        [](std::map<std::string, T>& v,
+           const std::vector<std::string_view>& ks
+        ){
+            v.clear();
+            for (auto& k : ks) {
+                v.emplace(k, T());
+            }
+        }
+    )),
+    desc::attr_func([](std::map<std::string, T>& v, ayu::Str k){
+        auto iter = v.find(k);
+        return iter != v.end()
+            ? ayu::Reference(&iter->second)
+            : ayu::Reference();
+    })
+)
+
+ // std::unordered_set
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_set<T>),
+    desc::name([]{
+        using namespace std::literals;
+        static ayu::String r = ayu::cat(
+            "std::unordered_set<"sv,
+            ayu::Type::CppType<T>().name(), '>'
+        );
+        return ayu::Str(r);
+    }),
+     // Although sets serialize to arrays, accessing elements in a set by index
+     // doesn't make sense, so use to_tree and from_tree instead of length and
+     // elem_func
+    desc::to_tree([](const std::unordered_set<T>& v){
+        ayu::Array a;
+        for (auto& e : v) {
+            a.emplace_back(ayu::item_to_tree(e));
+        }
+        return ayu::Tree(std::move(a));
+    }),
+    desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
+        if (tree.form() != ayu::ARRAY) {
+            throw ayu::X::InvalidForm(ayu::current_location(), tree);
+        }
+        auto& a = static_cast<const ayu::Array&>(tree);
+        v.reserve(a.size());
+         // We have to use C++17's node interface in order to preserve the
+         // address of individual elements for swizzling.  This is a little
+         // awkward, and if we don't do it, item_from_tree will probably corrupt
+         // memory if there are swizzle ops.  TODO: Figure out a way to prevent
+         // that from happening, maybe by making the default behavior to do
+         // swizzling immediately and add a DELAY_SWIZZLE flag to
+         // item_from_tree to get the delayed behavior.
+        std::unordered_set<T> source;
+        for (auto& e : a) {
+            auto iter = source.emplace().first;
+            auto node = source.extract(iter);
+            item_from_tree(&node.value(), e);
+            auto res = v.insert(std::move(node));
+             // Check for duplicates.
+            if (!res.inserted) {
+                throw ayu::X::GenericError(ayu::cat(
+                    "Duplicate element given for ",
+                    ayu::Type::CppType<std::unordered_set<T>>().name()
+                ));
+            }
+        }
+    })
+)
+
+ // std::set.  Same as std::unordered_set above, but elements will be serialized
+ // in sorted order.
+AYU_DESCRIBE_TEMPLATE(
+    AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
+    AYU_DESCRIBE_TEMPLATE_TYPE(std::set<T>),
+    desc::name([]{
+        using namespace std::literals;
+        static ayu::String r = ayu::cat(
+            "std::set<"sv, ayu::Type::CppType<T>().name(), '>'
+        );
+        return ayu::Str(r);
+    }),
+    desc::to_tree([](const std::set<T>& v){
+        ayu::Array a;
+        for (auto& e : v) {
+            a.emplace_back(ayu::item_to_tree(&e));
+        }
+        return ayu::Tree(std::move(a));
+    }),
+    desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
+        if (tree.form() != ayu::ARRAY) {
+            throw ayu::X::InvalidForm(ayu::current_location(), tree);
+        }
+        auto& a = static_cast<const ayu::Array&>(tree);
+        std::set<T> source;
+        for (auto& e : a) {
+            auto iter = source.emplace().first;
+            auto node = source.extract(iter);
+            item_from_tree(&node.value(), e);
+            auto res = v.insert(std::move(node));
+             // Check for duplicates.
+            if (!res.inserted) {
+                throw ayu::X::GenericError(ayu::cat(
+                    "Duplicate element given for ",
+                    ayu::Type::CppType<std::set<T>>().name()
+                ));
+            }
+        }
+    })
+)
+
  // Raw pointers
  // TODO: figure out if we need to do something for const T*
 AYU_DESCRIBE_TEMPLATE(
@@ -168,7 +301,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
         else if (tree.form() == ayu::ARRAY) {
-            const auto& a = ayu::Array(tree);
+            auto& a = static_cast<const ayu::Array&>(tree);
             if (a.size() != n) {
                 throw ayu::X::WrongLength(&v, n, n, a.size());
             }
@@ -176,6 +309,7 @@ AYU_DESCRIBE_TEMPLATE(
                 v[i] = char(a[i]);
             }
         }
+        else throw ayu::X::InvalidForm(ayu::current_location(), tree);
     }),
      // Allow accessing individual elements like an array
     desc::length(desc::template constant<ayu::usize>(n)),
