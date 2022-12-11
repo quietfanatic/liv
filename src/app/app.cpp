@@ -1,12 +1,11 @@
 #include "app.h"
 
 #include <filesystem>
-#include <unordered_set>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include "../base/ayu/parse.h"
 #include "../base/ayu/resource.h"
-#include "../base/uni/text.h"
+#include "files.h"
 #include "settings.h"
 
 namespace fs = std::filesystem;
@@ -142,100 +141,16 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 }
 
 void App::open_files (const std::vector<String>& files) {
-    std::unordered_set<Str> extensions;
-    auto& supported = setting(&FilesSettings::supported_extensions);
-    extensions.reserve(supported.size());
-    for (auto& ext : supported) {
-        extensions.emplace(ext);
-    }
-
-    Str folder;
-    if (files.size() == 1) {
-        if (fs::is_directory(files[0])) {
-            folder = files[0];
-        }
-        else if (fs::exists(files[0])) {
-            auto folder_p = fs::path(files[0]).remove_filename();
-            std::u8string folder_u8 = folder_p.u8string();
-            std::string& folder = reinterpret_cast<std::string&>(folder_u8);
-            std::vector<String> real_files;
-            for (auto& entry : fs::directory_iterator(folder_p)) {
-                std::u8string u8name = entry.path().u8string();
-                std::string& name = reinterpret_cast<std::string&>(u8name);
-                Str extension;
-                usize dotpos = name.rfind('.');
-                if (dotpos != std::string::npos) {
-                    extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
-                }
-                if (!extensions.count(extension)) continue;
-                real_files.emplace_back(std::move(name));
-            }
-            std::sort(
-                real_files.begin(), real_files.end(), &uni::natural_lessthan
-            );
-            auto book = std::make_unique<Book>(
-                *this, std::move(real_files), std::move(folder)
-            );
-            book->set_page(book->get_page_no_with_filename(files[0]));
-            add_book(*this, std::move(book));
-            return;
-        }
-    }
-    std::vector<String> real_files;
-    for (auto& file : files) {
-        if (fs::is_directory(file)) {
-            usize subfiles_begin = real_files.size();
-            for (auto& entry : fs::recursive_directory_iterator(file)) {
-                std::u8string u8name = entry.path().u8string();
-                std::string& name = reinterpret_cast<std::string&>(u8name);
-                Str extension;
-                usize dotpos = name.rfind('.');
-                if (dotpos != std::string::npos) {
-                    extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
-                }
-                if (!extensions.count(extension)) continue;
-                real_files.emplace_back(std::move(name));
-            }
-            std::sort(
-                real_files.begin() + subfiles_begin,
-                real_files.end(),
-                &uni::natural_lessthan
-            );
-        }
-        else real_files.emplace_back(file);
-    }
-    add_book(*this, std::make_unique<Book>(
-        *this, std::move(real_files), String(folder)
-    ));
+    FilesToOpen to_open = expand_files(*this, files);
+    auto book = std::make_unique<Book>(
+        *this, std::move(to_open.files), std::move(to_open.folder)
+    );
+    book->set_page(to_open.start_index + 1);
+    add_book(*this, std::move(book));
 }
 
-void App::open_list (Str filename) {
-    std::vector<String> lines {""};
-    if (filename == "-") {
-        for (;;) {
-            int c = getchar();
-            if (c == EOF) break;
-            else if (c == '\n') {
-                if (lines.back() != "") {
-                    lines.emplace_back();
-                }
-            }
-            else lines.back() += char(c);
-        }
-    }
-    else {
-        for (char c : ayu::string_from_file(filename)) {
-            if (c == '\n') {
-                if (lines.back() != "") {
-                    lines.emplace_back();
-                }
-            }
-            else lines.back().push_back(c);
-        }
-        fs::current_path(fs::absolute(filename).remove_filename());
-    }
-    if (lines.back() == "") lines.pop_back();
-    open_files(lines);
+void App::open_list (Str list_filename) {
+    return open_files(read_list(list_filename));
 }
 
 void App::close_book (Book* book) {
