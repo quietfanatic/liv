@@ -45,7 +45,7 @@ struct WindowSettings {
     std::optional<bool> fullscreen;
 };
 struct FilesSettings {
-    std::optional<std::vector<String>> supported_extensions;
+    std::optional<std::set<String>> supported_extensions;
 };
 struct ControlSettings {
     std::optional<float> drag_speed;
@@ -56,6 +56,8 @@ struct MemorySettings {
     std::optional<double> page_cache_mb;
 };
 
+ // Using inheritance instead of containment because it makes using member
+ // pointers much simpler.
 struct Settings :
     PageSettings, WindowSettings, FilesSettings,
     ControlSettings, MemorySettings

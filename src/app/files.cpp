@@ -11,15 +11,7 @@ namespace fs = std::filesystem;
 namespace app {
 
 FilesToOpen expand_files (App& app, const std::vector<String>& specified) {
-     // Put extensions in a hashset.  This probably isn't any faster.
-     // TODO: Just put a std::set (for defined ordering) in the settings and
-     // give ayu/describe-standard.h an AYU_DESCRIBE for std::set.
-    std::unordered_set<Str> extensions;
-    auto& supported = app.setting(&FilesSettings::supported_extensions);
-    extensions.reserve(supported.size());
-    for (auto& ext : supported) {
-        extensions.emplace(ext);
-    }
+    auto& extensions = app.setting(&FilesSettings::supported_extensions);
 
     if (specified.size() == 1 &&
         fs::exists(specified[0]) &&
@@ -39,7 +31,7 @@ FilesToOpen expand_files (App& app, const std::vector<String>& specified) {
             if (dotpos != std::string::npos) {
                 extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
             }
-            if (!extensions.count(extension)) continue;
+            if (!extensions.count(String(extension))) continue;
             r.files.emplace_back(std::move(name));
         }
         std::sort(
@@ -74,7 +66,7 @@ FilesToOpen expand_files (App& app, const std::vector<String>& specified) {
                     if (dotpos != std::string::npos) {
                         extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
                     }
-                    if (!extensions.count(extension)) continue;
+                    if (!extensions.count(String(extension))) continue;
                     r.files.emplace_back(std::move(name));
                 }
                 std::sort(

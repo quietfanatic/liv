@@ -20,7 +20,7 @@ const Settings builtin_default_settings = {
         .fullscreen = false,
     },
     FilesSettings{
-        .supported_extensions = std::vector<String>{
+        .supported_extensions = std::set<String>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg", "png",
             "tif", "tiff", "xbm", "xpm", "webp",
         },
