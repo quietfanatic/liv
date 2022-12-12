@@ -89,7 +89,6 @@ Tree in::ser_to_tree (const Traversal& trav) {
         else throw;
     }
 }
- // TODO: Add location parameter
 Tree item_to_tree (const Reference& item, const Location& loc) {
     Tree r;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
@@ -199,15 +198,17 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
     if (swizzle || init) {
         Reference ref = trav_reference(trav);
         if (swizzle) {
-            swizzle_ops.emplace_back(swizzle->f, ref, tree);
+            IFTContext::current->swizzle_ops.emplace_back(
+                swizzle->f, ref, tree
+            );
         }
         if (init) {
-            init_ops.emplace_back(init->f, ref);
+            IFTContext::current->init_ops.emplace_back(init->f, ref);
         }
     }
 }
 
-void in::ser_do_swizzles () {
+void in::IFTContext::do_swizzles () {
      // Swizzling might add more swizzle ops; this will happen if we're
      // swizzling a pointer which points to a separate resource; that resource
      // will be load()ed in op.f.
@@ -223,7 +224,7 @@ void in::ser_do_swizzles () {
         }
     }
 }
-void in::ser_do_inits () {
+void in::IFTContext::do_inits () {
      // Initting might add some more init ops.  It'd be weird, but it's allowed
      // for an init() to load another resource.
     while (!init_ops.empty()) {
@@ -235,40 +236,32 @@ void in::ser_do_inits () {
                 op.f(*trav.address);
             });
              // Initting might even add more swizzle ops.
-            ser_do_swizzles();
+            do_swizzles();
         }
     }
 }
 
+IFTContext* IFTContext::current = null;
+
 void item_from_tree (
-    const Reference& item, const Tree& tree, const Location& loc
+    const Reference& item, const Tree& tree, const Location& loc,
+    ItemFromTreeFlags flags
 ) {
-    static bool in_from_tree = false;
-    if (in_from_tree) {
-         // If we're reentering, swizzles and inits will be done later.
+    if (flags & DELAY_SWIZZLE && IFTContext::current) {
+         // Delay swizzle and inits to the outer item_from_tree call.  Basically
+         // this just means keep the current context instead of making a new
+         // one.
         trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
             ser_from_tree(trav, tree);
         });
     }
     else {
-        if (!swizzle_ops.empty() || !init_ops.empty()) {
-            AYU_INTERNAL_UGUU();
-        }
-        in_from_tree = true;
-        try {
-            trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
-                ser_from_tree(trav, tree);
-            });
-            ser_do_swizzles();
-            ser_do_inits();
-            in_from_tree = false;
-        }
-        catch (...) {
-            in_from_tree = false;
-            swizzle_ops.clear();
-            init_ops.clear();
-            throw;
-        }
+        IFTContext context;
+        trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
+            ser_from_tree(trav, tree);
+        });
+        context.do_swizzles();
+        context.do_inits();
     }
 }
 

@@ -195,13 +195,17 @@ void load (const std::vector<Resource>& reses) {
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
-            item_from_tree(&res.data->value, tree, Location(res));
+            item_from_tree(
+                &res.data->value, tree, Location(res), DELAY_SWIZZLE
+            );
         }
         for (auto res : rs) {
             res.data->state = LOADED;
         }
     }
     catch (...) {
+         // TODO: When recursing load(), rollback innerly loading resources if
+         // an outerly loading resource throws.
         for (auto res : rs) {
             res.data->state = LOAD_ROLLBACK;
         }
@@ -420,6 +424,8 @@ void reload (const std::vector<Resource>& reses) {
             String filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
+             // Do not DELAY_SWIZZLE for reload.  TODO: Forbid reload while a
+             // serialization operation is ongoing.
             item_from_tree(&res.data->value, tree, Location(res));
         }
         for (auto res : reses) {
@@ -621,6 +627,8 @@ AYU_DESCRIBE(ayu::X::RemoveSourceFailed,
 
 #ifndef TAP_DISABLE_TESTS
 #include "test-environment-private.h"
+
+AYU_DESCRIBE_INSTANTIATE(std::unordered_set<int32*>)
 
 static tap::TestSet tests ("base/ayu/resource", []{
     using namespace tap;

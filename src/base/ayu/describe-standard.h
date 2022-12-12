@@ -165,18 +165,19 @@ AYU_DESCRIBE_TEMPLATE(
         }
         auto& a = static_cast<const ayu::Array&>(tree);
         v.reserve(a.size());
-         // We have to use C++17's node interface in order to preserve the
-         // address of individual elements for swizzling.  This is a little
-         // awkward, and if we don't do it, item_from_tree will probably corrupt
-         // memory if there are swizzle ops.  TODO: Figure out a way to prevent
-         // that from happening, maybe by making the default behavior to do
-         // swizzling immediately and add a DELAY_SWIZZLE flag to
-         // item_from_tree to get the delayed behavior.
+         // If we use C++17's node interface, we can get away with not doing a
+         // move() on the element, thereby supporting elements without a move
+         // constructor.
         std::unordered_set<T> source;
+        auto loc = ayu::current_location();
+        ayu::usize i = 0;
         for (auto& e : a) {
             auto iter = source.emplace().first;
             auto node = source.extract(iter);
-            item_from_tree(&node.value(), e);
+             // This Location value isn't really correct because the order of
+             // the elements can change, but it's needed if there are References
+             // inside the elements.
+            item_from_tree(&node.value(), e, ayu::Location(loc, i++));
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {
@@ -214,10 +215,12 @@ AYU_DESCRIBE_TEMPLATE(
         }
         auto& a = static_cast<const ayu::Array&>(tree);
         std::set<T> source;
+        auto loc = ayu::current_location();
+        ayu::usize i = 0;
         for (auto& e : a) {
             auto iter = source.emplace().first;
             auto node = source.extract(iter);
-            item_from_tree(&node.value(), e);
+            item_from_tree(&node.value(), e, ayu::Location(loc, i++));
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {

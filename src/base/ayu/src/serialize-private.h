@@ -32,11 +32,22 @@ struct InitOp {
         f(f), item(r), loc(trav_location(*current_traversal))
     { }
 };
-inline std::vector<SwizzleOp> swizzle_ops;
-inline std::vector<InitOp> init_ops;
+struct IFTContext {
+    static IFTContext* current;
+    IFTContext* previous;
+    IFTContext () : previous(current) {
+        current = this;
+    }
+    ~IFTContext () {
+        assert(current == this);
+        current = previous;
+    }
 
-void ser_do_swizzles ();
-void ser_do_inits ();
+    std::vector<SwizzleOp> swizzle_ops;
+    std::vector<InitOp> init_ops;
+    void do_swizzles ();
+    void do_inits ();
+};
 void ser_from_tree (const Traversal&, const Tree&);
 
 ///// ATTR OPERATIONS

@@ -78,7 +78,9 @@ AYU_DESCRIBE(Statement,
             args_a.push_back(a[i]);
         }
         s.args = ayu::Dynamic(s.command->args_type());
-        ayu::item_from_tree(s.args.ptr(), ayu::Tree(args_a));
+        ayu::item_from_tree(
+            s.args.ptr(), ayu::Tree(args_a), ayu::Location(), ayu::DELAY_SWIZZLE
+        );
     })
 )
 

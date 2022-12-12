@@ -21,12 +21,34 @@ namespace ayu {
 Tree item_to_tree (
     const Reference&, const Location& loc = Location()
 );
+
+ // Flags to change the behavior of item_from_tree.
+enum ItemFromTreeFlags : uint8 {
+     // If calling item_from_tree recursively, schedule swizzle and init
+     // operations for after the outer call does its swizzle and init
+     // operations respectively.  This will allow items to cyclically reference
+     // one another, but can only be used if
+     //   A: the provided reference will still be valid later on (e.g it's not
+     //      the address of a stack temporary that's about to be moved into a
+     //      container), and
+     //   B: the item's treatment will not change based on its value.  For
+     //      instance, this is not usable on the elements of a
+     //      std::unordered_set, because the position of a set element depends
+     //      on its value, and updating it in place without notifying the
+     //      unordered_set would corrupt the unordered_set.
+     // item_from_tree cannot check that these conditions are true, so if you
+     // use this flag when they are not true, you will likely corrupt memory.
+     //
+     // For non-recursive item_from_tree calls, this flag has no effect.
+    DELAY_SWIZZLE = 1,
+};
  // Write to an item from a tree.  If an exception is thrown, the item may be
  // left in an incomplete state, so if you're worried about that, construct a
  // fresh item, call item_from_tree on that, and then move it onto the original
  // item (this is what ayu::reload() on resources does).
 void item_from_tree (
-    const Reference&, const Tree&, const Location& loc = Location()
+    const Reference&, const Tree&, const Location& loc = Location(),
+    ItemFromTreeFlags flags = ItemFromTreeFlags{0}
 );
 
 ///// MAIN OPERATION SHORTCUTS

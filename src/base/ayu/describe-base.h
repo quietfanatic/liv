@@ -93,12 +93,6 @@ struct _AYU_DescribeBase {
      //
      // For compound types (types with attributes or elements), this will be
      // called first on all the child items in order, then on the parent item.
-     //
-     // If item_from_tree() is called recursively, swizzle() operations in the
-     // inner call will be done AFTER swizzle() operations in the outer call,
-     // not before like you would expect.  This isn't strictly necessary but it
-     // helps reduce stack usage.  Your swizzle() functions shouldn't rely on
-     // the order they're called in anyway.
     static constexpr auto swizzle (void(* f )(T&, const Tree&));
      // If your type has an extra step needed to complete its initialization
      // after from_tree() and swizzle(), use this function.  As an example, you
@@ -107,9 +101,6 @@ struct _AYU_DescribeBase {
      //
      // For compound types, this will be called first on all the child items in
      // order, then on the parent item.
-     //
-     // If item_from_tree() is called recursively, the order of init()
-     // operations has the same behavior as with swizzle() mentioned above.
     static constexpr auto init (void(* f )(T&));
      // Make this type behave like another type.  `accessor` must be the result
      // of one of the accessor functions in the ACCESSOR section below.  If both
