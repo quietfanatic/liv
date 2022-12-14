@@ -7,6 +7,7 @@
 #include "../base/glow/gl.h"
 #include "../base/uni/time.h"
 #include "app.h"
+#include "files.h"
 #include "page.h"
 
 using namespace geo;
@@ -53,9 +54,10 @@ static void unload_page (Book& self, Page* page) {
 
 ///// Contents
 
-Book::Book (App& app, std::vector<String>&& filenames, String&& folder) :
+Book::Book (App& app, FilesToOpen&& to_open) :
     app(app),
-    folder(std::move(folder)),
+    folder(std::move(to_open.folder)),
+    current_page_no(to_open.start_index + 1),
     auto_zoom_mode(app.setting(&PageSettings::auto_zoom_mode)),
     small_align(app.setting(&PageSettings::small_align)),
     large_align(app.setting(&PageSettings::large_align)),
@@ -69,9 +71,9 @@ Book::Book (App& app, std::vector<String>&& filenames, String&& folder) :
         set_fullscreen(true);
     }
     glow::init();
-    pages.reserve(filenames.size());
-    for (auto& filename : filenames) {
-        pages.emplace_back(std::make_unique<Page>(filename));
+    pages.reserve(to_open.files.size());
+    for (auto& filename : to_open.files) {
+        pages.emplace_back(std::make_unique<Page>(std::move(filename)));
     }
     need_draw = true;
     if (!app.hidden) SDL_ShowWindow(window);
@@ -88,13 +90,6 @@ Page* Book::get_page (isize no) {
     if (!pages.size()) return null;
     if (clamp_page_no(no) != no) return null;
     return &*pages[no-1];
-}
-
-isize Book::get_page_no_with_filename (Str filename) {
-    for (isize i = 0; i < isize(pages.size()); i++) {
-        if (pages[i]->filename == filename) return i + 1;
-    }
-    return 0;
 }
 
 ///// Layout logic
@@ -347,10 +342,10 @@ static tap::TestSet tests ("app/book", []{
     App app;
     app.hidden = true;
     app.settings->WindowSettings::size = size;
-    Book book (app, {
+    Book book (app, FilesToOpen{{
         ayu::cat(exe_folder, "/res/base/glow/test/image.png"sv),
         ayu::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
-    });
+    }});
 
     book.draw_if_needed();
     glow::Image img (size);

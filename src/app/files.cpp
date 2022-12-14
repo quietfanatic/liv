@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 namespace app {
 
-FilesToOpen expand_files (App& app, const std::vector<String>& specified) {
+FilesToOpen expand_files (App& app, std::vector<String>&& specified) {
     auto& extensions = app.setting(&FilesSettings::supported_extensions);
 
     if (specified.size() == 1 &&
@@ -78,7 +78,7 @@ FilesToOpen expand_files (App& app, const std::vector<String>& specified) {
             else {
                  // Don't check the file extension for explicitly specified
                  // files.
-                r.files.emplace_back(file);
+                r.files.emplace_back(std::move(file));
             }
         }
         return r;

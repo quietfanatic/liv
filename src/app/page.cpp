@@ -10,8 +10,8 @@ using namespace glow;
 
 namespace app {
 
-Page::Page (String filename) :
-    filename(filename)
+Page::Page (String&& filename) :
+    filename(std::move(filename))
 { }
 Page::~Page () { }
 

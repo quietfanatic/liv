@@ -140,13 +140,10 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
     );
 }
 
-void App::open_files (const std::vector<String>& files) {
-    FilesToOpen to_open = expand_files(*this, files);
-    auto book = std::make_unique<Book>(
-        *this, std::move(to_open.files), std::move(to_open.folder)
-    );
-    book->set_page(to_open.start_index + 1);
-    add_book(*this, std::move(book));
+void App::open_files (std::vector<String>&& files) {
+    add_book(*this, std::make_unique<Book>(
+        *this, expand_files(*this, std::move(files))
+    ));
 }
 
 void App::open_list (Str list_filename) {
@@ -155,6 +152,9 @@ void App::open_list (Str list_filename) {
 
 void App::close_book (Book* book) {
     AA(book);
+    books_by_window_id.erase(
+        AS(SDL_GetWindowID(book->window))
+    );
     for (auto iter = books.begin(); iter != books.end(); iter++) {
         if (&**iter == book) {
             books.erase(iter);

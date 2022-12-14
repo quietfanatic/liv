@@ -46,7 +46,7 @@ int main (int argc, char** argv) {
         app.open_list(args[0]);
     }
     else {
-        app.open_files(args);
+        app.open_files(std::move(args));
     }
     app.run();
     return 0;

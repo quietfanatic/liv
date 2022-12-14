@@ -12,6 +12,7 @@ struct SDL_Window;
 
 namespace app {
 struct App;
+struct FilesToOpen;
 struct Page;
 
 struct Book {
@@ -22,11 +23,9 @@ struct Book {
     std::vector<std::unique_ptr<Page>> pages;
     isize current_page_no = 1; // 1-based index
 
-     // Just loads the given files as pages
     explicit Book (
         App& app,
-        std::vector<String>&& filenames,
-        String&& folder = ""
+        FilesToOpen&& files
     );
     ~Book ();
 
@@ -34,8 +33,6 @@ struct Book {
     isize clamp_page_no (isize no);
      // Returns null if not valid page number
     Page* get_page (isize no);
-
-    isize get_page_no_with_filename (Str filename);
 
     ///// Layout decision logic
     AutoZoomMode auto_zoom_mode = FIT;
