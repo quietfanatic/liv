@@ -6,27 +6,31 @@
 namespace app {
 
 const Settings builtin_default_settings = {
-    PageSettings{
+    WindowSettings{
+        .size = geo::IVec{720, 720},
+        .fullscreen = false,
+    },
+    LayoutSettings{
+        .spread_pages = 1,
+        .max_spread_pages = 4,
         .auto_zoom_mode = FIT,
         .max_zoom = 32,
         .min_page_size = 16,
         .reset_zoom_on_page_turn = true,
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
+    },
+    PageSettings{
         .interpolation_mode = SMART_CUBIC,
     },
-    WindowSettings{
-        .size = geo::IVec{720, 720},
-        .fullscreen = false,
+    ControlSettings{
+        .drag_speed = 1,
     },
     FilesSettings{
         .supported_extensions = std::set<String>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg", "png",
             "tif", "tiff", "xbm", "xpm", "webp",
         },
-    },
-    ControlSettings{
-        .drag_speed = 1,
     },
     MemorySettings{
         .preload_ahead = 1,
@@ -71,14 +75,20 @@ AYU_DESCRIBE(app::Mapping,
     )
 )
 
+AYU_DESCRIBE(app::LayoutSettings,
+    attrs(
+        attr("spread_pages", &LayoutSettings::spread_pages, optional),
+        attr("max_spread_pages", &LayoutSettings::max_spread_pages, optional),
+        attr("auto_zoom_mode", &LayoutSettings::auto_zoom_mode, optional),
+        attr("reset_zoom_on_page_turn", &LayoutSettings::reset_zoom_on_page_turn, optional),
+        attr("max_zoom", &LayoutSettings::max_zoom, optional),
+        attr("min_page_size", &LayoutSettings::min_page_size, optional),
+        attr("small_align", &LayoutSettings::small_align, optional),
+        attr("large_align", &LayoutSettings::large_align, optional)
+    )
+)
 AYU_DESCRIBE(app::PageSettings,
     attrs(
-        attr("auto_zoom_mode", &PageSettings::auto_zoom_mode, optional),
-        attr("reset_zoom_on_page_turn", &PageSettings::reset_zoom_on_page_turn, optional),
-        attr("max_zoom", &PageSettings::max_zoom, optional),
-        attr("min_page_size", &PageSettings::min_page_size, optional),
-        attr("small_align", &PageSettings::small_align, optional),
-        attr("large_align", &PageSettings::large_align, optional),
         attr("interpolation_mode", &PageSettings::interpolation_mode, optional)
     )
 )
@@ -112,10 +122,11 @@ AYU_DESCRIBE(app::MemorySettings,
 
 AYU_DESCRIBE(app::Settings,
     attrs(
-        attr("page", base<PageSettings>(), optional),
         attr("window", base<WindowSettings>(), optional),
-        attr("files", base<FilesSettings>(), optional),
+        attr("layout", base<LayoutSettings>(), optional),
+        attr("page", base<PageSettings>(), optional),
         attr("control", base<ControlSettings>(), optional),
+        attr("files", base<FilesSettings>(), optional),
         attr("memory", base<MemorySettings>(), optional),
         attr("mappings", &Settings::mappings)
     )

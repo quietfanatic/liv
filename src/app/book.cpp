@@ -24,10 +24,10 @@ static void update_title (Book& self) {
     }
     else {
         if (self.pages.size() > 1) {
-            title = "[" + std::to_string(self.current_page_no)
+            title = "[" + std::to_string(self.page_offset)
                   + "/" + std::to_string(self.pages.size()) + "] ";
         }
-        title += self.get_page(self.current_page_no)->filename;
+        title += self.get_page(self.page_offset)->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (self.zoom != 1) {
@@ -57,10 +57,10 @@ static void unload_page (Book& self, Page* page) {
 Book::Book (App& app, FilesToOpen&& to_open) :
     app(app),
     folder(std::move(to_open.folder)),
-    current_page_no(to_open.start_index + 1),
-    auto_zoom_mode(app.setting(&PageSettings::auto_zoom_mode)),
-    small_align(app.setting(&PageSettings::small_align)),
-    large_align(app.setting(&PageSettings::large_align)),
+    page_offset(to_open.start_index + 1),
+    auto_zoom_mode(app.setting(&LayoutSettings::auto_zoom_mode)),
+    small_align(app.setting(&LayoutSettings::small_align)),
+    large_align(app.setting(&LayoutSettings::large_align)),
     interpolation_mode(app.setting(&PageSettings::interpolation_mode)),
     window("Little Image Viewer", app.setting(&WindowSettings::size))
 {
@@ -81,23 +81,25 @@ Book::Book (App& app, FilesToOpen&& to_open) :
 Book::~Book () { }
 
 
-isize Book::clamp_page_no (isize no) {
-    if (!pages.empty()) return clamp(no, 1, isize(pages.size()));
+isize Book::clamp_page_offset (isize off) {
+    if (!pages.empty()) return clamp(
+        off, 1 - (spread_pages-1), isize(pages.size()) + (spread_pages-1)
+    );
     else return 1;
 }
 
 Page* Book::get_page (isize no) {
-    if (!pages.size()) return null;
-    if (clamp_page_no(no) != no) return null;
-    return &*pages[no-1];
+    if (!pages.size() || no < 1 || no > isize(pages.size())) return null;
+    else return &*pages[no-1];
 }
 
 ///// Layout logic
 
 float Book::clamp_zoom (float zoom) {
-    auto max_zoom = app.setting(&PageSettings::max_zoom);
-    auto min_page_size = app.setting(&PageSettings::min_page_size);
-    if (Page* page = get_page(current_page_no)) {
+    auto max_zoom = app.setting(&LayoutSettings::max_zoom);
+    auto min_page_size = app.setting(&LayoutSettings::min_page_size);
+     // TODO: support spread_pages
+    if (Page* page = get_page(page_offset)) {
         float min_zoom = min(1.f, min(
             min_page_size / page->size.x,
             min_page_size / page->size.y
@@ -115,13 +117,22 @@ float Book::clamp_zoom (float zoom) {
 
 ///// Controls
 
-void Book::set_page (isize no) {
-    current_page_no = clamp_page_no(no);
-    if (app.setting(&PageSettings::reset_zoom_on_page_turn)) {
+void Book::set_page_offset (isize off) {
+    page_offset = clamp_page_offset(off);
+    if (app.setting(&LayoutSettings::reset_zoom_on_page_turn)) {
         manual_zoom = false;
         manual_offset = false;
     }
     need_draw = true;
+}
+
+void Book::set_spread_pages (isize count) {
+    if (count < 1) count = 1;
+    else {
+        isize max = app.setting(&LayoutSettings::max_spread_pages);
+        if (count > max) count = max;
+    }
+    spread_pages = count;
 }
 
 void Book::set_align (Vec small, Vec large) {
@@ -152,7 +163,8 @@ void Book::drag (Vec amount) {
 }
 
 void Book::zoom_multiply (float factor) {
-    if (Page* page = get_page(current_page_no)) {
+     // TODO: Support spread_pages
+    if (Page* page = get_page(page_offset)) {
         manual_zoom = true;
         if (manual_offset) {
              // Hacky way to zoom from center
@@ -168,11 +180,10 @@ void Book::zoom_multiply (float factor) {
     }
 }
 
-void Book::reset_page () {
-    auto_zoom_mode = app.setting(&PageSettings::auto_zoom_mode);
-    small_align = app.setting(&PageSettings::small_align);
-    large_align = app.setting(&PageSettings::large_align);
-    interpolation_mode = app.setting(&PageSettings::interpolation_mode);
+void Book::reset_layout () {
+    auto_zoom_mode = app.setting(&LayoutSettings::auto_zoom_mode);
+    small_align = app.setting(&LayoutSettings::small_align);
+    large_align = app.setting(&LayoutSettings::large_align);
     manual_zoom = false;
     manual_offset = false;
     need_draw = true;
@@ -201,7 +212,7 @@ bool Book::draw_if_needed () {
      // Clear
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    if (Page* page = get_page(current_page_no)) {
+    if (Page* page = get_page(page_offset)) {
         load_page(*this, page);
         page->last_viewed_at = uni::now();
          // Determine layout
@@ -266,8 +277,9 @@ bool Book::idle_processing () {
     int32 preload_ahead = app.setting(&MemorySettings::preload_ahead);
     int32 preload_behind = app.setting(&MemorySettings::preload_behind);
     int32 page_cache_mb = app.setting(&MemorySettings::page_cache_mb);
+     // TODO: Support spread_pages
     for (int32 i = 1; i <= preload_ahead; i++) {
-        if (Page* page = get_page(current_page_no + i)) {
+        if (Page* page = get_page(page_offset + i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
@@ -276,7 +288,7 @@ bool Book::idle_processing () {
     }
      // Preload pages backwards
     for (int32 i = 1; i <= preload_behind; i++) {
-        if (Page* page = get_page(current_page_no - i)) {
+        if (Page* page = get_page(page_offset - i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
@@ -290,8 +302,8 @@ bool Book::idle_processing () {
         Page* oldest_page = null;
         for (isize no = 1; no <= isize(pages.size()); no++) {
              // Don't unload images in the preload region
-            if (no >= current_page_no - preload_behind
-             && no <= current_page_no + preload_ahead) {
+            if (no >= page_offset - preload_behind
+             && no <= page_offset + preload_ahead) {
                 continue;
             }
             Page* page = get_page(no);
@@ -351,30 +363,30 @@ static tap::TestSet tests ("app/book", []{
     glow::Image img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.current_page_no, 1, "Initial page is 1");
+    is(book.page_offset, 1, "Initial page is 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.current_page_no, 2, "Next page is 2");
+    is(book.page_offset, 2, "Next page is 2");
     is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
     book.draw_if_needed();
-    is(book.current_page_no, 2, "Can't go past last page");
+    is(book.page_offset, 2, "Can't go past last page");
 
     book.prev();
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.current_page_no, 1, "Go back to page 1");
+    is(book.page_offset, 1, "Go back to page 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "Going back to first page works");
 
     book.prev();
     book.draw_if_needed();
-    is(book.current_page_no, 1, "Can't go before page 1");
+    is(book.page_offset, 1, "Can't go before page 1");
 
     is(img[{0, 60}], glow::RGBA8(0x2674dbff), "Default to auto_zoom_mode = fit");
     book.set_auto_zoom_mode(ORIGINAL);

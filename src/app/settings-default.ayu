@@ -2,8 +2,20 @@
 
 [app::Settings {
 
- // Settings for how pages are viewed
-page: {
+ // Options for initial window properties
+window: {
+     // Initial window size in pixels
+    size: [720 720]
+     // Initial fullscreen state of the window
+    fullscreen: false
+}
+
+ // Settings for how pages are laid out in the window
+layout: {
+     // Default number of pages to view simultaneously.
+    spread_pages: 1
+     // The maximum number of pages that can be viewed simultaneously.
+    max_spread_pages: 4
      // Options:
      //   fit = Make sure page fits entirely within window
      //   fit_width = Match page's width to window's width
@@ -31,6 +43,10 @@ page: {
      // the other dimension, it will use small_align for the smaller dimension
      // and large_align for the larger.
     large_align: [0.5 0.5]
+}
+
+ // Settings for how individual pages are displayed
+page: {
      // Pixel interpolation mode.  Options (in rough order of processing cost):
      //   nearest = 1-sample nearest-neighbor (lowest quality)
      //   linear = 4-sample bilinear interpolation
@@ -43,12 +59,10 @@ page: {
     interpolation_mode: smart_cubic
 }
 
- // Options for initial window properties
-window: {
-     // Initial window size in pixels
-    size: [720 720]
-     // Initial fullscreen state of the window
-    fullscreen: false
+ // Options about control and input
+control: {
+     // When dragging the page with the mouse, multiply the speed by this.
+    drag_speed: 1
 }
 
  // Options dealing with files and filenames
@@ -57,12 +71,6 @@ files: {
     supported_extensions: [
         bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
     ]
-}
-
- // Options about control and input
-control: {
-     // When dragging the page with the mouse, multiply the speed by this.
-    drag_speed: 1
 }
 
  // Options regarding memory usage
@@ -109,14 +117,14 @@ mappings: [
     [["="] [zoom_multiply 1.4142135623731]]
      // Zoom out by √2
     [["-"] [zoom_multiply 0.707106781186547]]
+     // Reset layout to default
+    [[r] [reset_layout]]
      // Set interpolation mode
     [[ctrl 1] [interpolation_mode nearest]]
     [[ctrl 2] [interpolation_mode linear]]
     [[ctrl 3] [interpolation_mode cubic]]
     [[ctrl 4] [interpolation_mode smart_cubic]]
     [[ctrl 9] [interpolation_mode smoothed]]
-     // Reset all page view parameters to default
-    [[r] [reset_page]]
      // Quitting
     [[escape] [leave_fullscreen_or_quit]]
     [[ctrl q] [quit]]

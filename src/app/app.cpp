@@ -200,7 +200,7 @@ static tap::TestSet tests ("app/app", []{
     }, "App::open_files");
     auto window_id = AS(SDL_GetWindowID(app.books[0]->window));
 
-    is(app.books[0]->current_page_no, 1, "Book starts on page 1");
+    is(app.books[0]->page_offset, 1, "Book starts on page 1");
 
     SDL_Event quit_event;
     std::memset(&quit_event, 0, sizeof(quit_event));
@@ -215,7 +215,7 @@ static tap::TestSet tests ("app/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->current_page_no, 2, "Pressing right goes to next page");
+    is(app.books[0]->page_offset, 2, "Pressing right goes to next page");
 
     control::send_input_as_event(
         {.type = control::KEY, .code = SDLK_LEFT}, window_id
@@ -223,7 +223,7 @@ static tap::TestSet tests ("app/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->current_page_no, 1, "Pressing left goes to previous page");
+    is(app.books[0]->page_offset, 1, "Pressing left goes to previous page");
 
     control::send_input_as_event(
         {.type = control::KEY, .ctrl = true, .code = SDLK_q}, window_id

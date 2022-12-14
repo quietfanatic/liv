@@ -33,8 +33,8 @@ extern Command interpolation_mode;
  // (float) Multiply zoom by amount
 extern Command zoom_multiply;
 
- // () Reset page view parameters to default
-extern Command reset_page;
+ // () Reset layout parameters to default
+extern Command reset_layout;
 
 ///// WINDOW COMMANDS
 

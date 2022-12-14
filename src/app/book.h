@@ -21,7 +21,13 @@ struct Book {
     ///// Book contents
     String folder; // empty if not in a folder
     std::vector<std::unique_ptr<Page>> pages;
-    isize current_page_no = 1; // 1-based index
+     // 1-based index.  The page nos currently being viewed are
+     // page_offset .. (page_offset + spread_pages - 1).  Valid values are such
+     // that there is at least one valid page being viewed:
+     // (1 - (spread_pages-1)) .. (pages.size() + (spread_pages-1))
+    isize page_offset = 1;
+     // Number of pages currently being viewed.
+    isize spread_pages = 1;
 
     explicit Book (
         App& app,
@@ -29,9 +35,9 @@ struct Book {
     );
     ~Book ();
 
-     // Turns an invalid page number into a valid one
-    isize clamp_page_no (isize no);
-     // Returns null if not valid page number
+     // Turns an invalid page offset into a valid one
+    isize clamp_page_offset (isize off);
+     // Returns null if no is not in 1..pages.size()
     Page* get_page (isize no);
 
     ///// Layout decision logic
@@ -62,14 +68,15 @@ struct Book {
     geo::Vec offset;
 
     ///// Controls
-     // Clamps to valid page numbers
-    void set_page (isize no);
-     // Increment current page by 1
-     // TODO: Increment by two if viewing 2 pages (NYI)
-    void next () { set_page(current_page_no + 1); }
-    void prev () { set_page(current_page_no - 1); }
+     // Clamps to valid page offset
+    void set_page_offset (isize off);
+     // Set number of pages to view simultaneously.
+    void set_spread_pages (isize count); // clamps to 1..settings.max_spread_pages
+     // Increment current page(s) by spread_pages
+    void next () { set_page_offset(page_offset + spread_pages); }
+    void prev () { set_page_offset(page_offset - spread_pages); }
      // Add to current page (stopping at first/last page)
-    void seek (isize count) { set_page(current_page_no + count); }
+    void seek (isize count) { set_page_offset(page_offset + count); }
 
     void set_auto_zoom_mode (AutoZoomMode);
     void set_align (geo::Vec small, geo::Vec large);
@@ -79,8 +86,8 @@ struct Book {
 
     void zoom_multiply (float factor);
 
-     // Reset offset, zoom, interpolation to default
-    void reset_page ();
+     // Reset offset, zoom, align to default
+    void reset_layout ();
 
     bool is_fullscreen ();
     void set_fullscreen (bool);

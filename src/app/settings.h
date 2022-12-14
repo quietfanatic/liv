@@ -31,24 +31,28 @@ struct Mapping {
     control::Statement action;
 };
 
-struct PageSettings {
+struct WindowSettings {
+    std::optional<geo::IVec> size;
+    std::optional<bool> fullscreen;
+};
+struct LayoutSettings {
+    std::optional<isize> spread_pages;
+    std::optional<isize> max_spread_pages;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
     std::optional<float> min_page_size;
     std::optional<bool> reset_zoom_on_page_turn;
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;
+};
+struct PageSettings {
     std::optional<InterpolationMode> interpolation_mode;
-};
-struct WindowSettings {
-    std::optional<geo::IVec> size;
-    std::optional<bool> fullscreen;
-};
-struct FilesSettings {
-    std::optional<std::set<String>> supported_extensions;
 };
 struct ControlSettings {
     std::optional<float> drag_speed;
+};
+struct FilesSettings {
+    std::optional<std::set<String>> supported_extensions;
 };
 struct MemorySettings {
     std::optional<uint32> preload_ahead;
@@ -59,8 +63,8 @@ struct MemorySettings {
  // Using inheritance instead of containment because it makes using member
  // pointers much simpler.
 struct Settings :
-    PageSettings, WindowSettings, FilesSettings,
-    ControlSettings, MemorySettings
+    WindowSettings, LayoutSettings, PageSettings,
+    ControlSettings, FilesSettings, MemorySettings
 {
     std::vector<Mapping> mappings;
 };

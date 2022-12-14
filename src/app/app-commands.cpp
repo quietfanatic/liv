@@ -61,10 +61,10 @@ static void zoom_multiply_ (float factor) {
 }
 Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
 
-static void reset_page_ () {
-    if (current_book) current_book->reset_page();
+static void reset_layout_ () {
+    if (current_book) current_book->reset_layout();
 }
-Command reset_page (reset_page_, "reset_page", "Reset page view parameters to default");
+Command reset_layout (reset_layout_, "reset_layout", "Reset layout parameters to default");
 
 ///// WINDOW COMMANDS
 

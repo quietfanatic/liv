@@ -3,20 +3,24 @@
 
 [app::Settings {
 
- // Settings for how pages are viewed
-page: {
-}
-
  // Options for initial window properties
 window: {
 }
 
- // Options dealing with files and filenames
-files: {
+ // Settings for how pages are laid out in the window
+layout: {
+}
+
+ // Settings for how individual pages are displayed
+page: {
 }
 
  // Options about control and input
 control: {
+}
+
+ // Options dealing with files and filenames
+files: {
 }
 
  // Options regarding memory usage
