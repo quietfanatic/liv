@@ -5,7 +5,6 @@
 #include "../base/ayu/describe.h"
 #include "../base/ayu/resource.h"
 
-using namespace geo;
 using namespace glow;
 
 namespace app {

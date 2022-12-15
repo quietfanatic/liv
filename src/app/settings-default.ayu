@@ -8,6 +8,9 @@ window: {
     size: [720 720]
      // Initial fullscreen state of the window
     fullscreen: false
+     // Background color for window (black, white, or [r g b a]
+     // where r,g,b,a : 0..255
+    window_background: black
 }
 
  // Settings for how pages are laid out in the window
@@ -97,6 +100,9 @@ mappings: [
     [[shift left] [seek -20]]
      // Toggle fullscreen mode
     [[f11] [fullscreen]]
+     // Set background color
+    [[ctrl b] [window_background white]]
+    [[ctrl shift b] [window_background black]]
      // Set auto zoom mode
     [[f] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]

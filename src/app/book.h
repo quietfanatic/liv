@@ -6,14 +6,12 @@
 #include <vector>
 #include "../base/uni/common.h"
 #include "../base/wind/window.h"
+#include "common.h"
 #include "settings.h"
 
 struct SDL_Window;
 
 namespace app {
-struct App;
-struct FilesToOpen;
-struct Page;
 
 struct Book {
     App& app;
@@ -39,6 +37,10 @@ struct Book {
     isize clamp_page_offset (isize off);
      // Returns null if no is not in 1..pages.size()
     Page* get_page (isize no);
+
+    ///// Window parameters
+    Fill window_background = BLACK;
+    void set_window_background (Fill);
 
     ///// Layout decision logic
     AutoZoomMode auto_zoom_mode = FIT;

@@ -72,6 +72,27 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
 }
 template <class T>
 template <class N>
+    requires (requires (const T& v) { T(v); })
+constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
+    if constexpr (std::is_null_pointer_v<N>) {
+        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, v);
+    }
+    else if constexpr (std::is_same_v<N, bool>) {
+        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, v);
+    }
+    else if constexpr (std::is_integral_v<N>) {
+        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, v);
+    }
+    else if constexpr (std::is_floating_point_v<N>) {
+        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
+    }
+    else {
+         // Assume something convertible to Str (std::string_view)
+        return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, v);
+    }
+}
+template <class T>
+template <class N>
 constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* v) {
     if constexpr (std::is_null_pointer_v<N>) {
         return in::ValueDcrWith<T, Null, true>(in::VFNULL, n, v);

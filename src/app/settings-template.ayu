@@ -27,7 +27,8 @@ files: {
 memory: {
 }
 
- // Key and mouse bindings
+ // Key and mouse bindings.  These will be added to the default bindings.  To
+ // disable a default binding, map that binding to an action of []
 mappings: [
 ]
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../base/control/command.h"
+#include "common.h"
 
 namespace app::command {
 using namespace control;
@@ -42,5 +43,7 @@ extern Command reset_layout;
 extern Command fullscreen;
  // () Leave fullscreen mode or quit if not fullscreen
 extern Command leave_fullscreen_or_quit;
+ // (Fill) change window background fill
+extern Command window_background;
 
 } // namespace app::command

@@ -4,10 +4,11 @@
 #include "../base/control/command.h"
 #include "../base/control/input.h"
 #include "../base/geo/vec.h"
+#include "../base/glow/colors.h"
 #include "../base/uni/common.h"
+#include "common.h"
 
 namespace app {
-using namespace uni;
 
  // TODO: Add more fit modes
 enum AutoZoomMode : uint8 {
@@ -26,6 +27,12 @@ enum InterpolationMode : uint8 {
     SMART_CUBIC
 };
 
+struct Fill : glow::RGBA8 { using glow::RGBA8::RGBA8; };
+
+constexpr Fill BLACK = {0, 0, 0, 255};
+constexpr Fill WHITE = {255, 255, 255, 255};
+constexpr Fill TRANSPARENT = {0, 0, 0, 0};
+
 struct Mapping {
     control::Input input;
     control::Statement action;
@@ -34,6 +41,7 @@ struct Mapping {
 struct WindowSettings {
     std::optional<geo::IVec> size;
     std::optional<bool> fullscreen;
+    std::optional<Fill> window_background;
 };
 struct LayoutSettings {
     std::optional<isize> spread_pages;

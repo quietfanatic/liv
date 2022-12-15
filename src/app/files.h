@@ -2,10 +2,9 @@
 
 #include <vector>
 #include "../base/uni/common.h"
+#include "common.h"
 
 namespace app {
-using namespace uni;
-struct App;
 
 struct FilesToOpen {
     std::vector<String> files;

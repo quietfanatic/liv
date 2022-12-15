@@ -10,9 +10,6 @@
 #include "files.h"
 #include "page.h"
 
-using namespace geo;
-namespace fs = std::filesystem;
-
 namespace app {
 
 ///// Private helpers
@@ -58,6 +55,7 @@ Book::Book (App& app, FilesToOpen&& to_open) :
     app(app),
     folder(std::move(to_open.folder)),
     page_offset(to_open.start_index + 1),
+    window_background(app.setting(&WindowSettings::window_background)),
     auto_zoom_mode(app.setting(&LayoutSettings::auto_zoom_mode)),
     small_align(app.setting(&LayoutSettings::small_align)),
     large_align(app.setting(&LayoutSettings::large_align)),
@@ -91,6 +89,13 @@ isize Book::clamp_page_offset (isize off) {
 Page* Book::get_page (isize no) {
     if (!pages.size() || no < 1 || no > isize(pages.size())) return null;
     else return &*pages[no-1];
+}
+
+///// Window parameters
+
+void Book::set_window_background (Fill bg) {
+    window_background = bg;
+    need_draw = true;
 }
 
 ///// Layout logic
@@ -210,7 +215,12 @@ bool Book::draw_if_needed () {
      // be better to share a context between all windows?
     SDL_GL_MakeCurrent(window, window.gl_context);
      // Clear
-    glClearColor(0, 0, 0, 0);
+    glClearColor(
+        window_background.r / 255.0,
+        window_background.g / 255.0,
+        window_background.b / 255.0,
+        window_background.a / 255.0 // Alpha is probably ignored
+    );
     glClear(GL_COLOR_BUFFER_BIT);
     if (Page* page = get_page(page_offset)) {
         load_page(*this, page);

@@ -5,8 +5,6 @@
 #include "book.h"
 #include "settings.h"
 
-using namespace geo;
-
 namespace app::command {
 
 ///// APP COMMANDS
@@ -86,5 +84,10 @@ static void leave_fullscreen_or_quit_ () {
 Command leave_fullscreen_or_quit (
     leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
 );
+
+static void window_background_ (Fill bg) {
+    if (current_book) current_book->set_window_background(bg);
+}
+Command window_background (window_background_, "window_background", "Change window background fill");
 
 } // namespace app::command

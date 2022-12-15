@@ -9,6 +9,7 @@ const Settings builtin_default_settings = {
     WindowSettings{
         .size = geo::IVec{720, 720},
         .fullscreen = false,
+        .window_background = BLACK,
     },
     LayoutSettings{
         .spread_pages = 1,
@@ -68,6 +69,15 @@ AYU_DESCRIBE(app::InterpolationMode,
     )
 )
 
+AYU_DESCRIBE(app::Fill,
+    values(
+        value("black", BLACK),
+        value("white", WHITE),
+        value("transparent", TRANSPARENT)
+    ),
+    delegate(base<glow::RGBA8>())
+)
+
 AYU_DESCRIBE(app::Mapping,
     elems(
         elem(&Mapping::input),
@@ -96,7 +106,8 @@ AYU_DESCRIBE(app::PageSettings,
 AYU_DESCRIBE(app::WindowSettings,
     attrs(
         attr("size", &WindowSettings::size, optional),
-        attr("fullscreen", &WindowSettings::fullscreen, optional)
+        attr("fullscreen", &WindowSettings::fullscreen, optional),
+        attr("window_background", &WindowSettings::window_background, optional)
     )
 )
 

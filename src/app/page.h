@@ -7,6 +7,7 @@
 #include "../base/geo/vec.h"
 #include "../base/glow/file-texture.h"
 #include "../base/uni/common.h"
+#include "common.h"
 #include "settings.h"
 
 namespace app {
@@ -14,7 +15,7 @@ namespace app {
 struct Page {
     String filename;
     std::unique_ptr<glow::FileTexture> texture;
-    geo::IVec size;
+    IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;
     bool load_failed = false;
@@ -29,7 +30,7 @@ struct Page {
         InterpolationMode interpolation_mode,
         float zoom,
         const geo::Rect& screen_rect,
-        const geo::Rect& tex_rect = geo::NAN // defaults to whole page
+        const geo::Rect& tex_rect = NAN // defaults to whole page
     );
 };
 

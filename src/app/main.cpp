@@ -6,8 +6,9 @@
 #include "../base/tap/tap.h"
 #include "../base/uni/common.h"
 #include "app.h"
+#include "common.h"
 
-using namespace uni;
+using namespace app;
 
 int main (int argc, char** argv) {
     AS(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
@@ -38,7 +39,7 @@ int main (int argc, char** argv) {
         else args.emplace_back(argv[i]);
     }
 
-    app::App app;
+    App app;
     if (list) {
         if (args.size() != 1) {
             throw ayu::X::GenericError("Wrong number of arguments given with --list (must be 1)");

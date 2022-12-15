@@ -8,8 +8,6 @@
 #include "files.h"
 #include "settings.h"
 
-namespace fs = std::filesystem;
-
 namespace app {
 
 static Book* book_with_window_id (App& self, uint32 id) {
@@ -76,19 +74,19 @@ static void on_event (App& self, SDL_Event* event) {
     }
     for (auto& [input, action] : self.settings->mappings) {
         if (input_matches_event(input, event)) {
-            action();
+            if (action) action();
             goto done_mapping;
         }
     }
     for (auto& [input, action] : res_default_settings->mappings) {
         if (input_matches_event(input, event)) {
-            action();
+            if (action) action();
             goto done_mapping;
         }
     }
     for (auto& [input, action] : builtin_default_settings.mappings) {
         if (input_matches_event(input, event)) {
-            action();
+            if (action) action();
             goto done_mapping;
         }
     }

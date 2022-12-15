@@ -160,6 +160,9 @@ struct _AYU_DescribeBase {
     template <class N>
         requires (requires (T v) { T(std::move(v)); })
     static constexpr auto value (const N& name, T&& value);
+    template <class N>
+        requires (requires (const T& v) { T(v); })
+    static constexpr auto value (const N& name, const T& value);
      // Specify a named value for use in values(...).  The value must be a
      // pointer to an item of this type, which doesn't have to be constexpr, but
      // it must be initialized before you call any AYU serialization functions.

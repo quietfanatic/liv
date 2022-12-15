@@ -6,8 +6,6 @@
 #include "app.h"
 #include "settings.h"
 
-namespace fs = std::filesystem;
-
 namespace app {
 
 FilesToOpen expand_files (App& app, std::vector<String>&& specified) {
