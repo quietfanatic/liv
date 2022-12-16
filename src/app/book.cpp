@@ -17,13 +17,16 @@ namespace app {
 
 static void update_title (Book& self) {
     String title;
+    isize first = self.first_visible_page();
+    isize last = self.last_visible_page();
     if (self.pages.size() == 0) {
         title = "Little Image Viewer (nothing loaded)"s;
     }
+    else if (first > last) {
+        title = "Little Image Viewer (no pages visible)"s;
+    }
     else {
         if (self.pages.size() > 1) {
-            isize first = self.first_visible_page();
-            isize last = self.last_visible_page();
             if (first == last) {
                 title = ayu::cat('[', first);
             }
@@ -118,7 +121,7 @@ Book::~Book () { }
 
 isize Book::clamp_page_offset (isize off) const {
     if (!pages.empty()) return clamp(
-        off, 1 - (spread_pages-1), isize(pages.size()) + (spread_pages-1)
+        off, 1 - (spread_pages-1), isize(pages.size())
     );
     else return 1;
 }
@@ -383,8 +386,9 @@ static tap::TestSet tests ("app/book", []{
     is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
-    book.draw_if_needed();
     is(book.page_offset, 2, "Can't go past last page");
+    book.seek(10000);
+    is(book.page_offset, 2, "Can't seek past last page");
 
     book.prev();
     book.draw_if_needed();
@@ -425,6 +429,9 @@ static tap::TestSet tests ("app/book", []{
     is(img[{20, 60}], glow::RGBA8(0x45942eff), "spread direction left (left)");
     is(img[{100, 60}], glow::RGBA8(0x2674dbff), "spread direction left (right)");
     is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
+
+    book.next();
+    is(book.page_offset, 2, "Next when spread_pages > 1 doesn't go past last page");
 
     done_testing();
 });
