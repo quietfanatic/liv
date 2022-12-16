@@ -16,6 +16,7 @@ struct Layout;
 struct LayoutParameters;
 struct Page;
 struct PageParameters;
+struct Pages;
 struct Settings;
 
 } // namespace app

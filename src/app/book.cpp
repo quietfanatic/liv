@@ -17,8 +17,9 @@ namespace app {
 
 Book::Book (App& app, FilesToOpen&& to_open) :
     settings(app.settings),
-    folder(std::move(to_open.folder)),
+    pages(to_open),
     page_offset(to_open.start_index + 1),
+    spread_pages(settings->get(&LayoutSettings::spread_pages)),
     window_background(
         settings->get(&WindowSettings::window_background)
     ),
@@ -31,30 +32,13 @@ Book::Book (App& app, FilesToOpen&& to_open) :
 {
     SDL_SetWindowResizable(window, SDL_TRUE);
     DA(!SDL_GL_SetSwapInterval(1));
-
     if (settings->get(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
     glow::init();
-    pages.reserve(to_open.files.size());
-    for (auto& filename : to_open.files) {
-        pages.emplace_back(std::make_unique<Page>(std::move(filename)));
-    }
     if (!app.hidden) SDL_ShowWindow(window);
 }
 Book::~Book () { }
-
-isize Book::clamp_page_offset (isize off) const {
-    if (!pages.empty()) return clamp(
-        off, 1 - (spread_pages-1), isize(pages.size())
-    );
-    else return 1;
-}
-
-Page* Book::get_page (isize no) const {
-    if (!pages.size() || no < 1 || no > isize(pages.size())) return null;
-    else return &*pages[no-1];
-}
 
 ///// Controls
 
@@ -64,7 +48,7 @@ void Book::set_window_background (Fill bg) {
 }
 
 void Book::set_page_offset (isize off) {
-    page_offset = clamp_page_offset(off);
+    page_offset = pages.clamp_page_offset({off, spread_pages});
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         layout_params.manual_zoom = NAN;
         layout_params.manual_offset = NAN;
@@ -175,7 +159,7 @@ const Spread& Book::get_spread () {
          no <= last_visible_page();
          no++
     ) {
-        load_page(get_page(no));
+        pages.load_page(pages.get(no));
     }
     if (!spread) spread.emplace(*this, layout_params);
     return *spread;
@@ -225,14 +209,14 @@ bool Book::draw_if_needed () {
     String title;
     isize first = first_visible_page();
     isize last = last_visible_page();
-    if (pages.size() == 0) {
+    if (pages.count() == 0) {
         title = "Little Image Viewer (nothing loaded)"s;
     }
     else if (first > last) {
         title = "Little Image Viewer (no pages visible)"s;
     }
     else {
-        if (pages.size() > 1) {
+        if (pages.count() > 1) {
             if (first == last) {
                 title = ayu::cat('[', first);
             }
@@ -242,10 +226,10 @@ bool Book::draw_if_needed () {
             else {
                 title = ayu::cat('[', first, '-', last);
             }
-            title = ayu::cat(title, '/', pages.size(), "] ");
+            title = ayu::cat(title, '/', pages.count(), "] ");
         }
          // TODO: Merge filenames
-        title += get_page(first_visible_page())->filename;
+        title += pages.get(first_visible_page())->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (layout.zoom != 1) {
@@ -258,72 +242,8 @@ bool Book::draw_if_needed () {
     return true;
 }
 
-void Book::load_page (Page* page) {
-    if (page && !page->texture) {
-        page->load();
-        estimated_page_memory += page->estimated_memory;
-    }
-}
-
-void Book::unload_page (Page* page) {
-    if (page && page->texture) {
-        page->unload();
-        estimated_page_memory -= page->estimated_memory;
-        DA(estimated_page_memory >= 0);
-    }
-}
-
 bool Book::idle_processing () {
-    int32 preload_ahead = settings->get(&MemorySettings::preload_ahead);
-    int32 preload_behind = settings->get(&MemorySettings::preload_behind);
-    int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
-
-    isize preload_first = max(page_offset - preload_behind, 1);
-    isize preload_last = min(
-        page_offset + spread_pages - 1 + preload_ahead,
-        isize(pages.size())
-    );
-     // Preload pages forwards
-    for (isize no = page_offset; no >= preload_first; no--) {
-        if (Page* page = get_page(no)) {
-            if (!page->texture && !page->load_failed) {
-                load_page(page);
-                return true;
-            }
-        }
-    }
-     // Preload pages backwards
-    for (isize no = page_offset + spread_pages - 1; no <= preload_last; no++) {
-        if (Page* page = get_page(no)) {
-            if (!page->texture && !page->load_failed) {
-                load_page(page);
-                return true;
-            }
-        }
-    }
-     // Unload pages if we're above the memory limit
-    isize limit = page_cache_mb * (1024*1024);
-    if (estimated_page_memory > limit) {
-        double oldest_viewed_at = INF;
-        Page* oldest_page = null;
-        for (isize no = 1; no <= isize(pages.size()); no++) {
-             // Don't unload images in the preload region
-            if (no >= preload_first && no <= preload_last) {
-                continue;
-            }
-            Page* page = get_page(no);
-            if (!page->texture) continue;
-            if (page->last_viewed_at < oldest_viewed_at) {
-                oldest_viewed_at = page->last_viewed_at;
-                oldest_page = page;
-            }
-        }
-        if (oldest_page) {
-            unload_page(oldest_page);
-        }
-    }
-     // Didn't do anything
-    return false;
+    return pages.idle_processing(settings, {page_offset, spread_pages});
 }
 
 IVec Book::get_window_size () const {

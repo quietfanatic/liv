@@ -64,6 +64,7 @@ my @sources = (qw(
     app/layout.cpp
     app/main.cpp
     app/page.cpp
+    app/pages.cpp
     app/settings.cpp
     base/ayu/describe-standard.cpp
     base/ayu/src/accessors.cpp

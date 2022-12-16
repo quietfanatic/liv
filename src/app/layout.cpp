@@ -17,7 +17,7 @@ Spread::Spread (const Book& book, const LayoutParams& params) {
     for (isize no = book.first_visible_page();
          no <= book.last_visible_page(); no++
     ) {
-        pages.emplace_back(book.get_page(no));
+        pages.emplace_back(book.pages.get(no));
     }
     size = {0, 0};
     switch (params.spread_direction) {

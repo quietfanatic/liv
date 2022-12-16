@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
 #include "../base/uni/common.h"
 #include "../base/wind/window.h"
 #include "common.h"
 #include "layout.h"
 #include "page.h"
+#include "pages.h"
 #include "settings.h"
 
 struct SDL_Window;
@@ -19,8 +18,7 @@ struct Book {
     const Settings* settings;
 
     ///// Book contents
-    String folder; // empty if not in a folder
-    std::vector<std::unique_ptr<Page>> pages;
+    Pages pages;
      // 1-based index.  The page nos currently being viewed are
      // page_offset .. (page_offset + spread_pages - 1).  Valid values are such
      // that there is at least one valid page being viewed:
@@ -29,9 +27,11 @@ struct Book {
      // Number of pages currently being viewed.
     isize spread_pages = 1;
 
-    isize first_visible_page () const { return max(page_offset, 1); }
+    isize first_visible_page () const {
+        return pages.first_visible_page({page_offset, spread_pages});
+    }
     isize last_visible_page () const {
-        return min(page_offset + spread_pages - 1, isize(pages.size()));
+        return pages.last_visible_page({page_offset, spread_pages});
     }
 
     explicit Book (
@@ -39,11 +39,6 @@ struct Book {
         FilesToOpen&& files
     );
     ~Book ();
-
-     // Turns an invalid page offset into a valid one
-    isize clamp_page_offset (isize off) const;
-     // Returns null if no is not in 1..pages.size()
-    Page* get_page (isize no) const;
 
     ///// Display parameters
     Fill window_background = BLACK;
@@ -92,10 +87,6 @@ struct Book {
     bool draw_if_needed ();
     bool need_draw = true;
 
-    int64 estimated_page_memory = 0;
-
-    void load_page (Page*);
-    void unload_page (Page*);
      // Preload images perhaps
      // Returns true if any processing was actually done
     bool idle_processing ();
