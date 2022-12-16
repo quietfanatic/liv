@@ -29,6 +29,11 @@ struct Book {
      // Number of pages currently being viewed.
     isize spread_pages = 1;
 
+    isize first_visible_page () const { return max(page_offset, 1); }
+    isize last_visible_page () const {
+        return min(page_offset + spread_pages - 1, isize(pages.size()));
+    }
+
     explicit Book (
         App& app,
         FilesToOpen&& files

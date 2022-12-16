@@ -22,14 +22,26 @@ static void update_title (Book& self) {
     }
     else {
         if (self.pages.size() > 1) {
-            title = "[" + std::to_string(self.page_offset)
-                  + "/" + std::to_string(self.pages.size()) + "] ";
+            isize first = self.first_visible_page();
+            isize last = self.last_visible_page();
+            if (first == last) {
+                title = ayu::cat('[', first);
+            }
+            else if (first + 1 == last) {
+                title = ayu::cat('[', first, ',', last);
+            }
+            else {
+                title = ayu::cat('[', first, '-', last);
+            }
+            title = ayu::cat(title, '/', self.pages.size(), "] ");
         }
         title += self.get_page(self.page_offset)->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (self.layout && self.layout->zoom != 1) {
-            title += " (" + std::to_string(geo::round(self.layout->zoom * 100)) + "%)";
+            title = ayu::cat(title,
+                " (", geo::round(self.layout->zoom * 100), "%)"
+            );
         }
     }
     SDL_SetWindowTitle(self.window, title.c_str());
@@ -51,11 +63,12 @@ static void unload_page (Book& self, Page* page) {
 }
 
 static const Spread& get_spread (Book& self) {
-    for (isize i = self.page_offset;
-        i < self.page_offset + self.spread_pages;
-        i++
+     // Not sure this is the best place to do this.
+    for (isize no = self.first_visible_page();
+         no <= self.last_visible_page();
+         no++
     ) {
-        load_page(self, self.get_page(i));
+        load_page(self, self.get_page(no));
     }
     if (!self.spread) self.spread.emplace(self, self.layout_params);
     return *self.spread;
@@ -238,7 +251,10 @@ bool Book::draw_if_needed () {
     Vec window_size = get_window_size();
     for (auto& spread_page : spread.pages) {
         spread_page.page->last_viewed_at = uni::now();
-        Rect spread_rect = Rect(spread_page.offset, spread_page.page->size);
+        Rect spread_rect = Rect(
+            spread_page.offset,
+            spread_page.offset + spread_page.page->size
+        );
         Rect window_rect = spread_rect * layout.zoom + layout.offset;
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = window_rect / window_size * float(2) - Vec(1, 1);
@@ -251,13 +267,18 @@ bool Book::draw_if_needed () {
 }
 
 bool Book::idle_processing () {
-     // Preload pages forwards
     int32 preload_ahead = settings->get(&MemorySettings::preload_ahead);
     int32 preload_behind = settings->get(&MemorySettings::preload_behind);
     int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
-     // TODO: Support spread_pages
-    for (int32 i = 1; i <= preload_ahead; i++) {
-        if (Page* page = get_page(page_offset + i)) {
+
+    isize preload_first = max(page_offset - preload_behind, 1);
+    isize preload_last = min(
+        page_offset + spread_pages - 1 + preload_ahead,
+        isize(pages.size())
+    );
+     // Preload pages forwards
+    for (isize no = page_offset; no >= preload_first; no--) {
+        if (Page* page = get_page(no)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
@@ -265,8 +286,8 @@ bool Book::idle_processing () {
         }
     }
      // Preload pages backwards
-    for (int32 i = 1; i <= preload_behind; i++) {
-        if (Page* page = get_page(page_offset - i)) {
+    for (isize no = page_offset + spread_pages - 1; no <= preload_last; no++) {
+        if (Page* page = get_page(no)) {
             if (!page->texture && !page->load_failed) {
                 load_page(*this, page);
                 return true;
@@ -280,8 +301,7 @@ bool Book::idle_processing () {
         Page* oldest_page = null;
         for (isize no = 1; no <= isize(pages.size()); no++) {
              // Don't unload images in the preload region
-            if (no >= page_offset - preload_behind
-             && no <= page_offset + preload_ahead) {
+            if (no >= preload_first && no <= preload_last) {
                 continue;
             }
             Page* page = get_page(no);
@@ -372,6 +392,20 @@ static tap::TestSet tests ("app/book", []{
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{0, 60}], glow::RGBA8(0x000000ff), "auto_zoom_mode = original");
+
+    book.set_auto_zoom_mode(FIT);
+    book.set_spread_pages(2);
+    book.set_page_offset(1);
+    is(book.first_visible_page(), 1, "first_visible_page()");
+    is(book.last_visible_page(), 2, "last_visible_page()");
+    book.draw_if_needed();
+    is(book.spread->pages.size(), usize(2), "Spread has two pages");
+    is(book.spread->pages[1].offset.x, 7, "Spread second page has correct offset");
+    glFinish();
+    glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
+    is(img[{20, 60}], glow::RGBA8(0x2674dbff), "Left side of spread is correct");
+    is(img[{100, 60}], glow::RGBA8(0x45942eff), "Right side of spread is correct");
+    is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
 
     done_testing();
 });

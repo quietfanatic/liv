@@ -79,14 +79,14 @@ CE bool finite (float a) { return a == a && a != INF && a != -INF; }
 CE bool finite (double a) { return a == a && a != INF && a != -INF; }
 
  // min and max propagate NANs and prefer a if equal
-template <class T>
-CE T min (T a, T b) {
+template <class A, class B>
+CE auto min (A a, B b) {
     return a != a ? a
          : b != b ? b
          : a <= b ? a : b;
 }
-template <class T>
-CE T max (T a, T b) {
+template <class A, class B>
+CE auto max (A a, B b) {
     return a != a ? a
          : b != b ? b
          : a >= b ? a : b;

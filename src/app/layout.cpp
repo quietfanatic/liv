@@ -11,12 +11,25 @@ LayoutParams::LayoutParams (const Settings* settings) :
     large_align(settings->get(&LayoutSettings::large_align))
 { }
 
-Spread::Spread (const Book& book, const LayoutParams&) {
-    if (Page* page = book.get_page(book.page_offset)) {
-        if (page->texture) {
-            pages.emplace_back(page, Vec(0, 0));
-            size = page->size;
-        }
+Spread::Spread (const Book& book, const LayoutParams& params) {
+     // Collect visible pages
+    for (isize no = book.first_visible_page();
+         no <= book.last_visible_page(); no++
+    ) {
+        pages.emplace_back(book.get_page(no));
+    }
+     // TODO: Support different directions
+    size = {0, 0};
+     // Set height to height of tallest page
+    for (auto& page : pages) {
+        if (page.page->size.y > size.y) size.y = page.page->size.y;
+    }
+    for (auto& page : pages) {
+         // Accumulate width
+        page.offset.x = size.x;
+        size.x += page.page->size.x;
+         // Align vertically
+        page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
     }
 };
 
