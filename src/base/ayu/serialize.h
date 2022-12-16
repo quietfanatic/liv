@@ -198,15 +198,6 @@ namespace ayu::X {
             SerError(std::move(l)), min(min), max(max), got(g)
         { }
     };
-     // Tried to deserialize an item from an array tree, but the array has too
-     // many elements for the item.
-    struct TooLong : SerError {
-        usize max;
-        usize got;
-        TooLong (Location&& l, usize m, usize g) :
-            SerError(std::move(l)), max(m), got(g)
-        { }
-    };
      // Tried to treat an item like it has attributes, but it does not support
      // behaving like an object.
     struct NoAttrs : SerError {

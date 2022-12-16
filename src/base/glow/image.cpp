@@ -55,15 +55,6 @@ struct ImagePixelsProxy : Image { };
 
 } using namespace glow;
 
-AYU_DESCRIBE(glow::RGBA8,
-    elems(
-        elem(&RGBA8::r),
-        elem(&RGBA8::g),
-        elem(&RGBA8::b),
-        elem(&RGBA8::a)
-    )
-)
-
 AYU_DESCRIBE(glow::ImagePixelsProxy,
      // TODO: Allow parsing hex string as an option?
     length(value_funcs<usize>(
