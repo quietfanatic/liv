@@ -68,46 +68,27 @@ CE bool defined (double a) { return a == a; }
 CE bool finite (float a) { return a == a && a != GINF && a != -GINF; }
 CE bool finite (double a) { return a == a && a != GINF && a != -GINF; }
 
- // min and max propagate NANs and prefer a if equal
-template <class A, class B>
-CE auto min (A a, B b) {
-    return a != a ? a
-         : b != b ? b
-         : a <= b ? a : b;
+ // min and max propagate NANs and prefer left side if equal
+template <class T>
+CE auto min (T a) {
+    return a;
 }
-template <class A, class B>
-CE auto max (A a, B b) {
+template <class A, class B, class... Ts>
+CE auto min (A a, B b, Ts&&... rest) {
     return a != a ? a
-         : b != b ? b
-         : a >= b ? a : b;
+         : a <= b ? a
+         : min(b, std::forward<Ts>(rest)...);
 }
-
-//TODO
-// // min and max propagate NANs and prefer left side if equal
-//template <class T, class... Ts>
-//CE auto min (T a, Ts... ts);
-//template <class T>
-//CE auto min (T a) {
-//    return a;
-//}
-//template <class A, class B, class... Ts>
-//CE auto min (A a, B b, Ts... rest) {
-//    return a != a ? a
-//         : a <= b ? a
-//         : min(b, ts...);
-//}
-//template <class T, class... Ts>
-//CE auto max (T a, Ts... ts);
-//template <class T>
-//CE auto max (T a) {
-//    return a;
-//}
-//template <class A, class B, class... Ts>
-//CE auto max (A a, B b, Ts... rest) {
-//    return a != a ? a
-//         : a >= b ? a
-//         : max(b, ts...);
-//}
+template <class T>
+CE auto max (T a) {
+    return a;
+}
+template <class A, class B, class... Ts>
+CE auto max (A a, B b, Ts&&... rest) {
+    return a != a ? a
+         : a >= b ? a
+         : max(b, std::forward<Ts>(rest)...);
+}
 
 template <class T, class Low, class High>
 CE T clamp (T a, Low low, High high) {
