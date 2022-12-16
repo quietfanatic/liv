@@ -216,6 +216,8 @@ void Book::zoom_multiply (float factor) {
         layout_params.manual_offset +=
             spread.size * (layout.zoom - layout_params.manual_zoom) / 2;
     }
+    this->layout = {};
+    need_draw = true;
 }
 
 void Book::reset_layout () {
