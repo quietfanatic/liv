@@ -20,7 +20,7 @@ Book::Book (App& app, FilesToOpen&& to_open) :
     block(to_open),
     viewing_pages(
         to_open.start_index,
-        to_open.start_index + settings->get(&LayoutSettings::spread_pages)
+        to_open.start_index + settings->get(&LayoutSettings::spread_count)
     ),
     window_background(
         settings->get(&WindowSettings::window_background)
@@ -64,17 +64,8 @@ void Book::set_page_offset (int32 off) {
     need_draw = true;
 }
 
-void Book::set_spread_pages (int32 count) {
-    if (count < 1) count = 1;
-    else {
-        int32 max = clamp(
-            settings->get(&LayoutSettings::max_spread_pages),
-            1,
-            2048
-        );
-        if (count > max) count = max;
-    }
-    viewing_pages.r = viewing_pages.l + count;
+void Book::set_spread_count (int32 count) {
+    viewing_pages.r = viewing_pages.l + clamp(count, 1, 2048);
     spread = {};
     layout = {};
     need_draw = true;
@@ -325,7 +316,7 @@ static tap::TestSet tests ("app/book", []{
     is(img[{0, 60}], glow::RGBA8(0x000000ff), "auto_zoom_mode = original");
 
     book.set_auto_zoom_mode(FIT);
-    book.set_spread_pages(2);
+    book.set_spread_count(2);
     book.set_page_offset(1);
     is(book.viewing_pages, IRange{0, 2}, "Viewing two pages");
     is(book.visible_pages(), IRange{0, 2}, "Two visible pages");

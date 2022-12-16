@@ -39,22 +39,21 @@ struct Book {
 
     ///// Controls
      // Takes a 1-based page offset.  viewing_pages will be {off - 1, off +
-     // spread_pages - 1}
+     // spread_count - 1}
      // Clamps to valid page offset (such that there is at least one page being
      // viewed)
     void set_page_offset (int32 off);
     int32 get_page_offset () const { return viewing_pages.l + 1; }
 
-     // Set number of pages to view simultaneously.
-     // clamps to 1..settings.max_spread_pages
-    void set_spread_pages (int32 count);
+     // Set number of pages to view simultaneously.  Clamps to 1..2048
+    void set_spread_count (int32 count);
 
      // Add to current page (stopping at first/last page)
     void seek (int32 count) {
         int64 off = get_page_offset() + count;
         set_page_offset(clamp(off, -2048, int32(MAX)));
     }
-     // Increment current page(s) by spread_pages
+     // Increment current page(s) by spread_count
     void next () {
         seek(viewing_pages.size());
     }

@@ -17,11 +17,8 @@ window: {
 
  // Settings for how pages are laid out in the window
 layout: {
-     // Default number of pages to view simultaneously.
-    spread_pages: 1
-     // The maximum number of pages that can be viewed simultaneously.  The
-     // maximum maximum is 2048.
-    max_spread_pages: 4
+     // Default number of pages to view simultaneously.  The maximum is 2048.
+    spread_count: 1
      // Direction to lay out multiple pages.  Options: right left down up
     spread_direction: right
      // How to zoom images that aren't the same size as the window.  Options:
@@ -114,10 +111,10 @@ mappings: [
      // Go to the start of the book
     [[ctrl shift left] [seek -1000000000]]
      // Set simultaneous viewed pages
-    [[1] [spread_pages 1]]
-    [[2] [spread_pages 2]]
-    [[3] [spread_pages 3]]
-    [[4] [spread_pages 4]]
+    [[1] [spread_count 1]]
+    [[2] [spread_count 2]]
+    [[3] [spread_count 3]]
+    [[4] [spread_count 4]]
      // Toggle fullscreen mode
     [[f11] [fullscreen]]
      // Set background color

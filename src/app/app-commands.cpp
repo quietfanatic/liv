@@ -33,10 +33,10 @@ Command seek (seek_, "seek", "Add given amount to the current page number");
 
 ///// LAYOUT COMMANDS
 
-static void spread_pages_ (int32 count) {
-    if (current_book) current_book->set_spread_pages(count);
+static void spread_count_ (int32 count) {
+    if (current_book) current_book->set_spread_count(count);
 }
-Command spread_pages (spread_pages_, "spread_pages", "Change number of pages to view at once");
+Command spread_count (spread_count_, "spread_count", "Change number of pages to view at once");
 
 static void auto_zoom_mode_ (AutoZoomMode mode) {
     if (current_book) {

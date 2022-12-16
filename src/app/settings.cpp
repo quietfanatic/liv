@@ -12,8 +12,7 @@ const Settings builtin_default_settings = {
         .window_background = BLACK,
     },
     LayoutSettings{
-        .spread_pages = 1,
-        .max_spread_pages = 4,
+        .spread_count = 1,
         .spread_direction = RIGHT,
         .auto_zoom_mode = FIT,
         .max_zoom = 32,
@@ -96,8 +95,7 @@ AYU_DESCRIBE(app::Mapping,
 
 AYU_DESCRIBE(app::LayoutSettings,
     attrs(
-        attr("spread_pages", &LayoutSettings::spread_pages, optional),
-        attr("max_spread_pages", &LayoutSettings::max_spread_pages, optional),
+        attr("spread_count", &LayoutSettings::spread_count, optional),
         attr("spread_direction", &LayoutSettings::spread_direction, optional),
         attr("auto_zoom_mode", &LayoutSettings::auto_zoom_mode, optional),
         attr("reset_zoom_on_page_turn", &LayoutSettings::reset_zoom_on_page_turn, optional),
