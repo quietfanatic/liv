@@ -1,4 +1,6 @@
-// This is the default settings file for liv.
+// This is the default settings file for liv.  You probably don't want to
+// manually modify this file; instead add settings to settings.ayu in the same
+// directory as the program.
 
 [app::Settings {
 
@@ -8,8 +10,8 @@ window: {
     size: [720 720]
      // Initial fullscreen state of the window
     fullscreen: false
-     // Background color for window (black, white, or [r g b a]
-     // where r,g,b,a : 0..255
+     // Background color for window (black, white, 0xrrggbbaa, or [r g b a],
+     // where r,g,b,a : 0..255)
     window_background: black
 }
 
@@ -19,14 +21,17 @@ layout: {
     spread_pages: 1
      // The maximum number of pages that can be viewed simultaneously.
     max_spread_pages: 4
-     // Options:
+     // Direction to lay out multiple pages.  Options: right left down up
+    spread_direction: right
+     // How to zoom images that aren't the same size as the window.  Options:
      //   fit = Make sure page fits entirely within window
      //   fit_width = Match page's width to window's width
      //   fit_height = Match page's height to window's height
      //   original = View page at original pixel resolution
     auto_zoom_mode: fit
-     // true = When turning pages, apply auto zoom
-     // false = When turning pages, keep same zoom and offset as last page
+     // true = When turning pages, reset manual zoom and apply auto zoom
+     // false = When turning pages, keep same zoom and offset as last page if
+     //         zoom or offset were manually changed.
     reset_zoom_on_page_turn: true
      // Maximum allowed zoom factor
     max_zoom: 32
@@ -88,7 +93,8 @@ memory: {
     page_cache_mb: 200
 }
 
- // Key and mouse bindings
+ // Key and mouse bindings.  See app/app-commands.h for a list of supported
+ // commands.
 mappings: [
      // Go to next page(s)
     [[right] [next]]

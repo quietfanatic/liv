@@ -55,7 +55,10 @@ struct Book {
      // Clamps to valid page offset
     void set_page_offset (isize off);
      // Set number of pages to view simultaneously.
-    void set_spread_pages (isize count); // clamps to 1..settings.max_spread_pages
+     // clamps to 1..settings.max_spread_pages
+    void set_spread_pages (isize count);
+     // Set direction to display multiple pages
+    void set_spread_direction (SpreadDirection);
 
      // Increment current page(s) by spread_pages
     void next () { set_page_offset(page_offset + spread_pages); }

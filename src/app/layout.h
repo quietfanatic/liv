@@ -7,6 +7,7 @@
 namespace app {
 
 struct LayoutParams {
+    SpreadDirection spread_direction;
     AutoZoomMode auto_zoom_mode;
      // Controls alignment of pages when they're smaller than the window.
      // (0, 0) means the page's top-left corner is in the top-left corner of

@@ -87,6 +87,7 @@ my @sources = (qw(
     base/control/command-builtins.cpp
     base/control/input.cpp
     base/geo/mat.cpp
+    base/glow/colors.cpp
     base/glow/common.cpp
     base/glow/file-texture.cpp
     base/glow/gl.cpp

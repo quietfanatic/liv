@@ -14,6 +14,7 @@ const Settings builtin_default_settings = {
     LayoutSettings{
         .spread_pages = 1,
         .max_spread_pages = 4,
+        .spread_direction = RIGHT,
         .auto_zoom_mode = FIT,
         .max_zoom = 32,
         .min_zoomed_size = 16,
@@ -49,6 +50,15 @@ void init_settings () {
 
 } using namespace app;
 
+AYU_DESCRIBE(app::Fill,
+    values(
+        value("black", BLACK),
+        value("white", WHITE),
+        value("transparent", TRANSPARENT)
+    ),
+    delegate(base<glow::RGBA8>())
+)
+
 AYU_DESCRIBE(app::AutoZoomMode,
     values(
         value("fit", FIT),
@@ -68,13 +78,13 @@ AYU_DESCRIBE(app::InterpolationMode,
     )
 )
 
-AYU_DESCRIBE(app::Fill,
+AYU_DESCRIBE(app::SpreadDirection,
     values(
-        value("black", BLACK),
-        value("white", WHITE),
-        value("transparent", TRANSPARENT)
-    ),
-    delegate(base<glow::RGBA8>())
+        value("right", RIGHT),
+        value("left", LEFT),
+        value("down", DOWN),
+        value("up", UP)
+    )
 )
 
 AYU_DESCRIBE(app::Mapping,
@@ -88,6 +98,7 @@ AYU_DESCRIBE(app::LayoutSettings,
     attrs(
         attr("spread_pages", &LayoutSettings::spread_pages, optional),
         attr("max_spread_pages", &LayoutSettings::max_spread_pages, optional),
+        attr("spread_direction", &LayoutSettings::spread_direction, optional),
         attr("auto_zoom_mode", &LayoutSettings::auto_zoom_mode, optional),
         attr("reset_zoom_on_page_turn", &LayoutSettings::reset_zoom_on_page_turn, optional),
         attr("max_zoom", &LayoutSettings::max_zoom, optional),

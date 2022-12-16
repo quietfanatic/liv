@@ -10,7 +10,19 @@
 
 namespace app {
 
- // TODO: Add more fit modes
+struct Fill : glow::RGBA8 { using glow::RGBA8::RGBA8; };
+
+constexpr Fill BLACK = {0, 0, 0, 255};
+constexpr Fill WHITE = {255, 255, 255, 255};
+constexpr Fill TRANSPARENT = {0, 0, 0, 0};
+
+enum SpreadDirection : uint8 {
+    RIGHT,
+    LEFT,
+    DOWN,
+    UP
+};
+
 enum AutoZoomMode : uint8 {
     FIT,
     FIT_WIDTH,
@@ -26,12 +38,6 @@ enum InterpolationMode : uint8 {
     SMART_CUBIC
 };
 
-struct Fill : glow::RGBA8 { using glow::RGBA8::RGBA8; };
-
-constexpr Fill BLACK = {0, 0, 0, 255};
-constexpr Fill WHITE = {255, 255, 255, 255};
-constexpr Fill TRANSPARENT = {0, 0, 0, 0};
-
 struct Mapping {
     control::Input input;
     control::Statement action;
@@ -45,6 +51,7 @@ struct WindowSettings {
 struct LayoutSettings {
     std::optional<isize> spread_pages;
     std::optional<isize> max_spread_pages;
+    std::optional<SpreadDirection> spread_direction;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
     std::optional<float> min_zoomed_size;

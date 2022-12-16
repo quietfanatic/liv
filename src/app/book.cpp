@@ -160,6 +160,13 @@ void Book::set_spread_pages (isize count) {
     need_draw = true;
 }
 
+void Book::set_spread_direction (SpreadDirection dir) {
+    layout_params.spread_direction = dir;
+    spread = {};
+    layout = {};
+    need_draw = true;
+}
+
 void Book::set_align (Vec small, Vec large) {
     if (defined(small.x)) layout_params.small_align.x = small.x;
     if (defined(small.y)) layout_params.small_align.y = small.y;
@@ -405,6 +412,14 @@ static tap::TestSet tests ("app/book", []{
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{20, 60}], glow::RGBA8(0x2674dbff), "Left side of spread is correct");
     is(img[{100, 60}], glow::RGBA8(0x45942eff), "Right side of spread is correct");
+    is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
+
+    book.set_spread_direction(LEFT);
+    book.draw_if_needed();
+    glFinish();
+    glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
+    is(img[{20, 60}], glow::RGBA8(0x45942eff), "spread direction left (left)");
+    is(img[{100, 60}], glow::RGBA8(0x2674dbff), "spread direction left (right)");
     is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
 
     done_testing();

@@ -28,13 +28,16 @@ extern Command spread_pages;
  // (AutoZoomMode) Set auto zoom mode for current book
 extern Command auto_zoom_mode;
 
- // (Vec Vec) Set alignment (small_align and large_align)
+ // (Vec Vec) Set alignment (small_align and large_align).  If a component of a
+ // Vec is NAN, that component of the existing *_align will not be changed (so
+ // you can change only the horizontal or vertical align if you want).
 extern Command align;
 
  // (float) Multiply zoom by amount
 extern Command zoom_multiply;
 
- // () Reset layout parameters to default
+ // () Reset layout parameters to default (anything changed by the commands in
+ // the LAYOUT COMMANDS section).
 extern Command reset_layout;
 
 ///// PAGE COMMANDS

@@ -6,6 +6,7 @@
 namespace app {
 
 LayoutParams::LayoutParams (const Settings* settings) :
+    spread_direction(settings->get(&LayoutSettings::spread_direction)),
     auto_zoom_mode(settings->get(&LayoutSettings::auto_zoom_mode)),
     small_align(settings->get(&LayoutSettings::small_align)),
     large_align(settings->get(&LayoutSettings::large_align))
@@ -18,18 +19,57 @@ Spread::Spread (const Book& book, const LayoutParams& params) {
     ) {
         pages.emplace_back(book.get_page(no));
     }
-     // TODO: Support different directions
     size = {0, 0};
-     // Set height to height of tallest page
-    for (auto& page : pages) {
-        if (page.page->size.y > size.y) size.y = page.page->size.y;
-    }
-    for (auto& page : pages) {
-         // Accumulate width
-        page.offset.x = size.x;
-        size.x += page.page->size.x;
-         // Align vertically
-        page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
+    switch (params.spread_direction) {
+        case RIGHT: {
+             // Set height to height of tallest page
+            for (auto& page : pages) {
+                if (page.page->size.y > size.y) size.y = page.page->size.y;
+            }
+            for (auto& page : pages) {
+                 // Accumulate width
+                page.offset.x = size.x;
+                size.x += page.page->size.x;
+                 // Align vertically
+                page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
+            }
+            break;
+        }
+        case LEFT: {
+            for (auto& page : pages) {
+                if (page.page->size.y > size.y) size.y = page.page->size.y;
+            }
+            for (auto it = pages.rbegin(); it != pages.rend(); it++) {
+                auto& page = *it;
+                page.offset.x = size.x;
+                size.x += page.page->size.x;
+                page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
+            }
+            break;
+        }
+        case DOWN: {
+            for (auto& page : pages) {
+                if (page.page->size.x > size.x) size.x = page.page->size.x;
+            }
+            for (auto& page : pages) {
+                page.offset.y = size.y;
+                size.y += page.page->size.y;
+                page.offset.x = (size.x - page.page->size.x) * params.small_align.x;
+            }
+            break;
+        }
+        case UP: {
+            for (auto& page : pages) {
+                if (page.page->size.x > size.x) size.x = page.page->size.x;
+            }
+            for (auto it = pages.rbegin(); it != pages.rend(); it++) {
+                auto& page = *it;
+                page.offset.y = size.y;
+                size.y += page.page->size.y;
+                page.offset.x = (size.x - page.page->size.x) * params.small_align.x;
+            }
+            break;
+        }
     }
 };
 
