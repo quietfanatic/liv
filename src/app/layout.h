@@ -19,7 +19,7 @@ struct LayoutParams {
     Vec large_align;
      // NAN means no manual zoom/offset is applied, so use auto_zoom_mode.
     float manual_zoom = NAN;
-    Vec manual_offset = NAN;
+    Vec manual_offset = {NAN, NAN};
     LayoutParams (const Settings*);
 };
 

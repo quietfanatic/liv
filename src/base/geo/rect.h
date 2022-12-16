@@ -4,6 +4,7 @@
 
 #include "../ayu/describe.h"
 #include "../uni/common.h"
+#include "range.h"
 #include "vec.h"
 
 namespace geo {
@@ -19,6 +20,8 @@ using LRect = GRect<int64>;
  // I can imagine use cases for this.
 using BRect = GRect<bool>;
 
+ // Like ranges, Rects are considered to include the left and bottom, and
+ // exclude the right and top.
 template <class T>
 struct GRect {
     T l;
@@ -34,11 +37,23 @@ struct GRect {
     CE GRect (const GVec<T, 2>& lb, const GVec<T, 2>& rt) :
         l(lb.x), b(lb.y), r(rt.x), t(rt.y)
     { }
+    CE GRect (const GRange<T>& lr, const GRange<T>& bt) :
+        l(lr.l), b(bt.l), r(lr.r), t(bt.r)
+    { }
 
     CE GVec<T, 2> lb () const { return {l, b}; }
     CE GVec<T, 2> rb () const { return {r, b}; }
     CE GVec<T, 2> rt () const { return {r, t}; }
     CE GVec<T, 2> lt () const { return {l, t}; }
+    CE GRange<T> lr () const { return {l, r}; }
+    CE GRange<T> bt () const { return {b, t}; }
+
+    CE GRect<T> exclude_lb () const {
+        return {lr().exclude_l(), bt().exclude_l()};
+    }
+    CE GRect<T> include_rb () const {
+        return {lr().include_r(), bt().include_r()};
+    }
 
     CE T width () const { return r - l; }
     CE T height () const { return t - b; }
@@ -187,25 +202,20 @@ CE GRect<T> invert_v (const GRect<T>& a) {
  // Both width and height are non-negative.  (proper(NAN) == true)
 template <class T>
 CE bool proper (const GRect<T>& a) {
-    return a.r >= a.l && a.t >= a.b;
+    return proper(a.lr()) && proper(a.bt());
 }
 
  // If not proper, flip horizontally and/or vertically to make it proper.
 template <class T>
 CE GRect<T> properize (const GRect<T>& a) {
-    return {
-        min(a.l, a.r),
-        min(a.b, a.t),
-        max(a.r, a.l),
-        max(a.t, a.b)
-    };
+    return {properize(a.lr()), properize(a.bt())};
 }
 
 template <class T>
 CE GRect<T> lerp (
     const GRect<T>& a,
     const GRect<T>& b,
-    std::conditional_t<std::is_same_v<T, float>, float, double> t
+    PreferredLerper<T> t
 ) {
     return {
         lerp(a.l, b.l, t),
@@ -219,59 +229,34 @@ CE GRect<T> lerp (
 // These assume the rectangles are proper, and may give unintuitive results
 //  if they aren't.
 
- // a and b share area or are touching on the border
-template <class T>
-CE bool touches (const GRect<T>& a, const GRect<T>& b) {
-    return a.l <= b.r && a.r <= b.l
-        && a.b <= b.t && a.t <= b.b;
-}
-template <class T>
-CE bool touches (const GRect<T>& a, const GVec<T, 2>& b) {
-    return a.l <= b.x && b.x <= a.r
-        && a.b <= b.y && b.y <= a.t;
-}
-
- // a and b share area (aren't just touching on the border)
+ // a and b are overlapping.  Returns false if the rectangles are only touching
+ // on the border.  To return true in this case, use overlaps(a.include_lb(),
+ // b.include_lb())
 template <class T>
 CE bool overlaps (const GRect<T>& a, const GRect<T>& b) {
-    return a.l < b.r && a.r < b.l
-        && a.b < b.t && a.t < b.b;
+    return overlaps(a.lr(), b.lr()) && overlaps(a.bt(), b.bt());
 }
 template <class T>
 CE bool overlaps (const GRect<T>& a, const GVec<T, 2>& b) {
-    return a.l < b.x && b.x < a.r
-        && a.b < b.y && b.y < a.t;
+    return overlaps(a.lr(), b.x) && overlaps(a.bt(), b.y);
 }
 
- // b is fully contained in a, but they can share borders
-template <class T>
-CE bool contains (const GRect<T>& a, const GVec<T, 2>& b) {
-    return a.l <= b.x && b.x <= a.r
-        && a.b <= b.y && b.y <= a.t;
-}
+ // b is fully contained in a.  Note that the left and bottom are inclusive but
+ // the right and top are exclusive.  To change this behavior, use exlude_lb()
+ // or exclude_rt()
 template <class T>
 CE bool contains (const GRect<T>& a, const GRect<T>& b) {
-    return contains(a, b.lb()) && contains(a, b.rt());
-}
-
- // b is fully contained in a, and they can't share borders
-template <class T>
-CE bool covers (const GRect<T>& a, const GVec<T, 2>& b) {
-    return a.l < b.x && b.x < a.r
-        && a.b < b.y && b.y < a.t;
+    return contains(a.lr(), b.lr()) && contains(a.bt(), b.bt());
 }
 template <class T>
-CE bool covers (const GRect<T>& a, const GRect<T>& b) {
-    return covers(a, b.lb()) && covers(a, b.rt());
+CE bool contains (const GRect<T>& a, const GVec<T, 2>& b) {
+    return contains(a.lr(), b.x) && contains(a.bt(), b.y);
 }
 
  // If p is outside of a, returns the closest point to p contained in a.
 template <class T>
-CE GVec<T, 2> snap (const GRect<T>& a, const GVec<T, 2>& p) {
-    return {
-        p.x < a.l ? a.l : p.x > a.r ? a.r : p.x,
-        p.y < a.b ? a.b : p.y > a.t ? a.t : p.y
-    };
+CE GVec<T, 2> clamp (const GVec<T, 2>& p, const GRect<T>& a) {
+    return {clamp(p.x, a.lr()), clamp(p.y, a.bt())};
 }
 
 } // namespace geo

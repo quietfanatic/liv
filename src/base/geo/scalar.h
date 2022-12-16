@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <bit>
 #include <limits>
 #include "../uni/common.h"
 #include "../uni/macros.h"
@@ -243,11 +244,18 @@ CE int64 align (int64 a, int64 b) {
     return b >= 0 ? length(a) : -length(a);
 }
 
+template <class T>
+struct PreferredLerperS { using type = double; };
+template <>
+struct PreferredLerperS<float> { using type = float; };
+template <class T>
+using PreferredLerper = PreferredLerperS<T>::type;
+
 CE float lerp (float a, float b, float t) {
-    return t*a + (1-t)*b;
+    return (1-t)*a + t*b;
 }
 CE double lerp (double a, double b, double t) {
-    return t*a + (1-t)*b;
+    return (1-t)*a + t*b;
 }
 CE int32 lerp (int32 a, int32 b, double t) {
     return int32(lerp(double(a), double(b), t));
@@ -255,5 +263,96 @@ CE int32 lerp (int32 a, int32 b, double t) {
 CE int64 lerp (int64 a, int64 b, double t) {
     return int64(lerp(double(a), double(b), t));
 }
+ // This is stupid and I'm sure I'll regret it
+template <class T>
+CE T* lerp (T* a, T* b, double t) {
+    DA(t >= 0 && t <= 1);
+    T* r = a + isize((b - a) * t);
+}
+
+ // Get the next representable value.  Does not change NANs or INFs.
+ // Minus zero is treated the same as zero.  Includes subnormals.
+CE int32 next_quantum (int32 v) { return v+1; }
+CE int64 next_quantum (int64 v) { return v+1; }
+CE float next_quantum (float v) {
+    if (!finite(v)) return v;
+    uint32 rep = std::bit_cast<uint32>(v);
+    if (rep == 0x8000'0000) {
+         // Treat minus zero as zero
+        return std::bit_cast<float>(0x0000'0001);
+    }
+    else if (rep == 0x7f8f'ffff) {
+         // Largest finite number
+        return INF;
+    }
+    else if (rep & 0x8000'0000) {
+        return std::bit_cast<float>(rep - 1);
+    }
+    else {
+        return std::bit_cast<float>(rep + 1);
+    }
+}
+CE double next_quantum (double v) {
+    if (!finite(v)) return v;
+    uint64 rep = std::bit_cast<uint64>(v);
+    if (rep == 0x8000'0000'0000'0000) {
+         // Treat minus zero as zero
+        return std::bit_cast<double>(uint64(0x0000'0000'0000'0001));
+    }
+    else if (rep == 0x7fef'ffff'ffff'ffff) {
+         // Largest finite number
+        return INF;
+    }
+    else if (rep & 0x8000'0000'0000'0000) {
+        return std::bit_cast<double>(rep - 1);
+    }
+    else {
+        return std::bit_cast<double>(rep + 1);
+    }
+}
+template <class T>
+CE T* next_quantum (T* v) { return v+1; }
+
+ // Get the previous representable value.
+CE int32 prev_quantum (int32 v) { return v-1; }
+CE int64 prev_quantum (int64 v) { return v-1; }
+CE float prev_quantum (float v) {
+    if (!finite(v)) return v;
+    uint32 rep = std::bit_cast<uint32>(v);
+    if (rep == 0x0000'0000) {
+         // Skip minus zero
+        return std::bit_cast<float>(0x8000'0001);
+    }
+    else if (rep == 0xff8f'ffff) {
+         // Smallest finite number
+        return -INF;
+    }
+    else if (rep & 0x8000'0000) {
+        return std::bit_cast<float>(rep + 1);
+    }
+    else {
+        return std::bit_cast<float>(rep - 1);
+    }
+}
+CE double prev_quantum (double v) {
+    if (!finite(v)) return v;
+    uint64 rep = std::bit_cast<uint64>(v);
+    if (rep == 0x0000'0000'0000'0000) {
+         // Skip minus zero
+        return std::bit_cast<double>(0x8000'0000'0000'0001);
+    }
+    else if (rep == 0xffef'ffff'ffff'ffff) {
+         // Smallest finite number
+        return -INF;
+    }
+    else if (rep & 0x8000'0000'0000'0000) {
+        return std::bit_cast<double>(rep + 1);
+    }
+    else {
+        return std::bit_cast<double>(rep - 1);
+    }
+}
+template <class T>
+CE T* prev_quantum (T* v) { return v-1; }
 
 } // namespace geo

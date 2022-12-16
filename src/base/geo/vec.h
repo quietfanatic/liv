@@ -144,6 +144,7 @@ GVEC_UNARY_OP(-)
  // Do not define ! because the user probably expects it to coerce to scalar.
  // You can use ~ on BVecs instead
 GVEC_UNARY_OP(~)
+#undef GVEC_UNARY_OP
 
 ///// BINARY
 
@@ -157,7 +158,7 @@ CE auto operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
     return r; \
 } \
 template <class TA, class TB, usize n> \
-CE auto operator op (const GVec<TA, n>& a, TB b) { \
+CE auto operator op (const GVec<TA, n>& a, const TB& b) { \
     GVec<decltype(a[0] op b), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = a[i] op b; \
@@ -165,7 +166,7 @@ CE auto operator op (const GVec<TA, n>& a, TB b) { \
     return r; \
 } \
 template <class TA, class TB, usize n> \
-CE auto operator op (TA a, const GVec<TB, n>& b) { \
+CE auto operator op (const TA& a, const GVec<TB, n>& b) { \
     GVec<decltype(a op b[0]), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = a op b[i]; \
@@ -193,7 +194,7 @@ CE GVec<TA, n>& operator op (GVec<TA, n>& a, const GVec<TB, n>& b) { \
     return a; \
 } \
 template <class TA, class TB, usize n> \
-CE GVec<TA, n>& operator op (GVec<TA, n>& a, TB b) { \
+CE GVec<TA, n>& operator op (GVec<TA, n>& a, const TB& b) { \
     for (usize i = 0; i < n; i++) { \
         a[i] op b; \
     } \
@@ -294,6 +295,7 @@ CE auto length (const GVec<T, n>& a) {
     return std::sqrt(length2(a));
 }
 
+ // These work on scalars too.
 template <class TA, class TB>
 CE auto distance2 (const TA& a, const TB& b) {
     return length2(b - a);
