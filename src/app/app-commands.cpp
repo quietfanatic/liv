@@ -31,7 +31,12 @@ static void seek_ (isize count) {
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
 
-///// PAGE COMMANDS
+///// LAYOUT COMMANDS
+
+static void spread_pages_ (isize count) {
+    if (current_book) current_book->set_spread_pages(count);
+}
+Command spread_pages (spread_pages_, "spread_pages", "Change number of pages to view at once");
 
 static void auto_zoom_mode_ (AutoZoomMode mode) {
     if (current_book) {
@@ -47,13 +52,6 @@ static void align_ (Vec small, Vec large) {
 }
 Command align (align_, "align", "Set page alignment (small_align and large_align)");
 
-static void interpolation_mode_ (InterpolationMode mode) {
-    if (current_book) {
-        current_book->set_interpolation_mode(mode);
-    }
-}
-Command interpolation_mode (interpolation_mode_, "interpolation_mode", "Set the pixel interpolation mode: nearest, linear, or cubic");
-
 static void zoom_multiply_ (float factor) {
     if (current_book) current_book->zoom_multiply(factor);
 }
@@ -63,6 +61,15 @@ static void reset_layout_ () {
     if (current_book) current_book->reset_layout();
 }
 Command reset_layout (reset_layout_, "reset_layout", "Reset layout parameters to default");
+
+///// PAGE COMMANDS
+
+static void interpolation_mode_ (InterpolationMode mode) {
+    if (current_book) {
+        current_book->set_interpolation_mode(mode);
+    }
+}
+Command interpolation_mode (interpolation_mode_, "interpolation_mode", "Set the pixel interpolation mode: nearest, linear, or cubic");
 
 ///// WINDOW COMMANDS
 

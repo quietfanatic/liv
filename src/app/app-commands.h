@@ -20,7 +20,10 @@ extern Command prev;
  // (isize) Skip forward or backward this many pages
 extern Command seek;
 
-///// PAGE COMMANDS
+///// LAYOUT COMMANDS
+
+ // (isize) Set the number of pages to view simultaneously
+extern Command spread_pages;
 
  // (AutoZoomMode) Set auto zoom mode for current book
 extern Command auto_zoom_mode;
@@ -28,14 +31,16 @@ extern Command auto_zoom_mode;
  // (Vec Vec) Set alignment (small_align and large_align)
 extern Command align;
 
- // (InterpolationMode) Set interpolation mode for current book
-extern Command interpolation_mode;
-
  // (float) Multiply zoom by amount
 extern Command zoom_multiply;
 
  // () Reset layout parameters to default
 extern Command reset_layout;
+
+///// PAGE COMMANDS
+
+ // (InterpolationMode) Set interpolation mode for current book
+extern Command interpolation_mode;
 
 ///// WINDOW COMMANDS
 

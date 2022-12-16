@@ -93,10 +93,23 @@ mappings: [
     [[right] [next]]
      // Go to previous page(s)
     [[left] [prev]]
+     // Go forward one page (even if viewing multiple pages)
+    [[shift right] [seek 1]]
+     // Go backward one page (even if viewing multiple pages)
+    [[shift left] [seek -1]]
      // Skip ahead 20 pages
-    [[shift right] [seek 20]]
+    [[ctrl right] [seek 20]]
      // Rewind 20 pages
-    [[shift left] [seek -20]]
+    [[ctrl left] [seek -20]]
+     // Go to the end of the book
+    [[ctrl shift right] [seek 1000000000]]
+     // Go to the start of the book
+    [[ctrl shift left] [seek -1000000000]]
+     // Set simultaneous viewed pages
+    [[1] [spread_pages 1]]
+    [[2] [spread_pages 2]]
+    [[3] [spread_pages 3]]
+    [[4] [spread_pages 4]]
      // Toggle fullscreen mode
     [[f11] [fullscreen]]
      // Set background color
