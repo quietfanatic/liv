@@ -17,12 +17,13 @@ extern Command quit;
 extern Command next;
  // () Go to previous page(s)
 extern Command prev;
- // (isize) Skip forward or backward this many pages
+ // (int32) Skip forward or backward this many pages.  The page offset will be
+ // clamped to the valid range.
 extern Command seek;
 
 ///// LAYOUT COMMANDS
 
- // (isize) Set the number of pages to view simultaneously
+ // (int32) Set the number of pages to view simultaneously
 extern Command spread_pages;
 
  // (AutoZoomMode) Set auto zoom mode for current book

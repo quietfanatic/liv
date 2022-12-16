@@ -17,9 +17,11 @@ namespace app {
 
 Book::Book (App& app, FilesToOpen&& to_open) :
     settings(app.settings),
-    pages(to_open),
-    page_offset(to_open.start_index + 1),
-    spread_pages(settings->get(&LayoutSettings::spread_pages)),
+    block(to_open),
+    viewing_pages(
+        to_open.start_index,
+        to_open.start_index + settings->get(&LayoutSettings::spread_pages)
+    ),
     window_background(
         settings->get(&WindowSettings::window_background)
     ),
@@ -47,8 +49,12 @@ void Book::set_window_background (Fill bg) {
     need_draw = true;
 }
 
-void Book::set_page_offset (isize off) {
-    page_offset = pages.clamp_page_offset({off, spread_pages});
+void Book::set_page_offset (int32 off) {
+    if (!block.count()) return;
+     // Clamp such that there is at least one visible page in the range
+    int32 l = clamp(off - 1, 1 - viewing_pages.size(), block.count() - 1);
+    viewing_pages = {l, l + viewing_pages.size()};
+    DA(visible_pages().size() >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         layout_params.manual_zoom = NAN;
         layout_params.manual_offset = NAN;
@@ -58,14 +64,17 @@ void Book::set_page_offset (isize off) {
     need_draw = true;
 }
 
-void Book::set_spread_pages (isize count) {
+void Book::set_spread_pages (int32 count) {
     if (count < 1) count = 1;
     else {
-        isize max = settings->get(&LayoutSettings::max_spread_pages);
-        if (max < 1) max = 1;
+        int32 max = clamp(
+            settings->get(&LayoutSettings::max_spread_pages),
+            1,
+            2048
+        );
         if (count > max) count = max;
     }
-    spread_pages = count;
+    viewing_pages.r = viewing_pages.l + count;
     spread = {};
     layout = {};
     need_draw = true;
@@ -155,13 +164,7 @@ void Book::set_fullscreen (bool fs) {
 
 const Spread& Book::get_spread () {
      // Not sure this is the best place to do this.
-    for (isize no = first_visible_page();
-         no <= last_visible_page();
-         no++
-    ) {
-        pages.load_page(pages.get(no));
-    }
-    if (!spread) spread.emplace(*this, layout_params);
+    if (!spread) spread.emplace(block, viewing_pages, layout_params);
     return *spread;
 }
 
@@ -207,29 +210,28 @@ bool Book::draw_if_needed () {
     }
      // Generate title
     String title;
-    isize first = first_visible_page();
-    isize last = last_visible_page();
-    if (pages.count() == 0) {
+    IRange visible = visible_pages();
+    if (block.count() == 0) {
         title = "Little Image Viewer (nothing loaded)"s;
     }
-    else if (first > last) {
+    else if (empty(visible)) {
         title = "Little Image Viewer (no pages visible)"s;
     }
     else {
-        if (pages.count() > 1) {
-            if (first == last) {
-                title = ayu::cat('[', first);
+        if (block.count() > 1) {
+            if (visible.size() == 1) {
+                title = ayu::cat('[', visible.l);
             }
-            else if (first + 1 == last) {
-                title = ayu::cat('[', first, ',', last);
+            else if (visible.size() == 2) {
+                title = ayu::cat('[', visible.l, ',', visible.r - 1);
             }
             else {
-                title = ayu::cat('[', first, '-', last);
+                title = ayu::cat('[', visible.l, '-', visible.r - 1);
             }
-            title = ayu::cat(title, '/', pages.count(), "] ");
+            title = ayu::cat(title, '/', block.count(), "] ");
         }
          // TODO: Merge filenames
-        title += pages.get(first_visible_page())->filename;
+        title += block.get(visible.l)->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (layout.zoom != 1) {
@@ -243,7 +245,7 @@ bool Book::draw_if_needed () {
 }
 
 bool Book::idle_processing () {
-    return pages.idle_processing(settings, {page_offset, spread_pages});
+    return block.idle_processing(settings, viewing_pages);
 }
 
 IVec Book::get_window_size () const {
@@ -289,31 +291,31 @@ static tap::TestSet tests ("app/book", []{
     glow::Image img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.page_offset, 1, "Initial page is 1");
+    is(book.get_page_offset(), 1, "Initial page is 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.page_offset, 2, "Next page is 2");
+    is(book.get_page_offset(), 2, "Next page is 2");
     is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
-    is(book.page_offset, 2, "Can't go past last page");
+    is(book.get_page_offset(), 2, "Can't go past last page");
     book.seek(10000);
-    is(book.page_offset, 2, "Can't seek past last page");
+    is(book.get_page_offset(), 2, "Can't seek past last page");
 
     book.prev();
     book.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.page_offset, 1, "Go back to page 1");
+    is(book.get_page_offset(), 1, "Go back to page 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "Going back to first page works");
 
     book.prev();
     book.draw_if_needed();
-    is(book.page_offset, 1, "Can't go before page 1");
+    is(book.get_page_offset(), 1, "Can't go before page 1");
 
     is(img[{0, 60}], glow::RGBA8(0x2674dbff), "Default to auto_zoom_mode = fit");
     book.set_auto_zoom_mode(ORIGINAL);
@@ -325,8 +327,8 @@ static tap::TestSet tests ("app/book", []{
     book.set_auto_zoom_mode(FIT);
     book.set_spread_pages(2);
     book.set_page_offset(1);
-    is(book.first_visible_page(), 1, "first_visible_page()");
-    is(book.last_visible_page(), 2, "last_visible_page()");
+    is(book.viewing_pages, IRange{0, 2}, "Viewing two pages");
+    is(book.visible_pages(), IRange{0, 2}, "Two visible pages");
     book.draw_if_needed();
     is(book.spread->pages.size(), usize(2), "Spread has two pages");
     is(book.spread->pages[1].offset.x, 7, "Spread second page has correct offset");
@@ -345,7 +347,8 @@ static tap::TestSet tests ("app/book", []{
     is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
 
     book.next();
-    is(book.page_offset, 2, "Next when spread_pages > 1 doesn't go past last page");
+    is(book.viewing_pages, IRange{1, 3}, "viewing_pages can go off the end");
+    is(book.visible_pages(), IRange{1, 2}, "visible_pages cannot go off the end");
 
     done_testing();
 });

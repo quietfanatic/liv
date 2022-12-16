@@ -7,36 +7,31 @@
 
 #include <vector>
 #include <memory>
+#include "../base/geo/range.h"
 #include "../base/uni/common.h"
 #include "common.h"
 
 namespace app {
 
-struct PageRange {
-    isize offset;
-    isize spread_pages;
-};
-
-struct Pages {
+struct PageBlock {
     String folder; // empty if not in a folder
     std::vector<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    Pages (FilesToOpen&);
-    ~Pages ();
+    PageBlock (FilesToOpen&);
+    ~PageBlock ();
 
-     // Turns an invalid page offset into a valid one
-    isize clamp_page_offset (PageRange) const;
-    isize first_visible_page (PageRange) const;
-    isize last_visible_page (PageRange) const;
-     // Returns null if no is not in 1..pages.size()
-    isize count () const { return isize(pages.size()); }
-    Page* get (isize no) const;
+     // Returns null if i is out of range
+    Page* get (int32 i) const;
+    int32 count () const { return int32(pages.size()); }
+
+    IRange valid_pages () const { return {0, count()}; }
+
     void load_page (Page*);
     void unload_page (Page*);
      // Preload pages perhaps
      // Returns true if any processing was actually done
-    bool idle_processing (const Settings* settings, PageRange);
+    bool idle_processing (const Settings* settings, IRange);
 };
 
 } // namespace app

@@ -2,6 +2,7 @@
 
 #include "app.h"
 #include "book.h"
+#include "page-block.h"
 
 namespace app {
 
@@ -12,61 +13,62 @@ LayoutParams::LayoutParams (const Settings* settings) :
     large_align(settings->get(&LayoutSettings::large_align))
 { }
 
-Spread::Spread (const Book& book, const LayoutParams& params) {
+Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
      // Collect visible pages
-    for (isize no = book.first_visible_page();
-         no <= book.last_visible_page(); no++
-    ) {
-        pages.emplace_back(book.pages.get(no));
+    for (int32 i = viewing.l; i < viewing.r; i++) {
+        if (Page* page = block.get(i)) {
+            block.load_page(page);
+            pages.emplace_back(block.get(i));
+        }
     }
     size = {0, 0};
     switch (params.spread_direction) {
         case RIGHT: {
              // Set height to height of tallest page
-            for (auto& page : pages) {
-                if (page.page->size.y > size.y) size.y = page.page->size.y;
+            for (auto& p : pages) {
+                if (p.page->size.y > size.y) size.y = p.page->size.y;
             }
-            for (auto& page : pages) {
+            for (auto& p : pages) {
                  // Accumulate width
-                page.offset.x = size.x;
-                size.x += page.page->size.x;
+                p.offset.x = size.x;
+                size.x += p.page->size.x;
                  // Align vertically
-                page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
+                p.offset.y = (size.y - p.page->size.y) * params.small_align.y;
             }
             break;
         }
         case LEFT: {
-            for (auto& page : pages) {
-                if (page.page->size.y > size.y) size.y = page.page->size.y;
+            for (auto& p : pages) {
+                if (p.page->size.y > size.y) size.y = p.page->size.y;
             }
             for (auto it = pages.rbegin(); it != pages.rend(); it++) {
-                auto& page = *it;
-                page.offset.x = size.x;
-                size.x += page.page->size.x;
-                page.offset.y = (size.y - page.page->size.y) * params.small_align.y;
+                auto& p = *it;
+                p.offset.x = size.x;
+                size.x += p.page->size.x;
+                p.offset.y = (size.y - p.page->size.y) * params.small_align.y;
             }
             break;
         }
         case DOWN: {
-            for (auto& page : pages) {
-                if (page.page->size.x > size.x) size.x = page.page->size.x;
+            for (auto& p : pages) {
+                if (p.page->size.x > size.x) size.x = p.page->size.x;
             }
-            for (auto& page : pages) {
-                page.offset.y = size.y;
-                size.y += page.page->size.y;
-                page.offset.x = (size.x - page.page->size.x) * params.small_align.x;
+            for (auto& p : pages) {
+                p.offset.y = size.y;
+                size.y += p.page->size.y;
+                p.offset.x = (size.x - p.page->size.x) * params.small_align.x;
             }
             break;
         }
         case UP: {
-            for (auto& page : pages) {
-                if (page.page->size.x > size.x) size.x = page.page->size.x;
+            for (auto& p : pages) {
+                if (p.page->size.x > size.x) size.x = p.page->size.x;
             }
             for (auto it = pages.rbegin(); it != pages.rend(); it++) {
-                auto& page = *it;
-                page.offset.y = size.y;
-                size.y += page.page->size.y;
-                page.offset.x = (size.x - page.page->size.x) * params.small_align.x;
+                auto& p = *it;
+                p.offset.y = size.y;
+                size.y += p.page->size.y;
+                p.offset.x = (size.x - p.page->size.x) * params.small_align.x;
             }
             break;
         }

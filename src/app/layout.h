@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../base/geo/range.h"
 #include "../base/geo/vec.h"
 #include "common.h"
 #include "settings.h"
@@ -33,8 +34,9 @@ struct SpreadPage {
 struct Spread {
     std::vector<SpreadPage> pages;
     Vec size;
-     // Uses page_offset, spread_pages, small_align and large_align
-    Spread (const Book&, const LayoutParams&);
+     // Uses small_align and large_align.  PageBlock is not const because it'll
+     // be sent load_page messages.
+    Spread (PageBlock&, IRange viewing_pages, const LayoutParams&);
      // Uses max_zoom and min_page_size
     float clamp_zoom (const Settings*, float) const;
 };

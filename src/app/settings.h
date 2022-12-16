@@ -49,8 +49,8 @@ struct WindowSettings {
     std::optional<Fill> window_background;
 };
 struct LayoutSettings {
-    std::optional<isize> spread_pages;
-    std::optional<isize> max_spread_pages;
+    std::optional<int32> spread_pages;
+    std::optional<int32> max_spread_pages;
     std::optional<SpreadDirection> spread_direction;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;

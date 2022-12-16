@@ -26,14 +26,14 @@ static void prev_ () {
 }
 Command prev (prev_, "prev", "Go to previous page or pages");
 
-static void seek_ (isize count) {
+static void seek_ (int32 count) {
     if (current_book) current_book->seek(count);
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
 
 ///// LAYOUT COMMANDS
 
-static void spread_pages_ (isize count) {
+static void spread_pages_ (int32 count) {
     if (current_book) current_book->set_spread_pages(count);
 }
 Command spread_pages (spread_pages_, "spread_pages", "Change number of pages to view at once");

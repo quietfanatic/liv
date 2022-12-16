@@ -24,7 +24,7 @@ struct GRange {
      // Select inclusivity of either side
     CE GRange (T l, bool include_l, T r, bool include_r) :
         l(include_l ? l : next_quantum(l)),
-        r(include_r ? prev_quantum(r) : r)
+        r(include_r ? next_quantum(r) : r)
     { }
      // Change inclusivity
     CE GRange exclude_l () { return {next_quantum(l), r}; }

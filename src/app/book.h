@@ -7,7 +7,7 @@
 #include "common.h"
 #include "layout.h"
 #include "page.h"
-#include "pages.h"
+#include "page-block.h"
 #include "settings.h"
 
 struct SDL_Window;
@@ -17,28 +17,19 @@ namespace app {
 struct Book {
     const Settings* settings;
 
-    ///// Book contents
-    Pages pages;
-     // 1-based index.  The page nos currently being viewed are
-     // page_offset .. (page_offset + spread_pages - 1).  Valid values are such
-     // that there is at least one valid page being viewed:
-     // (1 - (spread_pages-1)) .. (pages.size() + (spread_pages-1))
-    isize page_offset = 1;
-     // Number of pages currently being viewed.
-    isize spread_pages = 1;
-
-    isize first_visible_page () const {
-        return pages.first_visible_page({page_offset, spread_pages});
-    }
-    isize last_visible_page () const {
-        return pages.last_visible_page({page_offset, spread_pages});
-    }
-
     explicit Book (
         App& app,
         FilesToOpen&& files
     );
     ~Book ();
+
+    ///// Book contents
+    PageBlock block;
+
+    IRange viewing_pages;
+    IRange visible_pages () const {
+        return viewing_pages & block.valid_pages();
+    }
 
     ///// Display parameters
     Fill window_background = BLACK;
@@ -47,19 +38,32 @@ struct Book {
     PageParams page_params;
 
     ///// Controls
-     // Clamps to valid page offset
-    void set_page_offset (isize off);
+     // Takes a 1-based page offset.  viewing_pages will be {off - 1, off +
+     // spread_pages - 1}
+     // Clamps to valid page offset (such that there is at least one page being
+     // viewed)
+    void set_page_offset (int32 off);
+    int32 get_page_offset () const { return viewing_pages.l + 1; }
+
      // Set number of pages to view simultaneously.
      // clamps to 1..settings.max_spread_pages
-    void set_spread_pages (isize count);
+    void set_spread_pages (int32 count);
+
+     // Add to current page (stopping at first/last page)
+    void seek (int32 count) {
+        int64 off = get_page_offset() + count;
+        set_page_offset(clamp(off, -2048, int32(MAX)));
+    }
+     // Increment current page(s) by spread_pages
+    void next () {
+        seek(viewing_pages.size());
+    }
+    void prev () {
+        seek(-viewing_pages.size());
+    }
+
      // Set direction to display multiple pages
     void set_spread_direction (SpreadDirection);
-
-     // Increment current page(s) by spread_pages
-    void next () { set_page_offset(page_offset + spread_pages); }
-    void prev () { set_page_offset(page_offset - spread_pages); }
-     // Add to current page (stopping at first/last page)
-    void seek (isize count) { set_page_offset(page_offset + count); }
 
     void set_window_background (Fill);
     void set_auto_zoom_mode (AutoZoomMode);
