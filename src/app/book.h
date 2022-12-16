@@ -51,7 +51,7 @@ struct Book {
      // Add to current page (stopping at first/last page)
     void seek (int32 count) {
         int64 off = get_page_offset() + count;
-        set_page_offset(clamp(off, -2048, int32(MAX)));
+        set_page_offset(clamp(off, -2048, int32(GINF)));
     }
      // Increment current page(s) by spread_count
     void next () {

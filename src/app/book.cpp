@@ -56,8 +56,8 @@ void Book::set_page_offset (int32 off) {
     viewing_pages = {l, l + viewing_pages.size()};
     DA(visible_pages().size() >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
-        layout_params.manual_zoom = NAN;
-        layout_params.manual_offset = NAN;
+        layout_params.manual_zoom = GNAN;
+        layout_params.manual_offset = GNAN;
     }
     spread = {};
     layout = {};
@@ -83,7 +83,7 @@ void Book::set_align (Vec small, Vec large) {
     if (defined(small.y)) layout_params.small_align.y = small.y;
     if (defined(large.x)) layout_params.large_align.x = large.x;
     if (defined(large.y)) layout_params.large_align.y = large.y;
-    layout_params.manual_offset = NAN;
+    layout_params.manual_offset = GNAN;
     spread = {};
     layout = {};
     need_draw = true;
@@ -91,8 +91,8 @@ void Book::set_align (Vec small, Vec large) {
 
 void Book::set_auto_zoom_mode (AutoZoomMode mode) {
     layout_params.auto_zoom_mode = mode;
-    layout_params.manual_zoom = NAN;
-    layout_params.manual_offset = NAN;
+    layout_params.manual_zoom = GNAN;
+    layout_params.manual_offset = GNAN;
     layout = {};
     need_draw = true;
 }

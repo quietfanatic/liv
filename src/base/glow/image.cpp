@@ -16,7 +16,7 @@ Image::~Image () { delete[](pixels); }
 void SubImage::validate () {
     if (!bounds) return;
     if (!proper(*bounds)) throw X::SubImageBoundsNotProper(*bounds);
-    if (image && *bounds != INF && !contains(image->bounds(), *bounds)) {
+    if (image && *bounds != GINF && !contains(image->bounds(), *bounds)) {
         throw X::SubImageOutOfBounds(image, image->size, *bounds);
     }
 }

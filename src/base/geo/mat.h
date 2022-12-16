@@ -54,22 +54,18 @@ struct GMat {
         }
     }
 
-    CE GMat (NAN_t nan) {
+    CE GMat (GNAN_t nan) {
         for (usize c = 0; c < cols; c++) {
             e[c] = nan;
         }
     }
 
     CE GVec<float, rows>& operator [] (usize c) {
-#ifndef NDEBUG
-        AA(c < cols);
-#endif
+        DA(c < cols);
         return e[c];
     }
     const GVec<float, rows>& operator [] (usize c) const {
-#ifndef NDEBUG
-        AA(c < cols);
-#endif
+        DA(c < cols);
         return e[c];
     }
     explicit CE operator bool () const {

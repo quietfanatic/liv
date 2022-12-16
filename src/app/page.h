@@ -37,7 +37,7 @@ struct Page {
         PageParams params,
         float zoom,
         const geo::Rect& screen_rect,
-        const geo::Rect& tex_rect = {NAN,NAN,NAN,NAN} // defaults to whole page
+        const geo::Rect& tex_rect = GNAN // defaults to whole page
     );
 };
 

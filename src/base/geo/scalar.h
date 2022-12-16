@@ -1,4 +1,4 @@
-// Implements various utilities for scalar math, such as symbolic INC and NAN,
+// Implements various utilities for scalar math, such as symbolic GINC and GNAN,
 // constexpr rounding functions, and vector-like scalar functions.
 
 #pragma once
@@ -11,73 +11,62 @@
 namespace geo {
 using namespace uni;
 
-///// SPECIAL VALUES
+///// SPECIAL GENERIC VALUES
 
  // Represents not-a-number, or an undefined number.  Only representable by
- //  floating point types.
-#undef NAN
-struct NAN_t {
+ // floating point types or things that contain them.
+struct GNAN_t {
     CE operator float () const {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    CE NAN_t operator + () const { return *this; }
-    CE NAN_t operator - () const { return *this; }
+    CE GNAN_t operator + () const { return *this; }
+    CE GNAN_t operator - () const { return *this; }
 };
-CE NAN_t NAN;
- // Represents infinity.  Don't cast this to signed integer types, because
- //  it'll always result in the minimum value even if it's positive INF.
-#undef INF
-struct INF_t {
-    bool minus = false;
-    CE operator float () const {
-        return minus ? -std::numeric_limits<float>::infinity()
-                     : std::numeric_limits<float>::infinity();
-    }
-    CE INF_t operator + () const { return *this; }
-    CE INF_t operator - () const { return {!minus}; }
-};
-CE INF_t INF;
+CE GNAN_t GNAN;
 
  // Represents the minimum or maximum value of whatever it's cast to.
- // TODO: merge this with INF_t
-#undef MAX
-struct MINMAX_t {
-    bool minus;
+struct GINF_t {
+    bool minus = false;
     template <class T>
     CE operator T () const {
-        return minus ? std::numeric_limits<T>::min()
-                     : std::numeric_limits<T>::max();
+        if constexpr (std::numeric_limits<T>::has_infinity) {
+            return minus ? -std::numeric_limits<T>::infinity()
+                         : std::numeric_limits<T>::infinity();
+        }
+        else {
+            return minus ? std::numeric_limits<T>::lowest()
+                         : std::numeric_limits<T>::max();
+        }
     }
-    CE MINMAX_t operator + () const { return *this; }
-    CE MINMAX_t operator - () const { return {!minus}; }
+    CE GINF_t operator + () const { return *this; }
+    CE GINF_t operator - () const { return {!minus}; }
 };
-CE MINMAX_t MIN {true};
-CE MINMAX_t MAX {false};
+CE GINF_t GINF;
 
-#define SPECIAL_COMPARISON(Special, op) \
+#define GINF_COMPARISON(op) \
 template <class T> \
-CE bool operator op (Special a, T b) { \
+CE bool operator op (GINF_t a, T b) { \
     return T(a) op b; \
 } \
 template <class T> \
-CE bool operator op (T a, Special b) { \
+CE bool operator op (T a, GINF_t b) { \
     return a op T(b); \
 }
-SPECIAL_COMPARISON(MINMAX_t, ==)
-SPECIAL_COMPARISON(MINMAX_t, !=)
-SPECIAL_COMPARISON(MINMAX_t, <)
-SPECIAL_COMPARISON(MINMAX_t, <=)
-SPECIAL_COMPARISON(MINMAX_t, >=)
-SPECIAL_COMPARISON(MINMAX_t, >)
-#undef SPECIAL_COMPARISON
+GINF_COMPARISON(==)
+GINF_COMPARISON(!=)
+GINF_COMPARISON(<)
+GINF_COMPARISON(<=)
+GINF_COMPARISON(>=)
+GINF_COMPARISON(>)
+#undef GINF_COMPARISON
 
 ///// NORMAL SCALAR FUNCTIONS
 
 CE bool defined (float a) { return a == a; }
 CE bool defined (double a) { return a == a; }
 
-CE bool finite (float a) { return a == a && a != INF && a != -INF; }
-CE bool finite (double a) { return a == a && a != INF && a != -INF; }
+CE bool finite (float a) { return a == a && a != GINF && a != -GINF; }
+CE bool finite (double a) { return a == a && a != GINF && a != -GINF; }
 
  // min and max propagate NANs and prefer a if equal
 template <class A, class B>
@@ -132,11 +121,11 @@ CE T clamp (T a, Low low, High high) {
 
  // Round toward 0
 CE int32 trunc (float a) {
-    DA(a >= int32(MIN) && a <= int32(MAX));
+    DA(a >= int32(-GINF) && a <= int32(GINF));
     return int32(a);
 }
 CE int64 trunc (double a) {
-    DA(a >= int32(MIN) && a <= int32(MAX));
+    DA(a >= int32(-GINF) && a <= int32(GINF));
     return int64(a);
 }
 
@@ -152,19 +141,19 @@ CE int64 round (double a) {
 
 CE int32 floor (float a) {
     if (a >= 0) return trunc(a);
-    else return int32(MIN) - trunc(int32(MIN) - a);
+    else return int32(-GINF) - trunc(int32(-GINF) - a);
 }
 CE int64 floor (double a) {
     if (a >= 0) return int64(a);
-    else return int64(MIN) - trunc(int64(MIN) - a);
+    else return int64(-GINF) - trunc(int64(-GINF) - a);
 }
 
 CE int32 ceil (float a) {
-    if (a > 0) return int32(MAX) - trunc(int32(MAX) - a);
+    if (a > 0) return int32(GINF) - trunc(int32(GINF) - a);
     else return trunc(a);
 }
 CE int64 ceil (double a) {
-    if (a > 0) return int64(MAX) - trunc(int64(MAX) - a);
+    if (a > 0) return int64(GINF) - trunc(int64(GINF) - a);
     else return trunc(a);
 }
 
@@ -172,17 +161,17 @@ CE int64 ceil (double a) {
  // These will not work if a / b is inordinately large.
 CE float mod (float a, float b) {
     float ratio = a / b;
-    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+    if (ratio >= int32(-GINF) && ratio <= int32(GINF)) {
         return a - trunc(ratio) * b;
     }
-    else return NAN;
+    else return GNAN;
 }
 CE double mod (double a, double b) {
     double ratio = a / b;
-    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+    if (ratio >= int32(-GINF) && ratio <= int32(GINF)) {
         return a - trunc(ratio) * b;
     }
-    else return NAN;
+    else return GNAN;
 }
 CE int32 mod (int32 a, int32 b) { return a % b; }
 CE int64 mod (int64 a, int64 b) { return a % b; }
@@ -190,17 +179,17 @@ CE int64 mod (int64 a, int64 b) { return a % b; }
  // Like mod but sign is always sign of b
 CE float rem (float a, float b) {
     float ratio = a / b;
-    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+    if (ratio >= int32(-GINF) && ratio <= int32(GINF)) {
         return a - floor(ratio) * b;
     }
-    else return NAN;
+    else return GNAN;
 }
 CE double rem (double a, double b) {
     double ratio = a / b;
-    if (ratio >= int32(MIN) && ratio <= int32(MAX)) {
+    if (ratio >= int32(-GINF) && ratio <= int32(GINF)) {
         return a - floor(ratio) * b;
     }
-    else return NAN;
+    else return GNAN;
 }
 CE int32 rem (int32 a, int32 b) {
     if (a >= 0) return a % b;
@@ -283,7 +272,7 @@ CE float next_quantum (float v) {
     }
     else if (rep == 0x7f8f'ffff) {
          // Largest finite number
-        return INF;
+        return GINF;
     }
     else if (rep & 0x8000'0000) {
         return std::bit_cast<float>(rep - 1);
@@ -301,7 +290,7 @@ CE double next_quantum (double v) {
     }
     else if (rep == 0x7fef'ffff'ffff'ffff) {
          // Largest finite number
-        return INF;
+        return GINF;
     }
     else if (rep & 0x8000'0000'0000'0000) {
         return std::bit_cast<double>(rep - 1);
@@ -325,7 +314,7 @@ CE float prev_quantum (float v) {
     }
     else if (rep == 0xff8f'ffff) {
          // Smallest finite number
-        return -INF;
+        return -GINF;
     }
     else if (rep & 0x8000'0000) {
         return std::bit_cast<float>(rep + 1);
@@ -343,7 +332,7 @@ CE double prev_quantum (double v) {
     }
     else if (rep == 0xffef'ffff'ffff'ffff) {
          // Smallest finite number
-        return -INF;
+        return -GINF;
     }
     else if (rep & 0x8000'0000'0000'0000) {
         return std::bit_cast<double>(rep + 1);

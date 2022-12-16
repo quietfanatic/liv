@@ -19,8 +19,8 @@ struct LayoutParams {
      // Controls alignment of the page when it's larger than the window.
     Vec large_align;
      // NAN means no manual zoom/offset is applied, so use auto_zoom_mode.
-    float manual_zoom = NAN;
-    Vec manual_offset = {NAN, NAN};
+    float manual_zoom = GNAN;
+    Vec manual_offset = GNAN;
     LayoutParams (const Settings*);
 };
 

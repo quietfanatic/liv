@@ -7,7 +7,7 @@
 namespace app {
 
 PageBlock::PageBlock (FilesToOpen& to_open) {
-    AA(to_open.files.size() <= int32(MAX));
+    AA(to_open.files.size() <= int32(GINF));
     pages.reserve(to_open.files.size());
     for (auto& filename : to_open.files) {
         pages.emplace_back(std::make_unique<Page>(std::move(filename)));
@@ -66,7 +66,7 @@ bool PageBlock::idle_processing (const Settings* settings, IRange viewing_range)
      // Unload a page if we're above the memory limit
     int64 limit = page_cache_mb * int64(1024*1024);
     if (estimated_page_memory > limit) {
-        double oldest_viewed_at = INF;
+        double oldest_viewed_at = GINF;
         Page* oldest_page = null;
         for (int32 i = 0; i < count(); i++) {
              // Don't unload pages in the preload region, or we'll keep loading

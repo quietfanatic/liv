@@ -81,12 +81,10 @@ struct GVec : GVecStorage<T, n> {
             this->e[i] = v;
         }
     }
-    template <class = std::void_t<decltype(T(NAN))>>
-    CE GVec (NAN_t nan) : GVec(T(nan)) { }
-    template <class = std::void_t<decltype(T(INF))>>
-    CE GVec (INF_t i) : GVec(T(i)) { }
-    template <class = std::void_t<decltype(T(MIN))>>
-    CE GVec (MINMAX_t m) : GVec(T(m)) { }
+    template <class = std::void_t<decltype(T(GNAN))>>
+    CE GVec (GNAN_t nan) : GVec(T(nan)) { }
+    template <class = std::void_t<decltype(T(GINF))>>
+    CE GVec (GINF_t i) : GVec(T(i)) { }
     template <class T2>
     CE GVec (const GVec<T2, n>& o) {
         for (usize i = 0; i < n; i++) {

@@ -20,6 +20,9 @@ template <class T>
 struct GRange {
     T l;
     T r;
+    CE GRange () : l(), r() { }
+    CE GRange (GNAN_t n) : l(n), r(n) { }
+    CE GRange (GINF_t i) : l(-i), r(i) { }
     CE GRange (T l, T r) : l(l), r(r) { }
      // Select inclusivity of either side
     CE GRange (T l, bool include_l, T r, bool include_r) :

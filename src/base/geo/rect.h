@@ -30,9 +30,8 @@ struct GRect {
     T t;
 
     CE GRect () : l(0), b(0), r(0), t(0) { }
-    CE GRect (NAN_t n) : l(n), b(n), r(n), t(n) { }
-    CE GRect (INF_t i) : l(-i), b(-i), r(i), t(i) { }
-    CE GRect (MINMAX_t m) : l(-m), b(-m), r(m), t(m) { }
+    CE GRect (GNAN_t n) : l(n), b(n), r(n), t(n) { }
+    CE GRect (GINF_t i) : l(-i), b(-i), r(i), t(i) { }
     CE GRect (T l, T b, T r, T t) : l(l), b(b), r(r), t(t) { }
     CE GRect (const GVec<T, 2>& lb, const GVec<T, 2>& rt) :
         l(lb.x), b(lb.y), r(rt.x), t(rt.y)
