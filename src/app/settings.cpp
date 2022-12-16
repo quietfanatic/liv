@@ -16,7 +16,7 @@ const Settings builtin_default_settings = {
         .max_spread_pages = 4,
         .auto_zoom_mode = FIT,
         .max_zoom = 32,
-        .min_page_size = 16,
+        .min_zoomed_size = 16,
         .reset_zoom_on_page_turn = true,
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
@@ -91,7 +91,7 @@ AYU_DESCRIBE(app::LayoutSettings,
         attr("auto_zoom_mode", &LayoutSettings::auto_zoom_mode, optional),
         attr("reset_zoom_on_page_turn", &LayoutSettings::reset_zoom_on_page_turn, optional),
         attr("max_zoom", &LayoutSettings::max_zoom, optional),
-        attr("min_page_size", &LayoutSettings::min_page_size, optional),
+        attr("min_zoomed_size", &LayoutSettings::min_zoomed_size, optional),
         attr("small_align", &LayoutSettings::small_align, optional),
         attr("large_align", &LayoutSettings::large_align, optional)
     )

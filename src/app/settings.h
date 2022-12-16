@@ -47,7 +47,7 @@ struct LayoutSettings {
     std::optional<isize> max_spread_pages;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
-    std::optional<float> min_page_size;
+    std::optional<float> min_zoomed_size;
     std::optional<bool> reset_zoom_on_page_turn;
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;

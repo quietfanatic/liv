@@ -42,11 +42,11 @@ float Spread::clamp_zoom (const Settings* settings, float zoom) const {
     }
      // Now clamp
     auto max_zoom = settings->get(&LayoutSettings::max_zoom);
-    auto min_page_size = settings->get(&LayoutSettings::min_page_size);
+    auto min_size = settings->get(&LayoutSettings::min_zoomed_size);
     if (size) {
         float min_zoom = min(1.f, min(
-            min_page_size / size.x,
-            min_page_size / size.y
+            min_size / size.x,
+            min_size / size.y
         ));
         zoom = clamp(zoom, min_zoom, max_zoom);
     }

@@ -31,8 +31,9 @@ layout: {
      // Maximum allowed zoom factor
     max_zoom: 32
      // Minimum zoom factor is such that the page can't be any smaller than
-     // this in pixels (in its largest dimension)
-    min_page_size: 16
+     // this in pixels (in its largest dimension).  If the page is naturally
+     // smaller than this, this setting is ignored and the minimum zoom is 1.
+    min_zoomed_size: 16
      // When page is smaller than window, use this to align the page within
      // the window.  Examples:
      //   [0 0] = put page's top-left corner in window's top-left corner
