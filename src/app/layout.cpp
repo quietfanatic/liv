@@ -110,6 +110,9 @@ Layout::Layout (
         if (defined(params.manual_zoom)) {
             zoom = params.manual_zoom;
         }
+        else if (!area(spread.size)) {
+            zoom = 1;
+        }
         else {
             switch (params.auto_zoom_mode) {
                 case FIT: {

@@ -35,7 +35,8 @@ static void update_title (Book& self) {
             }
             title = ayu::cat(title, '/', self.pages.size(), "] ");
         }
-        title += self.get_page(self.page_offset)->filename;
+         // TODO: Merge filenames
+        title += self.get_page(self.first_visible_page())->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (self.layout && self.layout->zoom != 1) {
@@ -336,6 +337,7 @@ IVec Book::get_window_size () const {
 void Book::window_size_changed (IVec size) {
     AA(size.x > 0 && size.y > 0);
     glViewport(0, 0, size.x, size.y);
+    layout = {};
     need_draw = true;
 }
 
