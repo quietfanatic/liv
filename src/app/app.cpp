@@ -59,12 +59,11 @@ static void on_event (App& self, SDL_Event* event) {
                 current_book = book_with_window_id(
                     self, event->motion.windowID
                 );
-                auto drag_speed = self.setting(&ControlSettings::drag_speed);
                 if (current_book) {
                     current_book->drag(geo::Vec(
                         event->motion.xrel,
                         event->motion.yrel
-                    ) * drag_speed);
+                    ) * self.settings->get(&ControlSettings::drag_speed));
                 }
             }
             break;
@@ -72,6 +71,7 @@ static void on_event (App& self, SDL_Event* event) {
          // TODO: Support wheel
         default: break;
     }
+     // TODO: Move this waterfall to settings.h somehow
     for (auto& [input, action] : self.settings->mappings) {
         if (input_matches_event(input, event)) {
             if (action) action();
@@ -140,7 +140,7 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 
 void App::open_files (std::vector<String>&& files) {
     add_book(*this, std::make_unique<Book>(
-        *this, expand_files(*this, std::move(files))
+        *this, expand_files(settings, std::move(files))
     ));
 }
 

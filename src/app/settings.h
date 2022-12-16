@@ -15,7 +15,6 @@ enum AutoZoomMode : uint8 {
     FIT,
     FIT_WIDTH,
     FIT_HEIGHT,
-    FILL,
     ORIGINAL
 };
 
@@ -75,6 +74,8 @@ struct Settings :
     ControlSettings, FilesSettings, MemorySettings
 {
     std::vector<Mapping> mappings;
+    template <class T, class Category>
+    const T& get (std::optional<T> Category::*) const;
 };
 
 extern const Settings builtin_default_settings;
@@ -83,14 +84,13 @@ extern const Settings* res_default_settings;
 void init_settings ();
 
 template <class T, class Category>
-const T& get_setting (
-    const Settings* app_settings,
+const T& Settings::get (
     std::optional<T> Category::* setting
-) {
+) const {
     init_settings();
     auto setting_generic = static_cast<std::optional<T> Settings::*>(setting);
-    if (app_settings && app_settings->*setting_generic) {
-        return *(app_settings->*setting_generic);
+    if (this->*setting_generic) {
+        return *(this->*setting_generic);
     }
     else if (res_default_settings->*setting_generic) {
         return *(res_default_settings->*setting_generic);

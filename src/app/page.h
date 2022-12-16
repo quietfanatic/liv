@@ -12,6 +12,12 @@
 
 namespace app {
 
+struct PageParams {
+    InterpolationMode interpolation_mode;
+    PageParams () { }
+    PageParams (const Settings*);
+};
+
 struct Page {
     String filename;
     std::unique_ptr<glow::FileTexture> texture;
@@ -27,7 +33,7 @@ struct Page {
     void unload ();
 
     void draw (
-        InterpolationMode interpolation_mode,
+        PageParams params,
         float zoom,
         const geo::Rect& screen_rect,
         const geo::Rect& tex_rect = NAN // defaults to whole page

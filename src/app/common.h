@@ -13,7 +13,9 @@ struct App;
 struct Book;
 struct FilesToOpen;
 struct Layout;
+struct LayoutParameters;
 struct Page;
+struct PageParameters;
 struct Settings;
 
 } // namespace app

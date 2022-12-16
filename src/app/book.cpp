@@ -8,6 +8,7 @@
 #include "../base/uni/time.h"
 #include "app.h"
 #include "files.h"
+#include "layout.h"
 #include "page.h"
 
 namespace app {
@@ -27,45 +28,69 @@ static void update_title (Book& self) {
         title += self.get_page(self.page_offset)->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
-        if (self.zoom != 1) {
-            title += " (" + std::to_string(geo::round(self.zoom * 100)) + "%)";
+        if (self.layout && self.layout->zoom != 1) {
+            title += " (" + std::to_string(geo::round(self.layout->zoom * 100)) + "%)";
         }
     }
     SDL_SetWindowTitle(self.window, title.c_str());
 }
 
 static void load_page (Book& self, Page* page) {
-    if (!page->texture) {
+    if (page && !page->texture) {
         page->load();
         self.estimated_page_memory += page->estimated_memory;
     }
 }
 
 static void unload_page (Book& self, Page* page) {
-    if (page->texture) {
+    if (page && page->texture) {
         page->unload();
         self.estimated_page_memory -= page->estimated_memory;
         DA(self.estimated_page_memory >= 0);
     }
 }
 
+static const Spread& get_spread (Book& self) {
+    for (isize i = self.page_offset;
+        i < self.page_offset + self.spread_pages;
+        i++
+    ) {
+        load_page(self, self.get_page(i));
+    }
+    if (!self.spread) self.spread.emplace(self, self.layout_params);
+    return *self.spread;
+}
+
+static const Layout& get_layout (Book& self) {
+    if (!self.layout) {
+        self.layout.emplace(
+            self.settings, get_spread(self),
+            self.layout_params, self.get_window_size()
+        );
+    }
+    return *self.layout;
+}
+
 ///// Contents
 
 Book::Book (App& app, FilesToOpen&& to_open) :
-    app(app),
+    settings(app.settings),
     folder(std::move(to_open.folder)),
     page_offset(to_open.start_index + 1),
-    window_background(app.setting(&WindowSettings::window_background)),
-    auto_zoom_mode(app.setting(&LayoutSettings::auto_zoom_mode)),
-    small_align(app.setting(&LayoutSettings::small_align)),
-    large_align(app.setting(&LayoutSettings::large_align)),
-    interpolation_mode(app.setting(&PageSettings::interpolation_mode)),
-    window("Little Image Viewer", app.setting(&WindowSettings::size))
+    window_background(
+        settings->get(&WindowSettings::window_background)
+    ),
+    layout_params(settings),
+    page_params(settings),
+    window(
+        "Little Image Viewer",
+        settings->get(&WindowSettings::size)
+    )
 {
     SDL_SetWindowResizable(window, SDL_TRUE);
     DA(!SDL_GL_SetSwapInterval(1));
 
-    if (app.setting(&WindowSettings::fullscreen)) {
+    if (settings->get(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
     glow::init();
@@ -73,20 +98,18 @@ Book::Book (App& app, FilesToOpen&& to_open) :
     for (auto& filename : to_open.files) {
         pages.emplace_back(std::make_unique<Page>(std::move(filename)));
     }
-    need_draw = true;
     if (!app.hidden) SDL_ShowWindow(window);
 }
 Book::~Book () { }
 
-
-isize Book::clamp_page_offset (isize off) {
+isize Book::clamp_page_offset (isize off) const {
     if (!pages.empty()) return clamp(
         off, 1 - (spread_pages-1), isize(pages.size()) + (spread_pages-1)
     );
     else return 1;
 }
 
-Page* Book::get_page (isize no) {
+Page* Book::get_page (isize no) const {
     if (!pages.size() || no < 1 || no > isize(pages.size())) return null;
     else return &*pages[no-1];
 }
@@ -98,108 +121,97 @@ void Book::set_window_background (Fill bg) {
     need_draw = true;
 }
 
-///// Layout logic
-
-float Book::clamp_zoom (float zoom) {
-    auto max_zoom = app.setting(&LayoutSettings::max_zoom);
-    auto min_page_size = app.setting(&LayoutSettings::min_page_size);
-     // TODO: support spread_pages
-    if (Page* page = get_page(page_offset)) {
-        float min_zoom = min(1.f, min(
-            min_page_size / page->size.x,
-            min_page_size / page->size.y
-        ));
-        zoom = clamp(zoom, min_zoom, max_zoom);
-    }
-    else zoom = clamp(zoom, 1/max_zoom, max_zoom);
-     // Slightly snap to half integers
-    auto rounded = geo::round(zoom * 2) / 2;
-    if (distance(zoom, rounded) < 0.0001) {
-        zoom = rounded;
-    }
-    return zoom;
-}
-
 ///// Controls
 
 void Book::set_page_offset (isize off) {
     page_offset = clamp_page_offset(off);
-    if (app.setting(&LayoutSettings::reset_zoom_on_page_turn)) {
-        manual_zoom = false;
-        manual_offset = false;
+    if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
+        layout_params.manual_zoom = NAN;
+        layout_params.manual_offset = NAN;
     }
+    spread = {};
+    layout = {};
     need_draw = true;
 }
 
 void Book::set_spread_pages (isize count) {
     if (count < 1) count = 1;
     else {
-        isize max = app.setting(&LayoutSettings::max_spread_pages);
+        isize max = settings->get(&LayoutSettings::max_spread_pages);
+        if (max < 1) max = 1;
         if (count > max) count = max;
     }
     spread_pages = count;
+    spread = {};
+    layout = {};
+    need_draw = true;
 }
 
 void Book::set_align (Vec small, Vec large) {
-    if (defined(small.x)) small_align.x = small.x;
-    if (defined(small.y)) small_align.y = small.y;
-    if (defined(large.x)) large_align.x = large.x;
-    if (defined(large.y)) large_align.y = large.y;
-    manual_offset = false;
+    if (defined(small.x)) layout_params.small_align.x = small.x;
+    if (defined(small.y)) layout_params.small_align.y = small.y;
+    if (defined(large.x)) layout_params.large_align.x = large.x;
+    if (defined(large.y)) layout_params.large_align.y = large.y;
+    layout_params.manual_offset = NAN;
+    spread = {};
+    layout = {};
     need_draw = true;
 }
 
 void Book::set_auto_zoom_mode (AutoZoomMode mode) {
-    auto_zoom_mode = mode;
-    manual_zoom = false;
-    manual_offset = false;
+    layout_params.auto_zoom_mode = mode;
+    layout_params.manual_zoom = NAN;
+    layout_params.manual_offset = NAN;
+    layout = {};
     need_draw = true;
 }
 
 void Book::set_interpolation_mode (InterpolationMode mode) {
-    interpolation_mode = mode;
+    page_params.interpolation_mode = mode;
     need_draw = true;
 }
 
 void Book::drag (Vec amount) {
-    manual_offset = true;
-    offset += amount;
+    if (defined(layout_params.manual_offset)) {
+        layout_params.manual_offset += amount;
+    }
+    else {
+        layout_params.manual_offset = amount;
+    }
+    layout = {};
     need_draw = true;
 }
 
 void Book::zoom_multiply (float factor) {
-     // TODO: Support spread_pages
-    if (Page* page = get_page(page_offset)) {
-        manual_zoom = true;
-        if (manual_offset) {
-             // Hacky way to zoom from center
-             // TODO: zoom from center of window, not center of page
-            offset += page->size * zoom / 2;
-            zoom = clamp_zoom(zoom * factor);
-            offset -= page->size * zoom / 2;
-        }
-        else {
-            zoom = clamp_zoom(zoom * factor);
-        }
-        need_draw = true;
+     // Need spread to clamp the zoom
+    auto& spread = get_spread(*this);
+     // Actually we also need the layout to multiply the zoom
+    auto& layout = get_layout(*this);
+     // Set manual zoom
+    layout_params.manual_zoom = spread.clamp_zoom(settings, layout.zoom * factor);
+    if (defined(layout_params.manual_offset)) {
+         // Hacky way to zoom from center
+         // TODO: zoom to preserve current alignment
+        layout_params.manual_offset +=
+            spread.size * (layout.zoom - layout_params.manual_zoom) / 2;
     }
 }
 
 void Book::reset_layout () {
-    auto_zoom_mode = app.setting(&LayoutSettings::auto_zoom_mode);
-    small_align = app.setting(&LayoutSettings::small_align);
-    large_align = app.setting(&LayoutSettings::large_align);
-    manual_zoom = false;
-    manual_offset = false;
+    layout_params = LayoutParams(settings);
+    spread = {};
+    layout = {};
     need_draw = true;
 }
 
-bool Book::is_fullscreen () {
+bool Book::is_fullscreen () const {
     auto flags = AS(SDL_GetWindowFlags(window));
     return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
 }
 
 void Book::set_fullscreen (bool fs) {
+     // This will trigger a window_size_changed, so no need to clear layout or
+     // set need_draw
     AS(!SDL_SetWindowFullscreen(
         window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
@@ -211,10 +223,11 @@ void Book::set_fullscreen (bool fs) {
 bool Book::draw_if_needed () {
     if (!need_draw) return false;
     need_draw = false;
+    auto& spread = get_spread(*this);
+    auto& layout = get_layout(*this);
      // TODO: Currently we have a different context for each window, would it
      // be better to share a context between all windows?
     SDL_GL_MakeCurrent(window, window.gl_context);
-     // Clear
     glClearColor(
         window_background.r / 255.0,
         window_background.g / 255.0,
@@ -222,60 +235,15 @@ bool Book::draw_if_needed () {
         window_background.a / 255.0 // Alpha is probably ignored
     );
     glClear(GL_COLOR_BUFFER_BIT);
-    if (Page* page = get_page(page_offset)) {
-        load_page(*this, page);
-        page->last_viewed_at = uni::now();
-         // Determine layout
-        Vec window_size = get_window_size();
-        if (!manual_offset) {
-            if (!manual_zoom) {
-                switch (auto_zoom_mode) {
-                    case FIT: {
-                         // slope = 1 / aspect ratio
-                        if (slope(Vec(page->size)) > slope(window_size)) {
-                            zoom = window_size.y / page->size.y;
-                        }
-                        else {
-                            zoom = window_size.x / page->size.x;
-                        }
-                        zoom = clamp_zoom(zoom);
-                        break;
-                    }
-                    case FIT_WIDTH: {
-                        zoom = clamp_zoom(window_size.x / page->size.x);
-                        break;
-                    }
-                    case FIT_HEIGHT: {
-                        zoom = clamp_zoom(window_size.y / page->size.y);
-                        break;
-                    }
-                    case FILL: {
-                         // slope = 1 / aspect ratio
-                        if (slope(Vec(page->size)) > slope(window_size)) {
-                            zoom = float(window_size.x) / page->size.x;
-                        }
-                        else {
-                            zoom = float(window_size.y) / page->size.y;
-                        }
-                        zoom = clamp_zoom(zoom);
-                        break;
-                    }
-                    case ORIGINAL: {
-                        zoom = 1;
-                        break;
-                    }
-                }
-            }
-             // Auto align
-            Vec range = window_size - (page->size * zoom); // Can be negative
-            offset.x = range.x * (range.x > 0 ? small_align.x : large_align.x);
-            offset.y = range.y * (range.y > 0 ? small_align.y : large_align.y);
-        }
-        Rect page_position = {offset, offset + page->size * zoom};
+    Vec window_size = get_window_size();
+    for (auto& spread_page : spread.pages) {
+        spread_page.page->last_viewed_at = uni::now();
+        Rect spread_rect = Rect(spread_page.offset, spread_page.page->size);
+        Rect window_rect = spread_rect * layout.zoom + layout.offset;
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
-        Rect screen_rect = page_position / Vec(window_size) * float(2) - Vec(1, 1);
+        Rect screen_rect = window_rect / window_size * float(2) - Vec(1, 1);
          // Draw
-        page->draw(interpolation_mode, zoom, screen_rect);
+        spread_page.page->draw(page_params, layout.zoom, screen_rect);
     }
     update_title(*this);
     SDL_GL_SwapWindow(window);
@@ -284,9 +252,9 @@ bool Book::draw_if_needed () {
 
 bool Book::idle_processing () {
      // Preload pages forwards
-    int32 preload_ahead = app.setting(&MemorySettings::preload_ahead);
-    int32 preload_behind = app.setting(&MemorySettings::preload_behind);
-    int32 page_cache_mb = app.setting(&MemorySettings::page_cache_mb);
+    int32 preload_ahead = settings->get(&MemorySettings::preload_ahead);
+    int32 preload_behind = settings->get(&MemorySettings::preload_behind);
+    int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
      // TODO: Support spread_pages
     for (int32 i = 1; i <= preload_ahead; i++) {
         if (Page* page = get_page(page_offset + i)) {
@@ -331,7 +299,7 @@ bool Book::idle_processing () {
     return false;
 }
 
-IVec Book::get_window_size () {
+IVec Book::get_window_size () const {
     int w, h;
     SDL_GL_GetDrawableSize(window, &w, &h);
     AA(w > 0 && h > 0);

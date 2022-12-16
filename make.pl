@@ -61,6 +61,7 @@ my @sources = (qw(
     app/app-commands.cpp
     app/book.cpp
     app/files.cpp
+    app/layout.cpp
     app/main.cpp
     app/page.cpp
     app/settings.cpp

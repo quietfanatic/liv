@@ -7,6 +7,8 @@
 #include "../base/uni/common.h"
 #include "../base/wind/window.h"
 #include "common.h"
+#include "layout.h"
+#include "page.h"
 #include "settings.h"
 
 struct SDL_Window;
@@ -14,7 +16,7 @@ struct SDL_Window;
 namespace app {
 
 struct Book {
-    App& app;
+    const Settings* settings;
 
     ///// Book contents
     String folder; // empty if not in a folder
@@ -34,52 +36,29 @@ struct Book {
     ~Book ();
 
      // Turns an invalid page offset into a valid one
-    isize clamp_page_offset (isize off);
+    isize clamp_page_offset (isize off) const;
      // Returns null if no is not in 1..pages.size()
-    Page* get_page (isize no);
+    Page* get_page (isize no) const;
 
-    ///// Window parameters
+    ///// Display parameters
     Fill window_background = BLACK;
-    void set_window_background (Fill);
 
-    ///// Layout decision logic
-    AutoZoomMode auto_zoom_mode = FIT;
-     // Controls alignment of the image when it's smaller than the window.
-     // (0, 0) means the image's top-left corner is in the top-left corner of
-     // the window.  (1, 1) means the image's bottom-right corner is in the
-     // bottom-right corner of the window.  (0.5, 0.5) means the image's center
-     // is in the center of the window.
-    geo::Vec small_align;
-     // Controls alignment of the image when it's larger than the window.
-    geo::Vec large_align;
-     // Controls texture filtering
-    InterpolationMode interpolation_mode = CUBIC;
-
-     // Clamps zoom level according to max_zoom and min_page_size
-    float clamp_zoom (float);
-
-    ///// Actual layout logic
-     // Zoom has been manually changed, so ignore auto_zoom
-    bool manual_zoom = false;
-     // Offset has been manually changed, so ignore auto_zoom and aligns.
-    bool manual_offset = false;
-     // Current zoom level.
-    float zoom = 1;
-     // In pixels, top-left origin
-     // (0, 0) means image's top-left corner is in window's top-left corner
-    geo::Vec offset;
+    LayoutParams layout_params;
+    PageParams page_params;
 
     ///// Controls
      // Clamps to valid page offset
     void set_page_offset (isize off);
      // Set number of pages to view simultaneously.
     void set_spread_pages (isize count); // clamps to 1..settings.max_spread_pages
+
      // Increment current page(s) by spread_pages
     void next () { set_page_offset(page_offset + spread_pages); }
     void prev () { set_page_offset(page_offset - spread_pages); }
      // Add to current page (stopping at first/last page)
     void seek (isize count) { set_page_offset(page_offset + count); }
 
+    void set_window_background (Fill);
     void set_auto_zoom_mode (AutoZoomMode);
     void set_align (geo::Vec small, geo::Vec large);
     void set_interpolation_mode (InterpolationMode);
@@ -88,23 +67,27 @@ struct Book {
 
     void zoom_multiply (float factor);
 
-     // Reset offset, zoom, align to default
+     // Reset all layout parameters
     void reset_layout ();
 
-    bool is_fullscreen ();
+    bool is_fullscreen () const;
     void set_fullscreen (bool);
 
     ///// Internal stuff
     wind::Window window;
+     // Set these to nullopt or false when you change things they depend on.
+    std::optional<Spread> spread;
+    std::optional<Layout> layout;
     bool need_draw = true;
+
     int64 estimated_page_memory = 0;
-     // Handles layout logic.  Returns true if drawing was actually done.
+     // Returns true if drawing was actually done.
     bool draw_if_needed ();
      // Preload images perhaps
      // Returns true if any processing was actually done
     bool idle_processing ();
 
-    geo::IVec get_window_size ();
+    geo::IVec get_window_size () const;
 
     void window_size_changed (geo::IVec new_size);
 };

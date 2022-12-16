@@ -3,13 +3,14 @@
 #include <filesystem>
 #include <unordered_set>
 #include "../base/uni/text.h"
-#include "app.h"
 #include "settings.h"
 
 namespace app {
 
-FilesToOpen expand_files (App& app, std::vector<String>&& specified) {
-    auto& extensions = app.setting(&FilesSettings::supported_extensions);
+FilesToOpen expand_files (
+    const Settings* settings, std::vector<String>&& specified
+) {
+    auto& extensions = settings->get(&FilesSettings::supported_extensions);
 
     if (specified.size() == 1 &&
         fs::exists(specified[0]) &&

@@ -23,7 +23,6 @@ layout: {
      //   fit = Make sure page fits entirely within window
      //   fit_width = Match page's width to window's width
      //   fit_height = Match page's height to window's height
-     //   fill = Make sure window is filled entirly by page
      //   original = View page at original pixel resolution
     auto_zoom_mode: fit
      // true = When turning pages, apply auto zoom
@@ -107,7 +106,6 @@ mappings: [
     [[f] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
     [[v] [auto_zoom_mode fit_height]]
-    [[shift f] [auto_zoom_mode fill]]
     [[o] [auto_zoom_mode original]]
      // Align page to top of window
     [[shift w] [align [+nan 0] [+nan 0]]]
