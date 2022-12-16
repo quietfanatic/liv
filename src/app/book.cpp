@@ -13,81 +13,6 @@
 
 namespace app {
 
-///// Private helpers
-
-static void update_title (Book& self) {
-    String title;
-    isize first = self.first_visible_page();
-    isize last = self.last_visible_page();
-    if (self.pages.size() == 0) {
-        title = "Little Image Viewer (nothing loaded)"s;
-    }
-    else if (first > last) {
-        title = "Little Image Viewer (no pages visible)"s;
-    }
-    else {
-        if (self.pages.size() > 1) {
-            if (first == last) {
-                title = ayu::cat('[', first);
-            }
-            else if (first + 1 == last) {
-                title = ayu::cat('[', first, ',', last);
-            }
-            else {
-                title = ayu::cat('[', first, '-', last);
-            }
-            title = ayu::cat(title, '/', self.pages.size(), "] ");
-        }
-         // TODO: Merge filenames
-        title += self.get_page(self.first_visible_page())->filename;
-         // In general, direct comparisons of floats are not good, but we do
-         // slight snapping of our floats to half-integers, so this is fine.
-        if (self.layout && self.layout->zoom != 1) {
-            title = ayu::cat(title,
-                " (", geo::round(self.layout->zoom * 100), "%)"
-            );
-        }
-    }
-    SDL_SetWindowTitle(self.window, title.c_str());
-}
-
-static void load_page (Book& self, Page* page) {
-    if (page && !page->texture) {
-        page->load();
-        self.estimated_page_memory += page->estimated_memory;
-    }
-}
-
-static void unload_page (Book& self, Page* page) {
-    if (page && page->texture) {
-        page->unload();
-        self.estimated_page_memory -= page->estimated_memory;
-        DA(self.estimated_page_memory >= 0);
-    }
-}
-
-static const Spread& get_spread (Book& self) {
-     // Not sure this is the best place to do this.
-    for (isize no = self.first_visible_page();
-         no <= self.last_visible_page();
-         no++
-    ) {
-        load_page(self, self.get_page(no));
-    }
-    if (!self.spread) self.spread.emplace(self, self.layout_params);
-    return *self.spread;
-}
-
-static const Layout& get_layout (Book& self) {
-    if (!self.layout) {
-        self.layout.emplace(
-            self.settings, get_spread(self),
-            self.layout_params, self.get_window_size()
-        );
-    }
-    return *self.layout;
-}
-
 ///// Contents
 
 Book::Book (App& app, FilesToOpen&& to_open) :
@@ -131,14 +56,12 @@ Page* Book::get_page (isize no) const {
     else return &*pages[no-1];
 }
 
-///// Window parameters
+///// Controls
 
 void Book::set_window_background (Fill bg) {
     window_background = bg;
     need_draw = true;
 }
-
-///// Controls
 
 void Book::set_page_offset (isize off) {
     page_offset = clamp_page_offset(off);
@@ -208,9 +131,9 @@ void Book::drag (Vec amount) {
 
 void Book::zoom_multiply (float factor) {
      // Need spread to clamp the zoom
-    auto& spread = get_spread(*this);
+    auto& spread = get_spread();
      // Actually we also need the layout to multiply the zoom
-    auto& layout = get_layout(*this);
+    auto& layout = get_layout();
      // Set manual zoom
     layout_params.manual_zoom = spread.clamp_zoom(settings, layout.zoom * factor);
     if (defined(layout_params.manual_offset)) {
@@ -246,14 +169,37 @@ void Book::set_fullscreen (bool fs) {
 
 ///// Internal stuff
 
+const Spread& Book::get_spread () {
+     // Not sure this is the best place to do this.
+    for (isize no = first_visible_page();
+         no <= last_visible_page();
+         no++
+    ) {
+        load_page(get_page(no));
+    }
+    if (!spread) spread.emplace(*this, layout_params);
+    return *spread;
+}
+
+const Layout& Book::get_layout () {
+    if (!layout) {
+        layout.emplace(
+            settings, get_spread(),
+            layout_params, get_window_size()
+        );
+    }
+    return *layout;
+}
+
 bool Book::draw_if_needed () {
     if (!need_draw) return false;
     need_draw = false;
-    auto& spread = get_spread(*this);
-    auto& layout = get_layout(*this);
+    auto& spread = get_spread();
+    auto& layout = get_layout();
      // TODO: Currently we have a different context for each window, would it
      // be better to share a context between all windows?
     SDL_GL_MakeCurrent(window, window.gl_context);
+     // Draw background
     glClearColor(
         window_background.r / 255.0,
         window_background.g / 255.0,
@@ -261,6 +207,7 @@ bool Book::draw_if_needed () {
         window_background.a / 255.0 // Alpha is probably ignored
     );
     glClear(GL_COLOR_BUFFER_BIT);
+     // Draw spread
     Vec window_size = get_window_size();
     for (auto& spread_page : spread.pages) {
         spread_page.page->last_viewed_at = uni::now();
@@ -274,9 +221,56 @@ bool Book::draw_if_needed () {
          // Draw
         spread_page.page->draw(page_params, layout.zoom, screen_rect);
     }
-    update_title(*this);
+     // Generate title
+    String title;
+    isize first = first_visible_page();
+    isize last = last_visible_page();
+    if (pages.size() == 0) {
+        title = "Little Image Viewer (nothing loaded)"s;
+    }
+    else if (first > last) {
+        title = "Little Image Viewer (no pages visible)"s;
+    }
+    else {
+        if (pages.size() > 1) {
+            if (first == last) {
+                title = ayu::cat('[', first);
+            }
+            else if (first + 1 == last) {
+                title = ayu::cat('[', first, ',', last);
+            }
+            else {
+                title = ayu::cat('[', first, '-', last);
+            }
+            title = ayu::cat(title, '/', pages.size(), "] ");
+        }
+         // TODO: Merge filenames
+        title += get_page(first_visible_page())->filename;
+         // In general, direct comparisons of floats are not good, but we do
+         // slight snapping of our floats to half-integers, so this is fine.
+        if (layout.zoom != 1) {
+            title = ayu::cat(title, " (", geo::round(layout.zoom * 100), "%)");
+        }
+    }
+    SDL_SetWindowTitle(window, title.c_str());
+     // vsync
     SDL_GL_SwapWindow(window);
     return true;
+}
+
+void Book::load_page (Page* page) {
+    if (page && !page->texture) {
+        page->load();
+        estimated_page_memory += page->estimated_memory;
+    }
+}
+
+void Book::unload_page (Page* page) {
+    if (page && page->texture) {
+        page->unload();
+        estimated_page_memory -= page->estimated_memory;
+        DA(estimated_page_memory >= 0);
+    }
 }
 
 bool Book::idle_processing () {
@@ -293,7 +287,7 @@ bool Book::idle_processing () {
     for (isize no = page_offset; no >= preload_first; no--) {
         if (Page* page = get_page(no)) {
             if (!page->texture && !page->load_failed) {
-                load_page(*this, page);
+                load_page(page);
                 return true;
             }
         }
@@ -302,7 +296,7 @@ bool Book::idle_processing () {
     for (isize no = page_offset + spread_pages - 1; no <= preload_last; no++) {
         if (Page* page = get_page(no)) {
             if (!page->texture && !page->load_failed) {
-                load_page(*this, page);
+                load_page(page);
                 return true;
             }
         }
@@ -325,7 +319,7 @@ bool Book::idle_processing () {
             }
         }
         if (oldest_page) {
-            unload_page(*this, oldest_page);
+            unload_page(oldest_page);
         }
     }
      // Didn't do anything

@@ -85,12 +85,17 @@ struct Book {
     wind::Window window;
      // Set these to nullopt or false when you change things they depend on.
     std::optional<Spread> spread;
+    const Spread& get_spread ();
     std::optional<Layout> layout;
+    const Layout& get_layout ();
+     // Returns true if drawing was actually done.
+    bool draw_if_needed ();
     bool need_draw = true;
 
     int64 estimated_page_memory = 0;
-     // Returns true if drawing was actually done.
-    bool draw_if_needed ();
+
+    void load_page (Page*);
+    void unload_page (Page*);
      // Preload images perhaps
      // Returns true if any processing was actually done
     bool idle_processing ();
