@@ -108,25 +108,75 @@ struct GVec : GVecStorage<T, n> {
     }
 };
 
-///// COMPARISONS
+///// PROPERTIES
 
-#define GVEC_COMPARISON_OP(op, res, def) \
-template <class TA, class TB, usize n> \
-CE bool operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
-    for (usize i = 0; i < n; i++) { \
-        if (a[i] != b[i]) return res; \
-    } \
-    return def; \
+ // Will debug assert if some but not all elements are defined
+template <class T, usize n>
+CE bool defined (const GVec<T, n>& a) {
+    DA([&]{
+        bool any_defined = false;
+        bool all_defined = true;
+        for (usize i = 0; i < n; i++) {
+            if (defined(a[i])) any_defined = true;
+            else all_defined = false;
+        }
+        return any_defined == all_defined;
+    }());
+    return defined(a[0]);
 }
-GVEC_COMPARISON_OP(==, false, true)
-GVEC_COMPARISON_OP(!=, true, false)
-GVEC_COMPARISON_OP(<, a[i] < b[i], false)
-GVEC_COMPARISON_OP(<=, a[i] <= b[i], true)
-GVEC_COMPARISON_OP(>, a[i] > b[i], false)
-GVEC_COMPARISON_OP(>=, a[i] >= b[i], true)
-#undef GVEC_COMPARISON_OP
 
-///// UNARY
+template <class T, usize n>
+CE bool finite (const GVec<T, n>& a) {
+    for (usize i = 0; i < n; i++) {
+        if (!finite(a[i])) return false;
+    }
+    return true;
+}
+
+template <class T, usize n>
+CE auto length2 (const GVec<T, n>& a) {
+    decltype(wide_multiply(a[0], a[0])) r = 0;
+    for (usize i = 0; i < n; i++) {
+        r += wide_multiply(a[i], a[i]);
+    }
+    return r;
+}
+ // May be double or float
+ // TODO: CE sqrt
+template <class T, usize n>
+CE auto length (const GVec<T, n>& a) {
+    return std::sqrt(length2(a));
+}
+
+ // These work on scalars too.
+template <class TA, class TB>
+CE auto distance2 (const TA& a, const TB& b) {
+    return length2(b - a);
+}
+
+template <class TA, class TB>
+CE auto distance (const TA& a, const TB& b) {
+    return length(b - a);
+}
+
+ // Can be negative.
+ // area(a) == dot(a, a)
+ // For 2-Vecs, equivalent to area(GRect{{0}, a})
+template <class T, usize n>
+CE auto area (const GVec<T, n>& a) {
+    decltype(wide_multiply(a[0], a[0])) r = 1;
+    for (usize i = 0; i < n; i++) {
+        r = wide_multiply(r, a[i]);
+    }
+    return r;
+}
+
+template <class T>
+CE T slope (const GVec<T, 2>& a) {
+    return a.y / a.x;
+}
+
+///// MODIFIERS
 
 #define GVEC_UNARY_OP(op) \
 template <class T, usize n> \
@@ -144,7 +194,55 @@ GVEC_UNARY_OP(-)
 GVEC_UNARY_OP(~)
 #undef GVEC_UNARY_OP
 
-///// BINARY
+template <class T, usize n>
+CE auto round (const GVec<T, n>& a) {
+    GVec<decltype(round(a[0])), n> r;
+    for (usize i = 0; i < n; i++) {
+        r[i] = round(a[i]);
+    }
+    return r;
+}
+template <class T, usize n>
+CE auto floor (const GVec<T, n>& a) {
+    GVec<decltype(floor(a[0])), n> r;
+    for (usize i = 0; i < n; i++) {
+        r[i] = floor(a[i]);
+    }
+    return r;
+}
+template <class T, usize n>
+CE auto ceil (const GVec<T, n>& a) {
+    GVec<decltype(ceil(a[0])), n> r;
+    for (usize i = 0; i < n; i++) {
+        r[i] = ceil(a[i]);
+    }
+    return r;
+}
+
+template <class T, usize n>
+CE GVec<T, n> normalize (const GVec<T, n>& a) {
+    return a ? a / length(a) : a;
+}
+
+///// RELATIONSHIPS
+
+#define GVEC_COMPARISON_OP(op, res, def) \
+template <class TA, class TB, usize n> \
+CE bool operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
+    for (usize i = 0; i < n; i++) { \
+        if (a[i] != b[i]) return res; \
+    } \
+    return def; \
+}
+GVEC_COMPARISON_OP(==, false, true)
+GVEC_COMPARISON_OP(!=, true, false)
+GVEC_COMPARISON_OP(<, a[i] < b[i], false)
+GVEC_COMPARISON_OP(<=, a[i] <= b[i], true)
+GVEC_COMPARISON_OP(>, a[i] > b[i], false)
+GVEC_COMPARISON_OP(>=, a[i] >= b[i], true)
+#undef GVEC_COMPARISON_OP
+
+///// COMBINERS
 
 #define GVEC_BINARY_OP(op) \
 template <class TA, class TB, usize n> \
@@ -209,56 +307,6 @@ GVEC_ASSIGN_OP(<<=)
 GVEC_ASSIGN_OP(>>=)
 #undef GVEC_ASSIGN_OP
 
-///// SCALAR-LIKE FUNCTIONS
-
- // Will debug assert if some but not all elements are defined
-template <class T, usize n>
-CE bool defined (const GVec<T, n>& a) {
-    DA([&]{
-        bool any_defined = false;
-        bool all_defined = true;
-        for (usize i = 0; i < n; i++) {
-            if (defined(a[i])) any_defined = true;
-            else all_defined = false;
-        }
-        return any_defined == all_defined;
-    }());
-    return defined(a[0]);
-}
-
-template <class T, usize n>
-CE bool finite (const GVec<T, n>& a) {
-    for (usize i = 0; i < n; i++) {
-        if (!finite(a[i])) return false;
-    }
-    return true;
-}
-
-template <class T, usize n>
-CE auto round (const GVec<T, n>& a) {
-    GVec<decltype(round(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = round(a[i]);
-    }
-    return r;
-}
-template <class T, usize n>
-CE auto floor (const GVec<T, n>& a) {
-    GVec<decltype(floor(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = floor(a[i]);
-    }
-    return r;
-}
-template <class T, usize n>
-CE auto ceil (const GVec<T, n>& a) {
-    GVec<decltype(ceil(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = ceil(a[i]);
-    }
-    return r;
-}
-
 template <class TA, class TB, usize n>
 CE auto mod (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     GVec<decltype(mod(a[0], b[0])), n> r;
@@ -276,55 +324,11 @@ CE auto rem (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     return r;
 }
 
-///// VECTOR FUNCTIONS
-
 template <class T, usize n>
-CE T length2 (const GVec<T, n>& a) {
-    T r = 0;
+CE auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
+    decltype(wide_multiply(a[0], b[0])) r = 0;
     for (usize i = 0; i < n; i++) {
-        r += a[i] * a[i];
-    }
-    return r;
-}
- // May be double or float
- // TODO: CE sqrt
-template <class T, usize n>
-CE auto length (const GVec<T, n>& a) {
-    return std::sqrt(length2(a));
-}
-
- // These work on scalars too.
-template <class TA, class TB>
-CE auto distance2 (const TA& a, const TB& b) {
-    return length2(b - a);
-}
-
-template <class TA, class TB>
-CE auto distance (const TA& a, const TB& b) {
-    return length(b - a);
-}
-
- // Can be negative.
- // For 2-Vecs, equivalent to area(GRect{{0}, a})
-template <class T, usize n>
-CE T area (const GVec<T, n>& a) {
-    T r = 1;
-    for (usize i = 0; i < n; i++) {
-        r *= a[i];
-    }
-    return r;
-}
-
-template <class T, usize n>
-CE GVec<T, n> normalize (const GVec<T, n>& a) {
-    return a ? a / length(a) : a;
-}
-
-template <class T, usize n>
-CE T dot (const GVec<T, n>& a, const GVec<T, n>& b) {
-    T r = 0;
-    for (usize i = 0; i < n; i++) {
-        r += a[i] * b[i];
+        r += wide_multiply(a[i], b[i]);
     }
     return r;
 }
@@ -342,13 +346,6 @@ CE GVec<T, n> lerp (
     return r;
 }
 
-///// FUNCTIONS FOR SPECIFIC DIMENSIONS
-
-template <class T>
-CE T slope (const GVec<T, 2>& a) {
-    return a.y / a.x;
-}
-
 template <class T>
 CE GVec<T, 3> cross (const GVec<T, 3>& a, const GVec<T, 3>& b) {
     return GVec<T, 3>{
@@ -356,17 +353,6 @@ CE GVec<T, 3> cross (const GVec<T, 3>& a, const GVec<T, 3>& b) {
        a.z * b.x - a.x * b.z,
        a.x * b.y - a.y * b.x
     };
-}
-
-///// GENERIC FUNCTIONS
-
-template <class F, class T, usize n>
-CE auto map (const F& f, const GVec<T, n>& a) {
-    GVec<decltype(f(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = f(a[i]);
-    }
-    return r;
 }
 
 } // namespace geo

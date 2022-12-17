@@ -24,35 +24,72 @@ struct GRange {
     CE GRange (GNAN_t n) : l(n), r(n) { }
     CE GRange (GINF_t i) : l(-i), r(i) { }
     CE GRange (T l, T r) : l(l), r(r) { }
-     // Select inclusivity of either side
-    CE GRange (T l, bool include_l, T r, bool include_r) :
-        l(include_l ? l : next_quantum(l)),
-        r(include_r ? next_quantum(r) : r)
-    { }
-     // Change inclusivity
-    CE GRange exclude_l () { return {next_quantum(l), r}; }
-    CE GRange include_r () { return {l, next_quantum(r)}; }
      // Why am I even doing this, this is so dumb
     template <class Ix> requires (
         requires (T l, Ix i) { i < l - l; l[i]; }
     )
     CE auto operator [] (Ix i) const {
-        DA(i < size(*this));
+        DA(i < r - l);
         return l[i];
     }
      // No operator bool because it's not clear whether it should check if the
      // range is empty (size == 0) or if the range is {0, 0}
 };
 
-///// OPERATORS
+///// PROPERTIES
 
  // If T is a pointer, supports range-for-loops.  Yay!
 template <class T>
-CE T begin (const GRange<T>& a) { return a.l; }
+CE const T& begin (const GRange<T>& a) { return a.l; }
 template <class T>
-CE T end (const GRange<T>& a) { return a.r; }
+CE const T& end (const GRange<T>& a) { return a.r; }
 template <class T>
 CE auto size (const GRange<T>& a) { return a.r - a.l; }
+
+template <class T>
+CE bool defined (const GRange<T>& a) {
+    DA(defined(a.l) == defined(a.r));
+    return defined(a.l);
+}
+
+template <class T>
+CE bool finite (const GRange<T>& a) {
+    return finite(a.l) && finite(a.r);
+}
+
+template <class T>
+CE bool empty (const GRange<T>& a) {
+    return a.l == a.r;
+}
+
+template <class T>
+CE bool proper (const GRange<T>& a) {
+    return a.l <= a.r;
+}
+
+///// MODIFIERS
+
+ // Change inclusivity
+template <class T>
+CE GRange<T> exclude_l (const GRange<T>& a) {
+    return {next_quantum(a.l), a.r};
+}
+template <class T>
+CE GRange<T> include_r (const GRange<T>& a) {
+    return {a.l, next_quantum(a.r)};
+}
+
+template <class T>
+CE GRange<T> invert (const GRange<T>& a) {
+    return {a.r, a.l};
+}
+
+template <class T>
+CE GRange<T> properize (const GRange<T>& a) {
+    return {min(a.l, a.r), max(a.r, a.l)};
+}
+
+///// RELATIONSHIPS
 
 template <class T>
 CE bool operator== (const GRange<T>& a, const GRange<T>& b) {
@@ -72,6 +109,36 @@ CE auto operator op (const GRange<T>& a) { \
 GRANGE_UNARY_OP(+)
 GRANGE_UNARY_OP(-)
 #undef GRANGE_UNARY_OP
+
+ // These assume the ranges are proper, and may give unintuitive results if they
+ // aren't.
+
+ // Returns true if the ranges are strictly overlapping (not just touching).
+ // overlaps(a, b) == !empty(a & b)
+template <class T>
+CE bool overlaps (const GRange<T>& a, const GRange<T>& b) {
+    return a.l < b.r && a.r < b.l;
+}
+ // Returns true if overlapping or touching.
+ // touches(a, b) == proper(a & b)
+template <class T>
+CE bool touches (const GRange<T>& a, const GRange<T>& b) {
+    return a.l <= b.r && a.r <= b.l;
+}
+
+ // b is fully contained in a.
+ // contains(a, b) == ((a | b) == a) == ((a & b) == b)
+template <class T>
+CE bool contains (const GRange<T>& a, const GRange<T>& b) {
+    return a.l <= b.l && b.r <= a.r;
+}
+ // contains(a, b) == (clamp(b, a) == b)
+template <class T>
+CE bool contains (const GRange<T>& a, const T& b) {
+    return a.l <= b && b < a.r;
+}
+
+///// COMBINERS
 
 #define GRANGE_BINARY_OP(op) \
 template <class TA, class TB> \
@@ -102,8 +169,6 @@ GRANGE_ASSIGN_OP(*=)
 GRANGE_ASSIGN_OP(/=)
 #undef GRANGE_ASSIGN_OP
 
-///// RECTANGLE-LIKE BEHAVIOR
-
  // Range union, like for Rects but 1-dimensional
 template <class T>
 CE GRange<T> operator | (const GRange<T>& a, const GRange<T>& b) {
@@ -124,80 +189,28 @@ CE GRange<T>& operator &= (GRange<T>& a, const GRange<T>& b) {
     return a = a & b;
 }
 
-template <class T>
-CE bool defined (const GRange<T>& a) {
-    DA(defined(a.l) == defined(a.r));
-    return defined(a.l);
-}
-
-template <class T>
-CE bool finite (const GRange<T>& a) {
-    return finite(a.l) && finite(a.r);
-}
-
-template <class T>
-CE bool empty (const GRange<T>& a) {
-    return a.l == a.r;
-}
-
-template <class T>
-CE GRange<T> invert (const GRange<T>& a) {
-    return {a.r, a.l};
-}
-
-template <class T>
-CE bool proper (const GRange<T>& a) {
-    return a.l <= a.r;
-}
-
-template <class T>
-CE GRange<T> properize (const GRange<T>& a) {
-    return {min(a.l, a.r), max(a.r, a.l)};
-}
-
- // Actual lerping for Range
-template <class T>
-CE T lerp (const GRange<T>& a, const GRange<T>& b, PreferredLerper<T> t) {
-    return {lerp(a.l, b.l, t), lerp(a.r, b.r, t)};
-}
-
- // Shortcut for lerp(a.l, a.r, t)
-template <class T>
-CE T lerp (const GRange<T>& r, PreferredLerper<T> t) {
-    return lerp(r.l, r.r, t);
-}
-
-///// RELATIONSHIPS
- // These assume the ranges are proper, and may give unintuitive results if they
- // aren't.
-
- // Returns false if exactly touching on one side.  To return true in this case,
- // use overlaps(a.include_r(), b.include_r())
-template <class T>
-CE bool overlaps (const GRange<T>& a, const GRange<T>& b) {
-    return a.l < b.r && a.r < b.l;
-}
-template <class T>
-CE bool overlaps (const GRange<T>& a, const T& b) {
-    return a.l <= b && b < a.r;
-}
-
- // b is fully contained in a.
-template <class T>
-CE bool contains (const GRange<T>& a, const GRange<T>& b) {
-    return a.l <= b.l && b.r <= a.r;
-}
-template <class T>
-CE bool contains (const GRange<T>& a, const T& b) {
-    return a.l <= b && b <= a.r;
-}
-
  // If p is outside of a, returns the closest value to p contained in a.  Note
  // that because the right side of the range is exclusive, this will never
  // return a.r.  To allow returning a.r, use clamp(p, r.include_r())
 template <class TA, class TB>
 CE TA clamp (const TA& p, const GRange<TB>& r) {
     return p < r.l ? TA(r.l) : p >= r.r ? TB(prev_quantum(r.r)) : p;
+}
+
+ // Lerp between two ranges
+template <class T>
+CE GRange<T> lerp (
+    const GRange<T>& a, const GRange<T>& b, PreferredLerper<T> t
+) {
+    return {lerp(a.l, b.l, t), lerp(a.r, b.r, t)};
+}
+
+///// MISC
+
+ // Lerp within one range
+template <class T>
+CE T lerp (const GRange<T>& r, PreferredLerper<T> t) {
+    return lerp(r.l, r.r, t);
 }
 
 } // namespace geo

@@ -26,6 +26,7 @@ geo::IVec Texture::size (int level) {
 }
 int32 Texture::bpp (int level) {
     GLint rsize, gsize, bsize, asize;
+    glBindTexture(target, id);
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_RED_SIZE, &rsize);
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_GREEN_SIZE, &gsize);
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_BLUE_SIZE, &bsize);

@@ -60,6 +60,16 @@ GINF_COMPARISON(>=)
 GINF_COMPARISON(>)
 #undef GINF_COMPARISON
 
+///// SPECIAL CASE MULTIPLY THAT WIDENS int32 TO isize
+ // This is used, for instance, by area()
+template <class A, class B>
+CE auto wide_multiply (const A& a, const B& b) {
+    return a * b;
+}
+CE isize wide_multiply (int32 a, int32 b) {
+    return isize(a) * isize(b);
+}
+
 ///// NORMAL SCALAR FUNCTIONS
 
 CE bool defined (float a) { return a == a; }
@@ -214,6 +224,8 @@ CE int64 align (int64 a, int64 b) {
     return b >= 0 ? length(a) : -length(a);
 }
 
+ // Selecting preferred type for t passed to lerping functions.  Basically,
+ // double for everything except float for floats.
 template <class T>
 struct PreferredLerperS { using type = double; };
 template <>

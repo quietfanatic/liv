@@ -41,18 +41,14 @@ struct Image {
     IRect bounds () const {
         return {{0, 0}, size};
     }
-     // A rectangle containing all valid indexes
-    IRect index_bounds () const {
-        return {{0, 0}, size - 1};
-    }
     RGBA8& operator [] (IVec i) {
-        AA(pixels);
-        AA(contains(index_bounds(), i));
+        DA(pixels);
+        DA(contains(bounds(), i));
         return pixels[i.y * size.x + i.x];
     }
     const RGBA8& operator [] (IVec i) const {
-        AA(pixels);
-        AA(contains(index_bounds(), i));
+        DA(pixels);
+        DA(contains(bounds(), i));
         return pixels[i.y * size.x + i.x];
     }
 };
@@ -62,36 +58,33 @@ struct SubImage {
      // Image that is being referenced.
     const Image* image = null;
      // Area of the image in pixels.  Coordinates refer to the corners between
-     //  pixels, not the pixels themselves.  If null, refers to the entire
-     //  image.  Otherwise cannot have negative width or height and cannot be
-     //  ourside the bounds of the image.
-    std::optional<IRect> bounds = std::nullopt;
+     // pixels, not the pixels themselves.  As a special case, GINF refers to
+     // the entire image.  Otherwise, cannot have negative width or height and
+     // cannot be outside the bounds of the image.
+    IRect bounds = GINF;
 
      // Will throw if bounds is outside the image or is not proper.
      // Can't check if the bounds or image size is changed later.
     void validate ();
 
     CE SubImage () { }
-    explicit SubImage (const Image* image, const std::optional<IRect>& bounds = std::nullopt) :
+    explicit SubImage (const Image* image, const IRect& bounds = GINF) :
         image(image), bounds(bounds)
     { validate(); }
 
     CE explicit operator bool () { return image && *image; }
 
     IVec size () const {
-        if (bounds) return bounds->size();
+        if (bounds != GINF) return bounds.size();
         else {
-            AA(image);
+            DA(image);
             return image->size;
         }
     }
-    IRect index_bounds () const {
-        return {{0, 0}, size() - 1};
-    }
     const RGBA8& operator [] (IVec i) const {
-        AA(image);
-        AA(contains(index_bounds(), i));
-        return (*image)[bounds ? i + bounds->lb() : i];
+        DA(image);
+        DA(contains(bounds != GINF ? bounds : IRect({0, 0}, image->size), i));
+        return (*image)[bounds != GINF ? i + bounds.lb() : i];
     }
 };
 

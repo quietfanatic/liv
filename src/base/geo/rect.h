@@ -226,27 +226,28 @@ CE GRect<T> lerp (
 
 ///// RELATIONSHIPS
 // These assume the rectangles are proper, and may give unintuitive results
-//  if they aren't.
+// if they aren't.
 
  // a and b are overlapping.  Returns false if the rectangles are only touching
- // on the border.  To return true in this case, use overlaps(a.include_lb(),
- // b.include_lb())
+ // on the border.
+ // overlaps(a, b) == !empty(a & b)
 template <class T>
 CE bool overlaps (const GRect<T>& a, const GRect<T>& b) {
     return overlaps(a.lr(), b.lr()) && overlaps(a.bt(), b.bt());
 }
+ // touches(a, b) == proper(a & b)
 template <class T>
-CE bool overlaps (const GRect<T>& a, const GVec<T, 2>& b) {
-    return overlaps(a.lr(), b.x) && overlaps(a.bt(), b.y);
+CE bool touches (const GRect<T>& a, const GVec<T, 2>& b) {
+    return touches(a.lr(), b.x) && touches(a.bt(), b.y);
 }
 
- // b is fully contained in a.  Note that the left and bottom are inclusive but
- // the right and top are exclusive.  To change this behavior, use exlude_lb()
- // or exclude_rt()
+ // b is fully contained in a.
 template <class T>
 CE bool contains (const GRect<T>& a, const GRect<T>& b) {
     return contains(a.lr(), b.lr()) && contains(a.bt(), b.bt());
 }
+ // b is contained in a.  Note that the left and bottom are inclusive but the
+ // right and top are exclusive.
 template <class T>
 CE bool contains (const GRect<T>& a, const GVec<T, 2>& b) {
     return contains(a.lr(), b.x) && contains(a.bt(), b.y);

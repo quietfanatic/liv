@@ -14,10 +14,13 @@ Image::Image (IVec s) :
 Image::~Image () { delete[](pixels); }
 
 void SubImage::validate () {
-    if (!bounds) return;
-    if (!proper(*bounds)) throw X::SubImageBoundsNotProper(*bounds);
-    if (image && *bounds != GINF && !contains(image->bounds(), *bounds)) {
-        throw X::SubImageOutOfBounds(image, image->size, *bounds);
+    if (bounds != GINF) {
+        if (!proper(bounds)) {
+            throw X::SubImageBoundsNotProper(bounds);
+        }
+        if (image && !contains(image->bounds(), bounds)) {
+            throw X::SubImageOutOfBounds(image, image->size, bounds);
+        }
     }
 }
 
@@ -28,12 +31,13 @@ void ImageTexture::init () {
             || target == GL_TEXTURE_RECTANGLE
         );
         Image processed (source.size());
-        IRect ib = source.index_bounds();
+        IRect ib = source.bounds != GINF ?
+            source.bounds : IRect{{0, 0}, source.image->size};
         for (int y = 0; y < processed.size.y; y++)
         for (int x = 0; x < processed.size.x; x++) {
             processed[{x, y}] = source[{
-                flip.x ? ib.r - x : ib.l + x,
-                flip.y ? ib.t - y : ib.b + y
+                flip.x ? ib.r - x - 1 : ib.l + x,
+                flip.y ? ib.t - y - 1 : ib.b + y
             }];
         }
         glBindTexture(target, id);
