@@ -272,7 +272,9 @@ AYU_DESCRIBE_TEMPLATE(
         else if CE (std::is_same_v<T, int64>) return "geo::LRect"sv;
         else if CE (std::is_same_v<T, bool>) return "geo::BRect"sv;
         else {
-            static String r = "geo::GRect<" + String(ayu::Type::CppType<T>().name()) + ">";
+            static String r = "geo::GRect<" + String(
+                ayu::Type::CppType<T>().name()
+            ) + ">";
             return Str(r);
         }
     }),

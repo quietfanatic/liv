@@ -55,10 +55,10 @@ struct Book {
     }
      // Increment current page(s) by spread_count
     void next () {
-        seek(viewing_pages.size());
+        seek(size(viewing_pages));
     }
     void prev () {
-        seek(-viewing_pages.size());
+        seek(-size(viewing_pages));
     }
 
      // Set direction to display multiple pages

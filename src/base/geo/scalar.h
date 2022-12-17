@@ -240,6 +240,8 @@ CE T* lerp (T* a, T* b, double t) {
     T* r = a + isize((b - a) * t);
 }
 
+///// QUANTUM FUNCTIONS (no relation to QM)
+
  // Get the next representable value.  Does not change NANs or INFs.
  // Minus zero is treated the same as zero.  Includes subnormals.
 CE int32 next_quantum (int32 v) { return v+1; }

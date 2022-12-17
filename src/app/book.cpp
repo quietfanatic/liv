@@ -52,9 +52,9 @@ void Book::set_window_background (Fill bg) {
 void Book::set_page_offset (int32 off) {
     if (!block.count()) return;
      // Clamp such that there is at least one visible page in the range
-    int32 l = clamp(off - 1, 1 - viewing_pages.size(), block.count() - 1);
-    viewing_pages = {l, l + viewing_pages.size()};
-    DA(visible_pages().size() >= 1);
+    int32 l = clamp(off - 1, 1 - size(viewing_pages), block.count() - 1);
+    viewing_pages = {l, l + size(viewing_pages)};
+    DA(size(visible_pages()) >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         layout_params.manual_zoom = GNAN;
         layout_params.manual_offset = GNAN;
@@ -210,10 +210,10 @@ bool Book::draw_if_needed () {
     }
     else {
         if (block.count() > 1) {
-            if (visible.size() == 1) {
+            if (size(visible) == 1) {
                 title = ayu::cat('[', visible.l);
             }
-            else if (visible.size() == 2) {
+            else if (size(visible) == 2) {
                 title = ayu::cat('[', visible.l, ',', visible.r - 1);
             }
             else {

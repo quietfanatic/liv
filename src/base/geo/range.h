@@ -32,10 +32,6 @@ struct GRange {
      // Change inclusivity
     CE GRange exclude_l () { return {next_quantum(l), r}; }
     CE GRange include_r () { return {l, next_quantum(r)}; }
-     // If T is a pointer, supports range-for-loops.  Yay!
-    CE T begin () const { return l; }
-    CE T end () const { return r; }
-    CE auto size () const { return r - l; }
      // Why am I even doing this, this is so dumb
     template <class Ix> requires (
         requires (T l, Ix i) { i < l - l; l[i]; }
@@ -49,6 +45,14 @@ struct GRange {
 };
 
 ///// OPERATORS
+
+ // If T is a pointer, supports range-for-loops.  Yay!
+template <class T>
+CE T begin (const GRange<T>& a) { return a.l; }
+template <class T>
+CE T end (const GRange<T>& a) { return a.r; }
+template <class T>
+CE auto size (const GRange<T>& a) { return a.r - a.l; }
 
 template <class T>
 CE bool operator== (const GRange<T>& a, const GRange<T>& b) {
@@ -133,7 +137,7 @@ CE bool finite (const GRange<T>& a) {
 
 template <class T>
 CE bool empty (const GRange<T>& a) {
-    return a.size() == 0;
+    return a.l == b.r || !defined(a);
 }
 
 template <class T>
@@ -191,9 +195,9 @@ CE bool contains (const GRange<T>& a, const T& b) {
  // If p is outside of a, returns the closest value to p contained in a.  Note
  // that because the right side of the range is exclusive, this will never
  // return a.r.  To allow returning a.r, use clamp(p, r.include_r())
-template <class T>
-CE T clamp (const T& p, const GRange<T>& a) {
-    return p < a.l ? a.l : p >= a.r ? prev_quantum(a.r) : p;
+template <class TA, class TB>
+CE TA clamp (const TA& p, const GRange<TB>& r) {
+    return p < r.l ? TA(r.l) : p >= r.r ? TB(prev_quantum(r.r)) : p;
 }
 
 } // namespace geo
@@ -210,7 +214,9 @@ AYU_DESCRIBE_TEMPLATE(
         else if CE (std::is_same_v<T, int64>) return "geo::LRange"sv;
         else if CE (std::is_same_v<T, bool>) return "geo::BRange"sv;
         else {
-            static String r = "geo::GRange<" + String(ayu::Type::CppType<T>().name()) + ">";
+            static String r = "geo::GRange<" + String(
+                ayu::Type::CppType<T>().name()
+            ) + ">";
             return Str(r);
         }
     }),
