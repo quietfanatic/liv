@@ -76,7 +76,7 @@ struct GVec : GVecStorage<T, n> {
     CE GVec () : GVecStorage<T, n>{.e = {}} { }
     template <class... Args, std::enable_if_t<sizeof...(Args) == n, bool> = true>
     CE GVec (Args... args) : GVecStorage<T, n>{.e = {T(args)...}} { }
-    explicit CE GVec (T v) {
+    CE explicit GVec (T v) {
         for (usize i = 0; i < n; i++) {
             this->e[i] = v;
         }
@@ -100,7 +100,7 @@ struct GVec : GVecStorage<T, n> {
         DA(i < n);
         return this->e[i];
     }
-    explicit CE operator bool () const {
+    CE explicit operator bool () const {
         for (usize i = 0; i < n; i++) {
             if (!this->e[i]) return false;
         }
@@ -113,15 +113,14 @@ struct GVec : GVecStorage<T, n> {
  // Will debug assert if some but not all elements are defined
 template <class T, usize n>
 CE bool defined (const GVec<T, n>& a) {
-    DA([&]{
-        bool any_defined = false;
-        bool all_defined = true;
+#ifndef NDEBUG
+    if constexpr (n > 0) {
+        bool is_defined = defined(a[0]);
         for (usize i = 0; i < n; i++) {
-            if (defined(a[i])) any_defined = true;
-            else all_defined = false;
+            DA(defined(a[0]) == is_defined);
         }
-        return any_defined == all_defined;
-    }());
+    }
+#endif
     return defined(a[0]);
 }
 

@@ -55,7 +55,7 @@ struct GRect {
 
      // Don't use this to check for definedness or area = 0.  It only checks
      // that each side is strictly zero.
-    CE operator bool () const { return l || b || r || t; }
+    CE explicit operator bool () const { return l || b || r || t; }
 };
 
 ///// PROPERTIES
