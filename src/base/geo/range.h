@@ -47,6 +47,9 @@ template <class T>
 CE auto size (const GRange<T>& a) { return a.r - a.l; }
 
 template <class T>
+CE T center (const GRange<T>& a) { return (a.l + a.r) / 2; }
+
+template <class T>
 CE bool defined (const GRange<T>& a) {
     DA(defined(a.l) == defined(a.r));
     return defined(a.l);
@@ -108,6 +111,7 @@ CE auto operator op (const GRange<T>& a) { \
 }
 GRANGE_UNARY_OP(+)
 GRANGE_UNARY_OP(-)
+GRANGE_UNARY_OP(~)
 #undef GRANGE_UNARY_OP
 
  // These assume the ranges are proper, and may give unintuitive results if they
@@ -153,7 +157,8 @@ GRANGE_BINARY_OP(+)
 GRANGE_BINARY_OP(-)
 GRANGE_BINARY_OP(*)
 GRANGE_BINARY_OP(/)
- // Other binary ops don't really make sense on ranges
+ // Other operators don't really make sense for ranges.  Also, we define our own
+ // | and & later on.
 #undef GRANGE_BINARY_OP
 
 #define GRANGE_ASSIGN_OP(op) \
@@ -214,6 +219,8 @@ CE T lerp (const GRange<T>& r, PreferredLerper<T> t) {
 }
 
 } // namespace geo
+
+///// GENERIC AYU DESCRIPTION
 
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),

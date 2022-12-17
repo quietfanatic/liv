@@ -277,7 +277,7 @@ GVEC_BINARY_OP(%)
 GVEC_BINARY_OP(|)  // These can be used on BVec
 GVEC_BINARY_OP(&)
 GVEC_BINARY_OP(^)
-GVEC_BINARY_OP(<<)
+GVEC_BINARY_OP(<<)  // Not sure what you'd use these for but okay
 GVEC_BINARY_OP(>>)
 #undef GVEC_BINARY_OP
 
@@ -300,6 +300,7 @@ GVEC_ASSIGN_OP(+=)
 GVEC_ASSIGN_OP(-=)
 GVEC_ASSIGN_OP(*=)
 GVEC_ASSIGN_OP(/=)
+GVEC_ASSIGN_OP(%=)
 GVEC_ASSIGN_OP(|=)
 GVEC_ASSIGN_OP(&=)
 GVEC_ASSIGN_OP(^=)

@@ -75,7 +75,7 @@ struct SubImage {
     CE explicit operator bool () { return image && *image; }
 
     IVec size () const {
-        if (bounds != GINF) return bounds.size();
+        if (bounds != GINF) return geo::size(bounds);
         else {
             DA(image);
             return image->size;
@@ -84,7 +84,7 @@ struct SubImage {
     const RGBA8& operator [] (IVec i) const {
         DA(image);
         DA(contains(bounds != GINF ? bounds : IRect({0, 0}, image->size), i));
-        return (*image)[bounds != GINF ? i + bounds.lb() : i];
+        return (*image)[bounds != GINF ? i + lb(bounds) : i];
     }
 };
 

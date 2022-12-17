@@ -30,38 +30,155 @@ struct GRect {
     T t;
 
     CE GRect () : l(0), b(0), r(0), t(0) { }
+    CE GRect (T l, T b, T r, T t) : l(l), b(b), r(r), t(t) {
+     // You are not allowed to create a rectangle with some sides defined but
+     // not others.
+#ifndef NDEBUG
+        bool any_defined = l == l || b == b || r == r || t == t;
+        bool all_defined = l == l && b == b && r == r && t == t;
+        DA(any_defined == all_defined);
+#endif
+    }
+     // Create the undefined rectangle.  Most operations are not defined on the
+     // undefined rectangle.
     CE GRect (GNAN_t n) : l(n), b(n), r(n), t(n) { }
+     // Create an infinitely large (possibly negative) rectangle.
     CE GRect (GINF_t i) : l(-i), b(-i), r(i), t(i) { }
-    CE GRect (T l, T b, T r, T t) : l(l), b(b), r(r), t(t) { }
+     // Create from lower-left and upper-right corners
     CE GRect (const GVec<T, 2>& lb, const GVec<T, 2>& rt) :
         l(lb.x), b(lb.y), r(rt.x), t(rt.y)
     { }
+     // Create from two 1-dimensional ranges.
     CE GRect (const GRange<T>& lr, const GRange<T>& bt) :
         l(lr.l), b(bt.l), r(lr.r), t(bt.r)
     { }
 
-    CE GVec<T, 2> lb () const { return {l, b}; }
-    CE GVec<T, 2> rb () const { return {r, b}; }
-    CE GVec<T, 2> rt () const { return {r, t}; }
-    CE GVec<T, 2> lt () const { return {l, t}; }
-    CE GRange<T> lr () const { return {l, r}; }
-    CE GRange<T> bt () const { return {b, t}; }
-
-    CE GRect<T> exclude_lb () const {
-        return {lr().exclude_l(), bt().exclude_l()};
-    }
-    CE GRect<T> include_rt () const {
-        return {lr().include_r(), bt().include_r()};
-    }
-
-    CE T width () const { return r - l; }
-    CE T height () const { return t - b; }
-    CE GVec<T, 2> size () const { return {width(), height()}; }
-
+     // Don't use this to check for definedness or area = 0.  It only checks
+     // that each side is strictly zero.
     CE operator bool () const { return l || b || r || t; }
 };
 
-///// OPERATORS
+///// PROPERTIES
+
+ // Get a corner of the rectangle
+template <class T>
+CE GVec<T, 2> lb (const GRect<T>& a) { return {a.l, a.b}; }
+template <class T>
+CE GVec<T, 2> rb (const GRect<T>& a) { return {a.r, a.b}; }
+template <class T>
+CE GVec<T, 2> rt (const GRect<T>& a) { return {a.r, a.t}; }
+template <class T>
+CE GVec<T, 2> lt (const GRect<T>& a) { return {a.l, a.t}; }
+
+ // Get center point
+template <class T>
+CE GVec<T, 2> center (const GRect<T>& a) {
+    return {center(lr(a)), center(bt(a))};
+}
+
+ // Get one dimension of the rectangle
+template <class T>
+CE GRange<T> lr (const GRect<T>& a) { return {a.l, a.r}; }
+template <class T>
+CE GRange<T> bt (const GRect<T>& a) { return {a.b, a.t}; }
+
+ // Two-dimensional size
+template <class T>
+CE GVec<T, 2> size (const GRect<T>& a) { return {a.r - a.l, a.t - a.b}; }
+ // width(a) == size(a).x == size(lr(a))
+template <class T>
+CE T width (const GRect<T>& a) { return a.r - a.l; }
+ // height(a) == size(a).y == size(bt(a))
+template <class T>
+CE T height (const GRect<T>& a) { return a.t - a.b; }
+
+ // Will debug assert if some but not all elements are undefined
+template <class T>
+CE bool defined (const GRect<T>& a) {
+#ifndef NDEBUG
+    bool any_defined = a.l == a.l || a.b == a.b || a.r == a.r || a.t == a.t;
+    bool all_defined = a.l == a.l && a.b == a.b && a.r == a.r && a.t == a.t;
+    DA(any_defined == all_defined);
+#endif
+    return defined(a.l);
+}
+
+ // Returns false if any side is NAN, INF, or -INF
+template <class T>
+CE bool finite (const GRect<T>& a) {
+    return finite(a.l) && finite(a.b) && finite(a.r) && finite(a.t);
+}
+
+ // Will be negative if one of width() or height() is negative (but not both)
+template <class T>
+CE auto area (const GRect<T>& a) {
+    return wide_multiply(a.r - a.l, a.t - a.b);
+}
+
+ // Area is 0 (either width or height is 0)
+template <class T>
+CE bool empty (const GRect<T>& a) {
+    return a.l == a.r || a.b == a.t;
+}
+
+ // Both width and height are non-negative.  (proper(NAN) == true)
+template <class T>
+CE bool proper (const GRect<T>& a) {
+    return proper(lr(a)) && proper(bt(a));
+}
+
+ // The bounding box of a rectangle is itself
+template <class T>
+CE const GRect<T>& bounds (const GRect<T>& a) { return a; }
+
+///// MODIFIERS
+
+ // Change inclusivity of sides
+template <class T>
+CE GRect<T> exclude_lb (const GRect<T>& a) {
+    return {exclude_l(lr(a)), exclude_l(bt(a))};
+}
+template <class T>
+CE GRect<T> include_rt (const GRect<T>& a) {
+    return {include_r(lr(a)), include_r(bt(a))};
+}
+
+ // Flip both horizontally and vertically but keep the center in the same place.
+ // To flip around the origin, multiply by -1 instead.
+template <class T>
+CE GRect<T> invert (const GRect<T>& a) {
+    return {a.r, a.t, a.l, a.b};
+}
+
+ // Flip horizontally
+template <class T>
+CE GRect<T> invert_h (const GRect<T>& a) {
+    return {a.r, a.b, a.l, a.t};
+}
+
+ // Flip vertically
+template <class T>
+CE GRect<T> invert_v (const GRect<T>& a) {
+    return {a.l, a.t, a.r, a.b};
+}
+
+ // If not proper, flip horizontally and/or vertically to make it proper.
+template <class T>
+CE GRect<T> properize (const GRect<T>& a) {
+    return {properize(a.lr()), properize(a.bt())};
+}
+
+ // Arithmetic operators
+#define GRECT_UNARY_OP(op) \
+template <class T> \
+CE GRect<T> operator op (const GRect<T>& a) { \
+    return {op a.l, op a.b, op a.t, op a.r}; \
+}
+GRECT_UNARY_OP(+)
+GRECT_UNARY_OP(-)
+#undef GRECT_UNARY_OP
+
+///// RELATIONSHIPS
 
 template <class T>
 CE bool operator == (const GRect<T>& a, const GRect<T>& b) {
@@ -72,10 +189,36 @@ CE bool operator != (const GRect<T>& a, const GRect<T>& b) {
     return a.l != b.l || a.b != b.b || a.r != b.r || a.t != b.t;
 }
 
+// These assume the rectangles are proper, and may give unintuitive results
+// if they aren't.
+
+ // a and b are overlapping.  Returns false if the rectangles are only touching
+ // on the border.
+ // overlaps(a, b) == !empty(a & b)
 template <class T>
-CE GRect<T> operator - (const GRect<T>& a) {
-    return {-a.l, -a.b, -a.t, -a.r};
+CE bool overlaps (const GRect<T>& a, const GRect<T>& b) {
+    return overlaps(lr(a), lr(b)) && overlaps(bt(a), bt(b));
 }
+ // touches(a, b) == proper(a & b)
+template <class T>
+CE bool touches (const GRect<T>& a, const GRect<T>& b) {
+    return touches(lr(a), lr(b)) && touches(bt(a), bt(b));
+}
+
+ // b is fully contained in a.
+ // contains(a, b) == ((a | b) == a) == ((a & b) == b)
+template <class T>
+CE bool contains (const GRect<T>& a, const GRect<T>& b) {
+    return contains(lr(a), lr(b)) && contains(bt(a), bt(b));
+}
+ // b is contained in a.  Note that the left and bottom are inclusive but the
+ // right and top are exclusive.
+template <class T>
+CE bool contains (const GRect<T>& a, const GVec<T, 2>& b) {
+    return contains(lr(a), b.x) && contains(bt(a), b.y);
+}
+
+///// COMBINERS
 
 #define GRECT_GVEC_OP(op) \
 template <class T> \
@@ -146,70 +289,6 @@ CE GRect<T>& operator &= (GRect<T>& a, const GRect<T>& b) {
     return a = a & b;
 }
 
-///// RECTANGLE FUNCTIONS
-
- // Will debug assert if some but not all elements are undefined
-template <class T>
-CE bool defined (const GRect<T>& a) {
-#ifdef NDEBUG
-    return defined(a.l);
-#else
-    bool any_defined = a.l == a.l || a.b == a.b || a.r == a.r || a.t == a.t;
-    bool all_defined = a.l == a.l && a.b == a.b && a.r == a.r && a.t == a.t;
-    AA(any_defined == all_defined);
-    return all_defined;
-#endif
-}
-
-template <class T>
-CE bool finite (const GRect<T>& a) {
-    return finite(a.l) && finite(a.b) && finite(a.r) && finite(a.t);
-}
-
- // Will be negative if one of width() or height() is negative (but not both)
-template <class T>
-CE T area (const GRect<T>& a) {
-    return (a.r - a.l) * (a.t - a.b);
-}
-
- // Area is 0 (either width or height is 0)
-template <class T>
-CE bool empty (const GRect<T>& a) {
-    return area(a) == 0;
-}
-
- // The bounding box of a rectangle is itself
-template <class T>
-CE const GRect<T>& bounds (const GRect<T>& a) { return a; }
-
- // Flip both horizontally and vertically but keep the center in the same place.
-template <class T>
-CE GRect<T> invert (const GRect<T>& a) {
-    return {a.r, a.t, a.l, a.b};
-}
-
-template <class T>
-CE GRect<T> invert_h (const GRect<T>& a) {
-    return {a.r, a.b, a.l, a.t};
-}
-
-template <class T>
-CE GRect<T> invert_v (const GRect<T>& a) {
-    return {a.l, a.t, a.r, a.b};
-}
-
- // Both width and height are non-negative.  (proper(NAN) == true)
-template <class T>
-CE bool proper (const GRect<T>& a) {
-    return proper(a.lr()) && proper(a.bt());
-}
-
- // If not proper, flip horizontally and/or vertically to make it proper.
-template <class T>
-CE GRect<T> properize (const GRect<T>& a) {
-    return {properize(a.lr()), properize(a.bt())};
-}
-
 template <class T>
 CE GRect<T> lerp (
     const GRect<T>& a,
@@ -224,35 +303,6 @@ CE GRect<T> lerp (
     };
 }
 
-///// RELATIONSHIPS
-// These assume the rectangles are proper, and may give unintuitive results
-// if they aren't.
-
- // a and b are overlapping.  Returns false if the rectangles are only touching
- // on the border.
- // overlaps(a, b) == !empty(a & b)
-template <class T>
-CE bool overlaps (const GRect<T>& a, const GRect<T>& b) {
-    return overlaps(a.lr(), b.lr()) && overlaps(a.bt(), b.bt());
-}
- // touches(a, b) == proper(a & b)
-template <class T>
-CE bool touches (const GRect<T>& a, const GVec<T, 2>& b) {
-    return touches(a.lr(), b.x) && touches(a.bt(), b.y);
-}
-
- // b is fully contained in a.
-template <class T>
-CE bool contains (const GRect<T>& a, const GRect<T>& b) {
-    return contains(a.lr(), b.lr()) && contains(a.bt(), b.bt());
-}
- // b is contained in a.  Note that the left and bottom are inclusive but the
- // right and top are exclusive.
-template <class T>
-CE bool contains (const GRect<T>& a, const GVec<T, 2>& b) {
-    return contains(a.lr(), b.x) && contains(a.bt(), b.y);
-}
-
  // If p is outside of a, returns the closest point to p contained in a.
 template <class T>
 CE GVec<T, 2> clamp (const GVec<T, 2>& p, const GRect<T>& a) {
@@ -260,6 +310,8 @@ CE GVec<T, 2> clamp (const GVec<T, 2>& p, const GRect<T>& a) {
 }
 
 } // namespace geo
+
+///// GENERIC AYU DESCRIPTION
 
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
