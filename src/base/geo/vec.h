@@ -33,25 +33,38 @@ using IVec4 = GVec<int32, 4>;
 using LVec4 = GVec<int64, 4>;
 using BVec4 = GVec<bool, 4>;
 
- // TODO: destructors
+template <class T, usize n>
+using GVecStorageGeneric = T[n];
+
 template <class T, usize n>
 struct GVecStorage {
-    T e [n];
+    GVecStorageGeneric<T, n> e;
 };
-template <class T>
+template <class T> requires (std::is_trivially_destructible_v<T>)
 struct GVecStorage<T, 2> {
     union {
-        T e [2];
+        GVecStorageGeneric<T, 2> e;
         struct {
             T x;
             T y;
         };
     };
 };
-template <class T>
+template <class T> requires (!std::is_trivially_destructible_v<T>)
+struct GVecStorage<T, 2> {
+    union {
+        GVecStorageGeneric<T, 2> e;
+        struct {
+            T x;
+            T y;
+        };
+    };
+    ~GVecStorage () { e.~GVecStorageGeneric(); }
+};
+template <class T> requires (std::is_trivially_destructible_v<T>)
 struct GVecStorage<T, 3> {
     union {
-        T e [3];
+        GVecStorageGeneric<T, 3> e;
         struct {
             T x;
             T y;
@@ -59,10 +72,22 @@ struct GVecStorage<T, 3> {
         };
     };
 };
-template <class T>
+template <class T> requires (!std::is_trivially_destructible_v<T>)
+struct GVecStorage<T, 3> {
+    union {
+        GVecStorageGeneric<T, 3> e;
+        struct {
+            T x;
+            T y;
+            T z;
+        };
+    };
+    ~GVecStorage () { e.~GVecStorageGeneric(); }
+};
+template <class T> requires (std::is_trivially_destructible_v<T>)
 struct GVecStorage<T, 4> {
     union {
-        T e [4];
+        GVecStorageGeneric<T, 4> e;
         struct {
             T x;
             T y;
@@ -70,6 +95,19 @@ struct GVecStorage<T, 4> {
             T w;
         };
     };
+};
+template <class T> requires (!std::is_trivially_destructible_v<T>)
+struct GVecStorage<T, 4> {
+    union {
+        GVecStorageGeneric<T, 4> e;
+        struct {
+            T x;
+            T y;
+            T z;
+            T w;
+        };
+    };
+    ~GVecStorage () { e.~GVecStorageGeneric(); }
 };
 
  // TODO: std::get and tuple_size
