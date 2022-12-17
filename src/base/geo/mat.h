@@ -141,6 +141,23 @@ CE bool defined (const GMat<T, cols, rows>& a) {
     else return true;
 }
 
+template <class T, usize n>
+CE bool is_diagonal (const GMat<T, n, n>& a) {
+    for (usize c = 0; c < n; c++)
+    for (usize r = 0; r < n; r++) {
+        if (r != c && a[c][r]) return false;
+    }
+    return true;
+}
+template <class T, usize n>
+CE GVec<T, n> diagonal (const GMat<T, n, n>& a) {
+    GVec<T, n> ret;
+    for (usize i = 0; i < n; i++) {
+        ret[i] = a[i][i];
+    }
+    return ret;
+}
+
  // More properties (like determinant) NYI
 
 ///// MODIFIERS
