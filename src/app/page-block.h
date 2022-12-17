@@ -23,7 +23,7 @@ struct PageBlock {
 
      // Returns null if i is out of range
     Page* get (int32 i) const;
-    int32 count () const { return int32(pages.size()); }
+    int32 count () const { return int32(size(pages)); }
 
     IRange valid_pages () const { return {0, count()}; }
 

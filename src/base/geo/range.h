@@ -137,7 +137,7 @@ CE bool finite (const GRange<T>& a) {
 
 template <class T>
 CE bool empty (const GRange<T>& a) {
-    return a.l == b.r || !defined(a);
+    return a.l == a.r;
 }
 
 template <class T>

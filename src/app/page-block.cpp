@@ -8,7 +8,7 @@ namespace app {
 
 PageBlock::PageBlock (FilesToOpen& to_open) {
     AA(to_open.files.size() <= int32(GINF));
-    pages.reserve(to_open.files.size());
+    pages.reserve(size(to_open.files));
     for (auto& filename : to_open.files) {
         pages.emplace_back(std::make_unique<Page>(std::move(filename)));
     }

@@ -50,7 +50,7 @@ struct GRect {
     CE GRect<T> exclude_lb () const {
         return {lr().exclude_l(), bt().exclude_l()};
     }
-    CE GRect<T> include_rb () const {
+    CE GRect<T> include_rt () const {
         return {lr().include_r(), bt().include_r()};
     }
 

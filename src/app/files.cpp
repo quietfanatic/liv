@@ -12,7 +12,7 @@ FilesToOpen expand_files (
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
 
-    if (specified.size() == 1 &&
+    if (size(specified) == 1 &&
         fs::exists(specified[0]) &&
         !fs::is_directory(specified[0])
     ) {
@@ -28,7 +28,7 @@ FilesToOpen expand_files (
             Str extension;
             usize dotpos = name.rfind('.');
             if (dotpos != std::string::npos) {
-                extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
+                extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
             }
             if (!extensions.count(String(extension))) continue;
             r.files.emplace_back(std::move(name));
@@ -38,7 +38,7 @@ FilesToOpen expand_files (
         );
          // Start the book open to the actual file specified.
         r.start_index = usize(-1);
-        for (usize i = 0; i < r.files.size(); i++) {
+        for (usize i = 0; i < size(r.files); i++) {
             if (r.files[i] == specified[0]) {
                 r.start_index = i;
                 break;
@@ -56,14 +56,14 @@ FilesToOpen expand_files (
         FilesToOpen r;
         for (auto& file : specified) {
             if (fs::is_directory(file)) {
-                usize subfiles_begin = r.files.size();
+                usize subfiles_begin = size(r.files);
                 for (auto& entry : fs::recursive_directory_iterator(file)) {
                     std::u8string u8name = entry.path().u8string();
                     std::string& name = reinterpret_cast<std::string&>(u8name);
                     Str extension;
                     usize dotpos = name.rfind('.');
                     if (dotpos != std::string::npos) {
-                        extension = Str(&name[dotpos+1], name.size() - dotpos - 1);
+                        extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
                     }
                     if (!extensions.count(String(extension))) continue;
                     r.files.emplace_back(std::move(name));
