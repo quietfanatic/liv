@@ -52,6 +52,4 @@ struct Layout {
     );
 };
 
-
-
 } // namespace app

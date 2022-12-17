@@ -211,13 +211,13 @@ bool Book::draw_if_needed () {
     else {
         if (block.count() > 1) {
             if (size(visible) == 1) {
-                title = ayu::cat('[', visible.l);
+                title = ayu::cat('[', visible.l+1);
             }
             else if (size(visible) == 2) {
-                title = ayu::cat('[', visible.l, ',', visible.r - 1);
+                title = ayu::cat('[', visible.l+1, ',', visible.r+1 - 1);
             }
             else {
-                title = ayu::cat('[', visible.l, '-', visible.r - 1);
+                title = ayu::cat('[', visible.l+1, '-', visible.r+1 - 1);
             }
             title = ayu::cat(title, '/', block.count(), "] ");
         }
