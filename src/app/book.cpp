@@ -103,12 +103,12 @@ void Book::set_interpolation_mode (InterpolationMode mode) {
 }
 
 void Book::drag (Vec amount) {
-    if (defined(layout_params.manual_offset)) {
-        layout_params.manual_offset += amount;
+    if (!defined(layout_params.manual_offset)) {
+        auto& layout = get_layout();
+        layout_params.manual_offset = layout.offset;
+        layout_params.manual_zoom = layout.zoom;
     }
-    else {
-        layout_params.manual_offset = amount;
-    }
+    layout_params.manual_offset += amount;
     layout = {};
     need_draw = true;
 }
