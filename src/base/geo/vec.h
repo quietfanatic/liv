@@ -6,6 +6,7 @@
 
 #include "../ayu/describe.h"
 #include "../uni/common.h"
+#include "misc.h"
 #include "scalar.h"
 
 namespace geo {
@@ -32,6 +33,7 @@ using IVec4 = GVec<int32, 4>;
 using LVec4 = GVec<int64, 4>;
 using BVec4 = GVec<bool, 4>;
 
+ // TODO: destructors
 template <class T, usize n>
 struct GVecStorage {
     T e [n];
@@ -73,18 +75,30 @@ struct GVecStorage<T, 4> {
  // TODO: std::get and tuple_size
 template <class T, usize n>
 struct GVec : GVecStorage<T, n> {
+     // Default constructor
     CE GVec () : GVecStorage<T, n>{.e = {}} { }
-    template <class... Args, std::enable_if_t<sizeof...(Args) == n, bool> = true>
-    CE GVec (Args... args) : GVecStorage<T, n>{.e = {T(args)...}} { }
+
+     // Construct from individual elements
+    template <class... Args> requires(sizeof...(Args) == n)
+    CE GVec (Args... args) :
+        GVecStorage<T, n>{.e = {T(args)...}}
+    {
+#ifndef NDEBUG
+        DA(valid(*this));
+#endif
+    }
+
+     // Construct from a scalar (will be copied to all elements)
     CE explicit GVec (T v) {
         for (usize i = 0; i < n; i++) {
             this->e[i] = v;
         }
     }
+     // Construct the undefined vector
     template <class = std::void_t<decltype(T(GNAN))>>
     CE GVec (GNAN_t nan) : GVec(T(nan)) { }
-    template <class = std::void_t<decltype(T(GINF))>>
-    CE GVec (GINF_t i) : GVec(T(i)) { }
+
+     // Implicitly coerce from another vector
     template <class T2>
     CE GVec (const GVec<T2, n>& o) {
         for (usize i = 0; i < n; i++) {
@@ -92,6 +106,7 @@ struct GVec : GVecStorage<T, n> {
         }
     }
 
+     // Get individual element
     CE T& operator [] (usize i) {
         DA(i < n);
         return this->e[i];
@@ -100,6 +115,7 @@ struct GVec : GVecStorage<T, n> {
         DA(i < n);
         return this->e[i];
     }
+     // Check for the zero vector.  Does not check definedness.
     CE explicit operator bool () const {
         for (usize i = 0; i < n; i++) {
             if (!this->e[i]) return false;
@@ -110,20 +126,28 @@ struct GVec : GVecStorage<T, n> {
 
 ///// PROPERTIES
 
+ // A Vec is valid is all elements are defined or no elements are defined.
+template <class T, usize n>
+CE bool valid (const GVec<T, n>& a) {
+    if CE (n > 0 && requires (T v) { defined(v); }) {
+        bool is_defined = defined(a[0]);
+        for (usize i = 1; i < n; i++) {
+            if (defined(a[0]) != is_defined) return false;
+        }
+    }
+    return true;
+}
+
  // Will debug assert if some but not all elements are defined
 template <class T, usize n>
 CE bool defined (const GVec<T, n>& a) {
 #ifndef NDEBUG
-    if constexpr (n > 0) {
-        bool is_defined = defined(a[0]);
-        for (usize i = 0; i < n; i++) {
-            DA(defined(a[0]) == is_defined);
-        }
-    }
+    DA(valid(a));
 #endif
     return defined(a[0]);
 }
 
+ // Returns false if any elements are NAN or INF
 template <class T, usize n>
 CE bool finite (const GVec<T, n>& a) {
     for (usize i = 0; i < n; i++) {
@@ -132,6 +156,8 @@ CE bool finite (const GVec<T, n>& a) {
     return true;
 }
 
+ // length squared.  Faster than length.
+ // length2(a) == dot(a, a)
 template <class T, usize n>
 CE auto length2 (const GVec<T, n>& a) {
     decltype(wide_multiply(a[0], a[0])) r = 0;
@@ -143,23 +169,11 @@ CE auto length2 (const GVec<T, n>& a) {
  // May be double or float
  // TODO: CE sqrt
 template <class T, usize n>
-CE auto length (const GVec<T, n>& a) {
+CE T length (const GVec<T, n>& a) {
     return std::sqrt(length2(a));
 }
 
- // These work on scalars too.
-template <class TA, class TB>
-CE auto distance2 (const TA& a, const TB& b) {
-    return length2(b - a);
-}
-
-template <class TA, class TB>
-CE auto distance (const TA& a, const TB& b) {
-    return length(b - a);
-}
-
  // Can be negative.
- // area(a) == dot(a, a)
  // For 2-Vecs, equivalent to area(GRect{{0}, a})
 template <class T, usize n>
 CE auto area (const GVec<T, n>& a) {
@@ -170,9 +184,21 @@ CE auto area (const GVec<T, n>& a) {
     return r;
 }
 
+template <class T, usize n>
+CE bool normal (const GVec<T, n>& a) {
+    return length2(a) == T(1);
+}
+
+ // Slope of the line from the origin to a.
 template <class T>
 CE T slope (const GVec<T, 2>& a) {
     return a.y / a.x;
+}
+ // 1 / slope(a).  This is separate because floating point arithmetic doesn't
+ // optimize very well.
+template <class T>
+CE T aspect (const GVec<T, 2>& a) {
+    return a.x / a.y;
 }
 
 ///// MODIFIERS
@@ -193,6 +219,8 @@ GVEC_UNARY_OP(-)
 GVEC_UNARY_OP(~)
 #undef GVEC_UNARY_OP
 
+ // Vector version of rounding functions that just call the same function on
+ // each element.
 template <class T, usize n>
 CE auto round (const GVec<T, n>& a) {
     GVec<decltype(round(a[0])), n> r;
@@ -218,6 +246,8 @@ CE auto ceil (const GVec<T, n>& a) {
     return r;
 }
 
+ // Get vector that has the same direction but with a length of 1.  Returns the
+ // zero vector if given the zero vector.
 template <class T, usize n>
 CE GVec<T, n> normalize (const GVec<T, n>& a) {
     return a ? a / length(a) : a;
@@ -243,6 +273,7 @@ GVEC_COMPARISON_OP(>=, a[i] >= b[i], true)
 
 ///// COMBINERS
 
+ // Binary operators with vec-vec, vec-scalar, and scalar-vec.
 #define GVEC_BINARY_OP(op) \
 template <class TA, class TB, usize n> \
 CE auto operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
@@ -280,6 +311,7 @@ GVEC_BINARY_OP(<<)  // Not sure what you'd use these for but okay
 GVEC_BINARY_OP(>>)
 #undef GVEC_BINARY_OP
 
+ // Assignment operators vec-vec and vec-scalar
 #define GVEC_ASSIGN_OP(op) \
 template <class TA, class TB, usize n> \
 CE GVec<TA, n>& operator op (GVec<TA, n>& a, const GVec<TB, n>& b) { \
@@ -307,6 +339,7 @@ GVEC_ASSIGN_OP(<<=)
 GVEC_ASSIGN_OP(>>=)
 #undef GVEC_ASSIGN_OP
 
+ // mod and rem are basically binary operators
 template <class TA, class TB, usize n>
 CE auto mod (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     GVec<decltype(mod(a[0], b[0])), n> r;
@@ -324,6 +357,7 @@ CE auto rem (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     return r;
 }
 
+ // Dot product of two vectors.
 template <class T, usize n>
 CE auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
     decltype(wide_multiply(a[0], b[0])) r = 0;
@@ -333,6 +367,7 @@ CE auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
     return r;
 }
 
+ // Linearly interpolate between two vectors.
 template <class T, usize n>
 CE GVec<T, n> lerp (
     const GVec<T, n>& a,
@@ -346,9 +381,10 @@ CE GVec<T, n> lerp (
     return r;
 }
 
-template <class T>
-CE GVec<T, 3> cross (const GVec<T, 3>& a, const GVec<T, 3>& b) {
-    return GVec<T, 3>{
+ // Cross product of 3-dimensional vectors.
+template <class A, class B>
+CE auto cross (const GVec<A, 3>& a, const GVec<B, 3>& b) {
+    return GVec<decltype(A() * B()), 3>{
        a.y * b.z - a.z * b.y,
        a.z * b.x - a.x * b.z,
        a.x * b.y - a.y * b.x

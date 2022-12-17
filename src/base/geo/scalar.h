@@ -27,7 +27,7 @@ CE GNAN_t GNAN;
  // Represents the minimum or maximum value of whatever it's cast to.
 struct GINF_t {
     bool minus = false;
-    template <class T>
+    template <class T> requires (std::numeric_limits<T>::is_specialized)
     CE operator T () const {
         if constexpr (std::numeric_limits<T>::has_infinity) {
             return minus ? -std::numeric_limits<T>::infinity()
