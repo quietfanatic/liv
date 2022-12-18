@@ -11,6 +11,6 @@ void init () {
 
 } using namespace glow;
 
-AYU_DESCRIBE(glow::X::GlowError,
-    delegate(base<ayu::X::Error>())
+AYU_DESCRIBE(glow::GlowError,
+    delegate(base<ayu::Error>())
 )

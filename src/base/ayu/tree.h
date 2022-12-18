@@ -98,22 +98,18 @@ bool operator == (const Tree& a, const Tree& b);
  // Theoretically we could add < and friends, but it's a pain to program.
 inline bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
 
-namespace X {
-    struct TreeError : Error { };
-     // Tried to treat a tree as though it's a form which it's not.
-    struct WrongForm : TreeError {
-        Form form;
-        Tree tree;
-        WrongForm (Form f, Tree t) : form(f), tree(t) { }
-    };
-     // Tried to extract a number from a tree, but the tree's number won't fit
-     // into the requested type.
-    struct CantRepresent : TreeError {
-        String type_name;
-        Tree tree;
-        CantRepresent (const char* n, Tree t) : type_name(n), tree(t) { }
-    };
-}
+struct TreeError : Error { };
+ // Tried to treat a tree as though it's a form which it's not.
+struct WrongForm : TreeError {
+    Form form;
+    Tree tree;
+};
+ // Tried to extract a number from a tree, but the tree's number won't fit
+ // into the requested type.
+struct CantRepresent : TreeError {
+    String type_name;
+    Tree tree;
+};
 
 namespace in {
     TreeData* TreeData_bool (bool);

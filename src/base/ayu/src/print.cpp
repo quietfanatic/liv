@@ -4,6 +4,7 @@
 
 #include "../compat.h"
 #include "../describe-base.h"
+#include "../exception.h"
 #include "../type.h"
 #include "char-cases-private.h"
 #include "tree-private.h"
@@ -188,11 +189,11 @@ struct Printer {
                         t.data->as_known<std::exception_ptr>()
                     );
                 }
-                catch (const X::Error& e) {
+                catch (const Error& e) {
                     try {
                         out += cat("?("sv, Type(typeid(e)).name(), ')');
                     }
-                    catch (const X::UnknownType&) {
+                    catch (const UnknownType&) {
                         out += cat("?("sv, typeid(e).name(), ')');
                     }
                 }
@@ -205,10 +206,10 @@ struct Printer {
 
 static void validate_print_options (PrintOptions opts) {
     if (opts & ~VALID_PRINT_OPTION_BITS) {
-        throw X::InvalidPrintOptions(opts);
+        throw X<InvalidPrintOptions>(opts);
     }
     if ((opts & PRETTY) && (opts & COMPACT)) {
-        throw X::InvalidPrintOptions(opts);
+        throw X<InvalidPrintOptions>(opts);
     }
 }
 
@@ -227,11 +228,11 @@ String tree_to_string (const Tree& t, PrintOptions opts) {
 void string_to_file (Str content, Str filename) {
     FILE* f = fopen_utf8(String(filename).c_str(), "wb");
     if (!f) {
-        throw X::OpenFailed(filename, errno);
+        throw X<OpenFailed>(String(filename), errno);
     }
     fwrite(content.data(), 1, content.size(), f);
     if (fclose(f) != 0) {
-        throw X::CloseFailed(filename, errno);
+        throw X<CloseFailed>(String(filename), errno);
     }
 }
 
@@ -243,10 +244,10 @@ void tree_to_file (const Tree& tree, Str filename, PrintOptions opts) {
 
 } using namespace ayu;
 
-AYU_DESCRIBE(ayu::X::InvalidPrintOptions,
+AYU_DESCRIBE(ayu::InvalidPrintOptions,
     elems(
-        elem(base<X::Error>(), inherit),
-        elem(&X::InvalidPrintOptions::opts)
+        elem(base<Error>(), inherit),
+        elem(&InvalidPrintOptions::opts)
     )
 )
 

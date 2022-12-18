@@ -65,16 +65,4 @@ inline usize hash_combine (usize a, usize b) {
     return a*3 + b;
 }
 
- // Called when an exception is thrown in a place where the library can't
- // properly clean up after itself, such as when a resource value throws
- // from its destructor.
-[[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
- // Some internal error has occured, such as an invalid enum value, and it
- // isn't safe to continue execution.
-[[noreturn]] void internal_error (
-    const char* function, const char* filename, uint line
-);
-#define AYU_INTERNAL_UGUU() \
-[[unlikely]] ::ayu::in::internal_error(__FUNCTION__, __FILE__, __LINE__);
-
 }  // namespace ayu::in

@@ -109,31 +109,24 @@ struct ImageTexture : Texture {
     void init ();
 };
 
-namespace X {
-    struct ImageLoadFailed : GlowError {
-        String filename;
-        String details;
-        ImageLoadFailed (Str f, String&& d) : filename(f), details(d) { }
-    };
-    struct ImageSaveFailed : GlowError {
-        String filename;
-        String details;
-        ImageSaveFailed (Str f, String&& d) : filename(f), details(d) { }
-    };
-    struct SubImageBoundsNotProper : GlowError {
-        IRect bounds;
-        SubImageBoundsNotProper (const IRect& b) : bounds(b) { }
-    };
-    struct SubImageOutOfBounds : GlowError {
-        const Image* image;
-        IVec size;
-        IRect bounds;
-        SubImageOutOfBounds (const Image* i, IVec s, const IRect& b) : image(i), size(s), bounds(b) { }
-    };
-    struct ImageTextureIncompatibleTarget : GlowError {
-        uint target;
-        ImageTextureIncompatibleTarget (uint t) : target(t) { }
-    };
-}
+struct ImageLoadFailed : GlowError {
+    String filename;
+    String details;
+};
+struct ImageSaveFailed : GlowError {
+    String filename;
+    String details;
+};
+struct SubImageBoundsNotProper : GlowError {
+    IRect bounds;
+};
+struct SubImageOutOfBounds : GlowError {
+    const Image* image;
+    IVec size;
+    IRect bounds;
+};
+struct ImageTextureIncompatibleTarget : GlowError {
+    uint target;
+};
 
 }

@@ -13,7 +13,7 @@ void ResourceScheme::activate () const {
     auto& schemes = universe().schemes;
      // Validate
     if (scheme_name.size() == 0) {
-        throw X::InvalidResourceScheme(String(scheme_name));
+        throw X<InvalidResourceScheme>(String(scheme_name));
     }
     for (const char& c : scheme_name)
     switch (c) {
@@ -22,13 +22,13 @@ void ResourceScheme::activate () const {
         case ANY_DECIMAL_DIGIT:
         case '+': case '-': case '.':
             if (&c == &scheme_name.front()) {
-                throw X::InvalidResourceScheme(String(scheme_name));
+                throw X<InvalidResourceScheme>(String(scheme_name));
             }
             else break;
     }
      // Register
     auto [iter, emplaced] = schemes.emplace(scheme_name, this);
-    if (!emplaced) throw X::DuplicateResourceScheme(String(scheme_name));
+    if (!emplaced) throw X<DuplicateResourceScheme>(String(scheme_name));
 }
 void ResourceScheme::deactivate () const {
     auto& schemes = universe().schemes;
@@ -39,44 +39,44 @@ void ResourceScheme::deactivate () const {
 
 ///// AYU DESCRIPTIONS
 
-AYU_DESCRIBE(ayu::X::ResourceNameError,
-    delegate(base<X::Error>())
+AYU_DESCRIBE(ayu::ResourceNameError,
+    delegate(base<Error>())
 )
-AYU_DESCRIBE(ayu::X::InvalidResourceName,
+AYU_DESCRIBE(ayu::InvalidResourceName,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::InvalidResourceName::name)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&InvalidResourceName::name)
     )
 )
-AYU_DESCRIBE(ayu::X::UnknownResourceScheme,
+AYU_DESCRIBE(ayu::UnknownResourceScheme,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::UnknownResourceScheme::name)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&UnknownResourceScheme::name)
     )
 )
-AYU_DESCRIBE(ayu::X::UnacceptableResourceName,
+AYU_DESCRIBE(ayu::UnacceptableResourceName,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::UnacceptableResourceName::name)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&UnacceptableResourceName::name)
     )
 )
-AYU_DESCRIBE(ayu::X::UnacceptableResourceType,
+AYU_DESCRIBE(ayu::UnacceptableResourceType,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::UnacceptableResourceType::name),
-        elem(&X::UnacceptableResourceType::type)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&UnacceptableResourceType::name),
+        elem(&UnacceptableResourceType::type)
     )
 )
-AYU_DESCRIBE(ayu::X::InvalidResourceScheme,
+AYU_DESCRIBE(ayu::InvalidResourceScheme,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::InvalidResourceScheme::scheme)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&InvalidResourceScheme::scheme)
     )
 )
-AYU_DESCRIBE(ayu::X::DuplicateResourceScheme,
+AYU_DESCRIBE(ayu::DuplicateResourceScheme,
     elems(
-        elem(base<X::ResourceNameError>(), inherit),
-        elem(&X::DuplicateResourceScheme::scheme)
+        elem(base<ResourceNameError>(), inherit),
+        elem(&DuplicateResourceScheme::scheme)
     )
 )
 

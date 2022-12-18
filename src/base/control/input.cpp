@@ -195,7 +195,9 @@ AYU_DESCRIBE(control::Input,
         input = {};
         for (auto& e : a) {
             if (e.form() == ayu::NUMBER) {
-                if (input.type != NONE) throw ayu::X::GenericError("Too many descriptors for Input");
+                if (input.type != NONE) {
+                    throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
+                }
                 Input tmp = input_from_integer(int(e));
                 input.type = tmp.type;
                 input.code = tmp.code;
@@ -206,7 +208,9 @@ AYU_DESCRIBE(control::Input,
                 else if (name == "alt") input.alt = true;
                 else if (name == "shift") input.shift = true;
                 else {
-                    if (input.type != NONE) throw ayu::X::GenericError("Too many descriptors for Input");
+                    if (input.type != NONE) {
+                        throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
+                    }
                     Input tmp = input_from_string(name);
                     input.type = tmp.type;
                     input.code = tmp.code;

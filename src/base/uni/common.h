@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "../ayu/common.h"
+#include "../ayu/exception.h"
 
 namespace uni {
 using namespace std::literals;
@@ -46,25 +47,14 @@ using Str16 = std::wstring_view;
 
 ///// ASSERTIONS (use macros.h)
 
-namespace X {
-    struct AssertionFailed : ayu::X::Error {
-        String function;
-        String filename;
-        uint line;
-        AssertionFailed(Str function, Str filename, uint line) :
-            function(function),
-            filename(filename),
-            line(line)
-        { }
-    };
-    struct AssertionFailedSDL : AssertionFailed {
-        String sdl_error;
-        AssertionFailedSDL(Str function, Str filename, uint line, Str mess) :
-            AssertionFailed(function, filename, line),
-            sdl_error(mess)
-        { }
-    };
-}
+struct AssertionFailed : ayu::Error {
+    String function;
+    String filename;
+    uint line;
+};
+struct AssertionFailedSDL : AssertionFailed {
+    String sdl_error;
+};
 
 void assert_failed_general (const char* function, const char* filename, uint line);
 void assert_failed_sdl (const char* function, const char* filename, uint line);
@@ -75,7 +65,7 @@ static constexpr T&& assert_general (
 ) {
     if (!v) {
         if (std::is_constant_evaluated()) {
-            throw X::AssertionFailed(function, filename, line);
+            throw ayu::X<AssertionFailed>(function, filename, line);
         }
         else assert_failed_general(function, filename, line);
     }

@@ -114,7 +114,7 @@ Tree::operator bool () const { return data->as<bool>(); }
 Tree::operator char () const {
     const String& s = data->as<String>();
     if (s.size() == 1) return s[0];
-    else throw X::CantRepresent("char", *this);
+    else throw X<CantRepresent>("char", *this);
 }
 #define INTEGRAL_CONVERSION(T) \
 Tree::operator T () const { \
@@ -122,17 +122,17 @@ Tree::operator T () const { \
         case Rep::INT64: { \
             int64 v = data->as_known<int64>(); \
             if (int64(T(v)) == v) return v; \
-            else throw X::CantRepresent(#T, *this); \
+            else throw X<CantRepresent>(#T, *this); \
         } \
         case Rep::DOUBLE: { \
             double v = data->as_known<double>(); \
             if (double(T(v)) == v) return v; \
-            else throw X::CantRepresent(#T, *this); \
+            else throw X<CantRepresent>(#T, *this); \
         } \
         case Rep::ERROR: { \
             std::rethrow_exception(data->as_known<std::exception_ptr>()); \
         } \
-        default: throw X::WrongForm(NUMBER, *this); \
+        default: throw X<WrongForm>(NUMBER, *this); \
     } \
 }
 INTEGRAL_CONVERSION(int8)
@@ -152,7 +152,7 @@ Tree::operator double () const {
         case Rep::ERROR: {
             rethrow_exception(data->as_known<std::exception_ptr>());
         }
-        default: throw X::WrongForm(NUMBER, *this);
+        default: throw X<WrongForm>(NUMBER, *this);
     }
 }
 Tree::operator Str () const { return data->as<String>(); }
@@ -173,15 +173,15 @@ Tree* Tree::elem (usize index) const {
 }
 Tree Tree::operator[] (Str key) const {
     if (Tree* r = attr(key)) return *r;
-    else throw X::GenericError(cat(
+    else throw X<GenericError>{cat(
         "This tree has no attr with key \""sv, key, '"'
-    ));
+    )};
 }
 Tree Tree::operator[] (usize index) const {
     if (Tree* r = elem(index)) return *r;
-    else throw X::GenericError(cat(
+    else throw X<GenericError>{cat(
         "This tree has no elem with index \""sv, index, '"'
-    ));
+    )};
 }
 
 bool operator == (const Tree& a, const Tree& b) {
@@ -252,23 +252,23 @@ AYU_DESCRIBE(ayu::Tree,
     from_tree([](Tree& v, const Tree& t){ v = t; })
 )
 
-AYU_DESCRIBE(ayu::X::TreeError,
-    delegate(base<X::Error>())
+AYU_DESCRIBE(ayu::TreeError,
+    delegate(base<Error>())
 )
 
-AYU_DESCRIBE(ayu::X::WrongForm,
+AYU_DESCRIBE(ayu::WrongForm,
     elems(
-        elem(base<X::TreeError>(), inherit),
-        elem(&X::WrongForm::form),
-        elem(&X::WrongForm::tree)
+        elem(base<TreeError>(), inherit),
+        elem(&WrongForm::form),
+        elem(&WrongForm::tree)
     )
 )
 
-AYU_DESCRIBE(ayu::X::CantRepresent,
+AYU_DESCRIBE(ayu::CantRepresent,
     elems(
-        elem(base<X::TreeError>(), inherit),
-        elem(&X::CantRepresent::type_name),
-        elem(&X::CantRepresent::tree)
+        elem(base<TreeError>(), inherit),
+        elem(&CantRepresent::type_name),
+        elem(&CantRepresent::tree)
     )
 )
 
@@ -282,16 +282,16 @@ static tap::TestSet tests ("base/ayu/tree", []{
     isnt(Tree(3), Tree(3.1), "Compare integers with floats (!=)");
     is(Tree(0.0/0.0), Tree(0.0/0.0), "Tree of NAN equals Tree of NAN");
     is(Str(Tree("asdf")), "asdf"sv, "Round-trip strings");
-    throws<X::WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
+    throws<WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
     try_is<int>([]{ return int(Tree(3.0)); }, 3, "Convert floating to integer");
     try_is<double>([]{ return double(Tree(3)); }, 3.0, "Convert integer to floating");
-    throws<X::CantRepresent>([]{
+    throws<CantRepresent>([]{
         int(Tree(3.5));
     }, "Can't convert 3.5 to integer");
-    throws<X::CantRepresent>([]{
+    throws<CantRepresent>([]{
         int8(Tree(1000));
     }, "Can't convert 1000 to int8");
-    throws<X::CantRepresent>([]{
+    throws<CantRepresent>([]{
         uint8(Tree(-1));
     }, "Can't convert -1 to uint8");
     is(Tree(Array{Tree(3), Tree(4)}), Tree(Array{Tree(3), Tree(4)}), "Compare arrays.");

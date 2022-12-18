@@ -132,12 +132,12 @@ struct _AYU_DescribeBase {
      // When serializing, the current item will be compared to each VALUE using
      // operator==, and if it matches, serialized as NAME.  If no values match,
      // serialization will continue using other descriptors if available, or
-     // throw X::NoNameForValue if there are none.
+     // throw NoNameForValue if there are none.
      //
      // When deserializing, the provided Tree will be compared to each NAME, and
      // if it matches, the current item will be set to VALUE using operator=.
      // If no names match, deserialization will continue using other descriptors
-     // if available, or throw X::NoValueForName if there are none.
+     // if available, or throw NoValueForName if there are none.
      //
      // Using this, you can provide names for specific values of more complex
      // types.  For instance, for a matrix item, you can provide special names
@@ -189,7 +189,7 @@ struct _AYU_DescribeBase {
      // the member() accessor.  `flags` can be any |ed combination of:
      //   - optional: This attribute does not need to be provided when
      //   deserializing.  If it is not provided, `accessor`'s write operation
-     //   will not be called (normally X::MissingAttr would be thrown).
+     //   will not be called (normally MissingAttr would be thrown).
      //   - inherit: When serializing, `key` will be ignored and this
      //   attribute's attributes will be included in this item's attributes (and
      //   if any of those attributes have inherit specified, their attributes
@@ -221,8 +221,8 @@ struct _AYU_DescribeBase {
      //
      // During deserialization, `accessor`'s write operation will be called with
      // the list of keys provided in the Tree, and it should throw
-     // X::MissingAttr if it isn't given an attribute it needs or
-     // X::UnwantedAttr if it's given an attribute it doesn't accept.  If
+     // MissingAttr if it isn't given an attribute it needs or
+     // UnwantedAttr if it's given an attribute it doesn't accept.  If
      // `accessor` is a readonly accessor, then instead its `read` operation
      // will be called, and the list of provided keys must match exactly or an
      // exception will be thrown.  It is acceptable to ignore the provided list
@@ -284,7 +284,7 @@ struct _AYU_DescribeBase {
      // combination of:
      //   - optional: This element does not need to be provided when
      //   deserializing.  If it is not provided, `accessor`'s write operation
-     //   will not be called (normally X::WrongLength will be thrown).  This
+     //   will not be called (normally WrongLength will be thrown).  This
      //   flag is ignored if there are any elements after this one which are not
      //   optional (this might be a compile-time error later).
      //   - inherit: Unlike with attrs, this doesn't do much; all it does is
@@ -308,10 +308,10 @@ struct _AYU_DescribeBase {
      //
      // When deserializing, the `accessor`'s write operation will be called with
      // the length of the provided array Tree, and it should throw
-     // X::WrongLength if it doesn't like the provided length.  If `accessor` is
+     // WrongLength if it doesn't like the provided length.  If `accessor` is
      // readonly, then instead its read operation will be called, and the
      // provided array Tree's length must match its output exactly or
-     // X::WrongLength will be thrown.
+     // WrongLength will be thrown.
      //
      // If length() is present, elem_func() must also be present, and elems()
      // must not be present.

@@ -12,7 +12,7 @@ static std::unordered_map<Str, const Command*>& commands_by_name () {
 void Command::register_command () const {
     auto [iter, emplaced] = commands_by_name().emplace(name, this);
     if (!emplaced) {
-        throw X::ConflictingCommandName(
+        throw ayu::X<ConflictingCommandName>(
             name, iter->second->description, description
         );
     }
@@ -26,12 +26,12 @@ const Command* lookup_command (Str name) {
 const Command* require_command (Str name) {
     auto iter = commands_by_name().find(name);
     if (iter != commands_by_name().end()) return iter->second;
-    else throw X::CommandNotFound(name);
+    else throw ayu::X<CommandNotFound>(String(name));
 }
 
 Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(std::move(a)) {
     if (args.type != command->args_type()) {
-        throw X::StatementWrongArgsType(args.type, command->args_type());
+        throw ayu::X<StatementWrongArgsType>(args.type, command->args_type());
     }
 }
 
@@ -84,27 +84,27 @@ AYU_DESCRIBE(Statement,
     })
 )
 
-AYU_DESCRIBE(control::X::ConflictingCommandName,
-    delegate(base<ayu::X::Error>()),
+AYU_DESCRIBE(control::ConflictingCommandName,
+    delegate(base<ayu::Error>()),
     elems(
-        elem(&control::X::ConflictingCommandName::name),
-        elem(&control::X::ConflictingCommandName::desc_a),
-        elem(&control::X::ConflictingCommandName::desc_b)
+        elem(&control::ConflictingCommandName::name),
+        elem(&control::ConflictingCommandName::desc_a),
+        elem(&control::ConflictingCommandName::desc_b)
     )
 )
 
-AYU_DESCRIBE(control::X::CommandNotFound,
-    delegate(base<ayu::X::Error>()),
+AYU_DESCRIBE(control::CommandNotFound,
+    delegate(base<ayu::Error>()),
     elems(
-        elem(&control::X::CommandNotFound::name)
+        elem(&control::CommandNotFound::name)
     )
 )
 
-AYU_DESCRIBE(control::X::StatementWrongArgsType,
-    delegate(base<ayu::X::Error>()),
+AYU_DESCRIBE(control::StatementWrongArgsType,
+    delegate(base<ayu::Error>()),
     attrs(
-        attr("expected", &control::X::StatementWrongArgsType::expected),
-        attr("got", &control::X::StatementWrongArgsType::got)
+        attr("expected", &control::StatementWrongArgsType::expected),
+        attr("got", &control::StatementWrongArgsType::got)
     )
 )
 
@@ -141,11 +141,11 @@ static tap::TestSet tests ("base/control/command", []{
         "Command serializes correctly"
     );
 
-    throws<ayu::X::Error>([&]{
+    throws<ayu::Error>([&]{
         ayu::item_from_string(&s, "[_test_command]");
     }, "Can't create command with too few args");
 
-    throws<ayu::X::Error>([&]{
+    throws<ayu::Error>([&]{
         ayu::item_from_string(&s, "[_test_command 1 2 3]");
     }, "Can't create command with too many args");
 

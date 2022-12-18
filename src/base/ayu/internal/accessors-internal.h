@@ -7,15 +7,15 @@
 #include <typeinfo>
 
 #include "../common.h"
+#include "../exception.h"
 #include "../type.h"
 
+namespace ayu {
  // Theoretically, this should never be thrown (in all circumstances,
- // X::WriteReadonlyReference should be thrown instead).
-namespace ayu::X {
-    struct WriteReadonlyAccessor : Error { };
-}
+ // WriteReadonlyReference should be thrown instead).
+struct WriteReadonlyAccessor : Error { };
 
-namespace ayu::in {
+namespace in {
 
 ///// UNIVERSAL ACCESSOR STUFF
 
@@ -117,7 +117,7 @@ struct Accessor {
     void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {
         assert(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
         if (mode != ACR_READ && accessor_flags & ACR_READONLY) {
-            throw X::WriteReadonlyAccessor();
+            throw X<WriteReadonlyAccessor>();
         }
         vt->access(this, mode, from, cb);
     }
@@ -337,7 +337,7 @@ template <class To>
 void ValueFuncAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) throw X::WriteReadonlyAccessor();
+    if (mode != ACR_READ) throw X<WriteReadonlyAccessor>();
     auto self = static_cast<const ValueFuncAcr2<Mu, To>*>(acr);
     reinterpret_cast<Callback<void(const To&)>&>(cb)(self->f(from));
 }
@@ -539,7 +539,7 @@ template <class To>
 void ConstantAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu&, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) throw X::WriteReadonlyAccessor();
+    if (mode != ACR_READ) throw X<WriteReadonlyAccessor>();
     auto self = static_cast<const ConstantAcr2<Mu, To>*>(acr);
     cb(reinterpret_cast<Mu&>(const_cast<To&>(self->value)));
 }
@@ -596,4 +596,5 @@ struct ReferenceFuncAcr2 : ReferenceFuncAcr1 {
     { }
 };
 
-} // namespace ayu::in
+} // namespace in
+} // namespace ayu

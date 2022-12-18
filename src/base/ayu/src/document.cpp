@@ -112,10 +112,12 @@ void* Document::allocate (Type t) {
 void* Document::allocate_named (Type t, Str name) {
     usize id = parse_numbered_name(name);
 
-    if (name.empty()) throw X::DocumentInvalidName(String(name));
-    if (id == usize(-1) && name[0] == '_') throw X::DocumentInvalidName(String(name));
+    if (name.empty()) throw X<DocumentInvalidName>(String(name));
+    if (id == usize(-1) && name[0] == '_') {
+        throw X<DocumentInvalidName>(String(name));
+    }
     auto ref = DocumentItemRef(data, String(name));
-    if (ref.header) throw X::DocumentDuplicateName(String(name));
+    if (ref.header) throw X<DocumentDuplicateName>(String(name));
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
@@ -123,7 +125,7 @@ void* Document::allocate_named (Type t, Str name) {
         return header+1;
     }
     else { // Actually a numbered item
-        if (id > data->next_id + 10000) throw X::GenericError("Unreasonable growth of next_id"s);
+        if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id"s);
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
         auto header = new (p) DocumentItemHeader(&data->items, t, id, String(name));
@@ -138,11 +140,11 @@ void Document::delete_ (Type t, Mu* p) {
         auto header = static_cast<DocumentItemHeader*>(link);
         if (header->data() == p) goto we_good;
     }
-    throw X::DocumentDeleteNotOwned();
+    throw X<DocumentDeleteNotOwned>();
     we_good:;
 #endif
     auto header = (DocumentItemHeader*)p - 1;
-    if (header->type != t) throw X::DocumentDeleteWrongType(header->type, t);
+    if (header->type != t) throw X<DocumentDeleteWrongType>(header->type, t);
     if (header->type) header->type.destroy(p);
     header->~DocumentItemHeader();
     free(header);
@@ -158,7 +160,7 @@ void Document::delete_named (Str name) {
         free(ref.header);
         return;
     }
-    else throw X::DocumentDeleteMissing(String(name));
+    else throw X<DocumentDeleteMissing>(String(name));
 }
 
 void Document::deallocate (void* p) {
@@ -241,35 +243,35 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
     )
 )
 
-AYU_DESCRIBE(ayu::X::DocumentError,
-    delegate(base<X::Error>())
+AYU_DESCRIBE(ayu::DocumentError,
+    delegate(base<Error>())
 )
 
-AYU_DESCRIBE(ayu::X::DocumentInvalidName,
+AYU_DESCRIBE(ayu::DocumentInvalidName,
     elems(
-        elem(base<X::DocumentError>(), inherit),
-        elem(&X::DocumentInvalidName::name)
+        elem(base<DocumentError>(), inherit),
+        elem(&DocumentInvalidName::name)
     )
 )
-AYU_DESCRIBE(ayu::X::DocumentDuplicateName,
+AYU_DESCRIBE(ayu::DocumentDuplicateName,
     elems(
-        elem(base<X::DocumentError>(), inherit),
-        elem(&X::DocumentDuplicateName::name)
+        elem(base<DocumentError>(), inherit),
+        elem(&DocumentDuplicateName::name)
     )
 )
-AYU_DESCRIBE(ayu::X::DocumentDeleteWrongType,
+AYU_DESCRIBE(ayu::DocumentDeleteWrongType,
     elems(
-        elem(base<X::DocumentError>(), inherit),
-        elem(&X::DocumentDeleteWrongType::existing),
-        elem(&X::DocumentDeleteWrongType::deleted_as)
+        elem(base<DocumentError>(), inherit),
+        elem(&DocumentDeleteWrongType::existing),
+        elem(&DocumentDeleteWrongType::deleted_as)
     )
 )
-AYU_DESCRIBE(ayu::X::DocumentDeleteNotOwned,
-    elems(elem(base<X::DocumentError>(), inherit))
+AYU_DESCRIBE(ayu::DocumentDeleteNotOwned,
+    elems(elem(base<DocumentError>(), inherit))
 )
-AYU_DESCRIBE(ayu::X::DocumentDeleteMissing,
+AYU_DESCRIBE(ayu::DocumentDeleteMissing,
     elems(
-        elem(base<X::DocumentError>(), inherit),
-        elem(&X::DocumentDeleteMissing::name)
+        elem(base<DocumentError>(), inherit),
+        elem(&DocumentDeleteMissing::name)
     )
 )

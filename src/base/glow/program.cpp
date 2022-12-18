@@ -25,7 +25,9 @@ void Shader::compile () {
     if (!status || loglen > 16) {
         auto info_log = std::string(loglen, 0);
         glGetShaderInfoLog(id, loglen, nullptr, info_log.data());
-        throw X::ShaderCompileFailed(this, std::move(info_log));
+        throw ayu::X<ShaderCompileFailed>(
+            ayu::reference_to_location(this), std::move(info_log)
+        );
     }
 }
 
@@ -65,7 +67,9 @@ void Program::link () {
     if (!status || loglen > 16) {
         auto info_log = std::string(loglen, 0);
         glGetProgramInfoLog(id, loglen, nullptr, info_log.data());
-        throw X::ProgramLinkFailed(this, std::move(info_log));
+        throw ayu::X<ProgramLinkFailed>(
+            ayu::reference_to_location(this), std::move(info_log)
+        );
     }
      // Extra
     if (current_program) current_program->unuse();
@@ -160,19 +164,19 @@ AYU_DESCRIBE(glow::Program,
     init<&Program::link>()
 )
 
-AYU_DESCRIBE(glow::X::ShaderCompileFailed,
-    delegate(base<glow::X::GlowError>()),
+AYU_DESCRIBE(glow::ShaderCompileFailed,
+    delegate(base<glow::GlowError>()),
     elems(
-        elem(&glow::X::ShaderCompileFailed::location),
-        elem(&glow::X::ShaderCompileFailed::info_log)
+        elem(&glow::ShaderCompileFailed::location),
+        elem(&glow::ShaderCompileFailed::info_log)
     )
 )
 
-AYU_DESCRIBE(glow::X::ProgramLinkFailed,
-    delegate(base<glow::X::GlowError>()),
+AYU_DESCRIBE(glow::ProgramLinkFailed,
+    delegate(base<glow::GlowError>()),
     elems(
-        elem(&glow::X::ProgramLinkFailed::location),
-        elem(&glow::X::ProgramLinkFailed::info_log)
+        elem(&glow::ProgramLinkFailed::location),
+        elem(&glow::ProgramLinkFailed::info_log)
     )
 )
 

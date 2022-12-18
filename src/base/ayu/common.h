@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cwchar>
 #include <limits>
+#include <source_location>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -112,39 +113,26 @@ void dump (const Args&... v) {
 
 ///// BASIC ERRORS
 
-namespace X {
-     // Base class for ayu-related errors.
-    struct Error : std::exception {
-         // Gotta cache the generated error message or the exception handling
-         // system will reference stack garbage.
-        mutable String mess_cache;
-         // Calls item_to_string on the most derived type
-        const char* what () const noexcept override;
-    };
-     // Unclassified error
-    struct GenericError : Error {
-        String mess;
-        GenericError (String&& m) : mess(m) { }
-    };
-     // General IO-related problem
-    struct IOError : Error {
-        String filename;
-        int errnum; // TODO: use std::errc
-        IOError (Str f, int e) : filename(f), errnum(e) { }
-    };
-     // Failure to open a file
-    struct OpenFailed : IOError {
-        using IOError::IOError;
-    };
-     // Failure to read from an open file
-    struct ReadFailed : IOError {
-        using IOError::IOError;
-    };
-     // Failure to close a file
-    struct CloseFailed : IOError {
-        using IOError::IOError;
-    };
-}
+ // Base class for ayu-related errors.  Do not throw this or a base class
+ // directly; throw X<SomethingError>(...) instead.
+struct Error {
+    const std::source_location* source_location;
+};
+ // Unclassified error
+struct GenericError : Error {
+    String mess;
+};
+ // General IO-related problem
+struct IOError : Error {
+    String filename;
+    int errnum; // TODO: use std::errc
+};
+ // Failure to open a file
+struct OpenFailed : IOError { };
+ // Failure to read from an open file
+struct ReadFailed : IOError { };
+ // Failure to close a file
+struct CloseFailed : IOError { };
 
 } // namespace ayu
 

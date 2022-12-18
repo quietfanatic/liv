@@ -43,7 +43,7 @@ struct Document {
         }
     }
 
-     // Throws X::DocumentDeleteWrongType if T is not the type of *p
+     // Throws DocumentDeleteWrongType if T is not the type of *p
     template <class T>
     void delete_ (T* p) {
         delete_(Type::CppType<T>(), (Mu*)p);
@@ -57,39 +57,32 @@ struct Document {
     void deallocate (void* p);
 };
 
-namespace X {
-     // General category of errors coming from ayu::Document
-     // TODO: Add a Location to this
-    struct DocumentError : Error { };
-     // Tried to create a document item with an illegal name.
-    struct DocumentInvalidName : DocumentError {
-        String name;
-        DocumentInvalidName (String&& n) : name(std::move(n)) { }
-    };
-     // Tried to create a document item with a name that's already in use in
-     // this document.
-    struct DocumentDuplicateName : DocumentError {
-        String name;
-        DocumentDuplicateName (String&& n) : name(std::move(n)) { }
-    };
-     // Tried to delete a document item, but the wrong type was given during
-     // deletion.
-    struct DocumentDeleteWrongType : DocumentError {
-        Type existing;
-        Type deleted_as;
-        DocumentDeleteWrongType (Type e, Type d) :
-            existing(e), deleted_as(d)
-        { }
-    };
-     // (Debug only) Tried to delete a document item by pointer, but the given
-     // pointer doesn't belong to this document.
-    struct DocumentDeleteNotOwned : DocumentError { };
-     // Tried to delete a document item by name, but the given name isn't in
-     // this document.
-    struct DocumentDeleteMissing : DocumentError {
-        String name;
-        DocumentDeleteMissing (String&& n) : name(std::move(n)) { }
-    };
-}
+ // General category of errors coming from ayu::Document
+ // TODO: Add a Location to this
+struct DocumentError : Error { };
+ // Tried to create a document item with an illegal name.
+struct DocumentInvalidName : DocumentError {
+    String name;
+};
+ // Tried to create a document item with a name that's already in use in
+ // this document.
+struct DocumentDuplicateName : DocumentError {
+    String name;
+};
+ // Tried to delete a document item, but the wrong type was given during
+ // deletion.
+struct DocumentDeleteWrongType : DocumentError {
+    Type existing;
+    Type deleted_as;
+};
+ // (Debug only) Tried to delete a document item by pointer, but the given
+ // pointer doesn't belong to this document.  TODO: Replace this with a
+ // debug assert.
+struct DocumentDeleteNotOwned : DocumentError { };
+ // Tried to delete a document item by name, but the given name isn't in
+ // this document.
+struct DocumentDeleteMissing : DocumentError {
+    String name;
+};
 
 } // namespace ayu

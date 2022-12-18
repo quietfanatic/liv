@@ -40,21 +40,13 @@ struct Program {
     operator uint () const { return id; }
 };
 
-namespace X {
-    struct ShaderCompileFailed : GlowError {
-        ayu::Location location;
-        std::string info_log;
-        ShaderCompileFailed (Shader* s, std::string&& l) :
-            location(ayu::reference_to_location(s)), info_log(l)
-        { }
-    };
-    struct ProgramLinkFailed : GlowError {
-        ayu::Location location;
-        std::string info_log;
-        ProgramLinkFailed (Program* p, std::string&& l) :
-            location(ayu::reference_to_location(p)), info_log(l)
-        { }
-    };
-}
+struct ShaderCompileFailed : GlowError {
+    ayu::Location location;
+    std::string info_log;
+};
+struct ProgramLinkFailed : GlowError {
+    ayu::Location location;
+    std::string info_log;
+};
 
 } // namespace glow

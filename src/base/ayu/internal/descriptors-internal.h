@@ -460,6 +460,7 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
         }
         else if constexpr (std::is_base_of_v<DestroyDcr<T>, Dcr>) {
             if (header.destroy != destroy_p<T>) {
+                 // Not sure how to print an error message at constexpr time
                 throw "Multiple destroy descriptors in AYU_DESCRIBE";
             }
             header.destroy = dcr.f;

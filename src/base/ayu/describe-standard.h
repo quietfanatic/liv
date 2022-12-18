@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "common.h"
+#include "exception.h"
 #include "describe-base.h"
 #include "reference.h"
 
@@ -161,7 +162,7 @@ AYU_DESCRIBE_TEMPLATE(
     }),
     desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
         if (tree.form() != ayu::ARRAY) {
-            throw ayu::X::InvalidForm(ayu::current_location(), tree);
+            throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
         auto& a = static_cast<const ayu::Array&>(tree);
         v.reserve(a.size());
@@ -181,10 +182,10 @@ AYU_DESCRIBE_TEMPLATE(
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {
-                throw ayu::X::GenericError(ayu::cat(
+                throw ayu::X<ayu::GenericError>{ayu::cat(
                     "Duplicate element given for ",
                     ayu::Type::CppType<std::unordered_set<T>>().name()
-                ));
+                )};
             }
         }
     })
@@ -211,7 +212,7 @@ AYU_DESCRIBE_TEMPLATE(
     }),
     desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
         if (tree.form() != ayu::ARRAY) {
-            throw ayu::X::InvalidForm(ayu::current_location(), tree);
+            throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
         auto& a = static_cast<const ayu::Array&>(tree);
         std::set<T> source;
@@ -224,10 +225,10 @@ AYU_DESCRIBE_TEMPLATE(
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {
-                throw ayu::X::GenericError(ayu::cat(
+                throw ayu::X<ayu::GenericError>{ayu::cat(
                     "Duplicate element given for ",
                     ayu::Type::CppType<std::set<T>>().name()
-                ));
+                )};
             }
         }
     })
@@ -297,7 +298,7 @@ AYU_DESCRIBE_TEMPLATE(
         if (tree.form() == ayu::STRING) {
             auto s = ayu::Str(tree);
             if (s.size() != n) {
-                throw ayu::X::WrongLength(&v, n, n, s.size());
+                throw ayu::X<ayu::WrongLength>(&v, n, n, s.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = s[i];
@@ -306,13 +307,13 @@ AYU_DESCRIBE_TEMPLATE(
         else if (tree.form() == ayu::ARRAY) {
             auto& a = static_cast<const ayu::Array&>(tree);
             if (a.size() != n) {
-                throw ayu::X::WrongLength(&v, n, n, a.size());
+                throw ayu::X<ayu::WrongLength>(&v, n, n, a.size());
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = char(a[i]);
             }
         }
-        else throw ayu::X::InvalidForm(ayu::current_location(), tree);
+        else throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
     }),
      // Allow accessing individual elements like an array
     desc::length(desc::template constant<ayu::usize>(n)),

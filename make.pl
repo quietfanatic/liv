@@ -72,6 +72,7 @@ my @sources = (qw(
     base/ayu/src/compat.cpp
     base/ayu/src/document.cpp
     base/ayu/src/dynamic.cpp
+    base/ayu/src/exception.cpp
     base/ayu/src/location.cpp
     base/ayu/src/parse.cpp
     base/ayu/src/pointer.cpp

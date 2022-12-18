@@ -227,19 +227,19 @@ Location pointer_to_location (Pointer item) {
     else if (Location r = find_pointer(item)) {
         return r;
     }
-    else throw X::ReferenceNotFound(item.type);
+    else throw X<ReferenceNotFound>(item.type);
 }
 Location reference_to_location (const Reference& item) {
     if (!item) return Location();
     else if (Location r = find_reference(item)) {
         return r;
     }
-    else throw X::ReferenceNotFound(item.type());
+    else throw X<ReferenceNotFound>(item.type());
 }
 
 } using namespace ayu;
 
-AYU_DESCRIBE(ayu::X::ReferenceNotFound,
-    delegate(base<X::Error>()),
-    elems(elem(&X::ReferenceNotFound::type))
+AYU_DESCRIBE(ayu::ReferenceNotFound,
+    delegate(base<Error>()),
+    elems(elem(&ReferenceNotFound::type))
 )

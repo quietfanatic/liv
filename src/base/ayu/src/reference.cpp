@@ -12,13 +12,15 @@ namespace ayu {
 using namespace in;
 
 void Reference::require_writeable () const {
-    if (readonly()) throw X::WriteReadonlyReference(*this);
+    if (readonly()) {
+        throw X<WriteReadonlyReference>(reference_to_location(*this));
+    }
 }
 
 Mu* Reference::require_address () const {
     if (!*this) return null;
     if (auto a = address()) return a;
-    else throw X::UnaddressableReference(*this);
+    else throw X<UnaddressableReference>(reference_to_location(*this));
 }
 
 Reference Reference::chain (const Accessor* o_acr) const {
@@ -34,7 +36,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
-        else throw X::AttrNotFound(reference_to_location(*this), k);
+        else throw X<AttrNotFound>(reference_to_location(*this), String(k));
     }
     else {
          // Extra read just to check if the func returns null Reference.
@@ -43,7 +45,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) {
-                throw X::AttrNotFound(reference_to_location(*this), k);
+                throw X<AttrNotFound>(reference_to_location(*this), String(k));
             }
         });
         return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, k)));
@@ -54,23 +56,17 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
     if (auto a = address()) {
         auto r = f(*a, i);
         if (r) return r;
-        else throw X::ElemNotFound(reference_to_location(*this), i);
+        else throw X<ElemNotFound>(reference_to_location(*this), i);
     }
     else {
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), i);
             if (!ref) {
-                throw X::ElemNotFound(reference_to_location(*this), i);
+                throw X<ElemNotFound>(reference_to_location(*this), i);
             }
         });
         return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
     }
-}
-
-namespace X {
-    ReferenceError::ReferenceError (const Reference& r) :
-        location(reference_to_location(r))
-    { }
 }
 
 } using namespace ayu;
@@ -102,15 +98,15 @@ AYU_DESCRIBE(ayu::Reference,
     })
 )
 
-AYU_DESCRIBE(ayu::X::ReferenceError,
+AYU_DESCRIBE(ayu::ReferenceError,
     elems(
-        elem(base<X::Error>(), inherit),
-        elem(&X::ReferenceError::location)
+        elem(base<Error>(), inherit),
+        elem(&ReferenceError::location)
     )
 )
-AYU_DESCRIBE(ayu::X::WriteReadonlyReference,
-    elems(elem(base<X::ReferenceError>(), inherit))
+AYU_DESCRIBE(ayu::WriteReadonlyReference,
+    elems(elem(base<ReferenceError>(), inherit))
 )
-AYU_DESCRIBE(ayu::X::UnaddressableReference,
-    elems(elem(base<X::ReferenceError>(), inherit))
+AYU_DESCRIBE(ayu::UnaddressableReference,
+    elems(elem(base<ReferenceError>(), inherit))
 )

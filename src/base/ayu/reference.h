@@ -24,7 +24,7 @@
 // which assigns the referenced value with operator=.  write_as<> may or may not
 // clear the item's value before passing a reference to the callback, so if you
 // want to keep the item's original value, use modify_as<>.  Some References are
-// readonly, and trying to write to them will throw X::WriteReadonlyReference.
+// readonly, and trying to write to them will throw WriteReadonlyReference.
 //
 // A Reference can be implicitly cast to a raw C++ pointer if the item it points
 // to is addressable (i.e. the internal accessor supports the address
@@ -109,14 +109,14 @@ struct Reference {
         else if (acr) return acr->accessor_flags & in::ACR_READONLY;
         else return false;
     }
-     // Throws X::WriteReadonlyReference if readonly()
+     // Throws WriteReadonlyReference if readonly()
     void require_writeable () const;
 
      // Returns null if this reference is not addressable.
     Mu* address () const {
         return acr ? acr->address(*host.address) : host.address;
     }
-     // Can throw X::CannotCoerce, even if the result is null.
+     // Can throw CannotCoerce, even if the result is null.
     Mu* address_as (Type t) const {
         return type().cast_to(t, address());
     }
@@ -127,10 +127,10 @@ struct Reference {
         }
         return (T*)address_as(Type::CppType<T>());
     }
-     // Will throw X::UnaddressableReference if this Reference is not empty but
+     // Will throw UnaddressableReference if this Reference is not empty but
      // the return of address() is null.
     Mu* require_address () const;
-     // Can throw either X::CannotCoerce or X::UnaddressableReference
+     // Can throw either CannotCoerce or UnaddressableReference
     Mu* require_address_as (Type t) const {
         return type().cast_to(t, require_address());
     }
@@ -301,22 +301,14 @@ inline bool operator != (const Reference& a, const Reference& b) {
     return !(a == b);
 }
 
-namespace X {
-    struct ReferenceError : Error {
-        Location location;
-        ReferenceError (Location&& l) : location(l) { };
-        ReferenceError (const Reference& r);
-    };
-     // Tried to write to a readonly reference.
-    struct WriteReadonlyReference : ReferenceError {
-        using ReferenceError::ReferenceError;
-    };
-     // Used the reference in a context where its address was required, but it
-     // has no address.
-    struct UnaddressableReference : ReferenceError {
-        using ReferenceError::ReferenceError;
-    };
-}
+struct ReferenceError : Error {
+    Location location;
+};
+ // Tried to write to a readonly reference.
+struct WriteReadonlyReference : ReferenceError { };
+ // Used the reference in a context where its address was required, but it
+ // has no address.
+struct UnaddressableReference : ReferenceError { };
 
 } // namespace ayu
 

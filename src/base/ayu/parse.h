@@ -13,16 +13,11 @@ String string_from_file (Str filename);
 
 Tree tree_from_file (Str filename);
 
-namespace X {
-    struct ParseError : Error {
-        String mess;
-        String filename;
-        uint line;
-        uint col;
-        ParseError (String&& mess = ""s, Str f = ""sv, uint l = 0, uint c = 0) :
-            mess(std::move(mess)), filename(f), line(l), col(c)
-        { }
-    };
-}
+struct ParseError : Error {
+    String mess;
+    String filename;
+    uint line;
+    uint col;
+};
 
 } // namespace ayu

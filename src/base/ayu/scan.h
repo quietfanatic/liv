@@ -21,7 +21,7 @@ Location find_pointer (Pointer);
  // if a null reference was passed.
 Location find_reference (const Reference&);
 
- // These are the same as find_*, except they'll throw X::ReferenceNotFound
+ // These are the same as find_*, except they'll throw ReferenceNotFound
  // if the provided Pointer/Reference was not found (and is not null)
 Location pointer_to_location (Pointer);
 Location reference_to_location (const Reference&);
@@ -91,14 +91,11 @@ bool scan_universe_references (
     Callback<bool(const Reference&, const Location&)> cb
 );
 
-namespace X {
-     // Required the location of a reference, but a global scan or cache lookup
-     // couldn't find it.
-    struct ReferenceNotFound : Error {
-         // TODO: add a void*
-        Type type;
-        ReferenceNotFound (Type t) : type(t) { }
-    };
-}
+ // Required the location of a reference, but a global scan or cache lookup
+ // couldn't find it.
+struct ReferenceNotFound : Error {
+     // TODO: add a void*
+    Type type;
+};
 
 } // namespace ayu

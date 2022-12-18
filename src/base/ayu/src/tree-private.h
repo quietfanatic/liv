@@ -3,6 +3,7 @@
 #include "../tree.h"
 
 #include "../../tap/tap.h"
+#include "../exception.h"
 #include "../print.h"
 
 namespace ayu::in {
@@ -62,7 +63,7 @@ struct TreeData : RefCounted {
         else if (rep == Rep::ERROR) {
             std::rethrow_exception(as_known<std::exception_ptr>());
         }
-        else throw X::WrongForm(form_of_type<T>, Tree(this));
+        else throw X<WrongForm>(form_of_type<T>, Tree(this));
     }
 };
 

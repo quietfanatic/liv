@@ -26,13 +26,10 @@ void string_to_file (Str, Str filename);
 
 void tree_to_file (const Tree&, Str filename, PrintOptions opts = 0);
 
-namespace X {
-     // Conflicting combination of print options was provided, or it had bits
-     // outside of VALID_PRINT_OPTION_BITS.
-    struct InvalidPrintOptions : Error {
-        PrintOptions opts;
-        InvalidPrintOptions (PrintOptions opts) : opts(opts) { }
-    };
-}
+ // Conflicting combination of print options was provided, or it had bits
+ // outside of VALID_PRINT_OPTION_BITS.
+struct InvalidPrintOptions : Error {
+    PrintOptions opts;
+};
 
 } // namespace ayu

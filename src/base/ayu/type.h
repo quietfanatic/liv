@@ -26,12 +26,12 @@ struct Type {
      // Construct from internal data
     Type (const in::Description* desc, bool readonly = false) :
         data(reinterpret_cast<usize>(desc) | readonly) { }
-     // Can throw X::UnknownType.  There is no way to extract information about
+     // Can throw UnknownType.  There is no way to extract information about
      // constness from a std::type_info, so it must be provided as a bool.
     Type (const std::type_info& t, bool readonly = false) :
         Type(in::need_description_for_type_info(t), readonly)
     { }
-     // Can throw X::UnknownType
+     // Can throw UnknownType
     template <class T>
         requires (!std::is_volatile_v<std::remove_reference_t<T>>)
     static Type CppType () {
@@ -42,7 +42,7 @@ struct Type {
             std::is_const_v<T>
         );
     }
-     // Can throw X::TypeNotFound
+     // Can throw TypeNotFound
     Type (Str name, bool readonly = false) :
         Type(in::need_description_for_name(name), readonly)
     { }
@@ -100,7 +100,7 @@ struct Type {
      // try_upcast_to will return null if the requested base class was not found
      // in the derived class's inheritance hierarchy, or if the address of the
      // base class can't be retrieved (goes through value_funcs or some such).
-     // upcast_to will throw X::CannotCoerce (unless given null, in which case
+     // upcast_to will throw CannotCoerce (unless given null, in which case
      // it will return null).
      //
      // Finally, casting from non-readonly to readonly types is allowed, but not
@@ -162,37 +162,30 @@ inline bool operator != (Type a, Type b) {
     return a.data != b.data;
 }
 
-namespace X {
-    struct TypeError : Error { };
-     // Tried to map a C++ type to an AYU type, but AYU doesn't know about this
-     // type (it has no AYU_DESCRIBE description).
-     // TODO: serializing this doesn't work?
-    struct UnknownType : TypeError {
-        const std::type_info& cpp_type;
-        UnknownType (const std::type_info& t) : cpp_type(t) { }
-    };
-     // Tried to look up a type by name, but there is no type with that name.
-    struct TypeNotFound : TypeError {
-        String name;
-        TypeNotFound (String&& n) : name(n) { }
-    };
-     // Tried to default construct a type that has no default constructor.
-    struct CannotDefaultConstruct : TypeError {
-        Type type;
-        CannotDefaultConstruct (Type t) : type(t) { }
-    };
-     // Tried to construct or destroy a type that has no destructor.
-    struct CannotDestroy : TypeError {
-        Type type;
-        CannotDestroy (Type t) : type(t) { }
-    };
-     // Tried to coerce between types that can't be coerced.
-    struct CannotCoerce : TypeError {
-        Type from;
-        Type to;
-        CannotCoerce (Type f, Type t) : from(f), to(t) { }
-    };
-}
+struct TypeError : Error { };
+ // Tried to map a C++ type to an AYU type, but AYU doesn't know about this
+ // type (it has no AYU_DESCRIBE description).
+ // TODO: serializing this doesn't work?
+struct UnknownType : TypeError {
+    const std::type_info& cpp_type;
+};
+ // Tried to look up a type by name, but there is no type with that name.
+struct TypeNotFound : TypeError {
+    String name;
+};
+ // Tried to default construct a type that has no default constructor.
+struct CannotDefaultConstruct : TypeError {
+    Type type;
+};
+ // Tried to construct or destroy a type that has no destructor.
+struct CannotDestroy : TypeError {
+    Type type;
+};
+ // Tried to coerce between types that can't be coerced.
+struct CannotCoerce : TypeError {
+    Type from;
+    Type to;
+};
 
 } // namespace ayu
 

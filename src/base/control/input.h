@@ -41,7 +41,7 @@ Input input_from_string (Str c);
 Str input_to_string (const Input& i);
 
 namespace X {
-    struct InvalidInputName : ayu::X::Error {
+    struct InvalidInputName : ayu::Error {
         String name;
         InvalidInputName (String name) : name(name) { }
     };

@@ -27,73 +27,31 @@ void dump_refs (const std::vector<Reference>& rs) {
     }
 }
 
-namespace X {
-    const char* Error::what () const noexcept {
-        if (mess_cache.empty()) {
-            auto& cppt = typeid(*this);
-            if (Type t = get_description_by_type_info(cppt)) {
-                String s = cat('[', t.name(), ' ');
-                {
-                    DiagnosticSerialization ds;
-                    if (auto derived = Pointer(this).try_downcast_to(t)) {
-                        s += item_to_string(derived);
-                    }
-                    else {
-                        s += "?(Could not downcast error data)"sv;
-                    }
-                }
-                s += ']';
-                mess_cache = s;
-            }
-            else {
-                mess_cache = cat('[', get_demangled_name(cppt), ']');
-            }
-        }
-        return mess_cache.c_str();
-    }
-}
-
-namespace in {
-    void unrecoverable_exception (std::exception& e, Str when) {
-        std::cerr << "Unrecoverable exception "sv << when
-                  << ": "sv << e.what() << std::endl;
-        std::abort();
-    }
-    void internal_error (
-        const char* function, const char* filename, uint line
-    ) {
-        std::cerr << "Internal error in "sv << function
-                  << " at "sv << filename << ":"sv << line << std::endl;
-        std::abort();
-    }
-}
-
 } using namespace ayu;
 
-AYU_DESCRIBE(ayu::X::Error,
+AYU_DESCRIBE(ayu::Error,
     elems(),
     attrs()
 )
 
-AYU_DESCRIBE(ayu::X::GenericError,
+AYU_DESCRIBE(ayu::GenericError,
+    delegate(base<Error>()),
     elems(
-        elem(base<X::Error>(), inherit),
-        elem(&X::GenericError::mess)
+        elem(&GenericError::mess)
     )
 )
-AYU_DESCRIBE(ayu::X::IOError,
+AYU_DESCRIBE(ayu::IOError,
     elems(
-        elem(base<X::Error>(), inherit),
-        elem(&X::IOError::filename),
-        elem(&X::IOError::errnum)
+        elem(&IOError::filename),
+        elem(&IOError::errnum)
     )
 )
-AYU_DESCRIBE(ayu::X::OpenFailed,
-    elems(elem(base<X::IOError>(), inherit))
+AYU_DESCRIBE(ayu::OpenFailed,
+    delegate(base<Error>())
 )
-AYU_DESCRIBE(ayu::X::ReadFailed,
-    elems(elem(base<X::IOError>(), inherit))
+AYU_DESCRIBE(ayu::ReadFailed,
+    delegate(base<Error>())
 )
-AYU_DESCRIBE(ayu::X::CloseFailed,
-    elems(elem(base<X::IOError>(), inherit))
+AYU_DESCRIBE(ayu::CloseFailed,
+    delegate(base<Error>())
 )

@@ -30,7 +30,7 @@ struct ResourceScheme {
     const String scheme_name;
 
      // If you want to do some of your own validation besides the standard IRI
-     // validation.  If this returns false, X::UnacceptableResourceName will
+     // validation.  If this returns false, UnacceptableResourceName will
      // be thrown.  The provided IRI will not have a fragment.
     virtual bool accepts_iri (const IRI& iri) const {
         return !!iri;
@@ -39,7 +39,7 @@ struct ResourceScheme {
      // This is called when load(), reload(), save(), or set_value() is called
      // on a resource of this scheme, or a resource of this scheme is
      // constructed with a specific provided value.  If this returns false,
-     // X::UnacceptableResourceType will be thrown.
+     // UnacceptableResourceType will be thrown.
     virtual bool accepts_type (Type) const {
         return true;
     }
@@ -88,42 +88,32 @@ struct FileResourceScheme : ResourceScheme {
     { }
 };
 
-namespace X {
-    struct ResourceNameError : Error { };
-     // An invalid IRI was given as a resource name.
-    struct InvalidResourceName : ResourceNameError {
-        String name;
-        InvalidResourceName (String&& name) : name(std::move(name)) { }
-    };
-     // Tried to use an IRI as a resource name but its scheme was not registered
-    struct UnknownResourceScheme : ResourceNameError {
-        String name;
-        UnknownResourceScheme (String&& name) : name(std::move(name)) { }
-    };
-     // A valid IRI was given but its ResourceScheme didn't like it.
-    struct UnacceptableResourceName : ResourceNameError {
-        String name;
-        UnacceptableResourceName (String&& name) : name(std::move(name)) { }
-    };
-     // Tried to load or set_value a resource with a type that the
-     // ResourceScheme didn't accept.
-    struct UnacceptableResourceType : ResourceNameError {
-        String name;
-        Type type;
-        UnacceptableResourceType (String&& name, Type t) :
-            name(std::move(name)), type(t)
-        { }
-    };
-     // Tried to register a ResourceScheme with an invalid name.
-    struct InvalidResourceScheme : ResourceNameError {
-        String scheme;
-        InvalidResourceScheme (String&& scheme) : scheme(std::move(scheme)) { }
-    };
-     // Tried to register multiple ResourceSchemes with the same name.
-    struct DuplicateResourceScheme : ResourceNameError {
-        String scheme;
-        DuplicateResourceScheme (String&& scheme) : scheme(std::move(scheme)) { }
-    };
-}
+struct ResourceNameError : Error { };
+ // An invalid IRI was given as a resource name.
+struct InvalidResourceName : ResourceNameError {
+    String name;
+};
+ // Tried to use an IRI as a resource name but its scheme was not registered
+struct UnknownResourceScheme : ResourceNameError {
+    String name;
+};
+ // A valid IRI was given but its ResourceScheme didn't like it.
+struct UnacceptableResourceName : ResourceNameError {
+    String name;
+};
+ // Tried to load or set_value a resource with a type that the
+ // ResourceScheme didn't accept.
+struct UnacceptableResourceType : ResourceNameError {
+    String name;
+    Type type;
+};
+ // Tried to register a ResourceScheme with an invalid name.
+struct InvalidResourceScheme : ResourceNameError {
+    String scheme;
+};
+ // Tried to register multiple ResourceSchemes with the same name.
+struct DuplicateResourceScheme : ResourceNameError {
+    String scheme;
+};
 
 } // namespace ayu

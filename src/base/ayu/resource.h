@@ -95,8 +95,8 @@ struct Resource {
      // Doesn't autoconvert for some reason
     Resource (const char* name) : Resource(Str(name)) { }
      // Creates the resource already loaded with the given data, without reading
-     // from disk.  Will throw X::InvalidResourceState if a resource with this
-     // name is already loaded or X::EmptyResourceValue if value is empty.
+     // from disk.  Will throw InvalidResourceState if a resource with this
+     // name is already loaded or EmptyResourceValue if value is empty.
     Resource (IRI name, Dynamic&& value);
      // Creates an anonymous resource with the given value
      // TODO: I forgot to implement this
@@ -115,9 +115,9 @@ struct Resource {
      // be overwritten when the resource is loaded.
     Dynamic& get_value () const;
      // If the resource is UNLOADED, sets is state to LOADED without loading
-     // from disk, and sets its value.  Throws X::InvalidResourceState if the
+     // from disk, and sets its value.  Throws InvalidResourceState if the
      // resource's state is anything but UNLOADED, LOADED, or LOAD_CONSTRUCTING.
-     // Throws X::UnacceptableResourceType if this resource has a name and the
+     // Throws UnacceptableResourceType if this resource has a name and the
      // ResourceScheme associated with its name returns false from accepts_type.
     void set_value (Dynamic&&) const;
 
@@ -174,7 +174,7 @@ void save (const std::vector<Resource>&);
  // Clears the value of the resource and sets its state to UNLOADED.  Does
  // nothing if the resource is UNLOADED, and throws if it is LOADING.  Scans all
  // other LOADED resources to make sure none of them are referencing this
- // resource, and if any are, this call will throw X::UnloadWouldBreak and the
+ // resource, and if any are, this call will throw UnloadWouldBreak and the
  // resource will not be unloaded.
 void unload (Resource);
  // Unloads multiple resources at once.  This will be more efficient than
@@ -193,7 +193,7 @@ void force_unload (const std::vector<Resource>&);
  // Reloads a resource that is loaded.  Throws if the resource is not LOADED.
  // Scans all other resources for references to this one and updates them to
  // the new address.  If the reference is no longer valid, this call will throw
- // X::ReloadWouldBreak, and the resource will be restored to its old value
+ // ReloadWouldBreak, and the resource will be restored to its old value
  // before the call to reload.  It is an error to reload while another resource
  // is being loaded.
 void reload (Resource);
@@ -205,7 +205,7 @@ void reload (const std::vector<Resource>&);
 
  // Deletes the source of the resource.  If the source is a file, deletes the
  // file without confirmation.  Does not change the resource's state or value.
- // Does nothing if the source doesn't exist, but throws X::RemoveSourceFailed
+ // Does nothing if the source doesn't exist, but throws RemoveSourceFailed
  // if another error occurs (permission denied, etc.)  Calling load on the
  // resource should fail after this.
 void remove_source (Resource);
@@ -226,46 +226,34 @@ std::vector<Resource> loaded_resources ();
 
 ///// ERRORS
 
-namespace X {
-    struct ResourceError : Error { };
-     // Tried an an operation on a resource when its state wasn't appropriate
-     // for that operation.
-    struct InvalidResourceState : ResourceError {
-        Str tried;
-        Resource res;
-        ResourceState state;
-        InvalidResourceState (Str t, Resource r) :
-            tried(t), res(r), state(r.state()) { }
-    };
-     // Tried to create a resource with an empty value.
-    struct EmptyResourceValue : ResourceError {
-        String name;
-        EmptyResourceValue (String&& name) : name(std::move(name)) { }
-    };
-     // Tried to unload a resource, but there's still a reference somewhere
-     // referencing an item inside it.
-    struct UnloadWouldBreak : ResourceError {
-        Location from;
-        Location to;
-        UnloadWouldBreak (const Location& f, const Location& t) :
-            from(f), to(t)
-        { }
-    };
-     // Tried to reload a resource, but was unable to update a reference
-     // somewhere.
-    struct ReloadWouldBreak : ResourceError {
-        Location from;
-        Location to;
-        ReloadWouldBreak (const Location& f, const Location& t) :
-            from(f), to(t)
-        { }
-    };
-     // Failed to delete a resource's source file.
-    struct RemoveSourceFailed : ResourceError {
-        Resource res;
-        int errnum; // errno
-        RemoveSourceFailed (Resource r, int e) : res(r), errnum(e) { }
-    };
-}
+struct ResourceError : Error { };
+ // Tried an an operation on a resource when its state wasn't appropriate
+ // for that operation.
+struct InvalidResourceState : ResourceError {
+    Str tried;
+    Resource res;
+    ResourceState state;
+};
+ // Tried to create a resource with an empty value.
+struct EmptyResourceValue : ResourceError {
+    String name;
+};
+ // Tried to unload a resource, but there's still a reference somewhere
+ // referencing an item inside it.
+struct UnloadWouldBreak : ResourceError {
+    Location from;
+    Location to;
+};
+ // Tried to reload a resource, but was unable to update a reference
+ // somewhere.
+struct ReloadWouldBreak : ResourceError {
+    Location from;
+    Location to;
+};
+ // Failed to delete a resource's source file.
+struct RemoveSourceFailed : ResourceError {
+    Resource res;
+    int errnum; // errno
+};
 
 } // namespace ayu

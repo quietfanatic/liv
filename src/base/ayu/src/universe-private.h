@@ -23,7 +23,7 @@ namespace ayu::in {
             Str scheme = name.scheme();
             auto iter = schemes.find(String(scheme));
             if (iter != schemes.end()) return iter->second;
-            else throw X::UnknownResourceScheme(String(scheme));
+            else throw X<UnknownResourceScheme>(String(scheme));
         }
     };
 

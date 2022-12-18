@@ -140,90 +140,65 @@ struct DiagnosticSerialization {
     ~DiagnosticSerialization ();
 };
 
+ // Generic serialization error
+struct SerError : Error {
+    Location location;
+};
+ // Tried to call to_tree on a type that doesn't support to_tree
+struct CannotToTree : SerError { };
+ // Tried to call from_tree on a type that doesn't support from_tree
+struct CannotFromTree : SerError { };
+ // Tried to deserialize an item from a tree, but the item didn't accept
+ // the tree's form.
+struct InvalidForm : SerError {
+    Tree tree;
+};
+ // Tried to serialize an item using a values() descriptor, but no value()
+ // entry was found for the item's current value.
+struct NoNameForValue : SerError { };
+ // Tried to deserialize an item using a values() descriptor, but no value()
+ // entry was found that matched the provided name.
+struct NoValueForName : SerError {
+    Tree tree;
+};
+ // Tried to deserialize an item from an object tree, but the tree is
+ // an attribute that the item requires.
+struct MissingAttr : SerError {
+    String key;
+};
+ // Tried to deserialize an item from an object tree, but the item rejected
+ // one of the attributes in the tree.
+struct UnwantedAttr : SerError {
+    String key;
+};
+ // Tried to deserialize an item from an array tree, but the array has too
+ // few or too many elements for the item.
+struct WrongLength : SerError {
+    usize min;
+    usize max;
+    usize got;
+};
+ // Tried to treat an item like it has attributes, but it does not support
+ // behaving like an object.
+struct NoAttrs : SerError { };
+ // Tried to treat an item like it has elements, but it does not support
+ // behaving like an array.
+struct NoElems : SerError { };
+ // Tried to get an attribute from an item, but it doesn't have an attribute
+ // with the given key.
+struct AttrNotFound : SerError {
+    String key;
+};
+ // Tried to get an element from an item, but it doesn't have an element
+ // with the given index.
+struct ElemNotFound : SerError {
+    usize index;
+};
+ // The accessor given to a keys() descriptor did not serialize to an array
+ // of strings.
+struct InvalidKeysType : SerError {
+    Type type;
+};
+
 } // namespace ayu
 
-#include "reference.h"
-
-namespace ayu::X {
-     // Generic serialization error
-    struct SerError : Error {
-        Location location;
-        SerError (const Reference& item);
-        SerError (Location&& loc) : location(std::move(loc)) { }
-    };
-     // Tried to call to_tree on a type that doesn't support to_tree
-    struct CannotToTree : SerError {
-        using SerError::SerError;
-    };
-     // Tried to call from_tree on a type that doesn't support from_tree
-    struct CannotFromTree : SerError {
-        using SerError::SerError;
-    };
-     // Tried to deserialize an item from a tree, but the item didn't accept
-     // the tree's form.
-    struct InvalidForm : SerError {
-        Tree tree;
-        InvalidForm (Location&& l, Tree t) : SerError(std::move(l)), tree(t) { }
-    };
-     // Tried to serialize an item using a values() descriptor, but no value()
-     // entry was found for the item's current value.
-    struct NoNameForValue : SerError {
-        using SerError::SerError;
-    };
-     // Tried to deserialize an item using a values() descriptor, but no value()
-     // entry was found that matched the provided name.
-    struct NoValueForName : SerError {
-        Tree tree;
-        NoValueForName (Location&& l, Tree t) : SerError(std::move(l)), tree(t) { }
-    };
-     // Tried to deserialize an item from an object tree, but the tree is
-     // an attribute that the item requires.
-    struct MissingAttr : SerError {
-        String key;
-        MissingAttr (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
-    };
-     // Tried to deserialize an item from an object tree, but the item rejected
-     // one of the attributes in the tree.
-    struct UnwantedAttr : SerError {
-        String key;
-        UnwantedAttr (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
-    };
-     // Tried to deserialize an item from an array tree, but the array has too
-     // few or too many elements for the item.
-    struct WrongLength : SerError {
-        usize min;
-        usize max;
-        usize got;
-        WrongLength (Location&& l, usize min, usize max, usize g) :
-            SerError(std::move(l)), min(min), max(max), got(g)
-        { }
-    };
-     // Tried to treat an item like it has attributes, but it does not support
-     // behaving like an object.
-    struct NoAttrs : SerError {
-        using SerError::SerError;
-    };
-     // Tried to treat an item like it has elements, but it does not support
-     // behaving like an array.
-    struct NoElems : SerError {
-        using SerError::SerError;
-    };
-     // Tried to get an attribute from an item, but it doesn't have an attribute
-     // with the given key.
-    struct AttrNotFound : SerError {
-        String key;
-        AttrNotFound (Location&& l, Str k) : SerError(std::move(l)), key(k) { }
-    };
-     // Tried to get an element from an item, but it doesn't have an element
-     // with the given index.
-    struct ElemNotFound : SerError {
-        usize index;
-        ElemNotFound (Location&& l, usize i) : SerError(std::move(l)), index(i) { }
-    };
-     // The accessor given to a keys() descriptor did not serialize to an array
-     // of strings.
-    struct InvalidKeysType : SerError {
-        Type type;
-        InvalidKeysType (Location&& l, Type t) : SerError(std::move(l)), type(t) { }
-    };
-}

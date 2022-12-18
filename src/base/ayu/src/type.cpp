@@ -37,15 +37,15 @@ usize Type::cpp_align () const {
 
 void Type::default_construct (void* target) const {
     auto desc = in::DescriptionPrivate::get(*this);
-    if (!desc->default_construct) throw X::CannotDefaultConstruct(*this);
+    if (!desc->default_construct) throw X<CannotDefaultConstruct>(*this);
      // Don't allow constructing objects that can't be destroyed
-    if (!desc->destroy) throw X::CannotDestroy(*this);
+    if (!desc->destroy) throw X<CannotDestroy>(*this);
     desc->default_construct(target);
 }
 
 void Type::destroy (Mu* p) const {
     auto desc = in::DescriptionPrivate::get(*this);
-    if (!desc->destroy) throw X::CannotDestroy(*this);
+    if (!desc->destroy) throw X<CannotDestroy>(*this);
     desc->destroy(p);
 }
 
@@ -63,8 +63,8 @@ void Type::deallocate (void* p) const {
 Mu* Type::default_new () const {
     auto desc = in::DescriptionPrivate::get(*this);
      // Throw before allocating
-    if (!desc->default_construct) throw X::CannotDefaultConstruct(*this);
-    if (!desc->destroy) throw X::CannotDestroy(*this);
+    if (!desc->default_construct) throw X<CannotDefaultConstruct>(*this);
+    if (!desc->destroy) throw X<CannotDestroy>(*this);
     void* p = allocate();
     desc->default_construct(p);
     return (Mu*)p;
@@ -104,7 +104,7 @@ Mu* Type::try_upcast_to (Type to, Mu* p) const {
 }
 Mu* Type::upcast_to (Type to, Mu* p) const {
     if (Mu* r = try_upcast_to(to, p)) return r;
-    else throw X::CannotCoerce(*this, to);
+    else throw X<CannotCoerce>(*this, to);
 }
 
 Mu* Type::try_downcast_to (Type to, Mu* p) const {
@@ -142,7 +142,7 @@ Mu* Type::try_downcast_to (Type to, Mu* p) const {
 Mu* Type::downcast_to (Type to, Mu* p) const {
     if (!p) return p;
     if (Mu* r = try_downcast_to(to, p)) return r;
-    else throw X::CannotCoerce(*this, to);
+    else throw X<CannotCoerce>(*this, to);
 }
 
 Mu* Type::try_cast_to (Type to, Mu* p) const {
@@ -153,7 +153,7 @@ Mu* Type::try_cast_to (Type to, Mu* p) const {
 Mu* Type::cast_to (Type to, Mu* p) const {
     if (!p) return p;
     if (Mu* r = try_cast_to(to, p)) return r;
-    else throw X::CannotCoerce(*this, to);
+    else throw X<CannotCoerce>(*this, to);
 }
 
 namespace in {
@@ -181,7 +181,7 @@ static void init_names () {
 
 const Description* register_description (const Description* desc) {
     if (registry().initted) {
-        throw X::GenericError("register_description called after init time");
+        throw X<GenericError>("register_description called after init time");
     }
     auto [p, e] = registry().by_cpp_type.emplace(*desc->cpp_type, desc);
     return p->second;
@@ -196,7 +196,7 @@ const Description* get_description_by_type_info (const std::type_info& t) {
 const Description* need_description_for_type_info (const std::type_info& t) {
     auto desc = get_description_by_type_info(t);
     if (desc) return desc;
-    else throw X::UnknownType(t);
+    else throw X<UnknownType>(t);
 }
 
 const Description* get_description_by_name (Str name) {
@@ -209,7 +209,7 @@ const Description* get_description_by_name (Str name) {
 const Description* need_description_for_name (Str name) {
     auto desc = get_description_by_name(name);
     if (desc) return desc;
-    else throw X::TypeNotFound(String(name));
+    else throw X<TypeNotFound>(String(name));
 }
 
 Str get_description_name (const Description* desc) {
@@ -262,43 +262,43 @@ AYU_DESCRIBE(ayu::Type,
     ))
 )
 
-AYU_DESCRIBE(ayu::X::TypeError,
-    delegate(base<X::Error>())
+AYU_DESCRIBE(ayu::TypeError,
+    delegate(base<Error>())
 )
 
-AYU_DESCRIBE(ayu::X::UnknownType,
+AYU_DESCRIBE(ayu::UnknownType,
     elems(
-        elem(base<X::TypeError>(), inherit),
+        elem(base<TypeError>(), inherit),
         elem(value_func<std::string>(
-            [](const ayu::X::UnknownType& v){ return get_demangled_name(v.cpp_type); }
+            [](const ayu::UnknownType& v){ return get_demangled_name(v.cpp_type); }
         ))
     )
 )
 
-AYU_DESCRIBE(ayu::X::TypeNotFound,
+AYU_DESCRIBE(ayu::TypeNotFound,
     elems(
-        elem(base<X::TypeError>(), inherit),
-        elem(&X::TypeNotFound::name)
+        elem(base<TypeError>(), inherit),
+        elem(&TypeNotFound::name)
     )
 )
 
-AYU_DESCRIBE(ayu::X::CannotDefaultConstruct,
+AYU_DESCRIBE(ayu::CannotDefaultConstruct,
     elems(
-        elem(base<X::TypeError>(), inherit),
-        elem(&X::CannotDefaultConstruct::type)
+        elem(base<TypeError>(), inherit),
+        elem(&CannotDefaultConstruct::type)
     )
 )
-AYU_DESCRIBE(ayu::X::CannotDestroy,
+AYU_DESCRIBE(ayu::CannotDestroy,
     elems(
-        elem(base<X::TypeError>(), inherit),
-        elem(&X::CannotDestroy::type)
+        elem(base<TypeError>(), inherit),
+        elem(&CannotDestroy::type)
     )
 )
-AYU_DESCRIBE(ayu::X::CannotCoerce,
+AYU_DESCRIBE(ayu::CannotCoerce,
     elems(
-        elem(base<X::TypeError>(), inherit),
-        elem(&X::CannotCoerce::from),
-        elem(&X::CannotCoerce::to)
+        elem(base<TypeError>(), inherit),
+        elem(&CannotCoerce::from),
+        elem(&CannotCoerce::to)
     )
 )
 

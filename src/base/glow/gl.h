@@ -13,18 +13,13 @@ namespace glow {
         uint line
     );
 
-    namespace X {
-        struct GLError : GlowError {
-            uint error_code;
-            std::string gl_function;
-            std::string caller;
-            std::string filename;
-            uint line;
-            GLError (uint e, const char* g, const char* c, const char* f, uint l) :
-                error_code(e), gl_function(g), caller(c), filename(f), line(l)
-            { }
-        };
-    }
+    struct GLError : GlowError {
+        uint error_code;
+        std::string gl_function;
+        std::string caller;
+        std::string filename;
+        uint line;
+    };
 }
 
  // Build GL API

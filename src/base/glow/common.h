@@ -9,10 +9,6 @@ using namespace uni;
 
 void init ();
 
-namespace X {
-    struct GlowError : ayu::X::Error {
-        using ayu::X::Error::Error;
-    };
-}
+struct GlowError : ayu::Error { };
 
 } // namespace glow

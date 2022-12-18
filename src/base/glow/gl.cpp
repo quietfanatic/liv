@@ -45,18 +45,18 @@ void throw_on_glGetError (
     uint line
 ) {
     GLenum err = p_glGetError<>();
-    if (err) throw X::GLError(err, gl_function, caller, filename, line);
+    if (err) throw ayu::X<GLError>(err, gl_function, caller, filename, line);
 }
 
 } using namespace glow;
 
-AYU_DESCRIBE(glow::X::GLError,
-    delegate(base<glow::X::GlowError>()),
+AYU_DESCRIBE(glow::GLError,
+    delegate(base<glow::GlowError>()),
     elems(
-        elem(&glow::X::GLError::error_code),
-        elem(&glow::X::GLError::gl_function),
-        elem(&glow::X::GLError::caller),
-        elem(&glow::X::GLError::filename),
-        elem(&glow::X::GLError::line)
+        elem(&glow::GLError::error_code),
+        elem(&glow::GLError::gl_function),
+        elem(&glow::GLError::caller),
+        elem(&glow::GLError::filename),
+        elem(&glow::GLError::line)
     )
 )

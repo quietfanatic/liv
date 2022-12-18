@@ -56,7 +56,7 @@ struct Command {
 
  // Returns nullptr if not found
 const Command* lookup_command (Str name);
- // Throws X::CommandNotFound if not found
+ // Throws CommandNotFound if not found
 const Command* require_command (Str name);
 
  // The structure you create to use a command.  You can create this manually,
@@ -82,26 +82,18 @@ struct Statement {
     explicit operator bool () const { return !!command; }
 };
 
-namespace X {
-    struct ConflictingCommandName : ayu::X::Error {
-        String name;
-        String desc_a;
-        String desc_b;
-        ConflictingCommandName(Str n, Str a, Str b) :
-            name(n), desc_a(a), desc_b(b)
-        { }
-    };
-    struct CommandNotFound : ayu::X::Error {
-        String name;
-        CommandNotFound(Str n) : name(n) { }
-    };
-    struct StatementWrongArgsType : ayu::X::Error {
-        ayu::Type expected;
-        ayu::Type got;
-        StatementWrongArgsType(ayu::Type e, ayu::Type g) :
-            expected(e), got(g)
-        { }
-    };
-}
+ // TODO: CommandError
+struct ConflictingCommandName : ayu::Error {
+    String name;
+    String desc_a;
+    String desc_b;
+};
+struct CommandNotFound : ayu::Error {
+    String name;
+};
+struct StatementWrongArgsType : ayu::Error {
+    ayu::Type expected;
+    ayu::Type got;
+};
 
 } // namespace control
