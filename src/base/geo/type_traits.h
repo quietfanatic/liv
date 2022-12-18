@@ -130,7 +130,7 @@ template <> struct TypeTraits<double> {
  // long double is not supported by this library
 
  // Whether this is an integral type.  It is expected that you can cast from
- // integer literals and do basic arithmetic operations.
+ // integer literals, pass by value, and do basic arithmetic operations.
 template <class T>
 concept Integral = TypeTraits<T>::integral;
 
@@ -166,8 +166,8 @@ using SameSizeInt = TypeTraits<T>::SameSizeInt;
  // Types that can store numbers inbetween 0 and 1, not necessarily floating
  // point (though currently this library doesn't provide any fraction
  // non-floating types).  It is expected that fractional numbers can be cast
- // from integers and have basic arithmetic operations as well as trunc, round,
- // etc.
+ // from integers, passed by value, and have basic arithmetic operations as well
+ // as trunc, round, etc.
 template <class T>
 concept Fractional = TypeTraits<T>::fractional;
 

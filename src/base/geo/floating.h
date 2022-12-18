@@ -12,11 +12,6 @@
 
 namespace geo {
 
-template <Floating T>
-CE bool exact_eq (T a, T b) {
-    return std::bit_cast<SameSizeInt<T>>(a) == std::bit_cast<SameSizeInt<T>>(b);
-}
-
 ///// PROPERTIES
 
 template <Floating T>
@@ -35,16 +30,6 @@ CE bool finite (T a) {
     return (rep & mask) != mask;
 }
  // TODO: Move these to separate testing file
-static_assert(!finite(float(GINF)));
-static_assert(!finite(float(-GINF)));
-static_assert(!finite(float(GNAN)));
-static_assert(finite(std::numeric_limits<float>::max()));
-static_assert(finite(std::numeric_limits<float>::lowest()));
-static_assert(!finite(double(GINF)));
-static_assert(!finite(double(-GINF)));
-static_assert(!finite(double(GNAN)));
-static_assert(finite(std::numeric_limits<double>::max()));
-static_assert(finite(std::numeric_limits<double>::lowest()));
 
 template <Floating T>
 CE T length2 (T v) { return v * v; }
@@ -88,6 +73,15 @@ CE double sqrt (double v) {
  // In case you define other floating point types, I guess?
 template <Floating T>
 CE T root2 (T v) { return slow_root2(v); }
+
+///// COMPARISONS
+
+ // Checks that the representations of the two floats are exactly the same.
+ // Different NAN values will be unequal.
+template <Floating T>
+CE bool exact_eq (T a, T b) {
+    return std::bit_cast<SameSizeInt<T>>(a) == std::bit_cast<SameSizeInt<T>>(b);
+}
 
 ///// MODIFIERS
 
