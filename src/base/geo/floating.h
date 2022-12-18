@@ -25,11 +25,24 @@ CE bool defined (T a) {
 
 template <Floating T>
 CE bool finite (T a) {
-     // A full exponent mask means the number is not finite.
+     // A full exponent mask means the number is not finite.  This ends up being
+     // much quicker than comparing against GNAN, GINF, and -GINF individually,
+     // because the optimizer basically doesn't touch floating point
+     // expressions.
     auto rep = std::bit_cast<SameSizeInt<T>>(a);
     auto mask = TypeTraits<T>::EXPONENT_MASK;
     return (rep & mask) != mask;
 }
+static_assert(!finite(float(GINF)));
+static_assert(!finite(float(-GINF)));
+static_assert(!finite(float(GNAN)));
+static_assert(finite(std::numeric_limits<float>::max()));
+static_assert(finite(std::numeric_limits<float>::lowest()));
+static_assert(!finite(double(GINF)));
+static_assert(!finite(double(-GINF)));
+static_assert(!finite(double(GNAN)));
+static_assert(finite(std::numeric_limits<double>::max()));
+static_assert(finite(std::numeric_limits<double>::lowest()));
 
 template <Floating T>
 CE T length2 (T v) { return v * v; }

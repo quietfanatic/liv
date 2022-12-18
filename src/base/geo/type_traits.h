@@ -92,14 +92,15 @@ template <> struct TypeTraits<float> {
      // layout.
     static CE uint32 SIGN_BIT = 0x8000'0000;
     static CE uint32 EXPONENT_MASK = 0x7f80'0000;
-    static CE float MINUS_INF = std::bit_cast<float>(0xffff'ffff);
+    static CE float MINUS_INF = std::bit_cast<float>(0xff80'0000);
     static CE float MINUS_HUGE = std::bit_cast<float>(0xff7f'ffff);
     static CE float MINUS_TINY = std::bit_cast<float>(0x8000'0001);
     static CE float MINUS_ZERO = std::bit_cast<float>(0x8000'0000);
     static CE float PLUS_ZERO = std::bit_cast<float>(0x0000'0000);
     static CE float PLUS_TINY = std::bit_cast<float>(0x0000'0001);
     static CE float PLUS_HUGE = std::bit_cast<float>(0x7f7f'ffff);
-    static CE float PLUS_INF = std::bit_cast<float>(0x7fff'ffff);
+    static CE float PLUS_INF = std::bit_cast<float>(0x7f80'0000);
+    static_assert(std::numeric_limits<float>::infinity() == PLUS_INF);
     static_assert(std::numeric_limits<float>::max() == PLUS_HUGE);
     static_assert(std::numeric_limits<float>::lowest() == MINUS_HUGE);
     static_assert(std::numeric_limits<float>::denorm_min() == PLUS_TINY);
@@ -113,14 +114,15 @@ template <> struct TypeTraits<double> {
     static CE bool is_signed = true;
     static CE uint64 SIGN_BIT = 0x8000'0000'0000'0000;
     static CE uint64 EXPONENT_MASK = 0x7ff0'0000'0000'0000;
-    static CE double MINUS_INF = std::bit_cast<double>(0xffff'ffff'ffff'ffff);
+    static CE double MINUS_INF = std::bit_cast<double>(0xfff0'0000'0000'0000);
     static CE double MINUS_HUGE = std::bit_cast<double>(0xffef'ffff'ffff'ffff);
     static CE double MINUS_TINY = std::bit_cast<double>(0x8000'0000'0000'0001);
     static CE double MINUS_ZERO = std::bit_cast<double>(0x8000'0000'0000'0000);
     static CE double PLUS_ZERO = std::bit_cast<double>(uint64(0x0000'0000'0000'0000));
     static CE double PLUS_TINY = std::bit_cast<double>(uint64(0x0000'0000'0000'0001));
     static CE double PLUS_HUGE = std::bit_cast<double>(0x7fef'ffff'ffff'ffff);
-    static CE double PLUS_INF = std::bit_cast<double>(0x7fff'ffff'ffff'ffff);
+    static CE double PLUS_INF = std::bit_cast<double>(0x7ff0'0000'0000'0000);
+    static_assert(std::numeric_limits<double>::infinity() == PLUS_INF);
     static_assert(std::numeric_limits<double>::max() == PLUS_HUGE);
     static_assert(std::numeric_limits<double>::lowest() == MINUS_HUGE);
     static_assert(std::numeric_limits<double>::denorm_min() == PLUS_TINY);
