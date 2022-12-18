@@ -35,22 +35,25 @@ CE auto max (A a, B b, Ts&&... rest) {
          : max(b, std::forward<Ts>(rest)...);
 }
 
+ // clamp returns NAN if any argument is NAN.
 template <class T, class Low, class High>
 CE T clamp (T a, Low low, High high) {
-    return a != a ? a
-         : a < low ? T(low)
-         : a > high ? T(high)
-         : a;
+    if (a != a) return a;
+    if (a >= low) {
+        if (a <= high) return a;
+        else return T(high);
+    }
+    else return T(low);
 }
 
  // These work on anything that has length (or length2) and can be subtracted.
 template <class TA, class TB>
-CE auto distance2 (const TA& a, const TB& b) {
+CE auto distance2 (TA a, TB b) {
     return length2(b - a);
 }
 
 template <class TA, class TB>
-CE auto distance (const TA& a, const TB& b) {
+CE auto distance (TA a, TB b) {
     return length(b - a);
 }
 

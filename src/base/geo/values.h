@@ -4,6 +4,7 @@
 
 #include <limits>
 #include "common.h"
+#include "type_traits.h"
 
 namespace geo {
 
@@ -15,7 +16,7 @@ struct GNAN_t {
     CE operator float () const {
         return std::numeric_limits<float>::quiet_NaN();
     }
-     // Explicitly forbid coercion to integers
+     // Explicitly forbid coercion to non-floating-point types
     template <class T> requires (std::is_integral_v<T>)
     CE operator T () const {
         static_assert((T*)nullptr, "Cannot coerce GNAN to integer type");
@@ -44,13 +45,17 @@ struct GINF_t {
 };
 CE GINF_t GINF;
 
+ // Comparisons directly with GINF to avoid ambiguous conversions.  There is no
+ // equivalent comparison with GNAN because comparing with GNAN always returns
+ // false.
+
 #define GINF_COMPARISON(op) \
 template <class T> \
-CE bool operator op (GINF_t a, T b) { \
+CE bool operator op (GINF_t a, const T& b) { \
     return T(a) op b; \
 } \
 template <class T> \
-CE bool operator op (T a, GINF_t b) { \
+CE bool operator op (const T& a, GINF_t b) { \
     return a op T(b); \
 }
 GINF_COMPARISON(==)

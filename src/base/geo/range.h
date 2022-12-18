@@ -23,11 +23,12 @@ struct GRange {
     CE GRange () : l(), r() { }
     CE GRange (GNAN_t n) : l(n), r(n) { }
     CE GRange (GINF_t i) : l(-i), r(i) { }
-    CE GRange (T l, T r) : l(l), r(r) { }
+    template <class A, class B>
+    CE GRange (A l, B r) : l(l), r(r) {
+        DA(valid(*this));
+    }
      // Why am I even doing this, this is so dumb
-    template <class Ix> requires (
-        requires (T l, Ix i) { i < l - l; l[i]; }
-    )
+    template <class Ix>
     CE auto operator [] (Ix i) const {
         DA(i < r - l);
         return l[i];
@@ -47,11 +48,19 @@ template <class T>
 CE auto size (const GRange<T>& a) { return a.r - a.l; }
 
 template <class T>
-CE T center (const GRange<T>& a) { return (a.l + a.r) / 2; }
+CE auto center (const GRange<T>& a) { return (a.l + a.r) / 2; }
+
+template <class T>
+CE bool valid (const GRange<T>& a) {
+    if constexpr (requires (T v) { defined(v); }) {
+        return defined(a.l) == defined(a.r);
+    }
+    else return true;
+}
 
 template <class T>
 CE bool defined (const GRange<T>& a) {
-    DA(defined(a.l) == defined(a.r));
+    DA(valid(a));
     return defined(a.l);
 }
 
@@ -203,19 +212,21 @@ CE TA clamp (const TA& p, const GRange<TB>& r) {
 }
 
  // Lerp between two ranges
-template <class T>
-CE GRange<T> lerp (
-    const GRange<T>& a, const GRange<T>& b, PreferredLerper<T> t
+template <class A, class B, Fractional T>
+CE auto lerp (
+    const GRange<A>& a, const GRange<B>& b, const T& t
 ) {
-    return {lerp(a.l, b.l, t), lerp(a.r, b.r, t)};
+    return GRange<decltype(lerp(a.l, b.l, t))>(
+        lerp(a.l, b.l, t), lerp(a.r, b.r, t)
+    );
 }
 
 ///// MISC
 
  // Lerp within one range
-template <class T>
-CE T lerp (const GRange<T>& r, PreferredLerper<T> t) {
-    return lerp(r.l, r.r, t);
+template <class A, Fractional T>
+CE A lerp (const GRange<A>& a, T t) {
+    return lerp(a.l, a.r, t);
 }
 
 } // namespace geo

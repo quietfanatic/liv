@@ -289,13 +289,13 @@ CE GRect<T>& operator &= (GRect<T>& a, const GRect<T>& b) {
     return a = a & b;
 }
 
-template <class T>
-CE GRect<T> lerp (
-    const GRect<T>& a,
-    const GRect<T>& b,
-    PreferredLerper<T> t
+template <class A, class B, Fractional T>
+CE auto lerp (
+    const GRect<A>& a,
+    const GRect<B>& b,
+    T t
 ) {
-    return {
+    return GRect<decltype(lerp(a.l, b.l, t))>{
         lerp(a.l, b.l, t),
         lerp(a.b, b.b, t),
         lerp(a.r, b.r, t),
