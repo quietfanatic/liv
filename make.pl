@@ -90,6 +90,7 @@ my @sources = (qw(
     base/control/input.cpp
     base/geo/floating.t.cpp
     base/geo/mat.t.cpp
+    base/geo/vec.t.cpp
     base/glow/colors.cpp
     base/glow/common.cpp
     base/glow/file-texture.cpp

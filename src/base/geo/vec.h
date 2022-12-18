@@ -176,6 +176,9 @@ struct TypeTraits<GVec<T, n>> {
     static CE bool is_signed = TypeTraits<T>::is_signed;
 };
 
+template <usize i, class T, usize n> requires (i < n)
+auto get (const GVec<T, n>& a) { return a[i]; }
+
 ///// PROPERTIES
 
  // A Vec is valid is all elements are defined or no elements are defined.
@@ -486,6 +489,17 @@ AYU_DESCRIBE_TEMPLATE(
         else return ayu::Reference();
     })
 )
+
+template <class T, geo::usize n>
+struct std::tuple_size<geo::GVec<T, n>> {
+    static constexpr geo::usize value = n;
+};
+
+template <geo::usize i, class T, geo::usize n>
+struct std::tuple_element<i, geo::GVec<T, n>> {
+    using type = T;
+};
+
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
