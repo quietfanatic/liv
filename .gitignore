@@ -11,3 +11,6 @@ callgrind.out.*
 
 # externals
 /src/external/SDL2-2.0.14
+
+# ????
+.fuse_hidden*
