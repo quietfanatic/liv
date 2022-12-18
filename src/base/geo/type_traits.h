@@ -11,14 +11,14 @@ namespace geo {
 
 template <class T>
 struct TypeTraits {
-    using Widen = T;
+    using Widened = T;
     static CE bool integral = false;
     static CE bool floating = false;
     static CE bool fractional = false;
     static CE bool is_signed = false;
 };
 template <> struct TypeTraits<int8> {
-    using Widen = int16;
+    using Widened = int16;
     using MakeUnsigned = uint8;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -26,7 +26,7 @@ template <> struct TypeTraits<int8> {
     static CE bool is_signed = true;
 };
 template <> struct TypeTraits<uint8> {
-    using Widen = uint16;
+    using Widened = uint16;
     using MakeSigned = int8;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -34,7 +34,7 @@ template <> struct TypeTraits<uint8> {
     static CE bool is_signed = false;
 };
 template <> struct TypeTraits<int16> {
-    using Widen = int32;
+    using Widened = int32;
     using MakeUnis_signed = uint16;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -42,7 +42,7 @@ template <> struct TypeTraits<int16> {
     static CE bool is_signed = true;
 };
 template <> struct TypeTraits<uint16> {
-    using Widen = uint32;
+    using Widened = uint32;
     using MakeSigned = int16;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -50,7 +50,7 @@ template <> struct TypeTraits<uint16> {
     static CE bool is_signed = false;
 };
 template <> struct TypeTraits<int32> {
-    using Widen = int64;
+    using Widened = int64;
     using MakeUnis_signed = uint32;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -58,7 +58,7 @@ template <> struct TypeTraits<int32> {
     static CE bool is_signed = true;
 };
 template <> struct TypeTraits<uint32> {
-    using Widen = uint64;
+    using Widened = uint64;
     using MakeSigned = int32;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -66,7 +66,7 @@ template <> struct TypeTraits<uint32> {
     static CE bool is_signed = false;
 };
 template <> struct TypeTraits<int64> {
-    using Widen = int64;
+    using Widened = int64;
     using MakeUnis_signed = int64;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -74,7 +74,7 @@ template <> struct TypeTraits<int64> {
     static CE bool is_signed = true;
 };
 template <> struct TypeTraits<uint64> {
-    using Widen = uint64;
+    using Widened = uint64;
     using MakeSigned = int64;
     static CE bool integral = true;
     static CE bool floating = false;
@@ -82,7 +82,7 @@ template <> struct TypeTraits<uint64> {
     static CE bool is_signed = false;
 };
 template <> struct TypeTraits<float> {
-    using Widen = float;
+    using Widened = float;
     using SameSizeInt = int32;
     static CE bool integral = false;
     static CE bool floating = true;
@@ -106,7 +106,7 @@ template <> struct TypeTraits<float> {
     static_assert(std::numeric_limits<float>::denorm_min() == PLUS_TINY);
 };
 template <> struct TypeTraits<double> {
-    using Widen = double;
+    using Widened = double;
     using SameSizeInt = int64;
     static CE bool integral = false;
     static CE bool floating = true;
@@ -143,7 +143,7 @@ concept UnsignedIntegral = Integral<T> && !TypeTraits<T>::is_signed;
  // Get a wider version of the type for multiplication.  Does not widen floats,
  // doubles, or int64s.
 template <class T>
-using Widen = TypeTraits<T>::Widen;
+using Widen = TypeTraits<T>::Widened;
 
 template <class T>
 CE Widen<T> widen (const T& v) { return v; }

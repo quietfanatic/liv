@@ -114,6 +114,16 @@ struct GMat {
     }
 };
 
+ // This is probably not necessary
+template <class T, usize cols, usize rows>
+struct TypeTraits<GMat<T, cols, rows>> {
+    using Widened = GMat<Widen<T>, cols, rows>;
+    static CE bool integral = false;
+    static CE bool floating = false;
+    static CE bool fractional = false;
+    static CE bool is_signed = TypeTraits<T>::is_signed;
+};
+
 ///// PROPERTIES
 
 template <class T, usize cols, usize rows>

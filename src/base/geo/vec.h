@@ -167,6 +167,15 @@ struct GVec : GVecStorage<T, n> {
     }
 };
 
+template <class T, usize n>
+struct TypeTraits<GVec<T, n>> {
+    using Widened = GVec<Widen<T>, n>;
+    static CE bool integral = false;
+    static CE bool floating = false;
+    static CE bool fractional = false;
+    static CE bool is_signed = TypeTraits<T>::is_signed;
+};
+
 ///// PROPERTIES
 
  // A Vec is valid is all elements are defined or no elements are defined.

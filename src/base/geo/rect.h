@@ -58,6 +58,15 @@ struct GRect {
     CE explicit operator bool () const { return l || b || r || t; }
 };
 
+template <class T>
+struct TypeTraits<GRect<T>> {
+    using Widened = GRect<Widen<T>>;
+    static CE bool integral = false;
+    static CE bool floating = false;
+    static CE bool fractional = false;
+    static CE bool is_signed = TypeTraits<T>::is_signed;
+};
+
 ///// PROPERTIES
 
  // Get a corner of the rectangle

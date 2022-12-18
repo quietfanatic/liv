@@ -37,6 +37,15 @@ struct GRange {
      // range is empty (size == 0) or if the range is {0, 0}
 };
 
+template <class T>
+struct TypeTraits<GRange<T>> {
+    using Widened = GRange<Widen<T>>;
+    static CE bool integral = false;
+    static CE bool floating = false;
+    static CE bool fractional = false;
+    static CE bool is_signed = TypeTraits<T>::is_signed;
+};
+
 ///// PROPERTIES
 
  // If T is a pointer, supports range-for-loops.  Yay!
