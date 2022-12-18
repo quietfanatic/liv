@@ -5,8 +5,7 @@
 #include <cmath>  // for sqrt
 
 #include "../ayu/describe.h"
-#include "../uni/common.h"
-#include "misc.h"
+#include "common.h"
 #include "scalar.h"
 
 namespace geo {
@@ -32,6 +31,10 @@ using DVec4 = GVec<double, 4>;
 using IVec4 = GVec<int32, 4>;
 using LVec4 = GVec<int64, 4>;
 using BVec4 = GVec<bool, 4>;
+
+///// VECTOR STORAGE
+// Some uniony magic to allow you to reference elements with either operator[]
+// or .x, .y, etc
 
 template <class T, usize n>
 using GVecStorageGeneric = T[n];
@@ -110,6 +113,8 @@ struct GVecStorage<T, 4> {
     ~GVecStorage () { e.~GVecStorageGeneric(); }
 };
 
+///// GVec CLASS
+
  // TODO: std::get and tuple_size
 template <class T, usize n>
 struct GVec : GVecStorage<T, n> {
@@ -127,13 +132,15 @@ struct GVec : GVecStorage<T, n> {
     }
 
      // Construct from a scalar (will be copied to all elements)
-    CE explicit GVec (T v) {
+    CE explicit GVec (const T& v) {
         for (usize i = 0; i < n; i++) {
             this->e[i] = v;
         }
     }
      // Construct the undefined vector
-    template <class = std::void_t<decltype(T(GNAN))>>
+    template <class = void> requires (
+        requires (GNAN_t nan) { T(nan); }
+    )
     CE GVec (GNAN_t nan) : GVec(T(nan)) { }
 
      // Implicitly coerce from another vector

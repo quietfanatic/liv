@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../ayu/describe.h"
-#include "../uni/common.h"
+#include "common.h"
 #include "range.h"
 #include "vec.h"
 
