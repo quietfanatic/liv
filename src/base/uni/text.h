@@ -1,4 +1,4 @@
-// Some convenient text-related functions, as well as UTF-8 file IO.
+// Some convenient text-related functions
 
 #pragma once
 

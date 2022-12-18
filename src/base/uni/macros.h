@@ -21,9 +21,5 @@ T& operator = (const T& o) { \
 }
 
 #define AA(v) ::uni::assert_general(v, __FUNCTION__, __FILE__, __LINE__)
-#ifdef NDEBUG
-#define DA(v)
-#else
-#define DA(v) AA(v)
-#endif
+#define DA(v) ::uni::debug_assert(v)
 #define AS(v) ::uni::assert_sdl(v, __FUNCTION__, __FILE__, __LINE__)

@@ -101,8 +101,6 @@ String&& cat (String&& s, Args... args) {
     return std::move(s);
 }
 
-///// CALLBACKS
-
 ///// UTILITY
 
 void dump_refs (const std::vector<Reference>&);
