@@ -112,7 +112,7 @@ CE bool finite (const GRect<T>& a) {
  // Will be negative if one of width() or height() is negative (but not both)
 template <class T>
 CE auto area (const GRect<T>& a) {
-    return wide_multiply(a.r - a.l, a.t - a.b);
+    return widen(a.r - a.l) * widen(a.t - a.b);
 }
 
  // Area is 0 (either width or height is 0)

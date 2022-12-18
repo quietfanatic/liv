@@ -145,11 +145,8 @@ concept UnsignedIntegral = Integral<T> && !TypeTraits<T>::is_signed;
 template <class T>
 using Widen = TypeTraits<T>::Widen;
 
- // TODO: get rid of this
-template <class A, class B>
-CE auto wide_multiply (A a, B b) {
-    return Widen<A>(a) * Widen<B>(b);
-}
+template <class T>
+CE Widen<T> widen (const T& v) { return v; }
 
 template <class T>
 using MakeUnsigned = TypeTraits<T>::MakeUnsigned;

@@ -13,7 +13,7 @@ namespace geo {
  // AKA sqr
 template <SignedIntegral T>
 CE MakeUnsigned<Widen<T>> length2 (T v) {
-    return wide_multiply(v, v);
+    return widen(v) * widen(v);
 }
 
  // AKA sign

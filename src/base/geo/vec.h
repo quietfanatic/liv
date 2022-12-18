@@ -205,13 +205,12 @@ CE bool finite (const GVec<T, n>& a) {
  // length2(a) == dot(a, a)
 template <class T, usize n>
 CE auto length2 (const GVec<T, n>& a) {
-    decltype(wide_multiply(a[0], a[0])) r = 0;
+    Widen<T> r = 0;
     for (usize i = 0; i < n; i++) {
-        r += wide_multiply(a[i], a[i]);
+        r += widen(a[i]) * widen(a[i]);
     }
     return r;
 }
- // May be double or float
  // TODO: CE sqrt
 template <class T, usize n>
 CE T length (const GVec<T, n>& a) {
@@ -222,9 +221,9 @@ CE T length (const GVec<T, n>& a) {
  // For 2-Vecs, equivalent to area(GRect{{0}, a})
 template <class T, usize n>
 CE auto area (const GVec<T, n>& a) {
-    decltype(wide_multiply(a[0], a[0])) r = 1;
+    Widen<T> r = 1;
     for (usize i = 0; i < n; i++) {
-        r = wide_multiply(r, a[i]);
+        r *= a[i];
     }
     return r;
 }
