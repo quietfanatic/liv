@@ -44,7 +44,9 @@ const Settings builtin_default_settings = {
 const Settings* res_default_settings;
 
 void init_settings () {
-    res_default_settings = ayu::Resource("res:/app/settings-default.ayu").ref();
+    if (!res_default_settings) {
+        res_default_settings = ayu::Resource("res:/app/settings-default.ayu").ref();
+    }
 }
 
 } using namespace app;
