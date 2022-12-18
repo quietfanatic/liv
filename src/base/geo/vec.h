@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <cmath>  // for sqrt
-
 #include "../ayu/describe.h"
 #include "common.h"
 #include "scalar.h"
@@ -211,10 +209,9 @@ CE auto length2 (const GVec<T, n>& a) {
     }
     return r;
 }
- // TODO: CE sqrt
 template <class T, usize n>
 CE T length (const GVec<T, n>& a) {
-    return std::sqrt(length2(a));
+    return root2(length2(a));
 }
 
  // Can be negative.

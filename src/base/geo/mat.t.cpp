@@ -1,15 +1,9 @@
+#ifndef TAP_DISABLE_TESTS
+#include "../tap/tap.h"
 #include "mat.h"
-
 #include "rect.h"
 
 using namespace geo;
-
-bool finite_a (const Rect& a) {
-    return finite(a.l) && finite(a.b) && finite(a.r) && finite(a.t);
-}
-
-#ifndef TAP_DISABLE_TESTS
-#include "../tap/tap.h"
 
 static tap::TestSet tests ("base/geo/mat", []{
     using namespace tap;

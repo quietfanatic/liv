@@ -5,6 +5,12 @@
 
 #define CE constexpr
 
+#ifdef __has_builtin
+#define HAS_BUILTIN(f) __has_builtin(f)
+#else
+#define HAS_BUILTIN(f)
+#endif
+
  // Recommended that you make sure the move and copy constructors can't throw,
  // or else the assignee may be left destructed.
 #define ASSIGN_BY_MOVE(T) \

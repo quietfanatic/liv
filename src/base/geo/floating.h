@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <bit>
 #include <limits>
 #include "common.h"
@@ -33,6 +34,7 @@ CE bool finite (T a) {
     auto mask = TypeTraits<T>::EXPONENT_MASK;
     return (rep & mask) != mask;
 }
+ // TODO: Move these to separate testing file
 static_assert(!finite(float(GINF)));
 static_assert(!finite(float(-GINF)));
 static_assert(!finite(float(GNAN)));
@@ -49,6 +51,43 @@ CE T length2 (T v) { return v * v; }
  // Okay, I admit, I just wanted a constexpr abs
 template <Floating T>
 CE T length (T v) { return v >= 0 ? v : -v; }
+
+///// CONSTEXPR SQUARE ROOT
+// Calling this root2 instead of sqrt to avoid ambiguity with std::sqrt
+
+template <Floating T>
+CE T slow_root2 (T v) {
+    if (v == GINF) return GINF;
+    else if (!(v >= 0)) return GNAN;
+    T curr = v;
+    T prev = 0;
+    while (curr != prev) {
+        prev = curr;
+        curr = T(0.5) * (curr + v / curr);
+    }
+    return curr;
+}
+
+CE float root2 (float v) {
+#if HAS_BUILTIN(__builtin_sqrtf)
+    return __builtin_sqrtf(v);
+#else
+    if consteval { return slow_root2(v); }
+    else { return std::sqrtf(v); }
+#endif
+}
+
+CE double sqrt (double v) {
+#if HAS_BUILTIN(__builtin_sqrt)
+    return __builtin_sqrt(v);
+#else
+    if consteval { return slow_root2(v); }
+    else { return std::sqrt(v); }
+#endif
+}
+ // In case you define other floating point types, I guess?
+template <Floating T>
+CE T root2 (T v) { return slow_root2(v); }
 
 ///// MODIFIERS
 
