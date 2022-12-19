@@ -50,9 +50,9 @@ template <class T> struct TreeDataT;
 
 struct TreeData : RefCounted {
     Rep rep;
-    uint16 flags;
+    TreeFlags flags;
 
-    TreeData (Rep r, uint16 fs, uint32 rc = 0) :
+    TreeData (Rep r, TreeFlags fs, uint32 rc = 0) :
         RefCounted{rc}, rep(r), flags(fs)
     { }
 
@@ -71,10 +71,10 @@ struct TreeData : RefCounted {
 template <class T>
 struct TreeDataT : TreeData {
     T value;
-    TreeDataT (const T& v, uint16 fs, uint32 rc = 0) :
+    TreeDataT (const T& v, TreeFlags fs, uint32 rc = 0) :
         TreeData(rep_of_type<T>, fs, rc), value(v)
     { }
-    TreeDataT (T&& v, uint16 fs, uint32 rc = 0) :
+    TreeDataT (T&& v, TreeFlags fs, uint32 rc = 0) :
         TreeData(rep_of_type<T>, fs, rc), value(std::move(v))
     { }
 };

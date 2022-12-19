@@ -7,7 +7,8 @@
 
 namespace ayu {
 
-enum PrintOptionsEnum : uint32 {
+using PrintOptions = uint32;
+enum : PrintOptions {
      // Print with a compact layout.  This is the default for tree_to_string.
     COMPACT = 1 << 0,
      // Print with a pretty layout.  This is the default for tree_to_file.
@@ -18,7 +19,6 @@ enum PrintOptionsEnum : uint32 {
      // For validation
     VALID_PRINT_OPTION_BITS = COMPACT | PRETTY | JSON
 };
-using PrintOptions = uint32;
 
 String tree_to_string (const Tree&, PrintOptions opts = 0);
 

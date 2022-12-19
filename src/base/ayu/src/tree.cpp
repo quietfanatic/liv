@@ -71,12 +71,12 @@ namespace in {
         return v ? &global_true : &global_false;
     }
 }
-Tree::Tree (int64 v, uint16 flags) : Tree(
+Tree::Tree (int64 v, TreeFlags flags) : Tree(
     flags == 0 && v >= -8 && v < 8
         ? &global_ints[v+8]
         : new TreeDataT<int64>(v, flags)
 ) { }
-Tree::Tree (double v, uint16 flags) : Tree(
+Tree::Tree (double v, TreeFlags flags) : Tree(
     flags != 0 ? static_cast<TreeData*>(new TreeDataT<double>(v, flags))
   : v != v ? static_cast<TreeData*>(&global_nan)
   : v == inf ? static_cast<TreeData*>(&global_plus_inf)
@@ -86,27 +86,27 @@ Tree::Tree (double v, uint16 flags) : Tree(
       ? static_cast<TreeData*>(&global_ints[int64(v)+8])
       : static_cast<TreeData*>(new TreeDataT<double>(v, flags))
 ) { }
-Tree::Tree (String&& v, uint16 flags) : Tree(
+Tree::Tree (String&& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_string
               : new TreeDataT<String>(std::move(v), flags)
 ) { }
-Tree::Tree (String16&& v, uint16 flags) : Tree(
+Tree::Tree (String16&& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_string
               : new TreeDataT<String>(from_utf16(v), flags)
 ) { }
-Tree::Tree (const Array& v, uint16 flags) : Tree(
+Tree::Tree (const Array& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_array
               : new TreeDataT<Array>(v, flags)
 ) { }
-Tree::Tree (Array&& v, uint16 flags) : Tree(
+Tree::Tree (Array&& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_array
               : new TreeDataT<Array>(std::move(v), flags)
 ) { }
-Tree::Tree (const Object& v, uint16 flags) : Tree(
+Tree::Tree (const Object& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_object
               : new TreeDataT<Object>(v, flags)
 ) { }
-Tree::Tree (Object&& v, uint16 flags) : Tree(
+Tree::Tree (Object&& v, TreeFlags flags) : Tree(
     v.empty() ? &global_empty_object
               : new TreeDataT<Object>(std::move(v), flags)
 ) { }

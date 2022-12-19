@@ -25,7 +25,8 @@ Str form_name (Form);
 
  // Options that control how a Tree is printed.  These do not have any effect on
  // the semantics of the Tree, and they do not affect subtrees.
-enum TreeFlags : uint16 {
+using TreeFlags = uint16;
+enum : TreeFlags {
      // For NUMBER: Print the number as hexadecimal.
     PREFER_HEX = 1 << 0,
      // For ARRAY or OBJECT: When pretty-printing, prefer printing this item
@@ -41,46 +42,43 @@ enum TreeFlags : uint16 {
 
     VALID_TREE_FLAG_BITS = PREFER_HEX | PREFER_COMPACT | PREFER_EXPANDED
 };
-constexpr TreeFlags operator | (TreeFlags a, TreeFlags b) {
-    return TreeFlags(uint16(a) | uint16(b));
-}
 
 struct Tree {
     in::RCP<in::TreeData, in::delete_TreeData> data;
     constexpr explicit Tree (in::TreeData* data = null) : data(data) { }
     bool has_value () const { return !!data; }
 
-    explicit Tree (Null v, uint16 flags = 0);
+    explicit Tree (Null v, TreeFlags flags = 0);
      // Disable implicit coercion of the argument to bool
     template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
-    explicit Tree (T v, uint16 flags = 0);
+    explicit Tree (T v, TreeFlags flags = 0);
      // plain (not signed or unsigned) chars are represented as strings
-    explicit Tree (char v, uint16 flags = 0) : Tree(String(1,v), flags) { }
-    explicit Tree (int8 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint8 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int16 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint16 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int32 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint32 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int64 v, uint16 flags = 0);
-    explicit Tree (uint64 v, uint16 flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (float v, uint16 flags = 0) : Tree(double(v), flags) { }
-    explicit Tree (double v, uint16 flags = 0);
-    explicit Tree (Str v, uint16 flags = 0) : Tree(String(v), flags) { }
-    explicit Tree (String&& v, uint16 flags = 0);
-    explicit Tree (Str16 v, uint16 flags = 0) : Tree(String16(v), flags) { }
-    explicit Tree (String16&& v, uint16 flags = 0); // Converts to UTF8 internally
-    explicit Tree (const char* v, uint16 flags = 0) : Tree(String(v), flags) { }
-    explicit Tree (const Array& v, uint16 flags = 0);
-    explicit Tree (Array&& v, uint16 flags = 0);
-    explicit Tree (const Object& v, uint16 flags = 0);
-    explicit Tree (Object&& v, uint16 flags = 0);
+    explicit Tree (char v, TreeFlags flags = 0) : Tree(String(1,v), flags) { }
+    explicit Tree (int8 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (uint8 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (int16 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (uint16 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (int32 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (uint32 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (int64 v, TreeFlags flags = 0);
+    explicit Tree (uint64 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
+    explicit Tree (float v, TreeFlags flags = 0) : Tree(double(v), flags) { }
+    explicit Tree (double v, TreeFlags flags = 0);
+    explicit Tree (Str v, TreeFlags flags = 0) : Tree(String(v), flags) { }
+    explicit Tree (String&& v, TreeFlags flags = 0);
+    explicit Tree (Str16 v, TreeFlags flags = 0) : Tree(String16(v), flags) { }
+    explicit Tree (String16&& v, TreeFlags flags = 0); // Converts to UTF8 internally
+    explicit Tree (const char* v, TreeFlags flags = 0) : Tree(String(v), flags) { }
+    explicit Tree (const Array& v, TreeFlags flags = 0);
+    explicit Tree (Array&& v, TreeFlags flags = 0);
+    explicit Tree (const Object& v, TreeFlags flags = 0);
+    explicit Tree (Object&& v, TreeFlags flags = 0);
 
     Form form () const;
      // Get flags for printing this tree.  This is NOT guaranteed to be equal to
      // the flags that were passed in (in particular, flags that don't apply to
      // the given Tree may or may not be omitted).
-    uint16 flags () const;
+    TreeFlags flags () const;
 
      // These throw if the tree is not the right form or if
      // the requested type cannot store the value.
@@ -138,9 +136,9 @@ struct CantRepresent : TreeError {
 };
 
 namespace in {
-    TreeData* TreeData_bool (bool, uint16 flags);
+    TreeData* TreeData_bool (bool, TreeFlags flags);
 }
 template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
-Tree::Tree (T v, uint16 flags) : Tree(in::TreeData_bool(v, flags)) { }
+Tree::Tree (T v, TreeFlags flags) : Tree(in::TreeData_bool(v, flags)) { }
 
 }  // namespace ayu
