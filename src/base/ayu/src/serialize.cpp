@@ -755,10 +755,8 @@ Location current_location () {
 
 AYU_DESCRIBE(ayu::SerError,
     elems(
-        elem(base<Error>(), inherit)
-    ),
-    attrs(
-        attr("ayu::Error", base<Error>(), inherit)
+        elem(base<Error>(), inherit),
+        elem(&SerError::location)
     )
 )
 

@@ -29,3 +29,16 @@ void in::internal_error (std::source_location loc) {
 }
 
 } using namespace ayu;
+
+AYU_DESCRIBE(std::source_location,
+    elems(
+        elem(value_func<String>([](const std::source_location& v) -> String {
+            return v.file_name();
+        })),
+        elem(value_func<String>([](const std::source_location& v) -> String {
+            return v.function_name();
+        })),
+        elem(value_method<uint32, &std::source_location::line>()),
+        elem(value_method<uint32, &std::source_location::column>())
+    )
+)

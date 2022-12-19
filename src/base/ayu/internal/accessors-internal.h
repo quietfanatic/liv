@@ -265,7 +265,7 @@ struct ConstRefFuncAcr2 : ConstRefFuncAcr0 {
     explicit constexpr ConstRefFuncAcr2 (
         const To&(* f )(const From&), uint8 flags = 0
     ) :
-        ConstRefFuncAcr0(&_vt, flags), get_type(&Type::CppType<To>()), f(f)
+        ConstRefFuncAcr0(&_vt, flags), get_type(&Type::CppType<To>), f(f)
     { }
 };
 

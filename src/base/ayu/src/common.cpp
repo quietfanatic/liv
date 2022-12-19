@@ -30,18 +30,22 @@ void dump_refs (const std::vector<Reference>& rs) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::Error,
-    elems(),
-    attrs()
+    delegate(const_ref_func<std::source_location>(
+        [](const ayu::Error& e) -> const std::source_location& {
+            return *e.source_location;
+        }
+    ))
 )
 
 AYU_DESCRIBE(ayu::GenericError,
-    delegate(base<Error>()),
     elems(
+        elem(base<Error>(), inherit),
         elem(&GenericError::mess)
     )
 )
 AYU_DESCRIBE(ayu::IOError,
     elems(
+        elem(base<Error>(), inherit),
         elem(&IOError::filename),
         elem(&IOError::errnum)
     )
