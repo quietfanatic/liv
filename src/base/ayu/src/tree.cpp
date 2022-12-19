@@ -34,79 +34,81 @@ namespace in {
 }
 
 Form Tree::form () const { return form_of_rep(data->rep); }
+uint16 Tree::flags () const { return data->flags; }
 
-static TreeDataT<Null> global_null {null, 1};
-static TreeDataT<bool> global_false {false, 1};
-static TreeDataT<bool> global_true {true, 1};
+static TreeDataT<Null> global_null {null, 0, 1};
+static TreeDataT<bool> global_false {false, 0, 1};
+static TreeDataT<bool> global_true {true, 0, 1};
 static TreeDataT<int64> global_ints [16] = {
-    {-8, 1},
-    {-7, 1},
-    {-6, 1},
-    {-5, 1},
-    {-4, 1},
-    {-3, 1},
-    {-2, 1},
-    {-1, 1},
-    {0, 1},
-    {1, 1},
-    {2, 1},
-    {3, 1},
-    {4, 1},
-    {5, 1},
-    {6, 1},
-    {7, 1}
+    {-8, 0, 1},
+    {-7, 0, 1},
+    {-6, 0, 1},
+    {-5, 0, 1},
+    {-4, 0, 1},
+    {-3, 0, 1},
+    {-2, 0, 1},
+    {-1, 0, 1},
+    {0, 0, 1},
+    {1, 0, 1},
+    {2, 0, 1},
+    {3, 0, 1},
+    {4, 0, 1},
+    {5, 0, 1},
+    {6, 0, 1},
+    {7, 0, 1}
 };
-static TreeDataT<double> global_nan {nan, 1};
-static TreeDataT<double> global_plus_inf {inf, 1};
-static TreeDataT<double> global_minus_inf {-inf, 1};
-static TreeDataT<double> global_minus_zero {-0.0, 1};
-static TreeDataT<String> global_empty_string {""s, 1};
-static TreeDataT<Array> global_empty_array {Array{}, 1};
-static TreeDataT<Object> global_empty_object {Object{}, 1};
+static TreeDataT<double> global_nan {nan, 0, 1};
+static TreeDataT<double> global_plus_inf {inf, 0, 1};
+static TreeDataT<double> global_minus_inf {-inf, 0, 1};
+static TreeDataT<double> global_minus_zero {-0.0, 0, 1};
+static TreeDataT<String> global_empty_string {""s, 0, 1};
+static TreeDataT<Array> global_empty_array {Array{}, 0, 1};
+static TreeDataT<Object> global_empty_object {Object{}, 0, 1};
 
-Tree::Tree (Null) : Tree(&global_null) { }
+Tree::Tree (Null, uint16) : Tree(&global_null) { }
 namespace in {
-    TreeData* TreeData_bool (bool v) {
+    TreeData* TreeData_bool (bool v, uint16) {
         return v ? &global_true : &global_false;
     }
 }
-Tree::Tree (int64 v) : Tree(
-    v >= -8 && v < 8
+Tree::Tree (int64 v, uint16 flags) : Tree(
+    flags == 0 && v >= -8 && v < 8
         ? &global_ints[v+8]
-        : new TreeDataT<int64>(v)
+        : new TreeDataT<int64>(v, flags)
 ) { }
-Tree::Tree (double v) : Tree(
-    v != v ? static_cast<TreeData*>(&global_nan)
+Tree::Tree (double v, uint16 flags) : Tree(
+    flags != 0 ? static_cast<TreeData*>(new TreeDataT<double>(v, flags))
+  : v != v ? static_cast<TreeData*>(&global_nan)
   : v == inf ? static_cast<TreeData*>(&global_plus_inf)
   : v == -inf ? static_cast<TreeData*>(&global_minus_inf)
   : v == 0 && (1.0/v == -inf) ? static_cast<TreeData*>(&global_minus_zero)
   : int64(v) == v && int64(v) >= -8 && int64(v) < 8
       ? static_cast<TreeData*>(&global_ints[int64(v)+8])
-      : static_cast<TreeData*>(new TreeDataT<double>(v))
+      : static_cast<TreeData*>(new TreeDataT<double>(v, flags))
 ) { }
-Tree::Tree (String&& v) : Tree(
+Tree::Tree (String&& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_string
-              : new TreeDataT<String>(std::move(v))
+              : new TreeDataT<String>(std::move(v), flags)
 ) { }
-Tree::Tree (String16&& v) : Tree(
+Tree::Tree (String16&& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_string
-              : new TreeDataT<String>(from_utf16(v))
+              : new TreeDataT<String>(from_utf16(v), flags)
 ) { }
-Tree::Tree (const Array& v) : Tree(
+Tree::Tree (const Array& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_array
-              : new TreeDataT<Array>(v)
+              : new TreeDataT<Array>(v, flags)
 ) { }
-Tree::Tree (Array&& v) : Tree(
+Tree::Tree (Array&& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_array
-              : new TreeDataT<Array>(std::move(v))
+              : new TreeDataT<Array>(std::move(v), flags)
 ) { }
-Tree::Tree (const Object& v) : Tree(
+Tree::Tree (const Object& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_object
-              : new TreeDataT<Object>(v)
+              : new TreeDataT<Object>(v, flags)
 ) { }
-Tree::Tree (Object&& v) : Tree(
+Tree::Tree (Object&& v, uint16 flags) : Tree(
     v.empty() ? &global_empty_object
-              : new TreeDataT<Object>(std::move(v))
+              : new TreeDataT<Object>(std::move(v), flags)
 ) { }
 
 Tree::operator Null () const { return data->as<Null>(); }
@@ -306,6 +308,7 @@ static tap::TestSet tests ("base/ayu/tree", []{
         Tree(Object{Pair{"b", Tree(1)}, Pair{"a", Tree(0)}, Pair{"c", Tree(3)}}),
         "Extra attribute in second object makes it unequal"
     );
+    is(Tree(0xdeadbeef, PREFER_HEX).flags(), PREFER_HEX, "Basic flags support");
     done_testing();
 });
 #endif

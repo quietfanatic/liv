@@ -83,7 +83,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
     catch (const Error& e) {
         if (diagnostic_serialization) {
             return Tree(new TreeDataT<std::exception_ptr>(
-                std::current_exception()
+                std::current_exception(), 0
             ));
         }
         else throw;

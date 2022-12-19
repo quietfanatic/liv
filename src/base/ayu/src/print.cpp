@@ -18,8 +18,7 @@ struct Printer {
 
     Printer (String& o, PrintOptions f) : out(o), opts(f) { }
 
-     // TODO: Keep newlines in non-compact layout?
-    void print_quoted (Str s) {
+    void print_quoted (Str s, bool expand = false) {
         out += '"';
         for (auto p = s.begin(); p != s.end(); p++)
         switch (*p) {
@@ -27,16 +26,22 @@ struct Printer {
             case '\\': out += "\\\\"sv; break;
             case '\b': out += "\\b"sv; break;
             case '\f': out += "\\f"sv; break;
-            case '\n': out += "\\n"sv; break;
+            case '\n':
+                if (expand) out += *p;
+                else out += "\\n"sv;
+                break;
             case '\r': out += "\\r"sv; break;
-            case '\t': out += "\\t"sv; break;
-            default: out += String(1, *p); break;
+            case '\t':
+                if (expand) out += *p;
+                else out += "\\t"sv;
+                break;
+            default: out += *p; break;
         }
         out += '"';
     }
 
-    void print_string (Str s) {
-        if (opts & JSON) return print_quoted(s);
+    void print_string (Str s, bool expand = false) {
+        if (opts & JSON) return print_quoted(s, false);
         if (s == ""sv) {
             out += "\"\""sv; return;
         }
@@ -52,7 +57,7 @@ struct Printer {
         switch (s[0]) {
             case ANY_LETTER:
             case '_': break;
-            default: return print_quoted(s);
+            default: return print_quoted(s, expand);
         }
 
         for (auto p = s.begin(); p != s.end(); p++)
@@ -63,11 +68,11 @@ struct Printer {
                     p++;
                     continue;
                 }
-                else return print_quoted(s);
+                else return print_quoted(s, expand);
             }
             case ANY_LETTER: case ANY_DECIMAL_DIGIT:
             case '-': case '.': case '/': case '_': continue;
-            default: return print_quoted(s);
+            default: return print_quoted(s, expand);
         }
          // No need to quote
         out += s;
@@ -79,6 +84,7 @@ struct Printer {
     }
 
     void print_tree (const Tree& t, uint ind) {
+        uint16 flags = t.data->flags;
         switch (t.data->rep) {
             case Rep::NULLREP:
                 out += "null"sv;
@@ -88,43 +94,85 @@ struct Printer {
                     ? "true"sv : "false"sv
                 );
                 return;
-            case Rep::INT64:
-                out += std::to_string(t.data->as_known<int64>());
+            case Rep::INT64: {
+                int64 v = t.data->as_known<int64>();
+                if (v == 0) {
+                    out += '0';
+                }
+                else {
+                    bool hex = !(opts & JSON) && flags & PREFER_HEX;
+                    if (v < 0) {
+                        out += '-';
+                    }
+                    if (hex) {
+                        out += "0x";
+                    }
+                    uint64 mag = v < 0 ? -v : v;
+                    char buf [32];
+                    auto [ptr, ec] = std::to_chars(
+                        buf, buf+32, mag, hex ? 16 : 10
+                    );
+                    if (ec != std::errc()) AYU_INTERNAL_UGUU();
+                    out += Str(buf, ptr - buf);
+                }
                 return;
+            }
             case Rep::DOUBLE: {
                 double v = t.data->as_known<double>();
                 if (v != v) {
-                    if (opts & JSON) out += "null";
+                    if (opts & JSON) out += "null"sv;
                     else out += "+nan"sv;
                 }
                 else if (v == 1.0/0.0) {
-                    if (opts & JSON) out += "1e999";
+                    if (opts & JSON) out += "1e999"sv;
                     else out += "+inf"sv;
                 }
                 else if (v == -1.0/0.0) {
-                    if (opts & JSON) out += "-1e999";
+                    if (opts & JSON) out += "-1e999"sv;
                     else out += "-inf"sv;
                 }
-                else if (v == 0 && 1.0/v == -inf) {
-                    out += "-0"sv;
+                else if (v == 0) {
+                    if (1.0/v == -inf) {
+                        out += "-0"sv;
+                    }
+                    else {
+                        out += "0"sv;
+                    }
                 }
                 else {
+                    bool hex = !(opts & JSON) && flags & PREFER_HEX;
+                    if (hex) {
+                        if (v < 0) {
+                            out += '-';
+                            v = -v;
+                        }
+                        out += "0x"sv;
+                    }
                     char buf [32]; // Should be enough?
-                    auto [ptr, ec] = std::to_chars(buf, buf+32, v);
-                    if (ptr == buf) AYU_INTERNAL_UGUU();
+                    auto [ptr, ec] = std::to_chars(
+                        buf, buf+32, v, hex
+                            ? std::chars_format::hex
+                            : std::chars_format::general
+                    );
+                    if (ec != std::errc()) AYU_INTERNAL_UGUU();
                     out += Str(buf, ptr - buf);
                 }
                 return;
             }
             case Rep::STRING:
-                return print_string(t.data->as_known<String>());
+                return print_string(
+                    t.data->as_known<String>(), flags & PREFER_EXPANDED
+                );
             case Rep::ARRAY: {
                 const Array& a = t.data->as_known<Array>();
                 if (a.empty()) { out += "[]"sv; return; }
 
                  // Print "small" arrays compactly.
                  // TODO: Revise this?
-                bool expand = (opts & PRETTY) && a.size() > 4;
+                bool expand = !(opts & PRETTY) ? false
+                            : flags & PREFER_EXPANDED ? true
+                            : flags & PREFER_COMPACT ? false
+                            : a.size() > 4;
 
                 bool show_indices = expand
                                  && a.size() > 4
@@ -157,7 +205,10 @@ struct Printer {
                 const Object& o = t.data->as_known<Object>();
                 if (o.empty()) { out += "{}"sv; return; }
 
-                bool expand = (opts & PRETTY) && o.size() > 1;
+                bool expand = !(opts & PRETTY) ? false
+                            : flags & PREFER_EXPANDED ? true
+                            : flags & PREFER_COMPACT ? false
+                            : o.size() > 1;
 
                 out += '{';
                 for (auto& attr : o) {

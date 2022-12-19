@@ -211,8 +211,8 @@ struct Parser {
             }
             else if (ptr == word.end()) {
                 return minus && integer == 0
-                    ? Tree(-0.0)
-                    : Tree(minus ? -integer : integer);
+                    ? Tree(-0.0, (hex * PREFER_HEX))
+                    : Tree(minus ? -integer : integer, hex * PREFER_HEX);
             }
              // Forbid . without a digit after
             else if (ptr < word.end() && ptr[0] == '.') {
@@ -236,7 +236,7 @@ struct Parser {
                 error("Malformed number"sv);
             }
             else if (ptr == word.end()) {
-                return Tree(minus ? -floating : floating);
+                return Tree(minus ? -floating : floating, hex * PREFER_HEX);
             }
             else {
                 error("Junk at end of number"sv);
