@@ -13,34 +13,15 @@ const C* offset_get (const void* base, uint16 offset) {
 }
 
 struct ValueDcrPrivate : ValueDcr<Mu> {
-    const void* name () const {
-        switch (form) {
-            case VFNULL: return &((const ValueDcrWith<void*, Null, false>*)this)->name;
-            case VFBOOL: return &((const ValueDcrWith<void*, bool, false>*)this)->name;
-            case VFINT64: return &((const ValueDcrWith<void*, int64, false>*)this)->name;
-            case VFDOUBLE: return &((const ValueDcrWith<void*, double, false>*)this)->name;
-            case VFSTR: return &((const ValueDcrWith<void*, Str, false>*)this)->name;
-            default: AYU_INTERNAL_UGUU();
-        }
+    Mu* name () const {
+         // Name should have the same address for all forms, but just in case,
+         // skip the Null form.
+        return (Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->name;
     }
     Mu* get_value () const {
-         // This looks awful but it should be pretty optimizable...
-        if (pointer) switch (form) {
-            case VFNULL: return (Mu*)((const ValueDcrWith<Mu, Null, true>*)this)->ptr;
-            case VFBOOL: return (Mu*)((const ValueDcrWith<Mu, bool, true>*)this)->ptr;
-            case VFINT64: return (Mu*)((const ValueDcrWith<Mu, int64, true>*)this)->ptr;
-            case VFDOUBLE: return (Mu*)((const ValueDcrWith<Mu, double, true>*)this)->ptr;
-            case VFSTR: return (Mu*)((const ValueDcrWith<Mu, Str, true>*)this)->ptr;
-            default: AYU_INTERNAL_UGUU();
-        }
-        else switch (form) {
-            case VFNULL: return (Mu*)&((const ValueDcrWith<void*, Null, false>*)this)->value;
-            case VFBOOL: return (Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->value;
-            case VFINT64: return (Mu*)&((const ValueDcrWith<void*, int64, false>*)this)->value;
-            case VFDOUBLE: return (Mu*)&((const ValueDcrWith<void*, double, false>*)this)->value;
-            case VFSTR: return (Mu*)&((const ValueDcrWith<void*, Str, false>*)this)->value;
-            default: AYU_INTERNAL_UGUU();
-        }
+        Mu* value = (Mu*)((char*)this + this->value_offset);
+        if (pointer) return *(Mu**)value;
+        else return value;
     }
     Tree value_to_tree (
         const ValuesDcr<Mu>* values, Mu& v, TreeFlags flags
@@ -51,7 +32,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFBOOL: return Tree(*(const bool*)name(), flags);
                 case VFINT64: return Tree(*(const int64*)name(), flags);
                 case VFDOUBLE: return Tree(*(const double*)name(), flags);
-                case VFSTR: return Tree(*(Str*)name(), flags);
+                case VFSTR: return Tree(*(const Str*)name(), flags);
                 default: AYU_INTERNAL_UGUU();
             }
         }

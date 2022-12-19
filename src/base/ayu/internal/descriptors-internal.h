@@ -222,17 +222,25 @@ template <class T>
 struct ValueDcr : ComparableAddress {
     uint8 form;
     bool pointer;
+     // For optimization (skips a jump table)
+    uint8 value_offset;
 };
 
 template <class T, class VF, bool pointer>
 struct ValueDcrWith;
 
+ // Disable "offsetof within non-standard-layout class is conditionally
+ // supported" warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+
 template <class T, class VF>
 struct ValueDcrWith<T, VF, false> : ValueDcr<T> {
-    VF name;
+     // Don't reorder these
+    alignas(void*) VF name;
     alignas(void*) T value;
     constexpr ValueDcrWith (uint8 f, VF n, const T& v) :
-        ValueDcr<T>{{}, f, false},
+        ValueDcr<T>{{}, f, false, offsetof(ValueDcrWith, value)},
         name(n),
         value(v)
     { }
@@ -240,14 +248,16 @@ struct ValueDcrWith<T, VF, false> : ValueDcr<T> {
 
 template <class T, class VF>
 struct ValueDcrWith<T, VF, true> : ValueDcr<T> {
-    VF name;
+    alignas(void*) VF name;
     const T* ptr;
     constexpr ValueDcrWith (uint8 f, VF n, const T* p) :
-        ValueDcr<T>{{}, f, true},
+        ValueDcr<T>{{}, f, true, offsetof(ValueDcrWith, ptr)},
         name(n),
         ptr(p)
     { }
 };
+
+#pragma GCC diagnostic pop
 
 template <class T>
 struct ValuesDcr : AttachedDescriptor<T> {
