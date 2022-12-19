@@ -309,24 +309,21 @@ struct RefFuncsAcr2 : RefFuncsAcr1<To> {
 };
 template <class To>
 void RefFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb_mu
+    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
     auto self = static_cast<const RefFuncsAcr2<Mu, To>*>(acr);
-    auto& cb = reinterpret_cast<Callback<void(To&)>&>(cb_mu);
     switch (mode) {
         case ACR_READ: {
-            return reinterpret_cast<Callback<void(const To&)>&>(
-                cb
-            )(self->getter(from));
+            return cb.reinterpret<void(const To&)>()(self->getter(from));
         }
         case ACR_WRITE: {
             To tmp;
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, tmp);
         }
         case ACR_MODIFY: {
             To tmp = self->getter(from);
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, tmp);
         }
     }
@@ -355,7 +352,7 @@ void ValueFuncAcr1<To>::_access (
 ) {
     if (mode != ACR_READ) throw X<WriteReadonlyAccessor>();
     auto self = static_cast<const ValueFuncAcr2<Mu, To>*>(acr);
-    reinterpret_cast<Callback<void(const To&)>&>(cb)(self->f(from));
+    cb.reinterpret<void(const To&)>()(self->f(from));
 }
 
 /// value_funcs
@@ -383,24 +380,21 @@ struct ValueFuncsAcr2 : ValueFuncsAcr1<To> {
 };
 template <class To>
 void ValueFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb_mu
+    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
     auto self = static_cast<const ValueFuncsAcr2<Mu, To>*>(acr);
-    auto& cb = reinterpret_cast<Callback<void(To&)>&>(cb_mu);
     switch (mode) {
         case ACR_READ: {
-            return reinterpret_cast<Callback<void(const To&)>&>(
-                cb
-            )(self->getter(from));
+            return cb.reinterpret<void(const To&)>()(self->getter(from));
         }
         case ACR_WRITE: {
             To tmp;
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, std::move(tmp));
         }
         case ACR_MODIFY: {
             To tmp = self->getter(from);
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, std::move(tmp));
         }
     }
@@ -431,24 +425,21 @@ struct MixedFuncsAcr2 : MixedFuncsAcr1<To> {
 };
 template <class To>
 void MixedFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb_mu
+    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
     auto self = static_cast<const MixedFuncsAcr2<Mu, To>*>(acr);
-    auto& cb = reinterpret_cast<Callback<void(To&)>&>(cb_mu);
     switch (mode) {
         case ACR_READ: {
-            return reinterpret_cast<Callback<void(const To&)>&>(
-                cb
-            )(self->getter(from));
+            return cb.reinterpret<void(const To&)>()(self->getter(from));
         }
         case ACR_WRITE: {
             To tmp;
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, std::move(tmp));
         }
         case ACR_MODIFY: {
             To tmp = (self->getter)(from);
-            cb(tmp);
+            cb.reinterpret<void(To&)>()(tmp);
             return self->setter(from, std::move(tmp));
         }
     }
@@ -464,12 +455,12 @@ struct AssignableAcr2 : Accessor {
         const Accessor*, AccessMode mode, Mu& from_mu, Callback<void(Mu&)> cb_mu
     ) {
         From& from = reinterpret_cast<From&>(from_mu);
-        auto& cb = reinterpret_cast<Callback<void(To&)>&>(cb_mu);
+        auto cb = cb_mu.reinterpret<void(To&)>();
         switch (mode) {
             case ACR_READ: {
                 To tmp;
                 tmp = from;
-                return cb(tmp);
+                return cb_mu.reinterpret<void(const To&)>()(tmp);
             }
             case ACR_WRITE: {
                 To tmp;

@@ -152,7 +152,7 @@ struct Reference {
     }
     template <class T>
     void read_as (Callback<void(T&)> cb) const {
-        read_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
+        read_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
      // Write with callback
     void write (Callback<void(Mu&)> cb) const { access(in::ACR_WRITE, cb); }
@@ -166,7 +166,7 @@ struct Reference {
     template <class T>
         requires (!std::is_const_v<T>)
     void write_as (Callback<void(T&)> cb) const {
-        write_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
+        write_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
      // Modify in-place with callback
     void modify (Callback<void(Mu&)> cb) const { access(in::ACR_MODIFY, cb); }
@@ -180,7 +180,7 @@ struct Reference {
     template <class T>
         requires (!std::is_const_v<T>)
     void modify_as (Callback<void(T&)> cb) const {
-        modify_as(Type::CppType<T>(), reinterpret_cast<Callback<void(Mu&)>&>(cb));
+        modify_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
 
      // Copying getter.  Preferentially uses address if it's available.
