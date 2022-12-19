@@ -97,9 +97,10 @@ String cat (Args&&... args) {
 }
  // Optimization to skip a copy
 template <class... Args>
-String&& cat (String&& s, Args... args) {
-    ((s += in::to_string(std::forward<Args>(args))), ...);
-    return std::move(s);
+String cat (String&& s, Args... args) {
+    String r = std::move(s);
+    ((r += in::to_string(std::forward<Args>(args))), ...);
+    return r;
 }
 
 ///// UTILITY
