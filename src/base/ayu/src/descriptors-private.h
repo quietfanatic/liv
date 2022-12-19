@@ -42,14 +42,16 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             default: AYU_INTERNAL_UGUU();
         }
     }
-    Tree value_to_tree (const ValuesDcr<Mu>* values, Mu& v) const {
+    Tree value_to_tree (
+        const ValuesDcr<Mu>* values, Mu& v, TreeFlags flags
+    ) const {
         if (values->compare(v, *get_value())) {
             switch (form) {
-                case VFNULL: return Tree(null);
-                case VFBOOL: return Tree(*(const bool*)name());
-                case VFINT64: return Tree(*(const int64*)name());
-                case VFDOUBLE: return Tree(*(const double*)name());
-                case VFSTR: return Tree(*(Str*)name());
+                case VFNULL: return Tree(null, flags);
+                case VFBOOL: return Tree(*(const bool*)name(), flags);
+                case VFINT64: return Tree(*(const int64*)name(), flags);
+                case VFDOUBLE: return Tree(*(const double*)name(), flags);
+                case VFSTR: return Tree(*(Str*)name(), flags);
                 default: AYU_INTERNAL_UGUU();
             }
         }

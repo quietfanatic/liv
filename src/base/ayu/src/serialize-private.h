@@ -10,7 +10,7 @@
 namespace ayu::in {
 
 ///// TO_TREE
-Tree ser_to_tree (const Traversal&);
+Tree ser_to_tree (const Traversal&, TreeFlags);
 
 ///// FROM_TREE
 struct SwizzleOp {

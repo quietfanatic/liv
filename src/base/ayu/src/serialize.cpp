@@ -18,14 +18,16 @@ DiagnosticSerialization::~DiagnosticSerialization () {
     assert(diagnostic_serialization >= 0);
 }
 
-Tree in::ser_to_tree (const Traversal& trav) {
+Tree in::ser_to_tree (const Traversal& trav, TreeFlags flags) {
     try {
         if (auto to_tree = trav.desc->to_tree()) {
-            return to_tree->f(*trav.address);
+            return to_tree->f(*trav.address, flags);
         }
         if (auto values = trav.desc->values()) {
             for (uint i = 0; i < values->n_values; i++) {
-                Tree r = values->value(i)->value_to_tree(values, *trav.address);
+                Tree r = values->value(i)->value_to_tree(
+                    values, *trav.address, flags
+                );
                 if (r.has_value()) return r;
             }
         }
@@ -41,11 +43,14 @@ Tree in::ser_to_tree (const Traversal& trav) {
                          // Don't serialize readonly attributes, because they
                          // can't be deserialized.
                         if (!child.readonly) {
-                            o.emplace_back(k, ser_to_tree(child));
+                             // Get flags from acr
+                            TreeFlags flags = child.op == ATTR ?
+                                child.acr->tree_flags() : 0;
+                            o.emplace_back(k, ser_to_tree(child, flags));
                         }
                     });
                 }
-                return Tree(std::move(o));
+                return Tree(std::move(o), flags);
             }
             case Description::PREFER_ARRAY: {
                 Array a;
@@ -58,10 +63,12 @@ Tree in::ser_to_tree (const Traversal& trav) {
                          // just be skipped without changing the order of other
                          // elems.  We should probably just forbid them.
                          // TODO: do that.
-                        a.emplace_back(ser_to_tree(child));
+                        TreeFlags flags = child.op == ELEM ?
+                            child.acr->tree_flags() : 0;
+                        a.emplace_back(ser_to_tree(child, flags));
                     });
                 }
-                return Tree(std::move(a));
+                return Tree(std::move(a), flags);
             }
             default: {
                 if (auto acr = trav.desc->delegate_acr()) {
@@ -69,7 +76,9 @@ Tree in::ser_to_tree (const Traversal& trav) {
                     trav_delegate(
                         trav, acr, ACR_READ, [&](const Traversal& child)
                     {
-                        r = ser_to_tree(child);
+                         // TODO: Decide which flags should take priority
+                        TreeFlags del_flags = acr->tree_flags() | flags;
+                        r = ser_to_tree(child, del_flags);
                     });
                     return r;
                 }
@@ -89,10 +98,10 @@ Tree in::ser_to_tree (const Traversal& trav) {
         else throw;
     }
 }
-Tree item_to_tree (const Reference& item, const Location& loc) {
+Tree item_to_tree (const Reference& item, TreeFlags flags, const Location& loc) {
     Tree r;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
-        r = ser_to_tree(trav);
+        r = ser_to_tree(trav, flags);
     });
     return r;
 }
@@ -915,7 +924,7 @@ namespace ayu::test {
 } using namespace ayu::test;
 
 AYU_DESCRIBE(ayu::test::ToTreeTest,
-    to_tree([](const ToTreeTest& x){ return Tree(x.value); }),
+    to_tree([](const ToTreeTest& x, TreeFlags flags){ return Tree(x.value, flags); }),
     from_tree([](ToTreeTest& x, const Tree& t){ x.value = int(t); })
 )
 const ValuesTest vtnan = VTNAN;
@@ -1076,6 +1085,9 @@ static tap::TestSet tests ("base/ayu/serialize", []{
             String(name)
         );
     };
+
+    int32 seven = 7;
+    is(item_to_tree(&seven, PREFER_HEX).flags(), PREFER_HEX, "item_to_tree conveys TreeFlags");
 
     auto ttt = ToTreeTest{5};
     try_to_tree(&ttt, "5", "item_to_tree works with to_tree descriptor");

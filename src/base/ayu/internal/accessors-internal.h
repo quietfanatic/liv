@@ -8,6 +8,7 @@
 
 #include "../common.h"
 #include "../exception.h"
+#include "../tree.h"
 #include "../type.h"
 
 namespace ayu {
@@ -20,13 +21,20 @@ namespace in {
 ///// UNIVERSAL ACCESSOR STUFF
 
 enum AccessorFlags {
+     // Make TreeFlags-equivalent values the same value for optimization.
+     // Set PREFER_HEX on Trees
+    ACR_PREFER_HEX = 0x1,
+     // Set PREFER_COMPACT on Trees
+    ACR_PREFER_COMPACT = 0x2,
+     // Set PREFER_EXPANDED on Trees
+    ACR_PREFER_EXPANDED = 0x4,
      // Writes through this accessor will fail.  Attrs and elems with this
      // accessor will not be serialized.
-    ACR_READONLY = 0x1,
+    ACR_READONLY = 0x20,
      // Children considered addressable even if this item is not addressable.
-    ACR_PASS_THROUGH_ADDRESSABLE = 0x2,
+    ACR_PASS_THROUGH_ADDRESSABLE = 0x40,
      // Consider this ACR unaddressable even if it normally would be.
-    ACR_UNADDRESSABLE = 0x4,
+    ACR_UNADDRESSABLE = 0x80,
 };
 constexpr AccessorFlags operator | (const AccessorFlags& a, const AccessorFlags& b) {
     return AccessorFlags(int(a)|int(b));
@@ -112,6 +120,14 @@ struct Accessor {
     explicit constexpr Accessor (const AccessorVT* vt, uint8 flags = 0) :
         vt(vt), accessor_flags(flags)
     { }
+
+    TreeFlags tree_flags () const {
+        TreeFlags r = 0;
+        if (accessor_flags & ACR_PREFER_HEX) r |= PREFER_HEX;
+        if (accessor_flags & ACR_PREFER_COMPACT) r |= PREFER_COMPACT;
+        if (accessor_flags & ACR_PREFER_EXPANDED) r |= PREFER_EXPANDED;
+        return r;
+    }
 
     Type type (Mu* from) const { return vt->type(this, from); }
     void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {

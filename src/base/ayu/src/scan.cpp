@@ -240,6 +240,8 @@ Location reference_to_location (const Reference& item) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::ReferenceNotFound,
-    delegate(base<Error>()),
-    elems(elem(&ReferenceNotFound::type))
+    elems(
+        elem(base<Error>(), inherit),
+        elem(&ReferenceNotFound::type)
+    )
 )

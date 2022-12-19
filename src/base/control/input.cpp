@@ -158,7 +158,7 @@ Str input_to_string (const Input& input) {
 } using namespace control;
 
 AYU_DESCRIBE(control::Input,
-    to_tree([](const Input& input){
+    to_tree([](const Input& input, ayu::TreeFlags){
         ayu::Array a;
         if (input.type == NONE) return ayu::Tree(a);
         if (input.ctrl) a.emplace_back("ctrl"s);

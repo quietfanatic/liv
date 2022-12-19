@@ -19,11 +19,12 @@ namespace ayu {
  // Convert an item to a tree.  The optional location should match the
  // reference's location if provided.
 Tree item_to_tree (
-    const Reference&, const Location& loc = Location()
+    const Reference&, TreeFlags flags = 0, const Location& loc = Location()
 );
 
  // Flags to change the behavior of item_from_tree.
-enum ItemFromTreeFlags : uint8 {
+using ItemFromTreeFlags = uint32;
+enum : ItemFromTreeFlags {
      // If calling item_from_tree recursively, schedule swizzle and init
      // operations for after the outer call does its swizzle and init
      // operations respectively.  This will allow items to cyclically reference
@@ -48,22 +49,23 @@ enum ItemFromTreeFlags : uint8 {
  // item (this is what ayu::reload() on resources does).
 void item_from_tree (
     const Reference&, const Tree&, const Location& loc = Location(),
-    ItemFromTreeFlags flags = ItemFromTreeFlags{0}
+    ItemFromTreeFlags flags = 0
 );
 
 ///// MAIN OPERATION SHORTCUTS
 inline String item_to_string (
-    const Reference& item, PrintOptions opts = 0,
+    const Reference& item, TreeFlags flags = 0, PrintOptions opts = 0,
     const Location& loc = Location()
 ) {
-    return tree_to_string(item_to_tree(item, loc), opts);
+    return tree_to_string(item_to_tree(item, flags, loc), opts);
 }
 inline void item_to_file (
-    const Reference& item, Str filename, PrintOptions opts = 0,
-    const Location& loc = Location()
+    const Reference& item, Str filename, TreeFlags flags = 0,
+    PrintOptions opts = 0, const Location& loc = Location()
 ) {
-    return tree_to_file(item_to_tree(item, loc), filename, opts);
+    return tree_to_file(item_to_tree(item, flags, loc), filename, opts);
 }
+ // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (
     const Reference& item, Str src, const Location& loc = Location()
 ) {

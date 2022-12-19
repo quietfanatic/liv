@@ -14,7 +14,7 @@ struct RGBA8 {
     CE RGBA8 (uint32 rgba = 0) :
         r(rgba >> 24), g(rgba >> 16), b(rgba >> 8), a(rgba)
     { }
-    explicit CE operator uint32 () {
+    CE explicit operator uint32 () const {
         return uint32(r) << 24 | uint32(g) << 16 | uint32(b) << 8 | uint32(a);
     }
 };

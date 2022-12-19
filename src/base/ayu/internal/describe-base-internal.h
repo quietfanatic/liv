@@ -9,7 +9,7 @@ constexpr auto _AYU_DescribeBase<T>::name (Str(* f )()) {
 }
 
 template <class T>
-constexpr auto _AYU_DescribeBase<T>::to_tree (Tree(* f )(const T&)) {
+constexpr auto _AYU_DescribeBase<T>::to_tree (Tree(* f )(const T&, TreeFlags)) {
     return in::ToTreeDcr<T>{{}, f};
 }
 template <class T>

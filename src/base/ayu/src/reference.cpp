@@ -78,12 +78,12 @@ AYU_DESCRIBE(ayu::Reference,
      // mean you can't have a Reference pointing to a Location that is actually
      // a Reference.  Which...well, if you get to the point where you're trying
      // to do that, you should probably refactor anyway, after seeing a doctor.
-    to_tree([](const Reference& ref){
+    to_tree([](const Reference& ref, TreeFlags flags){
         if (ref) {
             Location loc = reference_to_location(ref);
-            return item_to_tree(&loc, current_location());
+            return item_to_tree(&loc, flags, current_location());
         }
-        else return Tree(null);
+        else return Tree(null, flags);
     }),
     from_tree([](Reference& v, const Tree&){
         v = Reference();

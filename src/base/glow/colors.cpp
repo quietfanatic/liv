@@ -5,14 +5,8 @@
 using namespace glow;
 
 AYU_DESCRIBE(glow::RGBA8,
-    to_tree([](const RGBA8& v){
-         // TODO: Allow specifying preference for hexadecimal in Tree
-        return ayu::Tree(ayu::Array{
-            ayu::Tree(v.r),
-            ayu::Tree(v.g),
-            ayu::Tree(v.b),
-            ayu::Tree(v.a)
-        });
+    to_tree([](const RGBA8& v, ayu::TreeFlags){
+        return ayu::Tree(uint32(v), ayu::PREFER_HEX);
     }),
     from_tree([](RGBA8& v, const ayu::Tree& t){
         if (t.form() == ayu::NUMBER) {

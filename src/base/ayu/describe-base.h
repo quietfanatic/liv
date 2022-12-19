@@ -71,8 +71,9 @@ struct _AYU_DescribeBase {
      // for serialization.  For most types this should not be needed; for
      // aggregate types you usually want attrs() or elems(), and for scalar
      // types delegate() or values().  For more complex types, however, you can
-     // use this and from_tree() to control serialization.
-    static constexpr auto to_tree (Tree(* f )(const T&));
+     // use this and from_tree() to control serialization.  The TreeFlags
+     // parameter should be either ignored or applied to the returned Tree.
+    static constexpr auto to_tree (Tree(* f )(const T&, TreeFlags));
      // Provides a function to transform an ayu::Tree into an item of this type
      // for deserialization.  For most types this should not be needed, but it's
      // available for more complex types if necessary.  The type will already
@@ -356,6 +357,15 @@ struct _AYU_DescribeBase {
      //   readonly by default and this flag is ignored.  Attrs and elems with
      //   readonly accessors will not be serialized, because they can't be
      //   deserialized anyway, so there's no point.
+     //   - prefer_hex: The item this accessor points to prefers to be
+     //   serialized in hexadecimal format if it's a number.
+     //   - prefer_compact: The item this accessor points to prefers to be
+     //   serialized compactly (for arrays and objects).
+     //   - prefer_expanded: The item this accessor points to prefers to be
+     //   serialized in expanded multi-line form (for arrays and objects).  The
+     //   behavior is unspecified if both prefer_compact and prefer_expanded are
+     //   given, and if multiple accessors are followed to reach an item, which
+     //   accessor's prefer_* flags are used is unspecified.
      //   - pass_through_addressable: Normally you can only take the address of
      //   a child item if its parent is also addressable, but if the parent
      //   item's accessor has pass_through_addressable, then instead you can
@@ -631,6 +641,9 @@ struct _AYU_DescribeBase {
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
     static constexpr in::AttrFlags inherit = in::ATTR_INHERIT;
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
+    static constexpr in::AccessorFlags prefer_hex = in::ACR_PREFER_HEX;
+    static constexpr in::AccessorFlags prefer_compact = in::ACR_PREFER_COMPACT;
+    static constexpr in::AccessorFlags prefer_expanded = in::ACR_PREFER_EXPANDED;
     static constexpr in::AccessorFlags pass_through_addressable =
         in::ACR_PASS_THROUGH_ADDRESSABLE;
     static constexpr in::AccessorFlags unaddressable = in::ACR_UNADDRESSABLE;

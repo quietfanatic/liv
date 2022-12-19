@@ -250,7 +250,7 @@ AYU_DESCRIBE(ayu::Form,
 
  // TODO: Add attrs and elems?
 AYU_DESCRIBE(ayu::Tree,
-    to_tree([](const Tree& v){ return v; }),
+    to_tree([](const Tree& v, TreeFlags){ return v; }),
     from_tree([](Tree& v, const Tree& t){ v = t; })
 )
 

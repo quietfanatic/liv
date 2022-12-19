@@ -266,7 +266,7 @@ void save (const std::vector<Resource>& reses) {
                 }
                 String filename = scheme->get_file(res.data->name);
                 auto contents = tree_to_string(
-                    item_to_tree(&res.data->value, Location(res))
+                    item_to_tree(&res.data->value, 0, Location(res))
                 );
                 committers[i] = [
                     contents{std::move(contents)},

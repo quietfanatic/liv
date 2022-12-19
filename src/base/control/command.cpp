@@ -57,7 +57,7 @@ AYU_DESCRIBE(const Command*,
 )
 
 AYU_DESCRIBE(Statement,
-    to_tree([](const Statement& s){
+    to_tree([](const Statement& s, ayu::TreeFlags){
          // Serialize the args and stick the command name in front
          // TODO: allow constructing readonly Reference from const Dynamic
         auto args_tree = ayu::item_to_tree(const_cast<ayu::Dynamic&>(s.args).ptr());

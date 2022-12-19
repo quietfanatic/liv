@@ -205,6 +205,7 @@ struct Printer {
                 const Object& o = t.data->as_known<Object>();
                 if (o.empty()) { out += "{}"sv; return; }
 
+                 // TODO: Decide what to do if both PREFER flags are set
                 bool expand = !(opts & PRETTY) ? false
                             : flags & PREFER_EXPANDED ? true
                             : flags & PREFER_COMPACT ? false
