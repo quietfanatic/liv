@@ -299,7 +299,6 @@ void unload (Resource res) {
     unload(reses);
 }
 void unload (const std::vector<Resource>& reses) {
-    static Type ref_type = Type::CppType<Reference>();
     std::vector<Resource> rs;
     for (auto res : reses)
     switch (res.data->state) {
@@ -340,7 +339,7 @@ void unload (const std::vector<Resource>& reses) {
                     other,
                     [&](Reference ref_ref, Location loc) {
                          // TODO: Check for Pointer as well
-                        if (ref_ref.type() != ref_type) return false;
+                        if (ref_ref.type() != Type::CppType<Reference>()) return false;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = ref_set.find(ref);
                         if (iter != ref_set.end()) {
@@ -406,7 +405,6 @@ void reload (Resource res) {
     reload(reses);
 }
 void reload (const std::vector<Resource>& reses) {
-    static Type ref_type = Type::CppType<Reference>();
     for (auto res : reses)
     if (res.data->state != LOADED) {
         throw X<InvalidResourceState>("reload"sv, res, res.data->state);
@@ -460,7 +458,7 @@ void reload (const std::vector<Resource>& reses) {
                     other,
                     [&](Reference ref_ref, Location loc) {
                          // TODO: scan Pointers as well
-                        if (ref_ref.type() != ref_type) return false;
+                        if (ref_ref.type() != Type::CppType<Reference>()) return false;
                         Reference ref = ref_ref.get_as<Reference>();
                         auto iter = old_refs.find(ref);
                         if (iter == old_refs.end()) return false;

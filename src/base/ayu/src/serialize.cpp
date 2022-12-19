@@ -294,9 +294,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
         Type keys_type = acr->type(trav.address);
          // Compare Type not std::type_info, since std::type_info can require a
          // string comparison.
-        static Type type_vector_str = Type::CppType<std::vector<Str>>();
-        static Type type_vector_string = Type::CppType<std::vector<String>>();
-        if (keys_type == type_vector_str) {
+        if (keys_type == Type::CppType<std::vector<Str>>()) {
              // Optimize for std::vector<Str>
             acr->read(*trav.address, [&](Mu& ksv){
                 auto& str_ksv = reinterpret_cast<const std::vector<Str>&>(ksv);
@@ -315,7 +313,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
                 }
             });
         }
-        else if (keys_type == type_vector_string) {
+        else if (keys_type == Type::CppType<std::vector<String>>()) {
              // Capitulate to std::vector<String> too.
             acr->read(*trav.address, [&](Mu& ksv){
                  // TODO: Flag accessor if it can be moved from?
@@ -413,15 +411,13 @@ void in::ser_claim_keys (
     if (auto acr = trav.desc->keys_acr()) {
         Type keys_type = acr->type(trav.address);
         if (!(acr->accessor_flags & ACR_READONLY)) {
-            static Type type_vector_str = Type::CppType<std::vector<Str>>();
-            static Type type_vector_string = Type::CppType<std::vector<String>>();
-            if (keys_type == type_vector_str) {
+            if (keys_type == Type::CppType<std::vector<Str>>()) {
                  // Optimize for std::vector<Str>
                 acr->write(*trav.address, [&](Mu& ksv){
                     reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
                 });
             }
-            else if (keys_type == type_vector_string) {
+            else if (keys_type == Type::CppType<std::vector<String>>()) {
                  // Compromise for std::vector<String> too
                 acr->write(*trav.address, [&](Mu& ksv){
                     reinterpret_cast<std::vector<String>&>(ksv) =

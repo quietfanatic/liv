@@ -25,6 +25,7 @@ namespace ayu::in {
     const Description* need_description_for_type_info (const std::type_info&);
     const Description* get_description_by_name (Str);
     const Description* need_description_for_name (Str);
+    [[noreturn]] void throw_UnknownType (const std::type_info&);
 
     Str get_description_name (const Description*);
      // If this returns false, the type is probably a corrupted pointer and
@@ -39,7 +40,8 @@ namespace ayu::in {
             return ayu_desc::_AYU_Describe<T>::_ayu_description;
         }
         else {
-            return get_description_by_type_info(typeid(T));
+            static auto r = get_description_by_type_info(typeid(T));
+            return r;
         }
     }
     template <class T> requires (
@@ -50,7 +52,10 @@ namespace ayu::in {
             return ayu_desc::_AYU_Describe<T>::_ayu_description;
         }
         else {
-            return need_description_for_type_info(typeid(T));
+            if (auto r = get_description_by_cpp_type<T>()) {
+                return r;
+            }
+            else throw_UnknownType(typeid(T));
         }
     }
     std::string get_demangled_name (const std::type_info& t);

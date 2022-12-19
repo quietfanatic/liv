@@ -211,6 +211,9 @@ const Description* need_description_for_name (Str name) {
     if (desc) return desc;
     else throw X<TypeNotFound>(String(name));
 }
+void throw_UnknownType (const std::type_info& t) {
+    throw X<UnknownType>(t);
+}
 
 Str get_description_name (const Description* desc) {
     return desc->name_offset
