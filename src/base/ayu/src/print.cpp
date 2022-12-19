@@ -13,10 +13,10 @@ namespace ayu {
 namespace in {
 
 struct Printer {
-    String& out;
+    String out;
     PrintOptions opts;
 
-    Printer (String& o, PrintOptions f) : out(o), opts(f) { }
+    Printer (PrintOptions f) : opts(f) { }
 
     void print_quoted (Str s, bool expand = false) {
         out += '"';
@@ -270,10 +270,10 @@ static void validate_print_options (PrintOptions opts) {
 String tree_to_string (const Tree& t, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & PRETTY)) opts |= COMPACT;
-    String r;
-    Printer(r, opts).print_tree(t, 0);
-    if (opts & PRETTY) r += '\n';
-    return r;
+    Printer p (opts);
+    p.print_tree(t, 0);
+    if (opts & PRETTY) p.out += '\n';
+    return std::move(p.out);
 }
 
  // Forget C++ IO and its crummy diagnostics
