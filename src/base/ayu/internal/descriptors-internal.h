@@ -431,6 +431,7 @@ using FullDescription = Cat<
 >;
 
  // Jank compile-time error messages
+template <class T>
 static void duplicate_descriptors_in_AYU_DESCRIBE () { }
 static void element_in_AYU_DESCRIBE_is_not_a_descriptor_for_this_type () { }
 static void attrs_cannot_be_combined_with_keys_and_attr_func_in_AYU_DESCRIBE () { }
@@ -464,21 +465,20 @@ constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&...
     for_variadic([&]<class Dcr>(const Dcr& dcr){
         if constexpr (std::is_base_of_v<DefaultConstructDcr<T>, Dcr>) {
             if (header.default_construct != default_construct_p<T>) {
-                duplicate_descriptors_in_AYU_DESCRIBE();
+                duplicate_descriptors_in_AYU_DESCRIBE<Dcr>();
             }
             header.default_construct = dcr.f;
         }
         else if constexpr (std::is_base_of_v<DestroyDcr<T>, Dcr>) {
             if (header.destroy != destroy_p<T>) {
-                 // Not sure how to print an error message at constexpr time
-                throw "Multiple destroy descriptors in AYU_DESCRIBE";
+                duplicate_descriptors_in_AYU_DESCRIBE<Dcr>();
             }
             header.destroy = dcr.f;
         }
         else if constexpr (std::is_base_of_v<NameDcr<T>, Dcr>) {
 #define AYU_APPLY_OFFSET(dcr_type, dcr_name) \
             if (header.dcr_name##_offset) { \
-                throw "Multiple " #dcr_name " descriptors in AYU_DESCRIBE"; \
+                duplicate_descriptors_in_AYU_DESCRIBE<Dcr>(); \
             } \
             header.dcr_name##_offset = \
                 desc.template get<dcr_type<T>>(0)->get_offset(header);
