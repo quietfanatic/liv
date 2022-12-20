@@ -194,7 +194,7 @@ AYU_DESCRIBE(control::Input,
         const auto& a = ayu::Array(tree);
         input = {};
         for (auto& e : a) {
-            if (e.form() == ayu::NUMBER) {
+            if (e.form == ayu::NUMBER) {
                 if (input.type != NONE) {
                     throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
                 }

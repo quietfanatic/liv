@@ -41,23 +41,19 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
     bool matches_tree (Tree tree) const {
         switch (form) {
             case VFNULL:
-                return tree.form() == NULLFORM;
+                return tree.form == NULLFORM;
             case VFBOOL:
-                return tree.form() == BOOL
-                    && tree.data->as_known<bool>() == *(const bool*)name();
+                return tree.form == BOOL
+                    && tree_bool(tree) == *(const bool*)name();
             case VFINT64:
-                return tree.form() == NUMBER
+                return tree.form == NUMBER
                     && tree == Tree(*(const int64*)name());
             case VFDOUBLE:
-                if (tree.form() == NUMBER) {
-                    double a = double(tree);
-                    double b = *(const double*)name();
-                    return a == b || (a != a && b != b);
-                }
-                else return false;
+                return tree.form == NUMBER
+                    && tree == Tree(*(const double*)name());
             case VFSTR:
-                return tree.form() == STRING
-                    && tree.data->as_known<String>() == *(const Str*)name();
+                return tree.form == STRING
+                    && tree_String(tree) == *(const Str*)name();
             default: AYU_INTERNAL_UGUU();
         }
     }

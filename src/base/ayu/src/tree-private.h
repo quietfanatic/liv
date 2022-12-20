@@ -8,84 +8,38 @@
 
 namespace ayu::in {
 
-enum class Rep : uint8 {
-    UNDEFINED,
-    NULLREP,
-    BOOL,
-    INT64,
-    DOUBLE,
-    STRING,
-    ARRAY,
-    OBJECT,
-    ERROR
-};
-
-constexpr Form form_of_rep (Rep rep) {
-    switch (rep) {
-        case Rep::NULLREP: return NULLFORM;
-        case Rep::BOOL: return BOOL;
-        case Rep::INT64: return NUMBER;
-        case Rep::DOUBLE: return NUMBER;
-        case Rep::STRING: return STRING;
-        case Rep::ARRAY: return ARRAY;
-        case Rep::OBJECT: return OBJECT;
-        case Rep::ERROR: return ERROR;
-        default: AYU_INTERNAL_UGUU();
-    }
-}
-
-template <class T> constexpr Rep rep_of_type;
-template <> constexpr Rep rep_of_type<Null> = Rep::NULLREP;
-template <> constexpr Rep rep_of_type<bool> = Rep::BOOL;
-template <> constexpr Rep rep_of_type<int64> = Rep::INT64;
-template <> constexpr Rep rep_of_type<double> = Rep::DOUBLE;
-template <> constexpr Rep rep_of_type<String> = Rep::STRING;
-template <> constexpr Rep rep_of_type<Array> = Rep::ARRAY;
-template <> constexpr Rep rep_of_type<Object> = Rep::OBJECT;
-template <> constexpr Rep rep_of_type<std::exception_ptr> = Rep::ERROR;
-
-template <class T> constexpr Form form_of_type = form_of_rep(rep_of_type<T>);
-
-template <class T> struct TreeDataT;
-
-struct TreeData : RefCounted {
-    Rep rep;
-    TreeFlags flags;
-
-    TreeData (Rep r, TreeFlags fs, uint32 rc = 0) :
-        RefCounted{rc}, rep(r), flags(fs)
-    { }
-
-    template <class T>
-    T& as_known () { return static_cast<TreeDataT<T>*>(this)->value; }
-    template <class T>
-    T& as () {
-        if (rep_of_type<T> == rep) return as_known<T>();
-        else if (rep == Rep::ERROR) {
-            std::rethrow_exception(as_known<std::exception_ptr>());
-        }
-        else throw X<WrongForm>(form_of_type<T>, Tree(this));
-    }
+using TreeRep = uint8;
+enum : TreeRep {
+    REP_UNDEFINED,
+    REP_NULL,
+    REP_BOOL,
+    REP_INT64,
+    REP_DOUBLE,
+    REP_STRING,
+    REP_ARRAY,
+    REP_OBJECT,
+    REP_ERROR
 };
 
 template <class T>
-struct TreeDataT : TreeData {
+struct TreeData : RefCounted {
     T value;
-    TreeDataT (const T& v, TreeFlags fs, uint32 rc = 0) :
-        TreeData(rep_of_type<T>, fs, rc), value(v)
-    { }
-    TreeDataT (T&& v, TreeFlags fs, uint32 rc = 0) :
-        TreeData(rep_of_type<T>, fs, rc), value(std::move(v))
-    { }
 };
 
-} // namespace ayu::in
-
-namespace tap {
-    template <>
-    struct Show<ayu::Tree> {
-        std::string show (const ayu::Tree& t) {
-            return tree_to_string(t);
-        }
-    };
+inline bool tree_bool (const Tree& t) { return t.data.as_usize; }
+inline int64 tree_int64 (const Tree& t) { return t.data.as_int64; }
+inline double tree_double (const Tree& t) { return t.data.as_double; }
+inline const String& tree_String (const Tree& t) {
+    return ((const TreeData<String>*)t.data.as_ptr)->value;
 }
+inline const Array& tree_Array (const Tree& t) {
+    return ((const TreeData<Array>*)t.data.as_ptr)->value;
+}
+inline const Object& tree_Object (const Tree& t) {
+    return ((const TreeData<Object>*)t.data.as_ptr)->value;
+}
+inline const std::exception_ptr& tree_Error (const Tree& t) {
+    return ((const TreeData<std::exception_ptr>*)t.data.as_ptr)->value;
+}
+
+} // namespace ayu::in

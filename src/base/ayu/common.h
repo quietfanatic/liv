@@ -89,6 +89,7 @@ namespace in {
 
  // I'm sick and tired of weirdness around string concatenation operators.
  // Just use this.  It will probably end up being more efficient anyway.
+ // TODO: Simplify the overloads
 template <class... Args>
 String cat (Args&&... args) {
     String r; // Should we reserve()?  Profile!
@@ -99,7 +100,7 @@ String cat (Args&&... args) {
 template <class... Args>
 String cat (String&& s, Args... args) {
     String r = std::move(s);
-    ((r += in::to_string(std::forward<Args>(args))), ...);
+    ((s += in::to_string(std::forward<Args>(args))), ...);
     return r;
 }
 

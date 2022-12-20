@@ -83,6 +83,8 @@ struct _AYU_DescribeBase {
      // elems, but the from_tree process will ignore the attrs and elems and
      // will not recursively call their swizzle or init descriptors.
      //
+     // The provided Tree will never be the undefined Tree.
+     //
      // TODO: Add construct_from_tree for types that refuse to be default
      // constructed no matter what.
     static constexpr auto from_tree (void(* f )(T&, const Tree&));

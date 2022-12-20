@@ -24,12 +24,12 @@ namespace in {
         const ResourceScheme* scheme,
         const Tree& tree
     ) {
-        if (tree.form() == NULLFORM) {
+        if (tree.form == NULLFORM) {
             throw X<EmptyResourceValue>(String(res.name().spec()));
         }
-        const Array& array = Array(tree);
-        if (array.size() == 2) {
-            Type type = Type(Str(array[0]));
+        const Array& a = static_cast<const Array&>(tree);
+        if (a.size() == 2) {
+            Type type = Type(Str(a[0]));
             if (!scheme->accepts_type(type)) {
                 throw X<UnacceptableResourceType>{
                     String(res.name().spec()), type

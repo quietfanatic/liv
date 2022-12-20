@@ -89,7 +89,7 @@ AYU_DESCRIBE(ayu::Reference,
         v = Reference();
     }),
     swizzle([](Reference& v, const Tree& t){
-        if (t.form() != NULLFORM) {
+        if (t.form != NULLFORM) {
             Location loc;
              // DELAY_SWIZZLE enables cyclic references.
             item_from_tree(&loc, t, current_location(), DELAY_SWIZZLE);

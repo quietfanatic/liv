@@ -270,7 +270,7 @@ struct Parser {
                 default: break;
             }
             Tree key = parse_term();
-            if (key.form() != STRING) {
+            if (key.form != STRING) {
                 error("Can't use non-string "sv, tree_to_string(key), " as key in object"sv);
             }
             skip_ws();
@@ -325,7 +325,7 @@ struct Parser {
             default: error("Expected ref name after &"sv);
         }
         Tree name = parse_term();
-        if (name.form() != STRING) {
+        if (name.form != STRING) {
             error("Can't use non-string "sv, tree_to_string(name), " as ref name"sv);
         }
         skip_ws();
@@ -354,7 +354,7 @@ struct Parser {
             default: error("Expected ref name after *"sv);
         }
         Tree name = parse_term();
-        if (name.form() != STRING) {
+        if (name.form != STRING) {
             error("Can't use non-string "sv, tree_to_string(name), " as ref name"sv);
         }
         return get_shortcut(Str(name));

@@ -69,7 +69,7 @@ struct StrVector : std::vector<Str> {
 
  // Implement get_keys by adding keys to a StrVector
 void ser_collect_key_str (StrVector&, Str);
-void ser_collect_key_string (StrVector&, String&&);
+void ser_collect_key_string (StrVector&, const String&);
 void ser_collect_keys (const Traversal&, StrVector&);
 
  // Implement set_keys by removing keys from a std::vector<Str>

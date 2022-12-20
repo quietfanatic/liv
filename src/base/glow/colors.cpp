@@ -9,10 +9,10 @@ AYU_DESCRIBE(glow::RGBA8,
         return ayu::Tree(uint32(v), ayu::PREFER_HEX);
     }),
     from_tree([](RGBA8& v, const ayu::Tree& t){
-        if (t.form() == ayu::NUMBER) {
+        if (t.form == ayu::NUMBER) {
             v = RGBA8(int32(t));
         }
-        else if (t.form() == ayu::ARRAY) {
+        else if (t.form == ayu::ARRAY) {
             auto& a = static_cast<const ayu::Array&>(t);
             if (a.size() != 4) {
                 throw ayu::X<ayu::WrongLength>(

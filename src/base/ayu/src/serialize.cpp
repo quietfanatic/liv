@@ -91,9 +91,7 @@ Tree in::ser_to_tree (const Traversal& trav, TreeFlags flags) {
     }
     catch (const Error& e) {
         if (diagnostic_serialization) {
-            return Tree(new TreeDataT<std::exception_ptr>(
-                std::current_exception(), 0
-            ));
+            return Tree(std::current_exception());
         }
         else throw;
     }
@@ -114,10 +112,10 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
-    switch (tree.form()) {
+    switch (tree.form) {
         case OBJECT: {
             if (trav.desc->accepts_object()) {
-                auto& o = tree.data->as_known<Object>();
+                auto& o = tree_Object(tree);
                 std::vector<Str> ks;
                 for (auto& p : o) {
                     ks.emplace_back(p.first);
@@ -136,7 +134,7 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
         }
         case ARRAY: {
             if (trav.desc->accepts_array()) {
-                auto& a = tree.data->as_known<Array>();
+                auto& a = tree_Array(tree);
                 ser_set_length(trav, a.size());
                 for (usize i = 0; i < a.size(); i++) {
                     ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
@@ -149,7 +147,7 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
         }
         case ERROR: {
              // Dunno how we got this far but whatever
-            std::rethrow_exception(tree.data->as_known<std::exception_ptr>());
+            std::rethrow_exception(tree_Error(tree));
         }
         default: {
              // All other tree types support the values descriptor
@@ -178,12 +176,12 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
     if (trav.desc->swizzle()) goto done;
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong
-    if (tree.form() == OBJECT &&
+    if (tree.form == OBJECT &&
         (trav.desc->values() || trav.desc->accepts_array())
     ) {
         throw X<InvalidForm>(trav_location(trav), tree);
     }
-    else if (tree.form() == ARRAY &&
+    else if (tree.form == ARRAY &&
         (trav.desc->values() || trav.desc->accepts_object())
     ) {
         throw X<InvalidForm>(trav_location(trav), tree);
@@ -256,6 +254,9 @@ void item_from_tree (
     const Reference& item, const Tree& tree, const Location& loc,
     ItemFromTreeFlags flags
 ) {
+    if (tree.form == UNDEFINED) {
+        throw X<GenericError>("Undefined tree passed to item_from_tree");
+    }
     if (flags & DELAY_SWIZZLE && IFTContext::current) {
          // Delay swizzle and inits to the outer item_from_tree call.  Basically
          // this just means keep the current context instead of making a new
@@ -281,10 +282,10 @@ void in::ser_collect_key_str (StrVector& ks, Str k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
-void in::ser_collect_key_string (StrVector& ks, String&& k) {
+void in::ser_collect_key_string (StrVector& ks, const String& k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.owned_strings = std::make_unique<OwnedStringNode>(
-        std::move(k), std::move(ks.owned_strings)
+        k, std::move(ks.owned_strings)
     );
     ks.emplace_back(ks.owned_strings->s);
 }
@@ -318,7 +319,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
             acr->read(*trav.address, [&](Mu& ksv){
                  // TODO: Flag accessor if it can be moved from?
                 for (auto& k : reinterpret_cast<const std::vector<String>&>(ksv)) {
-                    ser_collect_key_string(ks, String(k));
+                    ser_collect_key_string(ks, k);
                 }
             });
         }
@@ -328,15 +329,15 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
                  // We might be able to optimize this more, but it's not that
                  // important.
                 auto tree = item_to_tree(Pointer(&ksv, keys_type));
-                if (tree.form() != ARRAY) {
+                if (tree.form != ARRAY) {
                     throw X<InvalidKeysType>(trav_location(trav), keys_type);
                 }
-                for (Tree& e : tree.data->as_known<Array>()) {
-                    if (e.form() != STRING) {
+                for (const Tree& e : tree_Array(tree)) {
+                    if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
                     ser_collect_key_string(
-                        ks, std::move(e.data->as_known<String>())
+                        ks, tree_String(tree)
                     );
                 }
             });
@@ -1083,7 +1084,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     };
 
     int32 seven = 7;
-    is(item_to_tree(&seven, PREFER_HEX).flags(), PREFER_HEX, "item_to_tree conveys TreeFlags");
+    is(item_to_tree(&seven, PREFER_HEX).flags, PREFER_HEX, "item_to_tree conveys TreeFlags");
 
     auto ttt = ToTreeTest{5};
     try_to_tree(&ttt, "5", "item_to_tree works with to_tree descriptor");

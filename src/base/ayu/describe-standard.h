@@ -161,7 +161,7 @@ AYU_DESCRIBE_TEMPLATE(
         return ayu::Tree(std::move(a), flags);
     }),
     desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
-        if (tree.form() != ayu::ARRAY) {
+        if (tree.form != ayu::ARRAY) {
             throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
         auto& a = static_cast<const ayu::Array&>(tree);
@@ -211,7 +211,7 @@ AYU_DESCRIBE_TEMPLATE(
         return ayu::Tree(std::move(a), flags);
     }),
     desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
-        if (tree.form() != ayu::ARRAY) {
+        if (tree.form != ayu::ARRAY) {
             throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
         auto& a = static_cast<const ayu::Array&>(tree);
@@ -293,7 +293,7 @@ AYU_DESCRIBE_TEMPLATE(
     }),
      // Deserialize as either a string or an array
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
-        if (tree.form() == ayu::STRING) {
+        if (tree.form == ayu::STRING) {
             auto s = ayu::Str(tree);
             if (s.size() != n) {
                 throw ayu::X<ayu::WrongLength>(&v, n, n, s.size());
@@ -302,7 +302,7 @@ AYU_DESCRIBE_TEMPLATE(
                 v[i] = s[i];
             }
         }
-        else if (tree.form() == ayu::ARRAY) {
+        else if (tree.form == ayu::ARRAY) {
             auto& a = static_cast<const ayu::Array&>(tree);
             if (a.size() != n) {
                 throw ayu::X<ayu::WrongLength>(&v, n, n, a.size());

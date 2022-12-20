@@ -12,8 +12,6 @@ struct Description;
 struct LocationData;
 void delete_LocationData (LocationData*);
 struct ResourceData;
-struct TreeData;
-void delete_TreeData (TreeData*);
 
  // Intrusive reference counting
 struct RefCounted {

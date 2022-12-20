@@ -174,19 +174,18 @@ struct Printer {
 
     [[nodiscard]]
     char* print_subtree (char* p, const Tree& t, uint ind) {
-        TreeFlags flags = t.data->flags;
-        switch (t.data->rep) {
-            case Rep::NULLREP: return pstr(p, "null"sv);
-            case Rep::BOOL: {
-                Str s = t.data->as_known<bool>() ? "true"sv : "false"sv;
+        switch (t.rep) {
+            case REP_NULL: return pstr(p, "null"sv);
+            case REP_BOOL: {
+                Str s = tree_bool(t) ? "true"sv : "false"sv;
                 return pstr(p, s);
             }
-            case Rep::INT64: {
-                bool hex = !(opts & JSON) && flags & PREFER_HEX;
-                return print_int64(p, t.data->as_known<int64>(), hex);
+            case REP_INT64: {
+                bool hex = !(opts & JSON) && t.flags & PREFER_HEX;
+                return print_int64(p, tree_int64(t), hex);
             }
-            case Rep::DOUBLE: {
-                double v = t.data->as_known<double>();
+            case REP_DOUBLE: {
+                double v = tree_double(t);
                 if (v != v) {
                     return pstr(p, opts & JSON ? "null"sv : "+nan"sv);
                 }
@@ -203,16 +202,16 @@ struct Printer {
                     return pchar(p, '0');
                 }
                 else {
-                    bool hex = !(opts & JSON) && flags & PREFER_HEX;
+                    bool hex = !(opts & JSON) && t.flags & PREFER_HEX;
                     return print_double(p, v, hex);
                 }
             }
-            case Rep::STRING:
+            case REP_STRING:
                 return print_string(
-                    p, t.data->as_known<String>(), flags & PREFER_EXPANDED
+                    p, tree_String(t), t.flags & PREFER_EXPANDED
                 );
-            case Rep::ARRAY: {
-                const Array& a = t.data->as_known<Array>();
+            case REP_ARRAY: {
+                const Array& a = tree_Array(t);
                 if (a.empty()) {
                     return pstr(p, "[]"sv);
                 }
@@ -220,8 +219,8 @@ struct Printer {
                  // Print "small" arrays compactly.
                  // TODO: Revise this?
                 bool expand = !(opts & PRETTY) ? false
-                            : flags & PREFER_EXPANDED ? true
-                            : flags & PREFER_COMPACT ? false
+                            : t.flags & PREFER_EXPANDED ? true
+                            : t.flags & PREFER_COMPACT ? false
                             : a.size() > 4;
 
                 bool show_indices = expand
@@ -250,16 +249,16 @@ struct Printer {
                 if (expand) p = print_newline(p, ind);
                 return pchar(p, ']');
             }
-            case Rep::OBJECT: {
-                const Object& o = t.data->as_known<Object>();
+            case REP_OBJECT: {
+                const Object& o = tree_Object(t);
                 if (o.empty()) {
                     return pstr(p, "{}"sv);
                 }
 
                  // TODO: Decide what to do if both PREFER flags are set
                 bool expand = !(opts & PRETTY) ? false
-                            : flags & PREFER_EXPANDED ? true
-                            : flags & PREFER_COMPACT ? false
+                            : t.flags & PREFER_EXPANDED ? true
+                            : t.flags & PREFER_COMPACT ? false
                             : o.size() > 1;
 
                 p = pchar(p, '{');
@@ -286,11 +285,9 @@ struct Printer {
                 if (expand) p = print_newline(p, ind);
                 return pchar(p, '}');
             }
-            case Rep::ERROR: {
+            case REP_ERROR: {
                 try {
-                    std::rethrow_exception(
-                        t.data->as_known<std::exception_ptr>()
-                    );
+                    std::rethrow_exception(tree_Error(t));
                 }
                 catch (const std::exception& e) {
                     Str name;

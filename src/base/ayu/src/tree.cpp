@@ -7,7 +7,7 @@
 namespace ayu {
 using namespace in;
 
-Str form_name (Form f) {
+Str form_name (TreeForm f) {
     switch (f) {
         case NULLFORM: return "null"sv;
         case BOOL: return "bool"sv;
@@ -20,119 +20,116 @@ Str form_name (Form f) {
     }
 }
 
-namespace in {
-    void delete_TreeData (TreeData* data) {
-        switch (data->rep) {
-             // Only bothering with cases where the data needs destructing.
-            case Rep::STRING: delete static_cast<TreeDataT<String>*>(data); break;
-            case Rep::ARRAY: delete static_cast<TreeDataT<Array>*>(data); break;
-            case Rep::OBJECT: delete static_cast<TreeDataT<Object>*>(data); break;
-            case Rep::ERROR: delete static_cast<TreeDataT<std::exception_ptr>*>(data); break;
-            default: delete data; break;
+Tree::Tree (const Tree& o) :
+    form(o.form), rep(o.rep), flags(o.flags), data(o.data)
+{
+    switch (rep) {
+        case REP_STRING:
+        case REP_ARRAY:
+        case REP_OBJECT:
+        case REP_ERROR:
+            data.as_ptr->ref_count++;
+            break;
+    }
+}
+
+Tree::~Tree () {
+    switch (rep) {
+        case REP_STRING: {
+            if (!--data.as_ptr->ref_count) {
+                delete static_cast<const TreeData<String>*>(data.as_ptr);
+            }
+            break;
+        }
+        case REP_ARRAY: {
+            if (!--data.as_ptr->ref_count) {
+                delete static_cast<const TreeData<Array>*>(data.as_ptr);
+            }
+            break;
+        }
+        case REP_OBJECT: {
+            if (!--data.as_ptr->ref_count) {
+                delete static_cast<const TreeData<Object>*>(data.as_ptr);
+            }
+            break;
+        }
+        case REP_ERROR: {
+            if (!--data.as_ptr->ref_count) {
+                delete static_cast<const TreeData<std::exception_ptr>*>(data.as_ptr);
+            }
+            break;
         }
     }
 }
 
-Form Tree::form () const { return form_of_rep(data->rep); }
-TreeFlags Tree::flags () const { return data->flags; }
-
-static TreeDataT<Null> global_null {null, 0, 1};
-static TreeDataT<bool> global_false {false, 0, 1};
-static TreeDataT<bool> global_true {true, 0, 1};
-static TreeDataT<int64> global_ints [16] = {
-    {-8, 0, 1},
-    {-7, 0, 1},
-    {-6, 0, 1},
-    {-5, 0, 1},
-    {-4, 0, 1},
-    {-3, 0, 1},
-    {-2, 0, 1},
-    {-1, 0, 1},
-    {0, 0, 1},
-    {1, 0, 1},
-    {2, 0, 1},
-    {3, 0, 1},
-    {4, 0, 1},
-    {5, 0, 1},
-    {6, 0, 1},
-    {7, 0, 1}
-};
-static TreeDataT<double> global_nan {nan, 0, 1};
-static TreeDataT<double> global_plus_inf {inf, 0, 1};
-static TreeDataT<double> global_minus_inf {-inf, 0, 1};
-static TreeDataT<double> global_minus_zero {-0.0, 0, 1};
-static TreeDataT<String> global_empty_string {""s, 0, 1};
-static TreeDataT<Array> global_empty_array {Array{}, 0, 1};
-static TreeDataT<Object> global_empty_object {Object{}, 0, 1};
-
-Tree::Tree (Null, TreeFlags) : Tree(&global_null) { }
-namespace in {
-    TreeData* TreeData_bool (bool v, TreeFlags) {
-        return v ? &global_true : &global_false;
+Tree::Tree (Null, TreeFlags flags) :
+    form(NULLFORM), rep(REP_NULL), flags(flags), data{}
+{ }
+Tree::Tree (ExplicitBool v, TreeFlags flags) :
+    form(BOOL), rep(REP_BOOL), flags(flags), data{.as_usize = v.v}
+{ }
+Tree::Tree (int64 v, TreeFlags flags) :
+    form(NUMBER), rep(REP_INT64), flags(flags), data{.as_int64 = v}
+{ }
+Tree::Tree (double v, TreeFlags flags) :
+    form(NUMBER), rep(REP_DOUBLE), flags(flags), data{.as_double = v}
+{ }
+Tree::Tree (String&& v, TreeFlags flags) :
+    form(STRING), rep(REP_STRING), flags(flags), data{
+        .as_ptr = new TreeData<String>({1}, std::move(v))
     }
-}
-Tree::Tree (int64 v, TreeFlags flags) : Tree(
-    flags == 0 && v >= -8 && v < 8
-        ? &global_ints[v+8]
-        : new TreeDataT<int64>(v, flags)
-) { }
-Tree::Tree (double v, TreeFlags flags) : Tree(
-    flags != 0 ? static_cast<TreeData*>(new TreeDataT<double>(v, flags))
-  : v != v ? static_cast<TreeData*>(&global_nan)
-  : v == inf ? static_cast<TreeData*>(&global_plus_inf)
-  : v == -inf ? static_cast<TreeData*>(&global_minus_inf)
-  : v == 0 && (1.0/v == -inf) ? static_cast<TreeData*>(&global_minus_zero)
-  : int64(v) == v && int64(v) >= -8 && int64(v) < 8
-      ? static_cast<TreeData*>(&global_ints[int64(v)+8])
-      : static_cast<TreeData*>(new TreeDataT<double>(v, flags))
-) { }
-Tree::Tree (String&& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_string
-              : new TreeDataT<String>(std::move(v), flags)
-) { }
-Tree::Tree (String16&& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_string
-              : new TreeDataT<String>(from_utf16(v), flags)
-) { }
-Tree::Tree (const Array& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_array
-              : new TreeDataT<Array>(v, flags)
-) { }
-Tree::Tree (Array&& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_array
-              : new TreeDataT<Array>(std::move(v), flags)
-) { }
-Tree::Tree (const Object& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_object
-              : new TreeDataT<Object>(v, flags)
-) { }
-Tree::Tree (Object&& v, TreeFlags flags) : Tree(
-    v.empty() ? &global_empty_object
-              : new TreeDataT<Object>(std::move(v), flags)
-) { }
+{ }
+Tree::Tree (String16&& v, TreeFlags flags) : Tree(from_utf16(v), flags) { }
+Tree::Tree (Array v, TreeFlags flags) :
+    form(ARRAY), rep(REP_ARRAY), flags(flags), data{
+        .as_ptr = new TreeData<Array>({1}, std::move(v))
+    }
+{ }
+Tree::Tree (Object v, TreeFlags flags) :
+    form(OBJECT), rep(REP_OBJECT), flags(flags), data{
+        .as_ptr = new TreeData<Object>({1}, std::move(v))
+    }
+{ }
+Tree::Tree (std::exception_ptr v, TreeFlags flags) :
+    form(ERROR), rep(REP_ERROR), flags(flags), data{
+        .as_ptr = new TreeData<std::exception_ptr>({1}, std::move(v))
+    }
+{ }
 
-Tree::operator Null () const { return data->as<Null>(); }
-Tree::operator bool () const { return data->as<bool>(); }
+static void require_form (const Tree& t, TreeForm form) {
+    if (t.rep == REP_ERROR) std::rethrow_exception(tree_Error(t));
+    else if (t.form != form) throw X<WrongForm>(form, t);
+}
+
+Tree::operator Null () const {
+    require_form(*this, NULLFORM);
+    return null;
+}
+Tree::operator bool () const {
+    require_form(*this, BOOL);
+    return tree_bool(*this);
+}
 Tree::operator char () const {
-    const String& s = data->as<String>();
+    require_form(*this, STRING);
+    const String& s = tree_String(*this);
     if (s.size() == 1) return s[0];
     else throw X<CantRepresent>("char", *this);
 }
 #define INTEGRAL_CONVERSION(T) \
 Tree::operator T () const { \
-    switch (data->rep) { \
-        case Rep::INT64: { \
-            int64 v = data->as_known<int64>(); \
+    switch (rep) { \
+        case REP_INT64: { \
+            int64 v = tree_int64(*this); \
             if (int64(T(v)) == v) return v; \
             else throw X<CantRepresent>(#T, *this); \
         } \
-        case Rep::DOUBLE: { \
-            double v = data->as_known<double>(); \
+        case REP_DOUBLE: { \
+            double v = tree_double(*this); \
             if (double(T(v)) == v) return v; \
             else throw X<CantRepresent>(#T, *this); \
         } \
-        case Rep::ERROR: { \
-            std::rethrow_exception(data->as_known<std::exception_ptr>()); \
+        case REP_ERROR: { \
+            std::rethrow_exception(tree_Error(*this)); \
         } \
         default: throw X<WrongForm>(NUMBER, *this); \
     } \
@@ -145,90 +142,111 @@ INTEGRAL_CONVERSION(int32)
 INTEGRAL_CONVERSION(uint32)
 INTEGRAL_CONVERSION(int64)
 INTEGRAL_CONVERSION(uint64)
+#undef INTEGRAL_CONVERSION
 Tree::operator double () const {
-    switch (data->rep) {
+    switch (rep) {
          // Special case: allow null to represent +nan for JSON compatibility
-        case Rep::NULLREP: return nan;
-        case Rep::INT64: return data->as_known<int64>();
-        case Rep::DOUBLE: return data->as_known<double>();
-        case Rep::ERROR: {
-            rethrow_exception(data->as_known<std::exception_ptr>());
-        }
+        case REP_NULL: return +nan;
+        case REP_INT64: return tree_int64(*this);
+        case REP_DOUBLE: return tree_double(*this);
+        case REP_ERROR: std::rethrow_exception(tree_Error(*this));
         default: throw X<WrongForm>(NUMBER, *this);
     }
 }
-Tree::operator Str () const { return data->as<String>(); }
-Tree::operator String () const { return data->as<String>(); }
-Tree::operator String16 () const { return to_utf16(data->as<String>()); }
-Tree::operator const Array& () const { return data->as<Array>(); }
-Tree::operator const Object& () const { return data->as<Object>(); }
+Tree::operator Str () const {
+    require_form(*this, STRING);
+    return tree_String(*this);
+}
+Tree::operator String () const {
+    require_form(*this, STRING);
+    return tree_String(*this);
+}
+Tree::operator String16 () const {
+    require_form(*this, STRING);
+    return to_utf16(tree_String(*this));
+}
+Tree::operator const Array& () const {
+    require_form(*this, ARRAY);
+    return tree_Array(*this);
+}
+Tree::operator const Object& () const {
+    require_form(*this, OBJECT);
+    return tree_Object(*this);
+}
 
-Tree* Tree::attr (Str key) const {
-    for (auto& p : data->as<Object>()) {
+const Tree* Tree::attr (Str key) const {
+    require_form(*this, OBJECT);
+    for (auto& p : tree_Object(*this)) {
         if (p.first == key) return &p.second;
     }
     return null;
 }
-Tree* Tree::elem (usize index) const {
-    if (index >= data->as<Array>().size()) return null;
-    return &data->as_known<Array>()[index];
+const Tree* Tree::elem (usize index) const {
+    require_form(*this, ARRAY);
+    if (index >= tree_Array(*this).size()) return null;
+    return &tree_Array(*this)[index];
 }
-Tree Tree::operator[] (Str key) const {
-    if (Tree* r = attr(key)) return *r;
-    else throw X<GenericError>{cat(
+const Tree& Tree::operator[] (Str key) const {
+    if (const Tree* r = attr(key)) return *r;
+    else throw X<GenericError>(cat(
         "This tree has no attr with key \""sv, key, '"'
-    )};
+    ));
 }
-Tree Tree::operator[] (usize index) const {
-    if (Tree* r = elem(index)) return *r;
-    else throw X<GenericError>{cat(
+const Tree& Tree::operator[] (usize index) const {
+    if (const Tree* r = elem(index)) return *r;
+    else throw X<GenericError>(cat(
         "This tree has no elem with index \""sv, index, '"'
-    )};
+    ));
 }
 
 bool operator == (const Tree& a, const Tree& b) {
-    auto& ad = *a.data;
-    auto& bd = *b.data;
      // Shortcut if same address
-    if (&ad == &bd) return true;
+    if (&a == &b) return true;
      // Special case int/float comparisons
-    else if (ad.rep == Rep::INT64 && bd.rep == Rep::DOUBLE) {
-        return ad.as_known<int64>() == bd.as_known<double>();
+    else if (a.rep == REP_INT64 && b.rep == REP_DOUBLE) {
+        return tree_int64(a) == tree_double(b);
     }
-    else if (ad.rep == Rep::DOUBLE && bd.rep == Rep::INT64) {
-        return ad.as_known<double>() == bd.as_known<int64>();
+    else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
+        return tree_double(a) == tree_int64(b);
     }
      // Otherwise different reps = different values
-    else if (ad.rep != bd.rep) return false;
-    else switch (ad.rep) {
-        case Rep::NULLREP: return true;
-        case Rep::BOOL: return ad.as_known<bool>() == bd.as_known<bool>();
-        case Rep::INT64: return ad.as_known<int64>() == bd.as_known<int64>();
-        case Rep::DOUBLE: {
-            double af = ad.as_known<double>();
-            double bf = bd.as_known<double>();
+    else if (a.rep != b.rep) return false;
+    else switch (a.rep) {
+        case REP_NULL: return true;
+        case REP_BOOL: return tree_bool(a) == tree_bool(b);
+        case REP_INT64: return tree_int64(a) == tree_int64(b);
+        case REP_DOUBLE: {
+            double av = tree_double(a);
+            double bv = tree_double(b);
              // Check for nans
-            if (af != af && bf != bf) return true;
-            else return af == bf;
+            if (av != av && bv != bv) return true;
+            else return av == bv;
         }
-        case Rep::STRING: return ad.as_known<String>() == bd.as_known<String>();
-        case Rep::ARRAY: return ad.as_known<Array>() == bd.as_known<Array>();
-        case Rep::OBJECT: {
-           const Object& ao = ad.as_known<Object>();
-           const Object& bo = bd.as_known<Object>();
-           if (ao.size() != bo.size()) return false;
-           else for (auto& ap : ao) {
-               for (auto& bp : bo) {
-                   if (ap.first == bp.first) {
-                       if (ap.second == bp.second) break;
-                       else return false;
-                   }
-               }
-           }
-           return true;
+        case REP_STRING: {
+            if (a.data.as_ptr == b.data.as_ptr) return true;
+            return tree_String(a) == tree_String(b);
         }
-        case Rep::ERROR: {
-            std::rethrow_exception(ad.as_known<std::exception_ptr>());
+        case REP_ARRAY: {
+            if (a.data.as_ptr == b.data.as_ptr) return true;
+            return tree_Array(a) == tree_Array(b);
+        }
+        case REP_OBJECT: {
+            if (a.data.as_ptr == b.data.as_ptr) return true;
+            const Object& ao = tree_Object(a);
+            const Object& bo = tree_Object(b);
+            if (ao.size() != bo.size()) return false;
+            else for (auto& ap : ao) {
+                for (auto& bp : bo) {
+                    if (ap.first == bp.first) {
+                        if (ap.second == bp.second) break;
+                        else return false;
+                    }
+                }
+            }
+            return true;
+        }
+        case REP_ERROR: {
+            std::rethrow_exception(tree_Error(a));
         }
         default: AYU_INTERNAL_UGUU();
     }
@@ -236,7 +254,7 @@ bool operator == (const Tree& a, const Tree& b) {
 
 } using namespace ayu;
 
-AYU_DESCRIBE(ayu::Form,
+AYU_DESCRIBE(ayu::TreeForm,
     values(
         value("null", NULLFORM),
         value("bool", BOOL),
@@ -308,7 +326,7 @@ static tap::TestSet tests ("base/ayu/tree", []{
         Tree(Object{Pair{"b", Tree(1)}, Pair{"a", Tree(0)}, Pair{"c", Tree(3)}}),
         "Extra attribute in second object makes it unequal"
     );
-    is(Tree(0xdeadbeef, PREFER_HEX).flags(), PREFER_HEX, "Basic flags support");
+    is(Tree(0xdeadbeef, PREFER_HEX).flags, PREFER_HEX, "Basic flags support");
     done_testing();
 });
 #endif

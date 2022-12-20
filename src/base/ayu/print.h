@@ -33,3 +33,15 @@ struct InvalidPrintOptions : Error {
 };
 
 } // namespace ayu
+
+#ifndef TAP_DISABLE_TESTS
+#include "../tap/tap.h"
+
+template <>
+struct tap::Show<ayu::Tree> {
+    std::string show (const ayu::Tree& t) const {
+        return tree_to_string(t, ayu::COMPACT);
+    }
+};
+
+#endif

@@ -4,12 +4,14 @@
 
 #pragma once
 
+#include <exception>
 #include "internal/common-internal.h"
 
 namespace ayu {
 
  // For unambiguity, types of trees are called forms.
-enum Form {
+enum TreeForm : uint8 {
+    UNDEFINED = 0,
     NULLFORM,
     BOOL,
     NUMBER,
@@ -21,11 +23,11 @@ enum Form {
     ERROR
 };
  // Readable name of a form in lowercase.
-Str form_name (Form);
+Str form_name (TreeForm);
 
  // Options that control how a Tree is printed.  These do not have any effect on
  // the semantics of the Tree, and they do not affect subtrees.
-using TreeFlags = uint32;
+using TreeFlags = uint16;
 enum : TreeFlags {
      // For NUMBER: Print the number as hexadecimal.
     PREFER_HEX = 1 << 0,
@@ -44,14 +46,53 @@ enum : TreeFlags {
 };
 
 struct Tree {
-    in::RCP<in::TreeData, in::delete_TreeData> data;
-    constexpr explicit Tree (in::TreeData* data = null) : data(data) { }
-    bool has_value () const { return !!data; }
+    const TreeForm form;
+    const uint8 rep;
+    TreeFlags flags;
+    const union {
+        usize as_usize;
+        int64 as_int64;
+        double as_double;
+        const in::RefCounted* as_ptr;
+    } data;
+
+    bool has_value () const { return form != UNDEFINED; }
+
+     // Default construction.  The only valid operation on an UNDEFINED tree is
+     // has_value().
+    constexpr Tree () :
+        form(UNDEFINED), rep(0), flags(0), data{.as_int64 = 0}
+    { }
+    constexpr Tree (Tree&& o) :
+        form(o.form), rep(o.rep), flags(o.flags), data(o.data)
+    {
+        const_cast<TreeForm&>(o.form) = UNDEFINED;
+        const_cast<uint8&>(o.rep) = 0;
+        o.flags = 0;
+        const_cast<int64&>(o.data.as_int64) = 0;
+    }
+    Tree (const Tree&);
+    ~Tree ();
+
+    Tree& operator = (const Tree& o) {
+        this->~Tree();
+        new (this) Tree(o);
+        return *this;
+    }
+    Tree& operator = (Tree&& o) {
+        this->~Tree();
+        new (this) Tree(std::move(o));
+        return *this;
+    }
 
     explicit Tree (Null v, TreeFlags flags = 0);
+
      // Disable implicit coercion of the argument to bool
+    struct ExplicitBool { bool v; };
+    explicit Tree (ExplicitBool, TreeFlags flags);
     template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
-    explicit Tree (T v, TreeFlags flags = 0);
+    explicit Tree (T v, TreeFlags flags = 0) : Tree(ExplicitBool{v}, flags) { }
+
      // plain (not signed or unsigned) chars are represented as strings
     explicit Tree (char v, TreeFlags flags = 0) : Tree(String(1,v), flags) { }
     explicit Tree (int8 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
@@ -69,16 +110,9 @@ struct Tree {
     explicit Tree (Str16 v, TreeFlags flags = 0) : Tree(String16(v), flags) { }
     explicit Tree (String16&& v, TreeFlags flags = 0); // Converts to UTF8 internally
     explicit Tree (const char* v, TreeFlags flags = 0) : Tree(String(v), flags) { }
-    explicit Tree (const Array& v, TreeFlags flags = 0);
-    explicit Tree (Array&& v, TreeFlags flags = 0);
-    explicit Tree (const Object& v, TreeFlags flags = 0);
-    explicit Tree (Object&& v, TreeFlags flags = 0);
-
-    Form form () const;
-     // Get flags for printing this tree.  This is NOT guaranteed to be equal to
-     // the flags that were passed in (in particular, flags that don't apply to
-     // the given Tree may or may not be omitted).
-    TreeFlags flags () const;
+    explicit Tree (Array v, TreeFlags flags = 0);
+    explicit Tree (Object v, TreeFlags flags = 0);
+    explicit Tree (std::exception_ptr p, TreeFlags flags = 0);
 
      // These throw if the tree is not the right form or if
      // the requested type cannot store the value.
@@ -103,15 +137,15 @@ struct Tree {
 
      // Returns null if the invocant is not an OBJECT or does not have an
      // attribute with the given key.
-    Tree* attr (Str key) const;
+    const Tree* attr (Str key) const;
      // Returns null if the invocant is not an ARRAY or does not have an
      // element at the given index.
-    Tree* elem (usize index) const;
+    const Tree* elem (usize index) const;
 
      // Throws if the tree is not an object or doesn't have that attribute.
-    Tree operator[] (Str key) const;
+    const Tree& operator[] (Str key) const;
      // Throws if the tree is not an array or the index is out of bounds.
-    Tree operator[] (usize index) const;
+    const Tree& operator[] (usize index) const;
 };
 
  // Test for equality.  Trees of different forms are considered unequal.
@@ -125,7 +159,7 @@ inline bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.
 struct WrongForm : TreeError {
-    Form form;
+    TreeForm form;
     Tree tree;
 };
  // Tried to extract a number from a tree, but the tree's number won't fit
@@ -134,11 +168,5 @@ struct CantRepresent : TreeError {
     String type_name;
     Tree tree;
 };
-
-namespace in {
-    TreeData* TreeData_bool (bool, TreeFlags flags);
-}
-template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
-Tree::Tree (T v, TreeFlags flags) : Tree(in::TreeData_bool(v, flags)) { }
 
 }  // namespace ayu

@@ -68,7 +68,7 @@ AYU_DESCRIBE(Statement,
     from_tree([](Statement& s, const ayu::Tree& t){
          // Get the command from the first elem, then args from the rest.
          // TODO: optional parameters
-        auto a = ayu::Array(t);
+        auto& a = static_cast<const ayu::Array&>(t);
         if (a.size() == 0) {
             s = {}; return;
         }
