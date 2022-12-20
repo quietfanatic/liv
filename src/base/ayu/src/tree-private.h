@@ -35,9 +35,6 @@ struct TreeData : RefCounted {
     T value;
 };
 
-inline bool tree_bool (const Tree& t) { return t.data.as_usize; }
-inline int64 tree_int64 (const Tree& t) { return t.data.as_int64; }
-inline double tree_double (const Tree& t) { return t.data.as_double; }
 inline Str tree_chars (const Tree& t) {
     return Str(t.data.as_chars, t.rep - REP_0CHARS);
 }

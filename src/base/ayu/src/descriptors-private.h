@@ -36,26 +36,50 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
         }
         else return Tree();
     }
-    bool matches_tree (Tree tree) const {
+    bool matches_tree (const Tree& tree) const {
         switch (form) {
             case VFNULL:
-                return tree.form == NULLFORM;
+                return tree.rep == REP_NULL;
             case VFBOOL:
-                return tree.form == BOOL
-                    && tree_bool(tree) == *(const bool*)name();
+                return tree.rep == REP_BOOL
+                    && tree.data.as_usize == *(const bool*)name();
             case VFINT64:
-                return tree.form == NUMBER
-                    && tree == Tree(*(const int64*)name());
+                switch (tree.rep) {
+                    case REP_INT64:
+                        return tree.data.as_int64 == *(const int64*)name();
+                    case REP_DOUBLE:
+                        return tree.data.as_double == *(const int64*)name();
+                    default: return false;
+                }
             case VFDOUBLE:
-                return tree.form == NUMBER
-                    && tree == Tree(*(const double*)name());
-            case VFSTR:
-                return tree.form == STRING
-                    && Str(tree) == *(const Str*)name();
+                switch (tree.rep) {
+                    case REP_INT64:
+                        return tree.data.as_int64 == *(const double*)name();
+                    case REP_DOUBLE: {
+                        double a = tree.data.as_double;
+                        double b = *(const double*)name();
+                        return a == b || (a != a && b != b);
+                    }
+                    default: return false;
+                }
+            case VFSTR: {
+                Str n = *(const Str*)name();
+                if (n.size() <= 8) {
+                    if (tree.rep != REP_0CHARS + n.size()) return false;
+                    for (usize i = 0; i < n.size(); i++) {
+                        if (tree.data.as_chars[i] != n[i]) return false;
+                    }
+                    return true;
+                }
+                else {
+                    return tree.rep == REP_STRING
+                        && tree_String(tree) == *(const Str*)name();
+                }
+            }
             default: AYU_INTERNAL_UGUU();
         }
     }
-    Mu* tree_to_value (Tree tree) const {
+    Mu* tree_to_value (const Tree& tree) const {
         if (matches_tree(tree)) return get_value();
         else return null;
     }

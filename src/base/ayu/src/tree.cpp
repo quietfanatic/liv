@@ -78,6 +78,8 @@ Tree::Tree (Str v) :
     form(STRING), rep(), data{}
 {
     if (v.size() <= 8) {
+         // zero unused char slots
+        const_cast<int64&>(data.as_int64) = 0;
         const_cast<uint8&>(rep) = REP_0CHARS + v.size();
         for (usize i = 0; i < v.size(); i++) {
             const_cast<char&>(data.as_chars[i]) = v[i];
@@ -90,9 +92,10 @@ Tree::Tree (Str v) :
     }
 }
 Tree::Tree (String&& v) :
-    form(STRING), rep(), data{}
+    form(STRING), rep(), data{.as_int64 = 0}
 {
     if (v.size() <= 8) {
+        const_cast<int64&>(data.as_int64) = 0;
         const_cast<uint8&>(rep) = REP_0CHARS + v.size();
         for (usize i = 0; i < v.size(); i++) {
             const_cast<char&>(data.as_chars[i]) = v[i];
@@ -132,7 +135,7 @@ Tree::operator Null () const {
 }
 Tree::operator bool () const {
     require_form(*this, BOOL);
-    return tree_bool(*this);
+    return data.as_usize;
 }
 Tree::operator char () const {
     if (rep == REP_1CHARS) {
@@ -157,12 +160,12 @@ Tree::operator char () const {
 Tree::operator T () const { \
     switch (rep) { \
         case REP_INT64: { \
-            int64 v = tree_int64(*this); \
+            int64 v = data.as_int64; \
             if (int64(T(v)) == v) return v; \
             else throw X<CantRepresent>(#T, *this); \
         } \
         case REP_DOUBLE: { \
-            double v = tree_double(*this); \
+            double v = data.as_double; \
             if (double(T(v)) == v) return v; \
             else throw X<CantRepresent>(#T, *this); \
         } \
@@ -185,8 +188,8 @@ Tree::operator double () const {
     switch (rep) {
          // Special case: allow null to represent +nan for JSON compatibility
         case REP_NULL: return +nan;
-        case REP_INT64: return tree_int64(*this);
-        case REP_DOUBLE: return tree_double(*this);
+        case REP_INT64: return data.as_int64;
+        case REP_DOUBLE: return data.as_double;
         case REP_ERROR: std::rethrow_exception(tree_Error(*this));
         default: throw X<WrongForm>(NUMBER, *this);
     }
@@ -250,10 +253,10 @@ bool operator == (const Tree& a, const Tree& b) {
     if (&a == &b) return true;
      // Special case int/float comparisons
     else if (a.rep == REP_INT64 && b.rep == REP_DOUBLE) {
-        return tree_int64(a) == tree_double(b);
+        return a.data.as_int64 == b.data.as_double;
     }
     else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
-        return tree_double(a) == tree_int64(b);
+        return a.data.as_double == b.data.as_int64;
     }
      // Otherwise different reps = different values.  We don't need to compare
      // REP_*CHARS to REP_STRING because we guarantee that REP_STRING will never
@@ -261,11 +264,11 @@ bool operator == (const Tree& a, const Tree& b) {
     else if (a.rep != b.rep) return false;
     else switch (a.rep) {
         case REP_NULL: return true;
-        case REP_BOOL: return tree_bool(a) == tree_bool(b);
-        case REP_INT64: return tree_int64(a) == tree_int64(b);
+        case REP_BOOL: return a.data.as_usize == b.data.as_usize;
+        case REP_INT64: return a.data.as_int64 == b.data.as_int64;
         case REP_DOUBLE: {
-            double av = tree_double(a);
-            double bv = tree_double(b);
+            double av = a.data.as_double;
+            double bv = b.data.as_double;
              // Check for nans
             if (av != av && bv != bv) return true;
             else return av == bv;
@@ -297,7 +300,9 @@ bool operator == (const Tree& a, const Tree& b) {
         case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
         case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
         case REP_8CHARS: {
-            return tree_chars(a) == tree_chars(b);
+             // Unused char slots are zeroed out so we can compare them all at
+             // once.
+            return a.data.as_int64 == b.data.as_int64;
         }
         default: AYU_INTERNAL_UGUU();
     }

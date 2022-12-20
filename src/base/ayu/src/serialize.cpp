@@ -1099,11 +1099,11 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     doesnt_throw([&]{ item_from_string(&vtt, "\"vta\""); });
     is(vtt, VTA, "item_from_tree works with string value");
     doesnt_throw([&]{ item_from_string(&vtt, "null"); });
-    is(vtt, VTNULL, "item_from_tree works with string value");
+    is(vtt, VTNULL, "item_from_tree works with null value");
     doesnt_throw([&]{ item_from_string(&vtt, "0"); });
-    is(vtt, VTZERO, "item_from_tree works with string value");
+    is(vtt, VTZERO, "item_from_tree works with int value");
     doesnt_throw([&]{ item_from_string(&vtt, "+nan"); });
-    is(vtt, VTNAN, "item_from_tree works with string value");
+    is(vtt, VTNAN, "item_from_tree works with double value");
 
     auto mt = MemberTest(3, 4);
     Tree mtt = item_to_tree(&mt);

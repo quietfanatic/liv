@@ -177,15 +177,15 @@ struct Printer {
         switch (t.rep) {
             case REP_NULL: return pstr(p, "null"sv);
             case REP_BOOL: {
-                Str s = tree_bool(t) ? "true"sv : "false"sv;
+                Str s = t.data.as_usize ? "true"sv : "false"sv;
                 return pstr(p, s);
             }
             case REP_INT64: {
                 bool hex = !(opts & JSON) && t.flags & PREFER_HEX;
-                return print_int64(p, tree_int64(t), hex);
+                return print_int64(p, t.data.as_int64, hex);
             }
             case REP_DOUBLE: {
-                double v = tree_double(t);
+                double v = t.data.as_double;
                 if (v != v) {
                     return pstr(p, opts & JSON ? "null"sv : "+nan"sv);
                 }
