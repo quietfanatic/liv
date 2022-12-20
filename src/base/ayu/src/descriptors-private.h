@@ -51,7 +51,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                     && tree == Tree(*(const double*)name());
             case VFSTR:
                 return tree.form == STRING
-                    && tree_String(tree) == *(const Str*)name();
+                    && Str(tree) == *(const Str*)name();
             default: AYU_INTERNAL_UGUU();
         }
     }

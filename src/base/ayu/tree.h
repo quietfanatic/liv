@@ -54,6 +54,7 @@ struct Tree {
         usize as_usize;
         int64 as_int64;
         double as_double;
+        char as_chars [8];
         const in::RefCounted* as_ptr;
     } data;
 
@@ -107,7 +108,7 @@ struct Tree {
     explicit Tree (uint64 v) : Tree(int64(v)) { }
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
-    explicit Tree (Str v) : Tree(String(v)) { }
+    explicit Tree (Str v);
     explicit Tree (String&& v);
     explicit Tree (Str16 v) : Tree(String16(v)) { }
     explicit Tree (String16&& v); // Converts to UTF8 internally

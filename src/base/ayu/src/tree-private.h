@@ -18,7 +18,16 @@ enum : TreeRep {
     REP_STRING,
     REP_ARRAY,
     REP_OBJECT,
-    REP_ERROR
+    REP_ERROR,
+    REP_0CHARS,
+    REP_1CHARS,
+    REP_2CHARS,
+    REP_3CHARS,
+    REP_4CHARS,
+    REP_5CHARS,
+    REP_6CHARS,
+    REP_7CHARS,
+    REP_8CHARS,
 };
 
 template <class T>
@@ -29,6 +38,9 @@ struct TreeData : RefCounted {
 inline bool tree_bool (const Tree& t) { return t.data.as_usize; }
 inline int64 tree_int64 (const Tree& t) { return t.data.as_int64; }
 inline double tree_double (const Tree& t) { return t.data.as_double; }
+inline Str tree_chars (const Tree& t) {
+    return Str(t.data.as_chars, t.rep - REP_0CHARS);
+}
 inline const String& tree_String (const Tree& t) {
     return ((const TreeData<String>*)t.data.as_ptr)->value;
 }

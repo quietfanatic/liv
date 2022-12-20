@@ -74,11 +74,36 @@ Tree::Tree (int64 v) :
 Tree::Tree (double v) :
     form(NUMBER), rep(REP_DOUBLE), data{.as_double = v}
 { }
-Tree::Tree (String&& v) :
-    form(STRING), rep(REP_STRING), data{
-        .as_ptr = new TreeData<String>({1}, std::move(v))
+Tree::Tree (Str v) :
+    form(STRING), rep(), data{}
+{
+    if (v.size() <= 8) {
+        const_cast<uint8&>(rep) = REP_0CHARS + v.size();
+        for (usize i = 0; i < v.size(); i++) {
+            const_cast<char&>(data.as_chars[i]) = v[i];
+        }
     }
-{ }
+    else {
+        const_cast<uint8&>(rep) = REP_STRING;
+        const_cast<RefCounted*&>(data.as_ptr) =
+            new TreeData<String>({1}, String(v));
+    }
+}
+Tree::Tree (String&& v) :
+    form(STRING), rep(), data{}
+{
+    if (v.size() <= 8) {
+        const_cast<uint8&>(rep) = REP_0CHARS + v.size();
+        for (usize i = 0; i < v.size(); i++) {
+            const_cast<char&>(data.as_chars[i]) = v[i];
+        }
+    }
+    else {
+        const_cast<uint8&>(rep) = REP_STRING;
+        const_cast<RefCounted*&>(data.as_ptr) =
+            new TreeData<String>({1}, std::move(v));
+    }
+}
 Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
 Tree::Tree (Array v) :
     form(ARRAY), rep(REP_ARRAY), data{
@@ -110,10 +135,23 @@ Tree::operator bool () const {
     return tree_bool(*this);
 }
 Tree::operator char () const {
-    require_form(*this, STRING);
-    const String& s = tree_String(*this);
-    if (s.size() == 1) return s[0];
-    else throw X<CantRepresent>("char", *this);
+    if (rep == REP_1CHARS) {
+        return data.as_chars[0];
+    }
+    else {
+        [[unlikely]]
+        switch (rep) {
+            case REP_ERROR: std::rethrow_exception(tree_Error(*this));
+            case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
+            case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
+            case REP_8CHARS: case REP_STRING: {
+                 // We guarantee in construction that trees with REP_STRING will
+                 // never have 8 or less characters.
+                throw X<CantRepresent>("char", *this);
+            }
+            default: throw X<WrongForm>(form, *this);
+        }
+    }
 }
 #define INTEGRAL_CONVERSION(T) \
 Tree::operator T () const { \
@@ -154,16 +192,24 @@ Tree::operator double () const {
     }
 }
 Tree::operator Str () const {
-    require_form(*this, STRING);
-    return tree_String(*this);
+    switch (rep) {
+        case REP_ERROR: std::rethrow_exception(tree_Error(*this));
+        case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
+        case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
+        case REP_8CHARS: {
+            return tree_chars(*this);
+        }
+        case REP_STRING: {
+            return tree_String(*this);
+        }
+        default: throw X<WrongForm>(STRING, *this);
+    }
 }
 Tree::operator String () const {
-    require_form(*this, STRING);
-    return tree_String(*this);
+    return String(Str(*this));
 }
 Tree::operator String16 () const {
-    require_form(*this, STRING);
-    return to_utf16(tree_String(*this));
+    return to_utf16(Str(*this));
 }
 Tree::operator const Array& () const {
     require_form(*this, ARRAY);
@@ -209,7 +255,9 @@ bool operator == (const Tree& a, const Tree& b) {
     else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
         return tree_double(a) == tree_int64(b);
     }
-     // Otherwise different reps = different values
+     // Otherwise different reps = different values.  We don't need to compare
+     // REP_*CHARS to REP_STRING because we guarantee that REP_STRING will never
+     // have 8 or less chars.
     else if (a.rep != b.rep) return false;
     else switch (a.rep) {
         case REP_NULL: return true;
@@ -245,8 +293,11 @@ bool operator == (const Tree& a, const Tree& b) {
             }
             return true;
         }
-        case REP_ERROR: {
-            std::rethrow_exception(tree_Error(a));
+        case REP_ERROR: return false;
+        case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
+        case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
+        case REP_8CHARS: {
+            return tree_chars(a) == tree_chars(b);
         }
         default: AYU_INTERNAL_UGUU();
     }

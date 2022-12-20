@@ -301,6 +301,13 @@ struct Printer {
                 }
                 AYU_INTERNAL_UGUU();
             }
+            case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
+            case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
+            case REP_8CHARS: {
+                return print_string(
+                    p, tree_chars(t), t.flags & PREFER_EXPANDED
+                );
+            }
             default: AYU_INTERNAL_UGUU();
         }
     }
