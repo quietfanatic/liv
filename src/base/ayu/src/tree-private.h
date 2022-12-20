@@ -15,7 +15,7 @@ enum : TreeRep {
     REP_BOOL,
     REP_INT64,
     REP_DOUBLE,
-    REP_STRING,
+    REP_VARCHAR,
     REP_ARRAY,
     REP_OBJECT,
     REP_ERROR,
@@ -35,19 +35,31 @@ struct TreeData : RefCounted {
     T value;
 };
 
-inline Str tree_chars (const Tree& t) {
+struct VarChar {
+    usize size;
+    char data[0];
+};
+
+inline Str tree_shortStr (const Tree& t) {
+    assert(t.rep >= REP_0CHARS && t.rep <= REP_8CHARS);
     return Str(t.data.as_chars, t.rep - REP_0CHARS);
 }
-inline const String& tree_String (const Tree& t) {
-    return ((const TreeData<String>*)t.data.as_ptr)->value;
+inline Str tree_longStr (const Tree& t) {
+    assert(t.rep == REP_VARCHAR);
+    auto& vc = ((const TreeData<VarChar>*)t.data.as_ptr)->value;
+    assert(vc.size > 8);
+    return Str(vc.data, vc.size);
 }
 inline const Array& tree_Array (const Tree& t) {
+    assert(t.rep == REP_ARRAY);
     return ((const TreeData<Array>*)t.data.as_ptr)->value;
 }
 inline const Object& tree_Object (const Tree& t) {
+    assert(t.rep == REP_OBJECT);
     return ((const TreeData<Object>*)t.data.as_ptr)->value;
 }
 inline const std::exception_ptr& tree_Error (const Tree& t) {
+    assert(t.rep == REP_ERROR);
     return ((const TreeData<std::exception_ptr>*)t.data.as_ptr)->value;
 }
 

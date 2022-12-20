@@ -206,9 +206,9 @@ struct Printer {
                     return print_double(p, v, hex);
                 }
             }
-            case REP_STRING:
+            case REP_VARCHAR:
                 return print_string(
-                    p, tree_String(t), t.flags & PREFER_EXPANDED
+                    p, tree_longStr(t), t.flags & PREFER_EXPANDED
                 );
             case REP_ARRAY: {
                 const Array& a = tree_Array(t);
@@ -305,7 +305,7 @@ struct Printer {
             case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
             case REP_8CHARS: {
                 return print_string(
-                    p, tree_chars(t), t.flags & PREFER_EXPANDED
+                    p, tree_shortStr(t), t.flags & PREFER_EXPANDED
                 );
             }
             default: AYU_INTERNAL_UGUU();

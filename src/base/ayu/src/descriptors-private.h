@@ -72,8 +72,8 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                     return true;
                 }
                 else {
-                    return tree.rep == REP_STRING
-                        && tree_String(tree) == *(const Str*)name();
+                    return tree.rep == REP_VARCHAR
+                        && tree_longStr(tree) == *(const Str*)name();
                 }
             }
             default: AYU_INTERNAL_UGUU();

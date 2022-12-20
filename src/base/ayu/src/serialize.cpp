@@ -283,10 +283,10 @@ void in::ser_collect_key_str (StrVector& ks, Str k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(k);
 }
-void in::ser_collect_key_string (StrVector& ks, const String& k) {
+void in::ser_collect_key_string (StrVector& ks, Str k) {
     for (auto ksk : ks) if (k == ksk) return;
     ks.owned_strings = std::make_unique<OwnedStringNode>(
-        k, std::move(ks.owned_strings)
+        String(k), std::move(ks.owned_strings)
     );
     ks.emplace_back(ks.owned_strings->s);
 }
@@ -310,7 +310,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
                 }
                 else {
                     for (auto& k : str_ksv) {
-                        ser_collect_key_string(ks, String(k));
+                        ser_collect_key_string(ks, k);
                     }
                 }
             });
@@ -338,7 +338,7 @@ void in::ser_collect_keys (const Traversal& trav, StrVector& ks) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
                     ser_collect_key_string(
-                        ks, tree_String(tree)
+                        ks, Str(tree)
                     );
                 }
             });

@@ -24,7 +24,7 @@ Tree::Tree (const Tree& o) :
     form(o.form), rep(o.rep), flags(o.flags), data(o.data)
 {
     switch (rep) {
-        case REP_STRING:
+        case REP_VARCHAR:
         case REP_ARRAY:
         case REP_OBJECT:
         case REP_ERROR:
@@ -35,9 +35,9 @@ Tree::Tree (const Tree& o) :
 
 Tree::~Tree () {
     switch (rep) {
-        case REP_STRING: {
+        case REP_VARCHAR: {
             if (!--data.as_ptr->ref_count) {
-                delete static_cast<const TreeData<String>*>(data.as_ptr);
+                free((void*)data.as_ptr);
             }
             break;
         }
@@ -86,9 +86,14 @@ Tree::Tree (Str v) :
         }
     }
     else {
-        const_cast<uint8&>(rep) = REP_STRING;
-        const_cast<RefCounted*&>(data.as_ptr) =
-            new TreeData<String>({1}, String(v));
+        const_cast<uint8&>(rep) = REP_VARCHAR;
+        auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
+        vc->ref_count = 1;
+        vc->value.size = v.size();
+        for (usize i = 0; i < v.size(); i++) {
+            vc->value.data[i] = v[i];
+        }
+        const_cast<RefCounted*&>(data.as_ptr) = vc;
     }
 }
 Tree::Tree (String&& v) :
@@ -102,9 +107,14 @@ Tree::Tree (String&& v) :
         }
     }
     else {
-        const_cast<uint8&>(rep) = REP_STRING;
-        const_cast<RefCounted*&>(data.as_ptr) =
-            new TreeData<String>({1}, std::move(v));
+        const_cast<uint8&>(rep) = REP_VARCHAR;
+        auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
+        vc->ref_count = 1;
+        vc->value.size = v.size();
+        for (usize i = 0; i < v.size(); i++) {
+            vc->value.data[i] = v[i];
+        }
+        const_cast<RefCounted*&>(data.as_ptr) = vc;
     }
 }
 Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
@@ -147,8 +157,8 @@ Tree::operator char () const {
             case REP_ERROR: std::rethrow_exception(tree_Error(*this));
             case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
             case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
-            case REP_8CHARS: case REP_STRING: {
-                 // We guarantee in construction that trees with REP_STRING will
+            case REP_8CHARS: case REP_VARCHAR: {
+                 // We guarantee in construction that trees with REP_VARCHAR will
                  // never have 8 or less characters.
                 throw X<CantRepresent>("char", *this);
             }
@@ -200,10 +210,10 @@ Tree::operator Str () const {
         case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
         case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
         case REP_8CHARS: {
-            return tree_chars(*this);
+            return tree_shortStr(*this);
         }
-        case REP_STRING: {
-            return tree_String(*this);
+        case REP_VARCHAR: {
+            return tree_longStr(*this);
         }
         default: throw X<WrongForm>(STRING, *this);
     }
@@ -273,9 +283,9 @@ bool operator == (const Tree& a, const Tree& b) {
             if (av != av && bv != bv) return true;
             else return av == bv;
         }
-        case REP_STRING: {
+        case REP_VARCHAR: {
             if (a.data.as_ptr == b.data.as_ptr) return true;
-            return tree_String(a) == tree_String(b);
+            return tree_longStr(a) == tree_longStr(b);
         }
         case REP_ARRAY: {
             if (a.data.as_ptr == b.data.as_ptr) return true;
