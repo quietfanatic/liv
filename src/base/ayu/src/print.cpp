@@ -135,9 +135,11 @@ struct Printer {
         if (opts & JSON) {
             return print_quoted(p, s, false);
         }
-        if (s == ""sv || s == "null"sv || s == "true"sv || s == "false"sv) {
-            return pchar(pstr(pchar(p, '"'), s), '"');
-        }
+        if (s == ""sv) return pstr(p, "\"\""sv);
+        if (s == "null"sv) return pstr(p, "\"null\""sv);
+        if (s == "true"sv) return pstr(p, "\"true\""sv);
+        if (s == "false"sv) return pstr(p, "\"false\""sv);
+
         switch (s[0]) {
             case ANY_LETTER:
             case '_': break;
@@ -172,7 +174,7 @@ struct Printer {
 
     [[nodiscard]]
     char* print_subtree (char* p, const Tree& t, uint ind) {
-        uint16 flags = t.data->flags;
+        TreeFlags flags = t.data->flags;
         switch (t.data->rep) {
             case Rep::NULLREP: return pstr(p, "null"sv);
             case Rep::BOOL: {
@@ -188,10 +190,10 @@ struct Printer {
                 if (v != v) {
                     return pstr(p, opts & JSON ? "null"sv : "+nan"sv);
                 }
-                else if (v == 1.0/0.0) {
+                else if (v == +inf) {
                     return pstr(p, opts & JSON ? "1e999"sv : "+inf"sv);
                 }
-                else if (v == -1.0/0.0) {
+                else if (v == -inf) {
                     return pstr(p, opts & JSON ? "-1e999"sv : "-inf"sv);
                 }
                 else if (v == 0) {
@@ -242,7 +244,7 @@ struct Printer {
                     p = print_subtree(p, elem, ind + expand);
                     if (show_indices) {
                         p = pstr(p, "  // "sv);
-                        p = print_int64(p, &elem - &a.front(), false);
+                        p = print_uint64(p, &elem - &a.front(), false);
                     }
                 }
                 if (expand) p = print_newline(p, ind);

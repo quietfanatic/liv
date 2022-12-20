@@ -34,7 +34,7 @@ namespace in {
 }
 
 Form Tree::form () const { return form_of_rep(data->rep); }
-uint16 Tree::flags () const { return data->flags; }
+TreeFlags Tree::flags () const { return data->flags; }
 
 static TreeDataT<Null> global_null {null, 0, 1};
 static TreeDataT<bool> global_false {false, 0, 1};
@@ -65,9 +65,9 @@ static TreeDataT<String> global_empty_string {""s, 0, 1};
 static TreeDataT<Array> global_empty_array {Array{}, 0, 1};
 static TreeDataT<Object> global_empty_object {Object{}, 0, 1};
 
-Tree::Tree (Null, uint16) : Tree(&global_null) { }
+Tree::Tree (Null, TreeFlags) : Tree(&global_null) { }
 namespace in {
-    TreeData* TreeData_bool (bool v, uint16) {
+    TreeData* TreeData_bool (bool v, TreeFlags) {
         return v ? &global_true : &global_false;
     }
 }

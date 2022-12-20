@@ -154,7 +154,7 @@ for my $cfg (keys %configs) {
         }, {fork => $configs{$cfg}{fork} // 1};
         rule "tmp/$cfg/$mod.s", "src/$mod.cpp", sub {
             ensure_path($_[0][0]);
-            run @$compiler, '-S', @{$_[1]},
+            run @$compiler, '-S', '-masm=intel', @{$_[1]},
                 grep($_ ne '-ggdb' && $_ ne '-flto', @opts),
                 '-o', $_[0][0];
         }, {fork => $configs{$cfg}{fork} // 1};

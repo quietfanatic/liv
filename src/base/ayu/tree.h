@@ -25,7 +25,7 @@ Str form_name (Form);
 
  // Options that control how a Tree is printed.  These do not have any effect on
  // the semantics of the Tree, and they do not affect subtrees.
-using TreeFlags = uint16;
+using TreeFlags = uint32;
 enum : TreeFlags {
      // For NUMBER: Print the number as hexadecimal.
     PREFER_HEX = 1 << 0,
