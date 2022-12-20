@@ -62,36 +62,36 @@ Tree::~Tree () {
     }
 }
 
-Tree::Tree (Null, TreeFlags flags) :
-    form(NULLFORM), rep(REP_NULL), flags(flags), data{}
+Tree::Tree (Null) :
+    form(NULLFORM), rep(REP_NULL), data{}
 { }
-Tree::Tree (ExplicitBool v, TreeFlags flags) :
-    form(BOOL), rep(REP_BOOL), flags(flags), data{.as_usize = v.v}
+Tree::Tree (ExplicitBool v) :
+    form(BOOL), rep(REP_BOOL), data{.as_usize = v.v}
 { }
-Tree::Tree (int64 v, TreeFlags flags) :
-    form(NUMBER), rep(REP_INT64), flags(flags), data{.as_int64 = v}
+Tree::Tree (int64 v) :
+    form(NUMBER), rep(REP_INT64), data{.as_int64 = v}
 { }
-Tree::Tree (double v, TreeFlags flags) :
-    form(NUMBER), rep(REP_DOUBLE), flags(flags), data{.as_double = v}
+Tree::Tree (double v) :
+    form(NUMBER), rep(REP_DOUBLE), data{.as_double = v}
 { }
-Tree::Tree (String&& v, TreeFlags flags) :
-    form(STRING), rep(REP_STRING), flags(flags), data{
+Tree::Tree (String&& v) :
+    form(STRING), rep(REP_STRING), data{
         .as_ptr = new TreeData<String>({1}, std::move(v))
     }
 { }
-Tree::Tree (String16&& v, TreeFlags flags) : Tree(from_utf16(v), flags) { }
-Tree::Tree (Array v, TreeFlags flags) :
-    form(ARRAY), rep(REP_ARRAY), flags(flags), data{
+Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
+Tree::Tree (Array v) :
+    form(ARRAY), rep(REP_ARRAY), data{
         .as_ptr = new TreeData<Array>({1}, std::move(v))
     }
 { }
-Tree::Tree (Object v, TreeFlags flags) :
-    form(OBJECT), rep(REP_OBJECT), flags(flags), data{
+Tree::Tree (Object v) :
+    form(OBJECT), rep(REP_OBJECT), data{
         .as_ptr = new TreeData<Object>({1}, std::move(v))
     }
 { }
-Tree::Tree (std::exception_ptr v, TreeFlags flags) :
-    form(ERROR), rep(REP_ERROR), flags(flags), data{
+Tree::Tree (std::exception_ptr v) :
+    form(ERROR), rep(REP_ERROR), data{
         .as_ptr = new TreeData<std::exception_ptr>({1}, std::move(v))
     }
 { }
@@ -268,7 +268,7 @@ AYU_DESCRIBE(ayu::TreeForm,
 
  // TODO: Add attrs and elems?
 AYU_DESCRIBE(ayu::Tree,
-    to_tree([](const Tree& v, TreeFlags){ return v; }),
+    to_tree([](const Tree& v){ return v; }),
     from_tree([](Tree& v, const Tree& t){ v = t; })
 )
 
@@ -326,7 +326,6 @@ static tap::TestSet tests ("base/ayu/tree", []{
         Tree(Object{Pair{"b", Tree(1)}, Pair{"a", Tree(0)}, Pair{"c", Tree(3)}}),
         "Extra attribute in second object makes it unequal"
     );
-    is(Tree(0xdeadbeef, PREFER_HEX).flags, PREFER_HEX, "Basic flags support");
     done_testing();
 });
 #endif

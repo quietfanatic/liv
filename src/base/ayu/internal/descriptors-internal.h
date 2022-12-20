@@ -192,7 +192,7 @@ struct NameDcr : AttachedDescriptor<T> {
 
 template <class T>
 struct ToTreeDcr : AttachedDescriptor<T> {
-    Tree(* f )(const T&, TreeFlags);
+    Tree(* f )(const T&);
 };
 
 template <class T>

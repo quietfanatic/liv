@@ -48,7 +48,8 @@ enum : TreeFlags {
 struct Tree {
     const TreeForm form;
     const uint8 rep;
-    TreeFlags flags;
+     // Only the flags can be modified after construction.
+    TreeFlags flags = 0;
     const union {
         usize as_usize;
         int64 as_int64;
@@ -60,9 +61,8 @@ struct Tree {
 
      // Default construction.  The only valid operation on an UNDEFINED tree is
      // has_value().
-    constexpr Tree () :
-        form(UNDEFINED), rep(0), flags(0), data{.as_int64 = 0}
-    { }
+    constexpr Tree () : form(UNDEFINED), rep(0), data{.as_int64 = 0} { }
+     // Move construction.
     constexpr Tree (Tree&& o) :
         form(o.form), rep(o.rep), flags(o.flags), data(o.data)
     {
@@ -71,7 +71,9 @@ struct Tree {
         o.flags = 0;
         const_cast<int64&>(o.data.as_int64) = 0;
     }
+     // Copy construction.  May twiddle reference counts.
     Tree (const Tree&);
+     // Destructor.
     ~Tree ();
 
     Tree& operator = (const Tree& o) {
@@ -85,34 +87,34 @@ struct Tree {
         return *this;
     }
 
-    explicit Tree (Null v, TreeFlags flags = 0);
+    explicit Tree (Null);
 
      // Disable implicit coercion of the argument to bool
     struct ExplicitBool { bool v; };
-    explicit Tree (ExplicitBool, TreeFlags flags);
+    explicit Tree (ExplicitBool);
     template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
-    explicit Tree (T v, TreeFlags flags = 0) : Tree(ExplicitBool{v}, flags) { }
+    explicit Tree (T v) : Tree(ExplicitBool{v}) { }
 
      // plain (not signed or unsigned) chars are represented as strings
-    explicit Tree (char v, TreeFlags flags = 0) : Tree(String(1,v), flags) { }
-    explicit Tree (int8 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint8 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int16 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint16 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int32 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (uint32 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (int64 v, TreeFlags flags = 0);
-    explicit Tree (uint64 v, TreeFlags flags = 0) : Tree(int64(v), flags) { }
-    explicit Tree (float v, TreeFlags flags = 0) : Tree(double(v), flags) { }
-    explicit Tree (double v, TreeFlags flags = 0);
-    explicit Tree (Str v, TreeFlags flags = 0) : Tree(String(v), flags) { }
-    explicit Tree (String&& v, TreeFlags flags = 0);
-    explicit Tree (Str16 v, TreeFlags flags = 0) : Tree(String16(v), flags) { }
-    explicit Tree (String16&& v, TreeFlags flags = 0); // Converts to UTF8 internally
-    explicit Tree (const char* v, TreeFlags flags = 0) : Tree(String(v), flags) { }
-    explicit Tree (Array v, TreeFlags flags = 0);
-    explicit Tree (Object v, TreeFlags flags = 0);
-    explicit Tree (std::exception_ptr p, TreeFlags flags = 0);
+    explicit Tree (char v) : Tree(String(1,v)) { }
+    explicit Tree (int8 v) : Tree(int64(v)) { }
+    explicit Tree (uint8 v) : Tree(int64(v)) { }
+    explicit Tree (int16 v) : Tree(int64(v)) { }
+    explicit Tree (uint16 v) : Tree(int64(v)) { }
+    explicit Tree (int32 v) : Tree(int64(v)) { }
+    explicit Tree (uint32 v) : Tree(int64(v)) { }
+    explicit Tree (int64 v);
+    explicit Tree (uint64 v) : Tree(int64(v)) { }
+    explicit Tree (float v) : Tree(double(v)) { }
+    explicit Tree (double v);
+    explicit Tree (Str v) : Tree(String(v)) { }
+    explicit Tree (String&& v);
+    explicit Tree (Str16 v) : Tree(String16(v)) { }
+    explicit Tree (String16&& v); // Converts to UTF8 internally
+    explicit Tree (const char* v) : Tree(String(v)) { }
+    explicit Tree (Array v);
+    explicit Tree (Object v);
+    explicit Tree (std::exception_ptr p);
 
      // These throw if the tree is not the right form or if
      // the requested type cannot store the value.

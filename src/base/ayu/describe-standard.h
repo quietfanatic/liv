@@ -153,12 +153,12 @@ AYU_DESCRIBE_TEMPLATE(
      // Although sets serialize to arrays, accessing elements in a set by index
      // doesn't make sense, so use to_tree and from_tree instead of length and
      // elem_func
-    desc::to_tree([](const std::unordered_set<T>& v, ayu::TreeFlags flags){
+    desc::to_tree([](const std::unordered_set<T>& v){
         ayu::Array a;
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(e));
         }
-        return ayu::Tree(std::move(a), flags);
+        return ayu::Tree(std::move(a));
     }),
     desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
@@ -203,12 +203,12 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return ayu::Str(r);
     }),
-    desc::to_tree([](const std::set<T>& v, ayu::TreeFlags flags){
+    desc::to_tree([](const std::set<T>& v){
         ayu::Array a;
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(&e));
         }
-        return ayu::Tree(std::move(a), flags);
+        return ayu::Tree(std::move(a));
     }),
     desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
@@ -288,8 +288,8 @@ AYU_DESCRIBE_TEMPLATE(
         return ayu::Str(r);
     }),
      // Serialize as a string
-    desc::to_tree([](const char(& v )[n], ayu::TreeFlags flags){
-        return ayu::Tree(Str(v, n), flags);
+    desc::to_tree([](const char(& v )[n]){
+        return ayu::Tree(Str(v, n));
     }),
      // Deserialize as either a string or an array
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){

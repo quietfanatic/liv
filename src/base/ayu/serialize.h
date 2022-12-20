@@ -19,7 +19,7 @@ namespace ayu {
  // Convert an item to a tree.  The optional location should match the
  // reference's location if provided.
 Tree item_to_tree (
-    const Reference&, TreeFlags flags = 0, const Location& loc = Location()
+    const Reference&, const Location& loc = Location()
 );
 
  // Flags to change the behavior of item_from_tree.
@@ -54,16 +54,16 @@ void item_from_tree (
 
 ///// MAIN OPERATION SHORTCUTS
 inline String item_to_string (
-    const Reference& item, TreeFlags flags = 0, PrintOptions opts = 0,
+    const Reference& item, PrintOptions opts = 0,
     const Location& loc = Location()
 ) {
-    return tree_to_string(item_to_tree(item, flags, loc), opts);
+    return tree_to_string(item_to_tree(item, loc), opts);
 }
 inline void item_to_file (
-    const Reference& item, Str filename, TreeFlags flags = 0,
+    const Reference& item, Str filename,
     PrintOptions opts = 0, const Location& loc = Location()
 ) {
-    return tree_to_file(item_to_tree(item, flags, loc), filename, opts);
+    return tree_to_file(item_to_tree(item, loc), filename, opts);
 }
  // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (

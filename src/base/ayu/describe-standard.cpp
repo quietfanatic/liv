@@ -10,7 +10,7 @@ using namespace std::literals;
 
 #define AYU_DESCRIBE_SCALAR(type) \
 AYU_DESCRIBE(type, \
-    to_tree([](const type& v, TreeFlags flags){ return Tree(v, flags); }), \
+    to_tree([](const type& v){ return Tree(v); }), \
     from_tree([](type& v, const Tree& t){ v = type(t); }) \
 )
 
@@ -38,14 +38,14 @@ AYU_DESCRIBE_SCALAR(std::u16string)
  // giving this a description means that std::vector<Str> can be used as the
  // type for keys().
 AYU_DESCRIBE(std::string_view,
-    to_tree([](const Str& v, TreeFlags flags){
-        return Tree(v, flags);
+    to_tree([](const Str& v){
+        return Tree(v);
     })
 )
  // Same story with const char*
 AYU_DESCRIBE(const char*,
-    to_tree([](const char* const& v, TreeFlags flags){
-        return Tree(v, flags);
+    to_tree([](const char* const& v){
+        return Tree(v);
     })
 )
 

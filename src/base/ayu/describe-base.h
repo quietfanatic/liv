@@ -71,9 +71,8 @@ struct _AYU_DescribeBase {
      // for serialization.  For most types this should not be needed; for
      // aggregate types you usually want attrs() or elems(), and for scalar
      // types delegate() or values().  For more complex types, however, you can
-     // use this and from_tree() to control serialization.  The TreeFlags
-     // parameter should be either ignored or applied to the returned Tree.
-    static constexpr auto to_tree (Tree(* f )(const T&, TreeFlags));
+     // use this and from_tree() to control serialization.
+    static constexpr auto to_tree (Tree(* f )(const T&));
      // Provides a function to transform an ayu::Tree into an item of this type
      // for deserialization.  For most types this should not be needed, but it's
      // available for more complex types if necessary.  The type will already
