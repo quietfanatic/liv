@@ -7,7 +7,7 @@ namespace ayu::in {
 
 Type MemberAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
-    return self->get_type();
+    return *self->desc;
 }
 void MemberAcr0::_access (
     const Accessor* acr, AccessMode, Mu& from, Callback<void(Mu&)> cb
@@ -31,7 +31,7 @@ Mu* MemberAcr0::_inverse_address (const Accessor* acr, Mu& to) {
 
 Type RefFuncAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);
-    return self->get_type();
+    return *self->desc;
 }
 void RefFuncAcr0::_access (
     const Accessor* acr, AccessMode, Mu& from, Callback<void(Mu&)> cb
@@ -48,7 +48,7 @@ Mu* RefFuncAcr0::_address (const Accessor* acr, Mu& from) {
 
 Type ConstRefFuncAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
-    return self->get_type();
+    return *self->desc;
 }
 void ConstRefFuncAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,
@@ -65,7 +65,7 @@ Mu* ConstRefFuncAcr0::_address (const Accessor* acr, Mu& from) {
 
 Type ConstantPointerAcr0::_type (const Accessor* acr, Mu*) {
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
-    return self->get_type();
+    return *self->desc;
 }
 void ConstantPointerAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,

@@ -226,11 +226,10 @@ struct MemberAcr2 : MemberAcr0 {
      // Wouldn't it save space to put this in the vtable?  No!  Doing so would
      // require a different vtable for each To type, so it would likely use more
      // space.  TODO: actually test this
-     // TODO: Make this a pointer to _AYU_Describe<To>::_ayu_description
-    Type(* get_type )();
+    const Description* const* desc;
     To From::* mp;
     explicit constexpr MemberAcr2 (To From::* mp, uint8 flags = 0) :
-        MemberAcr0(&_vt, flags), get_type(&Type::CppType<To>), mp(mp)
+        MemberAcr0(&_vt, flags), desc(get_indirect_description<To>()), mp(mp)
     { }
 };
 
@@ -249,10 +248,10 @@ template <class From, class To>
 struct RefFuncAcr2 : RefFuncAcr0 {
     using AccessorFromType = From;
     using AccessorToType = To;
-    Type(* get_type )();
+    const Description* const* desc;
     To&(* f )(From&);
     explicit constexpr RefFuncAcr2 (To&(* f )(From&), uint8 flags = 0) :
-        RefFuncAcr0(&_vt, flags), get_type(&Type::CppType<To>), f(f)
+        RefFuncAcr0(&_vt, flags), desc(get_indirect_description<To>()), f(f)
     { }
 };
 
@@ -271,12 +270,12 @@ template <class From, class To>
 struct ConstRefFuncAcr2 : ConstRefFuncAcr0 {
     using AccessorFromType = From;
     using AccessorToType = To;
-    Type(* get_type )();
+    const Description* const* desc;
     const To&(* f )(const From&);
     explicit constexpr ConstRefFuncAcr2 (
         const To&(* f )(const From&), uint8 flags = 0
     ) :
-        ConstRefFuncAcr0(&_vt, flags), get_type(&Type::CppType<To>), f(f)
+        ConstRefFuncAcr0(&_vt, flags), desc(get_indirect_description<To>()), f(f)
     { }
 };
 
@@ -566,11 +565,11 @@ template <class From, class To>
 struct ConstantPointerAcr2 : ConstantPointerAcr0 {
     using AccessorFromType = From;
     using AccessorToType = To;
-    Type(* get_type )();
+    const Description* const* desc;
     const To* pointer;
     explicit constexpr ConstantPointerAcr2 (const To* p, uint8 flags = 0) :
         ConstantPointerAcr0(&_vt, flags | ACR_READONLY),
-        get_type(&Type::CppType<To>), pointer(p)
+        desc(get_indirect_description<To>()), pointer(p)
     { }
 };
 
