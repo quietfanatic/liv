@@ -42,7 +42,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 return tree.rep == REP_NULL;
             case VFBOOL:
                 return tree.rep == REP_BOOL
-                    && tree.data.as_usize == *(const bool*)name();
+                    && tree.data.as_bool == *(const bool*)name();
             case VFINT64:
                 switch (tree.rep) {
                     case REP_INT64:

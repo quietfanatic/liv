@@ -49,7 +49,7 @@ struct Tree {
      // Only the flags can be modified after construction.
     TreeFlags flags = 0;
     const union {
-        usize as_usize;
+        bool as_bool;
         int64 as_int64;
         double as_double;
         char as_chars [8];

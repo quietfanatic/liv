@@ -177,7 +177,7 @@ struct Printer {
         switch (t.rep) {
             case REP_NULL: return pstr(p, "null"sv);
             case REP_BOOL: {
-                Str s = t.data.as_usize ? "true"sv : "false"sv;
+                Str s = t.data.as_bool ? "true"sv : "false"sv;
                 return pstr(p, s);
             }
             case REP_INT64: {

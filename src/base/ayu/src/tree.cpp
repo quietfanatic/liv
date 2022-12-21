@@ -50,7 +50,7 @@ Tree::Tree (Null) :
     form(NULLFORM), rep(REP_NULL), data{}
 { }
 Tree::Tree (ExplicitBool v) :
-    form(BOOL), rep(REP_BOOL), data{.as_usize = v.v}
+    form(BOOL), rep(REP_BOOL), data{.as_bool = v.v}
 { }
 Tree::Tree (int64 v) :
     form(NUMBER), rep(REP_INT64), data{.as_int64 = v}
@@ -84,11 +84,10 @@ Tree::Tree (String&& v) :
     form(STRING), rep(), data{.as_int64 = 0}
 {
     if (v.size() <= 8) {
-        const_cast<int64&>(data.as_int64) = 0;
         const_cast<int8&>(rep) = REP_0CHARS + v.size();
-        for (usize i = 0; i < v.size(); i++) {
-            const_cast<char&>(data.as_chars[i]) = v[i];
-        }
+         // String storage should be aligned and large enough
+        const_cast<int64&>(data.as_int64) =
+            *(uint64*)v.data() & (uint64(-1) >> 8 * (8 - v.size()));
     }
     else {
         const_cast<int8&>(rep) = REP_VARCHAR;
@@ -118,18 +117,22 @@ Tree::Tree (std::exception_ptr v) :
     }
 { }
 
-static void require_form (const Tree& t, TreeForm form) {
+[[noreturn]]
+static void bad_form (const Tree& t, TreeForm form) {
     if (t.rep == REP_ERROR) std::rethrow_exception(tree_Error(t));
-    else if (t.form != form) throw X<WrongForm>(form, t);
+    else if (t.form == form) {
+        AYU_INTERNAL_UGUU();
+    }
+    else throw X<WrongForm>(form, t);
 }
 
 Tree::operator Null () const {
-    require_form(*this, NULLFORM);
+    if (form != NULLFORM) bad_form(*this, NULLFORM);
     return null;
 }
 Tree::operator bool () const {
-    require_form(*this, BOOL);
-    return data.as_usize;
+    if (form != BOOL) bad_form(*this, BOOL);
+    return data.as_bool;
 }
 Tree::operator char () const {
     if (rep == REP_1CHARS) {
@@ -138,7 +141,6 @@ Tree::operator char () const {
     else {
         [[unlikely]]
         switch (rep) {
-            case REP_ERROR: std::rethrow_exception(tree_Error(*this));
             case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
             case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
             case REP_8CHARS: case REP_VARCHAR: {
@@ -146,7 +148,7 @@ Tree::operator char () const {
                  // never have 8 or less characters.
                 throw X<CantRepresent>("char", *this);
             }
-            default: throw X<WrongForm>(form, *this);
+            default: bad_form(*this, STRING);
         }
     }
 }
@@ -163,10 +165,7 @@ Tree::operator T () const { \
             if (double(T(v)) == v) return v; \
             else throw X<CantRepresent>(#T, *this); \
         } \
-        case REP_ERROR: { \
-            std::rethrow_exception(tree_Error(*this)); \
-        } \
-        default: throw X<WrongForm>(NUMBER, *this); \
+        default: bad_form(*this, NUMBER); \
     } \
 }
 INTEGRAL_CONVERSION(int8)
@@ -184,13 +183,11 @@ Tree::operator double () const {
         case REP_NULL: return +nan;
         case REP_INT64: return data.as_int64;
         case REP_DOUBLE: return data.as_double;
-        case REP_ERROR: std::rethrow_exception(tree_Error(*this));
-        default: throw X<WrongForm>(NUMBER, *this);
+        default: bad_form(*this, NUMBER);
     }
 }
 Tree::operator Str () const {
     switch (rep) {
-        case REP_ERROR: std::rethrow_exception(tree_Error(*this));
         case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
         case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
         case REP_8CHARS: {
@@ -199,7 +196,7 @@ Tree::operator Str () const {
         case REP_VARCHAR: {
             return tree_longStr(*this);
         }
-        default: throw X<WrongForm>(STRING, *this);
+        default: bad_form(*this, STRING);
     }
 }
 Tree::operator String () const {
@@ -209,23 +206,23 @@ Tree::operator String16 () const {
     return to_utf16(Str(*this));
 }
 Tree::operator const Array& () const {
-    require_form(*this, ARRAY);
+    if (rep != REP_ARRAY) bad_form(*this, ARRAY);
     return tree_Array(*this);
 }
 Tree::operator const Object& () const {
-    require_form(*this, OBJECT);
+    if (rep != REP_OBJECT) bad_form(*this, OBJECT);
     return tree_Object(*this);
 }
 
 const Tree* Tree::attr (Str key) const {
-    require_form(*this, OBJECT);
+    if (rep != REP_OBJECT) bad_form(*this, OBJECT);
     for (auto& p : tree_Object(*this)) {
         if (p.first == key) return &p.second;
     }
     return null;
 }
 const Tree* Tree::elem (usize index) const {
-    require_form(*this, ARRAY);
+    if (rep != REP_ARRAY) bad_form(*this, ARRAY);
     if (index >= tree_Array(*this).size()) return null;
     return &tree_Array(*this)[index];
 }
@@ -245,33 +242,36 @@ const Tree& Tree::operator[] (usize index) const {
 bool operator == (const Tree& a, const Tree& b) {
      // Shortcut if same address
     if (&a == &b) return true;
-     // Special case int/float comparisons
-    else if (a.rep == REP_INT64 && b.rep == REP_DOUBLE) {
-        return a.data.as_int64 == b.data.as_double;
+    else if (a.rep != b.rep) {
+         // Special case int/float comparisons
+        if (a.rep == REP_INT64 && b.rep == REP_DOUBLE) {
+            return a.data.as_int64 == b.data.as_double;
+        }
+        else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
+            return a.data.as_double == b.data.as_int64;
+        }
+         // Otherwise different reps = different values.  We don't need to compare
+         // REP_*CHARS to REP_STRING because we guarantee that REP_STRING will never
+         // have 8 or less chars.
+        return false;
     }
-    else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
-        return a.data.as_double == b.data.as_int64;
-    }
-     // Otherwise different reps = different values.  We don't need to compare
-     // REP_*CHARS to REP_STRING because we guarantee that REP_STRING will never
-     // have 8 or less chars.
-    else if (a.rep != b.rep) return false;
     else switch (a.rep) {
         case REP_NULL: return true;
-        case REP_BOOL: return a.data.as_usize == b.data.as_usize;
+        case REP_BOOL: return a.data.as_bool == b.data.as_bool;
         case REP_INT64: return a.data.as_int64 == b.data.as_int64;
         case REP_DOUBLE: {
             double av = a.data.as_double;
             double bv = b.data.as_double;
-             // Check for nans
-            if (av != av && bv != bv) return true;
-            else return av == bv;
+            return av == bv || (av != av && bv != bv);
         }
         case REP_VARCHAR: {
             if (a.data.as_ptr == b.data.as_ptr) return true;
             return tree_longStr(a) == tree_longStr(b);
         }
         case REP_ARRAY: {
+             // From my investigations, the STL does NOT, in general,
+             // short-circuit container comparisons where the containers have
+             // the same address.
             if (a.data.as_ptr == b.data.as_ptr) return true;
             return tree_Array(a) == tree_Array(b);
         }
