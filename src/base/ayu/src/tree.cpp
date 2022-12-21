@@ -85,9 +85,9 @@ Tree::Tree (String&& v) :
 {
     if (v.size() <= 8) {
         const_cast<int8&>(rep) = REP_0CHARS + v.size();
-         // String storage should be aligned and large enough
-        const_cast<int64&>(data.as_int64) =
-            *(uint64*)v.data() & (uint64(-1) >> 8 * (8 - v.size()));
+        for (usize i = 0; i < v.size(); i++) {
+            const_cast<char&>(data.as_chars[i]) = v[i];
+        }
     }
     else {
         const_cast<int8&>(rep) = REP_VARCHAR;

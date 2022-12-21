@@ -69,7 +69,7 @@ using iri::IRI;
  //   - You can have a reference Mu& or Mu&&.
  //   - A pointer or reference to Mu is always supposed to refer to a
  //     constructed item, not an unconstructed buffer.  Functions that take or
- //     return unconstructed buffers use void* instead.
+ //     return unconstructed or untyped buffers use void* instead.
  //   - This does not track constness (in general there shouldn't be any
  //     const Mu&).
 struct Mu;
@@ -101,7 +101,7 @@ template <class... Args>
 String cat (String&& s, Args... args) {
     String r = std::move(s);
     ((s += in::to_string(std::forward<Args>(args))), ...);
-    return r;
+    return s;
 }
 
 ///// UTILITY

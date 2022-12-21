@@ -15,14 +15,14 @@ struct ExceptionBase : std::exception {
      // system will reference stack garbage.
     mutable String mess_cache;
      // Calls item_to_string on whatever the error type is.
-    const char* what () const noexcept override;
+    const char* what () const noexcept final;
     virtual Pointer ptr () const noexcept = 0;
 };
 
 template <class Err>
 struct X : ExceptionBase, Err {
     std::source_location loc = std::source_location::current();
-    Pointer ptr () const noexcept override {
+    Pointer ptr () const noexcept final {
         return static_cast<const Err*>(this);
     }
      // This has to be {} and not () to allow flattening aggregate
