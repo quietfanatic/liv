@@ -7,57 +7,41 @@
 namespace ayu {
 using namespace in;
 
-Str form_name (TreeForm f) {
-    switch (f) {
-        case NULLFORM: return "null"sv;
-        case BOOL: return "bool"sv;
-        case NUMBER: return "number"sv;
-        case STRING: return "string"sv;
-        case ARRAY: return "array"sv;
-        case OBJECT: return "object"sv;
-        case ERROR: return "error"sv;
-        default: return "(invalid form ID)"sv;
-    }
-}
-
 Tree::Tree (const Tree& o) :
     form(o.form), rep(o.rep), flags(o.flags), data(o.data)
 {
-    switch (rep) {
-        case REP_VARCHAR:
-        case REP_ARRAY:
-        case REP_OBJECT:
-        case REP_ERROR:
-            data.as_ptr->ref_count++;
+    if (rep < 0) {
+        data.as_ptr->ref_count++;
+    }
+}
+
+[[gnu::noinline]]
+void delete_data (const Tree& t) {
+    switch (t.rep) {
+        case REP_VARCHAR: {
+            free((void*)t.data.as_ptr);
             break;
+        }
+        case REP_ARRAY: {
+            delete static_cast<const TreeData<Array>*>(t.data.as_ptr);
+            break;
+        }
+        case REP_OBJECT: {
+            delete static_cast<const TreeData<Object>*>(t.data.as_ptr);
+            break;
+        }
+        case REP_ERROR: {
+            delete static_cast<const TreeData<std::exception_ptr>*>(t.data.as_ptr);
+            break;
+        }
+        default: AYU_INTERNAL_UGUU();
     }
 }
 
 Tree::~Tree () {
-    switch (rep) {
-        case REP_VARCHAR: {
-            if (!--data.as_ptr->ref_count) {
-                free((void*)data.as_ptr);
-            }
-            break;
-        }
-        case REP_ARRAY: {
-            if (!--data.as_ptr->ref_count) {
-                delete static_cast<const TreeData<Array>*>(data.as_ptr);
-            }
-            break;
-        }
-        case REP_OBJECT: {
-            if (!--data.as_ptr->ref_count) {
-                delete static_cast<const TreeData<Object>*>(data.as_ptr);
-            }
-            break;
-        }
-        case REP_ERROR: {
-            if (!--data.as_ptr->ref_count) {
-                delete static_cast<const TreeData<std::exception_ptr>*>(data.as_ptr);
-            }
-            break;
+    if (rep < 0) {
+        if (!--data.as_ptr->ref_count) {
+            delete_data(*this);
         }
     }
 }
@@ -80,13 +64,13 @@ Tree::Tree (Str v) :
     if (v.size() <= 8) {
          // zero unused char slots
         const_cast<int64&>(data.as_int64) = 0;
-        const_cast<uint8&>(rep) = REP_0CHARS + v.size();
+        const_cast<int8&>(rep) = REP_0CHARS + v.size();
         for (usize i = 0; i < v.size(); i++) {
             const_cast<char&>(data.as_chars[i]) = v[i];
         }
     }
     else {
-        const_cast<uint8&>(rep) = REP_VARCHAR;
+        const_cast<int8&>(rep) = REP_VARCHAR;
         auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
         vc->ref_count = 1;
         vc->value.size = v.size();
@@ -101,13 +85,13 @@ Tree::Tree (String&& v) :
 {
     if (v.size() <= 8) {
         const_cast<int64&>(data.as_int64) = 0;
-        const_cast<uint8&>(rep) = REP_0CHARS + v.size();
+        const_cast<int8&>(rep) = REP_0CHARS + v.size();
         for (usize i = 0; i < v.size(); i++) {
             const_cast<char&>(data.as_chars[i]) = v[i];
         }
     }
     else {
-        const_cast<uint8&>(rep) = REP_VARCHAR;
+        const_cast<int8&>(rep) = REP_VARCHAR;
         auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
         vc->ref_count = 1;
         vc->value.size = v.size();
@@ -322,6 +306,7 @@ bool operator == (const Tree& a, const Tree& b) {
 
 AYU_DESCRIBE(ayu::TreeForm,
     values(
+        value("undefined", UNDEFINED),
         value("null", NULLFORM),
         value("bool", BOOL),
         value("number", NUMBER),

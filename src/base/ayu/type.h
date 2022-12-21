@@ -15,8 +15,11 @@ namespace ayu {
  //
  // The default value will cause null derefs if you do anything with it.
  //
- // Types cannot be constructed or used until main() starts (except the empty
- // Type).
+ // Due to a constellation of unfortunate language rules, Types cannot be
+ // constexpr (except the empty Type).  However, they can be constructed at init
+ // time, and theoretically with LTO they should be effectively
+ // constant-initializable.  You cannot, however, actually use Types for
+ // anything before main() starts.
 struct Type {
      // Uses a tagged pointer; the first bit determines readonly (const), and the rest
      // points to an ayu::in::Description.
@@ -31,7 +34,7 @@ struct Type {
     Type (const std::type_info& t, bool readonly = false) :
         Type(in::get_description_for_type_info(t), readonly)
     { }
-     // Can throw UnknownType
+     // Should never throw, and in fact compile to a single pointer return.
     template <class T>
         requires (!std::is_volatile_v<std::remove_reference_t<T>>)
     static Type CppType () {

@@ -22,8 +22,6 @@ enum TreeForm : uint8 {
      // If you try to do anything with it, it will probably throw its contents.
     ERROR
 };
- // Readable name of a form in lowercase.
-Str form_name (TreeForm);
 
  // Options that control how a Tree is printed.  These do not have any effect on
  // the semantics of the Tree, and they do not affect subtrees.
@@ -47,7 +45,7 @@ enum : TreeFlags {
 
 struct Tree {
     const TreeForm form;
-    const uint8 rep;
+    const int8 rep;
      // Only the flags can be modified after construction.
     TreeFlags flags = 0;
     const union {
@@ -68,7 +66,7 @@ struct Tree {
         form(o.form), rep(o.rep), flags(o.flags), data(o.data)
     {
         const_cast<TreeForm&>(o.form) = UNDEFINED;
-        const_cast<uint8&>(o.rep) = 0;
+        const_cast<int8&>(o.rep) = 0;
         o.flags = 0;
         const_cast<int64&>(o.data.as_int64) = 0;
     }

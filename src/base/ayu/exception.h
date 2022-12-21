@@ -33,6 +33,9 @@ struct X : ExceptionBase, Err {
     constexpr explicit X(Args&&... args) :
         Err{&loc, std::forward<Args>(args)...}
     { }
+     // No sense optimizing exceptions for speed, so optimize for size instead
+    [[gnu::cold]]
+    ~X () { }
 };
 
 namespace in {

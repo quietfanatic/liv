@@ -8,17 +8,14 @@
 
 namespace ayu::in {
 
-using TreeRep = uint8;
+using TreeRep = int8;
 enum : TreeRep {
     REP_UNDEFINED,
     REP_NULL,
     REP_BOOL,
     REP_INT64,
     REP_DOUBLE,
-    REP_VARCHAR,
-    REP_ARRAY,
-    REP_OBJECT,
-    REP_ERROR,
+     // Short string's length is encoded here
     REP_0CHARS,
     REP_1CHARS,
     REP_2CHARS,
@@ -28,6 +25,11 @@ enum : TreeRep {
     REP_6CHARS,
     REP_7CHARS,
     REP_8CHARS,
+     // Types requiring reference counting
+    REP_VARCHAR = -1,
+    REP_ARRAY = -2,
+    REP_OBJECT = -3,
+    REP_ERROR = -4,
 };
 
 template <class T>

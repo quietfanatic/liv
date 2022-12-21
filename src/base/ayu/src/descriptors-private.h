@@ -65,7 +65,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFSTR: {
                 Str n = *(const Str*)name();
                 if (n.size() <= 8) {
-                    if (tree.rep != REP_0CHARS + n.size()) return false;
+                    if (tree.rep != REP_0CHARS + int8(n.size())) return false;
                     for (usize i = 0; i < n.size(); i++) {
                         if (tree.data.as_chars[i] != n[i]) return false;
                     }
