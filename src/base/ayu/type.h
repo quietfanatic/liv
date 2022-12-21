@@ -29,14 +29,14 @@ struct Type {
      // Can throw UnknownType.  There is no way to extract information about
      // constness from a std::type_info, so it must be provided as a bool.
     Type (const std::type_info& t, bool readonly = false) :
-        Type(in::need_description_for_type_info(t), readonly)
+        Type(in::get_description_for_type_info(t), readonly)
     { }
      // Can throw UnknownType
     template <class T>
         requires (!std::is_volatile_v<std::remove_reference_t<T>>)
     static Type CppType () {
         return Type(
-            in::need_description_for_cpp_type<
+            in::get_description_for_cpp_type<
                 std::remove_const_t<std::remove_reference_t<T>>
             >(),
             std::is_const_v<T>

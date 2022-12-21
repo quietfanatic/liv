@@ -1074,7 +1074,7 @@ AYU_DESCRIBE(ayu::test::InternalRefTest,
 
 static tap::TestSet tests ("base/ayu/serialize", []{
     using namespace tap;
-    ok(get_description_by_type_info(typeid(MemberTest)), "Description was registered");
+    ok(get_description_for_type_info(typeid(MemberTest)), "Description was registered");
 
     auto try_to_tree = [](Reference item, Str tree, Str name){
         try_is<Tree, Tree>(

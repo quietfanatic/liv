@@ -1,5 +1,6 @@
 #include "accessors-private.h"
 
+#include "../describe.h"
 #include "../reference.h"
 
 namespace ayu::in {
@@ -212,8 +213,7 @@ namespace ayu::in {
     }
 }
 
-static tap::TestSet tests ("base/ayu/accessors", []{
-    using namespace tap;
+namespace ayu::test {
     struct Thing {
         int a;
         int b;
@@ -221,6 +221,15 @@ static tap::TestSet tests ("base/ayu/accessors", []{
     struct SubThing : Thing {
         int c;
     };
+} using namespace ayu::test;
+
+ // Don't actually need any description, we just need these to be usable with
+ // AYU
+AYU_DESCRIBE_0(ayu::test::Thing)
+AYU_DESCRIBE_0(ayu::test::SubThing)
+
+static tap::TestSet tests ("base/ayu/accessors", []{
+    using namespace tap;
     SubThing thing2 {7, 8, 9};
 
     BaseAcr2<SubThing, Thing>{}.read(reinterpret_cast<Mu&>(thing2), [&](Mu& thing){

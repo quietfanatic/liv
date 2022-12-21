@@ -15,15 +15,21 @@
 namespace ayu_desc {
     template <class T>
     struct _AYU_Describe {
-        static constexpr bool _ayu_defined = false;
+        static constexpr bool _ayu_is_local = false;
+         // Declare this but don't define it.  It will be defined in a
+         // specialization of this template, which may be in a different
+         // translation unit.  Apparently nobody knows whether that's legal or
+         // not, but it works as long as the compiler uses the same mangled
+         // names for the specialization as the prototype.
+        static const ayu::in::Description* _ayu_description;
     };
 }
 
 namespace ayu::in {
     const Description* register_description (const Description*);
-    const Description* get_description_by_type_info (const std::type_info&);
+    const Description* get_description_for_type_info (const std::type_info&);
     const Description* need_description_for_type_info (const std::type_info&);
-    const Description* get_description_by_name (Str);
+    const Description* get_description_for_name (Str);
     const Description* need_description_for_name (Str);
     [[noreturn]] void throw_UnknownType (const std::type_info&);
 
@@ -35,29 +41,15 @@ namespace ayu::in {
     template <class T> requires (
         !std::is_reference_v<T> && !std::is_const_v<T> && !std::is_volatile_v<T>
     )
-    const Description* get_description_by_cpp_type () {
-        if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
-            return ayu_desc::_AYU_Describe<T>::_ayu_description;
-        }
-        else {
-            static auto r = get_description_by_type_info(typeid(T));
-            return r;
-        }
+    constexpr const Description** get_indirect_description_for_cpp_type () {
+        return &ayu_desc::_AYU_Describe<T>::_ayu_description;
     }
+
     template <class T> requires (
         !std::is_reference_v<T> && !std::is_const_v<T> && !std::is_volatile_v<T>
     )
-    const Description* need_description_for_cpp_type () {
-        if constexpr (ayu_desc::_AYU_Describe<T>::_ayu_defined) {
-            return ayu_desc::_AYU_Describe<T>::_ayu_description;
-        }
-        else {
-            if (auto r = get_description_by_cpp_type<T>()) {
-                return r;
-            }
-            else throw_UnknownType(typeid(T));
-        }
+    const Description* get_description_for_cpp_type () {
+        return ayu_desc::_AYU_Describe<T>::_ayu_description;
     }
-    std::string get_demangled_name (const std::type_info& t);
 }
 

@@ -187,19 +187,19 @@ const Description* register_description (const Description* desc) {
     return p->second;
 }
 
-const Description* get_description_by_type_info (const std::type_info& t) {
+const Description* get_description_for_type_info (const std::type_info& t) {
     auto& ds = registry().by_cpp_type;
     auto iter = ds.find(t);
     if (iter != ds.end()) return iter->second;
     else return null;
 }
 const Description* need_description_for_type_info (const std::type_info& t) {
-    auto desc = get_description_by_type_info(t);
+    auto desc = get_description_for_type_info(t);
     if (desc) return desc;
     else throw X<UnknownType>(t);
 }
 
-const Description* get_description_by_name (Str name) {
+const Description* get_description_for_name (Str name) {
     init_names();
     auto& ds = registry().by_name;
     auto iter = ds.find(name);
@@ -207,7 +207,7 @@ const Description* get_description_by_name (Str name) {
     else return null;
 }
 const Description* need_description_for_name (Str name) {
-    auto desc = get_description_by_name(name);
+    auto desc = get_description_for_name(name);
     if (desc) return desc;
     else throw X<TypeNotFound>(String(name));
 }

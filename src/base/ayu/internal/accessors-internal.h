@@ -11,12 +11,7 @@
 #include "../tree.h"
 #include "../type.h"
 
-namespace ayu {
- // Theoretically, this should never be thrown (in all circumstances,
- // WriteReadonlyReference should be thrown instead).
-struct WriteReadonlyAccessor : Error { };
-
-namespace in {
+namespace ayu::in {
 
 ///// UNIVERSAL ACCESSOR STUFF
 
@@ -133,7 +128,7 @@ struct Accessor {
     void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {
         assert(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
         if (mode != ACR_READ && accessor_flags & ACR_READONLY) {
-            throw X<WriteReadonlyAccessor>();
+            AYU_INTERNAL_UGUU();
         }
         vt->access(this, mode, from, cb);
     }
@@ -350,7 +345,7 @@ template <class To>
 void ValueFuncAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) throw X<WriteReadonlyAccessor>();
+    if (mode != ACR_READ) AYU_INTERNAL_UGUU();
     auto self = static_cast<const ValueFuncAcr2<Mu, To>*>(acr);
     cb.reinterpret<void(const To&)>()(self->f(from));
 }
@@ -546,7 +541,7 @@ template <class To>
 void ConstantAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu&, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) throw X<WriteReadonlyAccessor>();
+    if (mode != ACR_READ) AYU_INTERNAL_UGUU();
     auto self = static_cast<const ConstantAcr2<Mu, To>*>(acr);
     cb(reinterpret_cast<Mu&>(const_cast<To&>(self->value)));
 }
@@ -603,5 +598,4 @@ struct ReferenceFuncAcr2 : ReferenceFuncAcr1 {
     { }
 };
 
-} // namespace in
-} // namespace ayu
+} // namespace ayu::in

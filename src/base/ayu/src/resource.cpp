@@ -577,6 +577,22 @@ AYU_DESCRIBE(ayu::Resource,
         }
     ))
 )
+AYU_DESCRIBE(ayu::ResourceState,
+    values(
+        value("UNLOADED", UNLOADED),
+        value("LOADED", LOADED),
+        value("LOAD_CONSTRUCTING", LOAD_CONSTRUCTING),
+        value("LOAD_ROLLBACK", LOAD_ROLLBACK),
+        value("SAVE_VERIFYING", SAVE_VERIFYING),
+        value("SAVE_COMMITTING", SAVE_COMMITTING),
+        value("UNLOAD_VERIFYING", UNLOAD_VERIFYING),
+        value("UNLOAD_COMMITTING", UNLOAD_COMMITTING),
+        value("RELOAD_CONSTRUCTING", RELOAD_CONSTRUCTING),
+        value("RELOAD_VERIFYING", RELOAD_VERIFYING),
+        value("RELOAD_ROLLBACK", RELOAD_ROLLBACK),
+        value("RELOAD_COMMITTING", RELOAD_COMMITTING)
+    )
+)
 
 AYU_DESCRIBE(ayu::ResourceError,
     delegate(base<Error>())
