@@ -3,6 +3,7 @@
 #include "../base/ayu/common.h"
 #include "../base/ayu/resource.h"
 #include "../base/ayu/resource-scheme.h"
+#include "../base/glow/common.h"
 #include "../base/tap/tap.h"
 #include "../base/uni/common.h"
 #include "app.h"

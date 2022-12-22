@@ -14,18 +14,15 @@
  // Recommended that you make sure the move and copy constructors can't throw,
  // or else the assignee may be left destructed.
 #define ASSIGN_BY_MOVE(T) \
-T& operator = (T&& o) { \
+T& operator = (T&& o) noexcept { \
     this->~T(); \
-    new (this) T (std::move(o)); \
-    return *this; \
+    return *new (this) T (std::move(o)); \
 }
 #define ASSIGN_BY_COPY(T) \
-T& operator = (const T& o) { \
+T& operator = (const T& o) noexcept { \
     this->~T(); \
-    new (this) T (o); \
-    return *this; \
+    return *new (this) T (o); \
 }
 
 #define AA(v) ::uni::assert_general(v, __FUNCTION__, __FILE__, __LINE__)
 #define DA(v) ::uni::debug_assert(v)
-#define AS(v) ::uni::assert_sdl(v, __FUNCTION__, __FILE__, __LINE__)

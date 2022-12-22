@@ -36,28 +36,21 @@ constexpr Null null = nullptr;
 
 using String = std::string;
 using Str = std::string_view;
- // This is scuffed, wide strings are all scuffed
-#if WCHAR_MAX > 0xffff
-using String16 = std::u16string;
+using Str8 = std::u8string_view;
 using Str16 = std::u16string_view;
-#else
-using String16 = std::wstring;
-using Str16 = std::wstring_view;
-#endif
+using Str32 = std::u32string_view;
+using WStr = std::wstring_view;
 
 ///// ASSERTIONS (use macros.h)
 
 struct AssertionFailed : ayu::Error {
-    String function;
-    String filename;
+     // TODO: Replace with std::source_location
+    Str function;
+    Str filename;
     uint line;
-};
-struct AssertionFailedSDL : AssertionFailed {
-    String sdl_error;
 };
 
 void assert_failed_general (const char* function, const char* filename, uint line);
-void assert_failed_sdl (const char* function, const char* filename, uint line);
 
 template <class T>
 static constexpr T&& assert_general (
@@ -72,7 +65,7 @@ static constexpr T&& assert_general (
     return std::forward<T>(v);
 }
 
-static void unreachable () {
+static inline void unreachable () {
      // It would be nice if __builtin_unreachable() would trap in debug builds,
      // but it doesn't.  Instead GCC just gives up on compiling the rest of the
      // function and lets the CPU run off the end, corrupting the stack and
@@ -95,14 +88,6 @@ static void unreachable () {
 template <class T>
 static constexpr T&& debug_assert (T&& v) {
     if (!v) unreachable();
-    return std::forward<T>(v);
-}
-
-template <class T>
-static constexpr T&& assert_sdl (
-    T&& v, const char* function, const char* filename, uint line
-) {
-    if (!v) assert_failed_sdl(function, filename, line);
     return std::forward<T>(v);
 }
 

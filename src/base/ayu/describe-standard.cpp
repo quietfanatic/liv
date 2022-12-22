@@ -42,12 +42,10 @@ AYU_DESCRIBE(std::string_view,
         return Tree(v);
     })
 )
- // Same story with const char*
-AYU_DESCRIBE(const char*,
-    to_tree([](const char* const& v){
-        return Tree(v);
-    })
-)
+ // We can't do the same for const char* because the full specialization would
+ // conflict with the partial specialization for T*.  Normally this wouldn't be
+ // a problem, but if the templates are in different compilation units, it'll
+ // cause a duplicate definition error from the linker.
 
 AYU_DESCRIBE(iri::IRI,
     delegate(mixed_funcs<String>(
