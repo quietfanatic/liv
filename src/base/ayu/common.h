@@ -5,40 +5,22 @@
 
 #include <cstdint>
 #include <cwchar>
-#include <limits>
 #include <source_location>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
-#include "callback.h"
+#include "../uni/callback.h"
+#include "../uni/common.h"
 
 namespace iri { struct IRI; }
 
 namespace ayu {
-
 using namespace std::literals;
+using namespace uni;
+using iri::IRI;
 
 ///// BASIC TYPES AND STUFF
-
-using int8 = std::int8_t;
-using int16 = std::int16_t;
-using int32 = std::int32_t;
-using int64 = std::int64_t;
-using isize = std::intptr_t;
-using uint = unsigned int;
-using uint8 = std::uint8_t;
-using uint16 = std::uint16_t;
-using uint32 = std::uint32_t;
-using uint64 = std::uint64_t;
-using usize = std::uintptr_t;
-
-using Null = std::nullptr_t;
-
- // AYU-like keywords
-constexpr Null null = nullptr;
-constexpr double nan = std::numeric_limits<double>::quiet_NaN();
-constexpr double inf = std::numeric_limits<double>::infinity();
 
  // Defined elsewhere
 struct Document;
@@ -64,8 +46,6 @@ using Str16 = std::u16string_view;
 using Array = std::vector<Tree>;
 using Pair = std::pair<TreeString, Tree>;
 using Object = std::vector<Pair>;
-
-using iri::IRI;
 
  // Unknown type that will never be defined.  This has a similar role to void,
  // except:

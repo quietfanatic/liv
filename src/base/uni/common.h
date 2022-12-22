@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <source_location>
@@ -31,6 +32,9 @@ static_assert(std::is_same_v<usize, std::size_t>);
 
 using Null = std::nullptr_t;
 constexpr Null null = nullptr;
+
+constexpr float nan = std::numeric_limits<float>::quiet_NaN();
+constexpr float inf = std::numeric_limits<float>::infinity();
 
 using String = std::string;
 using Str = std::string_view;
