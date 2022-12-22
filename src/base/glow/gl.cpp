@@ -40,12 +40,10 @@ void init_gl_functions () {
 
 void throw_on_glGetError (
     const char* gl_function,
-    const char* caller,
-    const char* filename,
-    uint line
+    std::source_location loc
 ) {
     GLenum err = p_glGetError<>();
-    if (err) throw ayu::X<GLError>(err, gl_function, caller, filename, line);
+    if (err) throw ayu::X<GLError>(err, gl_function, loc);
 }
 
 } using namespace glow;
@@ -55,8 +53,6 @@ AYU_DESCRIBE(glow::GLError,
     elems(
         elem(&glow::GLError::error_code),
         elem(&glow::GLError::gl_function),
-        elem(&glow::GLError::caller),
-        elem(&glow::GLError::filename),
-        elem(&glow::GLError::line)
+        elem(&glow::GLError::loc)
     )
 )

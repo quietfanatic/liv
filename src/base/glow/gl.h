@@ -8,17 +8,13 @@ namespace glow {
 
     void throw_on_glGetError (
         const char* gl_function,
-        const char* caller,
-        const char* filename,
-        uint line
+        std::source_location = std::source_location::current()
     );
 
     struct GLError : GlowError {
         uint error_code;
-        std::string gl_function;
-        std::string caller;
-        std::string filename;
-        uint line;
+        Str gl_function;
+        std::source_location loc;
     };
 }
 
@@ -52,27 +48,25 @@ namespace glow {
     auto checked_gl_function(
         Ret(APIENTRY* p )(Args...),
         const char* fname,
-        const char* function,
-        const char* filename,
-        unsigned line
+        std::source_location loc = std::source_location::current()
     ) {
          // Bad hack: Add 2 to fname to remove the p_
         return [=](Args... args) -> Ret {
             if constexpr (std::is_void_v<Ret>) {
                 p(args...);
-                throw_on_glGetError(fname + 2, function, filename, line);
+                throw_on_glGetError(fname + 2, loc);
             }
             else {
                 Ret r = p(args...);
-                throw_on_glGetError(fname + 2, function, filename, line);
+                throw_on_glGetError(fname + 2, loc);
                 return r;
             }
         };
     }
 }
 
-#define USE_GL_FUNCTION(p_name) glow::checked_gl_function(p_name<>, #p_name, __FUNCTION__, __FILE__, __LINE__)
+#define USE_GL_FUNCTION(p_name) glow::checked_gl_function(p_name<>, #p_name)
 
 #endif
 
-#include "gl_api.h"
+#include "../gl_api/gl_api.h"
