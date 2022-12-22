@@ -33,6 +33,9 @@ my %configs = (
     opt => {
         opts => [qw(-O3 -DNDEBUG -ggdb -flto)],
     },
+    opt32 => {
+        opts => [qw(-m32 -fno-pie -O3 -DNDEBUG -ggdb -flto)],
+    },
     val => {
         opts => [qw(-O3 -DNDEBUG -ggdb)],
     },
@@ -82,7 +85,6 @@ my @sources = (qw(
     base/ayu/src/resource-scheme.cpp
     base/ayu/src/scan.cpp
     base/ayu/src/serialize.cpp
-    base/ayu/src/traversal.cpp
     base/ayu/src/tree.cpp
     base/ayu/src/type.cpp
     base/control/command.cpp

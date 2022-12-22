@@ -47,6 +47,14 @@ Tree::~Tree () {
     }
 }
 
+struct Foo {
+    alignas(void*) char data [8];
+};
+
+void foo (const Foo& f) {
+    if (f.data[3]) { std::cout << "3" << std::endl; }
+}
+
 Tree::Tree (Null) :
     form(NULLFORM), rep(REP_NULL), flags(0), length(0), data{.as_int64 = 0}
 { }

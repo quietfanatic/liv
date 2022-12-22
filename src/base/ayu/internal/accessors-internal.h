@@ -151,11 +151,14 @@ struct Accessor {
 
     void inc () const {
         if (ref_count != uint16(-1)) {
+             // Most ACRs are constexpr
+            [[unlikely]]
             const_cast<uint16&>(ref_count)++;
         }
     }
     void dec () const {
         if (ref_count != uint16(-1)) {
+            [[unlikely]]
             if (!--const_cast<uint16&>(ref_count)) {
                 vt->destroy_this(const_cast<Accessor*>(this));
                 delete this;
