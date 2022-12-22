@@ -74,7 +74,7 @@ CE P lerp (P a, P b, T t) {
      // For safety, ensure we don't go outside the given range.  Note that if we
      // are given a standard begin-end pair (where end cannot be dereferenced),
      // the undereferencable end will be returned if t == 1.
-    DA(t >= T(0) && t <= T(1));
+    expect(t >= T(0) && t <= T(1));
     return a + round((b - a) * t);
 }
 

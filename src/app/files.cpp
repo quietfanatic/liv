@@ -47,7 +47,7 @@ FilesToOpen expand_files (
          // If the specified file is not in the list, then it must have been
          // deleted or moved between fs::exists and fs::directory_iterator.
          // There's nothing reasonable to do in this case, so just crash.
-        AA(r.start_index != usize(-1));
+        require(r.start_index != usize(-1));
         return r;
     }
     else {

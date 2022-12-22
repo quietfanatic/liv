@@ -93,7 +93,7 @@ float Spread::clamp_zoom (const Settings* settings, float zoom) const {
         zoom = clamp(zoom, min_zoom, max_zoom);
     }
     else zoom = clamp(zoom, 1/max_zoom, max_zoom);
-    AA(defined(zoom));
+    require(defined(zoom));
     return zoom;
 }
 

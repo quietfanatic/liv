@@ -22,6 +22,5 @@ static constexpr T&& require_sdl (
     if (!v) [[unlikely]] requirement_failed_sdl(loc);
     return std::forward<T>(v);
 }
-#define AS(v) ::glow::require_sdl(v)
 
 } // namespace glow

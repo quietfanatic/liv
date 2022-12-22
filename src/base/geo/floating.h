@@ -89,7 +89,7 @@ CE bool exact_eq (T a, T b) {
  // in an integer of the same size.
 template <Floating T>
 CE SameSizeInt<T> trunc (T a) {
-    DA(a >= SameSizeInt<T>(-GINF) && a <= SameSizeInt<T>(GINF));
+    expect(a >= SameSizeInt<T>(-GINF) && a <= SameSizeInt<T>(GINF));
     return SameSizeInt<T>(a);
 }
 

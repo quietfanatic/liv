@@ -70,7 +70,7 @@ void send_input_as_event (const Input& input, int window) {
             SDL_PushEvent(&event);
             break;
         }
-        default: AA(false);
+        default: require(false);
     }
     if (input.shift) send_key_event(SDL_KEYUP, SDLK_LSHIFT, window);
     if (input.alt) send_key_event(SDL_KEYUP, SDLK_LALT, window);
@@ -151,7 +151,7 @@ Str input_to_string (const Input& input) {
                 default: return "";
             }
         }
-        default: AA(false); return "";
+        default: require(false); return "";
     }
 }
 
@@ -182,11 +182,11 @@ AYU_DESCRIBE(control::Input,
             }
             case BUTTON: {
                 Str name = input_to_string(input);
-                AA(!name.empty());
+                require(!name.empty());
                 a.emplace_back(name);
                 break;
             }
-            default: AA(false);
+            default: require(false);
         }
         return ayu::Tree(a);
     }),

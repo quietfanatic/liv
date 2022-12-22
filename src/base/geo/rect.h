@@ -36,7 +36,7 @@ struct GRect {
 #ifndef NDEBUG
         bool any_defined = l == l || b == b || r == r || t == t;
         bool all_defined = l == l && b == b && r == r && t == t;
-        DA(any_defined == all_defined);
+        expect(any_defined == all_defined);
 #endif
     }
      // Create the undefined rectangle.  Most operations are not defined on the
@@ -107,7 +107,7 @@ CE bool defined (const GRect<T>& a) {
 #ifndef NDEBUG
     bool any_defined = a.l == a.l || a.b == a.b || a.r == a.r || a.t == a.t;
     bool all_defined = a.l == a.l && a.b == a.b && a.r == a.r && a.t == a.t;
-    DA(any_defined == all_defined);
+    expect(any_defined == all_defined);
 #endif
     return defined(a.l);
 }

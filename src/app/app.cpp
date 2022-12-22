@@ -12,7 +12,7 @@ namespace app {
 
 static Book* book_with_window_id (App& self, uint32 id) {
     auto iter = self.books_by_window_id.find(id);
-    AA(iter != self.books_by_window_id.end());
+    require(iter != self.books_by_window_id.end());
     return &*iter->second;
 }
 
@@ -133,7 +133,7 @@ App::~App () { }
 static void add_book (App& self, std::unique_ptr<Book>&& b) {
     auto& book = self.books.emplace_back(std::move(b));
     self.books_by_window_id.emplace(
-        AS(SDL_GetWindowID(book->window)),
+        glow::require_sdl(SDL_GetWindowID(book->window)),
         &*book
     );
 }
@@ -149,9 +149,9 @@ void App::open_list (Str list_filename) {
 }
 
 void App::close_book (Book* book) {
-    AA(book);
+    require(book);
     books_by_window_id.erase(
-        AS(SDL_GetWindowID(book->window))
+        glow::require_sdl(SDL_GetWindowID(book->window))
     );
     for (auto iter = books.begin(); iter != books.end(); iter++) {
         if (&**iter == book) {
@@ -159,7 +159,7 @@ void App::close_book (Book* book) {
             return;
         }
     }
-    AA(false);
+    require(false);
 }
 
 void App::run () {
@@ -184,7 +184,7 @@ Book* current_book = null;
 static tap::TestSet tests ("app/app", []{
     using namespace tap;
 
-    char* base = AS(SDL_GetBasePath());
+    char* base = glow::require_sdl(SDL_GetBasePath());
     String exe_folder = base;
     SDL_free(base);
 
@@ -196,7 +196,7 @@ static tap::TestSet tests ("app/app", []{
             ayu::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
         });
     }, "App::open_files");
-    auto window_id = AS(SDL_GetWindowID(app.books[0]->window));
+    auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));
 
     is(app.books[0]->get_page_offset(), 1, "Book starts on page 1");
 

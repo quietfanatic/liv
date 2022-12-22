@@ -33,7 +33,7 @@ Book::Book (App& app, FilesToOpen&& to_open) :
     )
 {
     SDL_SetWindowResizable(window, SDL_TRUE);
-    DA(!SDL_GL_SetSwapInterval(1));
+    expect(!SDL_GL_SetSwapInterval(1));
     if (settings->get(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
@@ -54,7 +54,7 @@ void Book::set_page_offset (int32 off) {
      // Clamp such that there is at least one visible page in the range
     int32 l = clamp(off - 1, 1 - size(viewing_pages), block.count() - 1);
     viewing_pages = {l, l + size(viewing_pages)};
-    DA(size(visible_pages()) >= 1);
+    expect(size(visible_pages()) >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         layout_params.manual_zoom = GNAN;
         layout_params.manual_offset = GNAN;
@@ -138,14 +138,14 @@ void Book::reset_layout () {
 }
 
 bool Book::is_fullscreen () const {
-    auto flags = AS(SDL_GetWindowFlags(window));
+    auto flags = glow::require_sdl(SDL_GetWindowFlags(window));
     return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
 }
 
 void Book::set_fullscreen (bool fs) {
      // This will trigger a window_size_changed, so no need to clear layout or
      // set need_draw
-    AS(!SDL_SetWindowFullscreen(
+    glow::require_sdl(!SDL_SetWindowFullscreen(
         window,
         fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
     ));
@@ -242,12 +242,12 @@ bool Book::idle_processing () {
 IVec Book::get_window_size () const {
     int w, h;
     SDL_GL_GetDrawableSize(window, &w, &h);
-    AA(w > 0 && h > 0);
+    require(w > 0 && h > 0);
     return {w, h};
 }
 
 void Book::window_size_changed (IVec size) {
-    AA(size.x > 0 && size.y > 0);
+    require(size.x > 0 && size.y > 0);
     glViewport(0, 0, size.x, size.y);
     layout = {};
     need_draw = true;
@@ -264,7 +264,7 @@ void Book::window_size_changed (IVec size) {
 static tap::TestSet tests ("app/book", []{
     using namespace tap;
 
-    char* base = AS(SDL_GetBasePath());
+    char* base = glow::require_sdl(SDL_GetBasePath());
     String exe_folder = base;
     SDL_free(base);
 

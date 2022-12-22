@@ -18,7 +18,7 @@ Shader::~Shader () {
 }
 
 void Shader::compile () {
-    AA(id);
+    require(id);
     glCompileShader(id);
     int status = 0; glGetShaderiv(id, GL_COMPILE_STATUS, &status);
     int loglen = 0; glGetShaderiv(id, GL_INFO_LOG_LENGTH, &loglen);
@@ -43,7 +43,7 @@ Program::~Program () {
 }
 
 void Program::link () {
-    AA(id);
+    require(id);
      // Detach old shaders
     int n_to_detach; glGetProgramiv(id, GL_ATTACHED_SHADERS, &n_to_detach);
     if (n_to_detach) {
@@ -141,7 +141,7 @@ AYU_DESCRIBE(glow::Shader,
         )),
         attr("source", mixed_funcs<String>(
             [](const Shader& v){
-                AA(v.id);
+                require(v.id);
                 int len = 0;
                 glGetShaderiv(v.id, GL_SHADER_SOURCE_LENGTH, &len);
                 String r (len-1, 0);

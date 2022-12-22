@@ -38,7 +38,7 @@ Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(std::move
  // Should this be inlined?
 void Statement::operator() () const {
 #ifndef DEBUG
-    AA(args.type == command->args_type());
+    require(args.type == command->args_type());
 #endif
     command->wrapper(command->function, args.data);
 }

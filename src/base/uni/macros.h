@@ -24,6 +24,3 @@ T& operator = (const T& o) noexcept { \
     return *new (this) T (o); \
 }
 
- // TODO: Remove these
-#define AA(v) ::uni::require_throw(v)
-#define DA(v) ::uni::expect(v)

@@ -20,7 +20,7 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
 #ifdef GLOW_PROFILING
     double time0 = uni::now();
 #endif
-    SDL_Surface* surf = AS(IMG_Load(filename.c_str()));
+    SDL_Surface* surf = require_sdl(IMG_Load(filename.c_str()));
 #ifdef GLOW_PROFILING
     double time1 = uni::now();
     double time2 = time1;
@@ -59,7 +59,9 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
                 type = GL_UNSIGNED_BYTE;
             }
              // Nontrivial format, so ask SDL to convert
-            SDL_Surface* new_surf = AS(SDL_ConvertSurfaceFormat(surf, sdl_format, 0));
+            SDL_Surface* new_surf = require_sdl(
+                SDL_ConvertSurfaceFormat(surf, sdl_format, 0)
+            );
             SDL_FreeSurface(surf);
             surf = new_surf;
 #ifdef GLOW_PROFILING
@@ -112,7 +114,7 @@ FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
     double time3 = uni::now();
 #endif
      // Now upload texture
-    AA(surf->w > 0 && surf->h > 0);
+    require(surf->w > 0 && surf->h > 0);
     glBindTexture(target, id);
     glTexImage2D(
         target, 0, internal_format,

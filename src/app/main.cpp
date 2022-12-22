@@ -12,8 +12,8 @@
 using namespace app;
 
 int main (int argc, char** argv) {
-    AS(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
-    char* base = AS(SDL_GetBasePath());
+    glow::require_sdl(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
+    char* base = glow::require_sdl(SDL_GetBasePath());
      // TODO: allow resource schemes to be readonly
     ayu::FileResourceScheme res_scheme ("res", String(base) + "res");
     ayu::FileResourceScheme data_scheme ("data", String(base));

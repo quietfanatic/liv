@@ -42,13 +42,13 @@ struct Image {
         return {{0, 0}, size};
     }
     RGBA8& operator [] (IVec i) {
-        DA(pixels);
-        DA(contains(bounds(), i));
+        expect(pixels);
+        expect(contains(bounds(), i));
         return pixels[i.y * size.x + i.x];
     }
     const RGBA8& operator [] (IVec i) const {
-        DA(pixels);
-        DA(contains(bounds(), i));
+        expect(pixels);
+        expect(contains(bounds(), i));
         return pixels[i.y * size.x + i.x];
     }
 };
@@ -77,13 +77,13 @@ struct SubImage {
     IVec size () const {
         if (bounds != GINF) return geo::size(bounds);
         else {
-            DA(image);
+            expect(image);
             return image->size;
         }
     }
     const RGBA8& operator [] (IVec i) const {
-        DA(image);
-        DA(contains(bounds != GINF ? bounds : IRect({0, 0}, image->size), i));
+        expect(image);
+        expect(contains(bounds != GINF ? bounds : IRect({0, 0}, image->size), i));
         return (*image)[bounds != GINF ? i + lb(bounds) : i];
     }
 };

@@ -25,12 +25,12 @@ struct GRange {
     CE GRange (GINF_t i) : l(-i), r(i) { }
     template <class A, class B>
     CE GRange (A l, B r) : l(l), r(r) {
-        DA(valid(*this));
+        expect(valid(*this));
     }
      // Why am I even doing this, this is so dumb
     template <class Ix>
     CE auto operator [] (Ix i) const {
-        DA(i < r - l);
+        expect(i < r - l);
         return l[i];
     }
      // No operator bool because it's not clear whether it should check if the
@@ -69,7 +69,7 @@ CE bool valid (const GRange<T>& a) {
 
 template <class T>
 CE bool defined (const GRange<T>& a) {
-    DA(valid(a));
+    expect(valid(a));
     return defined(a.l);
 }
 

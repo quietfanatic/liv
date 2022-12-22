@@ -32,17 +32,17 @@ Window::Window (
     const char* title, int x, int y, int w, int h, uint32 flags,
     const GLAttributes& attrs
 ) {
-    AS(!SDL_InitSubSystem(SDL_INIT_VIDEO));
+    glow::require_sdl(!SDL_InitSubSystem(SDL_INIT_VIDEO));
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, attrs.red);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, attrs.green);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, attrs.blue);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, attrs.alpha);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, attrs.depth);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, attrs.stencil);
-    sdl_window = AS(SDL_CreateWindow(title, x, y, w, h, flags));
+    sdl_window = glow::require_sdl(SDL_CreateWindow(title, x, y, w, h, flags));
     if (flags & SDL_WINDOW_OPENGL) {
-        gl_context = AS(SDL_GL_CreateContext(sdl_window));
-        AS(!SDL_GL_SetSwapInterval(1));
+        gl_context = glow::require_sdl(SDL_GL_CreateContext(sdl_window));
+        glow::require_sdl(!SDL_GL_SetSwapInterval(1));
     }
 }
 

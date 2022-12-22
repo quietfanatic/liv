@@ -21,7 +21,7 @@ static GLFunctionRegistry& registry () {
 
 void register_gl_function (void* p, const char* name) {
     static GLFunctionRegistry& reg = registry();
-    AA(!reg.initted);
+    require(!reg.initted);
     reg.to_init.emplace_back(p, name);
 }
 
@@ -30,10 +30,10 @@ void init_gl_functions () {
     if (reg.initted) return;
     reg.initted = true;
 
-    AS(!SDL_GL_LoadLibrary(NULL));
+    require_sdl(!SDL_GL_LoadLibrary(NULL));
 
     for (auto& p : reg.to_init) {
-        *reinterpret_cast<void**>(p.first) = AS(SDL_GL_GetProcAddress(p.second));
+        *reinterpret_cast<void**>(p.first) = require_sdl(SDL_GL_GetProcAddress(p.second));
     }
     reg.to_init.clear();
 }

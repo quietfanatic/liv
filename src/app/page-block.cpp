@@ -7,7 +7,7 @@
 namespace app {
 
 PageBlock::PageBlock (FilesToOpen& to_open) {
-    AA(to_open.files.size() <= uint32(int32(GINF)));
+    require(to_open.files.size() <= uint32(int32(GINF)));
     pages.reserve(size(to_open.files));
     for (auto& filename : to_open.files) {
         pages.emplace_back(std::make_unique<Page>(std::move(filename)));
@@ -31,7 +31,7 @@ void PageBlock::unload_page (Page* page) {
     if (page && page->texture) {
         page->unload();
         estimated_page_memory -= page->estimated_memory;
-        DA(estimated_page_memory >= 0);
+        expect(estimated_page_memory >= 0);
     }
 }
 

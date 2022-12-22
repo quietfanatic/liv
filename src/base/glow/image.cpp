@@ -8,7 +8,7 @@
 namespace glow {
 
 Image::Image (IVec s) :
-    size((AA(area(s) >= 0), s)), pixels(new RGBA8 [area(size)])
+    size((require(area(s) >= 0), s)), pixels(new RGBA8 [area(size)])
 { }
 
 Image::~Image () { delete[](pixels); }
@@ -26,7 +26,7 @@ void SubImage::validate () {
 
 void ImageTexture::init () {
     if (target && source) {
-        AA(target == GL_TEXTURE_2D
+        require(target == GL_TEXTURE_2D
             || target == GL_TEXTURE_1D_ARRAY
             || target == GL_TEXTURE_RECTANGLE
         );
@@ -66,7 +66,7 @@ AYU_DESCRIBE(glow::ImagePixelsProxy,
             return usize(area(image.size));
         },
         [](ImagePixelsProxy& image, usize len){
-            AA(area(image.size) == isize(len));
+            require(area(image.size) == isize(len));
             delete[](image.pixels);
             const_cast<RGBA8*&>(image.pixels) = new RGBA8 [area(image.size)];
         }

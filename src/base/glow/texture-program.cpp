@@ -16,15 +16,15 @@ struct TextureProgram : Program {
         u_tex_rect = glGetUniformLocation(id, "u_tex_rect");
         int u_tex = glGetUniformLocation(id, "u_tex");
         glUniform1i(u_tex, 0);
-        AA(u_screen_rect != -1);
-        AA(u_tex_rect != -1);
-        AA(u_tex != -1);
+        require(u_screen_rect != -1);
+        require(u_tex_rect != -1);
+        require(u_tex != -1);
     }
 };
 
 void draw_texture (const Texture& tex, const Rect& screen_rect, const Rect& tex_rect) {
-    AA(!!tex);
-    AA(tex.target == GL_TEXTURE_2D);
+    require(!!tex);
+    require(tex.target == GL_TEXTURE_2D);
 
     static TextureProgram* program =
         ayu::Resource("res:/base/glow/texture-program.ayu")["program"][1];

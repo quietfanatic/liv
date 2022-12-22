@@ -55,11 +55,11 @@ struct PageProgram : Program {
         glUniform1i(u_tex, 0);
         u_interpolation_mode = glGetUniformLocation(id, "u_interpolation_mode");
         u_zoom = glGetUniformLocation(id, "u_zoom");
-        DA(u_screen_rect != -1);
-        DA(u_tex_rect != -1);
-        DA(u_tex != -1);
-        DA(u_interpolation_mode != -1);
-        DA(u_zoom != -1);
+        expect(u_screen_rect != -1);
+        expect(u_tex_rect != -1);
+        expect(u_tex != -1);
+        expect(u_interpolation_mode != -1);
+        expect(u_zoom != -1);
     }
 };
 
@@ -70,8 +70,8 @@ void Page::draw (
     const Rect& tex_rect
 ) {
     if (!texture) return;
-    AA(!!*texture);
-    AA(texture->target == GL_TEXTURE_RECTANGLE);
+    require(!!*texture);
+    require(texture->target == GL_TEXTURE_RECTANGLE);
 
     static PageProgram* program = ayu::Resource("res:/app/page.ayu")["program"][1];
     program->use();
@@ -106,7 +106,7 @@ AYU_DESCRIBE(app::PageProgram,
 static tap::TestSet tests ("app/page", []{
     using namespace tap;
 
-    char* base = AS(SDL_GetBasePath());
+    char* base = require_sdl(SDL_GetBasePath());
     String exe_folder = base;
     SDL_free(base);
 
