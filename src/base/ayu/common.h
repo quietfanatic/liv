@@ -50,6 +50,9 @@ struct Resource;
 struct Tree;
 struct Type;
 
+ // Using a Tree as a string-like type.
+using TreeString = Tree;
+
  // String is for storage and function return.  Str is for function parameters.
  // (you can also take String&& as a parameter if you're going to store it)
 using String = std::string;
@@ -59,7 +62,7 @@ using String16 = std::u16string;
 using Str16 = std::u16string_view;
 
 using Array = std::vector<Tree>;
-using Pair = std::pair<String, Tree>;
+using Pair = std::pair<TreeString, Tree>;
 using Object = std::vector<Pair>;
 
 using iri::IRI;

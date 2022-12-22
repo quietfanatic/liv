@@ -41,9 +41,19 @@ inline const Array& tree_Array (const Tree& t) {
     assert(t.rep == REP_ARRAY);
     return ((const TreeData<Array>*)t.data.as_ptr)->value;
 }
+inline Array&& tree_Array (Tree&& t) {
+    assert(t.rep == REP_ARRAY);
+    assert(t.data.as_ptr->ref_count == 1);
+    return std::move(((TreeData<Array>*)t.data.as_ptr)->value);
+}
 inline const Object& tree_Object (const Tree& t) {
     assert(t.rep == REP_OBJECT);
     return ((const TreeData<Object>*)t.data.as_ptr)->value;
+}
+inline Object&& tree_Object (Tree&& t) {
+    assert(t.data.as_ptr->ref_count == 1);
+    assert(t.rep == REP_OBJECT);
+    return std::move(((TreeData<Object>*)t.data.as_ptr)->value);
 }
 inline const std::exception_ptr& tree_Error (const Tree& t) {
     assert(t.rep == REP_ERROR);

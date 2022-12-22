@@ -113,30 +113,31 @@ struct Parser {
         }
     }
 
-    String got_string () {
+    Tree got_string () {
         p++;  // for the "
-        String r;
+        std::vector<char> r;
         for (;;) switch (look()) {
             case EOF: error("String not terminated by end of input"sv);
-            case '"': p++; return r;
+            case '"': p++; return Tree(Str(r.data(), r.size()));
             case '\\': {
                 p++;
                 switch (look()) {
                     case EOF: error("String not terminated by end of input"sv);
-                    case '"': r += '"'; break;
-                    case '\\': r += '\\'; break;
-                    case '/': r += '/'; break;  // Dunno why this is in json
-                    case 'b': r += '\b'; break;
-                    case 'f': r += '\f'; break;
-                    case 'n': r += '\n'; break;
-                    case 'r': r += '\r'; break;
-                    case 't': r += '\t'; break;
+                    case '"': r.push_back('"'); break;
+                    case '\\': r.push_back('\\'); break;
+                     // Dunno why this is in json
+                    case '/': r.push_back('/'); break;
+                    case 'b': r.push_back('\b'); break;
+                    case 'f': r.push_back('\f'); break;
+                    case 'n': r.push_back('\n'); break;
+                    case 'r': r.push_back('\r'); break;
+                    case 't': r.push_back('\t'); break;
                     default: error("Unrecognized escape sequence \\"sv, show_char(look()));
                 }
                 p++;
                 break;
             }
-            default: r += *p++;
+            default: r.push_back(*p++);
         }
     }
 
@@ -273,7 +274,7 @@ struct Parser {
                 case '}': p++; return o;
                 default: break;
             }
-            Tree key = parse_term();
+            TreeString key = parse_term();
             if (key.form != STRING) {
                 error("Can't use non-string "sv, tree_to_string(key), " as key in object"sv);
             }
@@ -291,7 +292,7 @@ struct Parser {
                 case ',':
                 case '}': error("Missing value after : in object"sv);
                 default: {
-                    o.emplace_back(String(key), parse_term());
+                    o.emplace_back(std::move(key), parse_term());
                     break;
                 }
             }
@@ -299,24 +300,24 @@ struct Parser {
         return o;
     }
 
-    void set_shortcut (Str name, Tree value) {
+    void set_shortcut (TreeString name, Tree value) {
         for (auto& p : shortcuts) {
             if (p.first == name) {
                 error(
                     "Duplicate declaration of shortcut &"sv,
-                    tree_to_string(Tree(name))
+                    tree_to_string(name)
                 );
             }
         }
-        shortcuts.emplace_back(String(name), std::move(value));
+        shortcuts.emplace_back(std::move(name), std::move(value));
     }
-    const Tree& get_shortcut (Str name) {
+    const Tree& get_shortcut (const TreeString& name) {
         for (auto& p : shortcuts) {
             if (p.first == name) return p.second;
         }
         error(
             "Unknown shortcut *"sv,
-            tree_to_string(Tree(name))
+            tree_to_string(name)
         );
     }
 
@@ -337,13 +338,13 @@ struct Parser {
             case ':': {
                 p++;
                 skip_ws();
-                set_shortcut(Str(name), parse_term());
+                set_shortcut(std::move(name), parse_term());
                 skip_commas();
                 return parse_term();
             }
             default: {
                 Tree value = parse_term();
-                set_shortcut(Str(name), value);
+                set_shortcut(std::move(name), value);
                 return value;
             }
         }
@@ -361,7 +362,7 @@ struct Parser {
         if (name.form != STRING) {
             error("Can't use non-string "sv, tree_to_string(name), " as ref name"sv);
         }
-        return get_shortcut(Str(name));
+        return get_shortcut(name);
     }
 
     Tree parse_term () {
@@ -388,7 +389,7 @@ struct Parser {
             case '+':
             case '-': return got_number();
 
-            case '"': return Tree(got_string());
+            case '"': return got_string();
             case '[': return Tree(got_array());
             case '{': return Tree(got_object());
 

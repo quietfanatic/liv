@@ -78,18 +78,8 @@ inline void item_from_file (
 }
 
 ///// ACCESS OPERATIONS
- // Get a list of the keys in an object-like item and pass them to a callback.
- // The Strs might not outlive the callback, so if you need to keep them around,
- // copy them or use item_get_keys instead.
-void item_read_keys (
-    const Reference&,
-    Callback<void(const std::vector<Str>&)> cb,
-    const Location& loc = Location()
-);
- // Get a list of the keys in a object-like item.  This will copy all the
- // strings, so if you're concerned about performance, use item_read_keys
- // instead.
-std::vector<String> item_get_keys (
+ // Get a list of the keys in a object-like item.
+std::vector<TreeString> item_get_keys (
     const Reference&, const Location& loc = Location()
 );
  // Set the keys in an object-like item.  This may clear the entire contents

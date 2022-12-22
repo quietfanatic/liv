@@ -267,6 +267,24 @@ bool operator == (const Tree& a, const Tree& b) {
     }
 }
 
+bool operator == (const Tree& a, Str b) {
+    if (a.length != b.size()) return false;
+    if (b.size() <= 8) {
+        if (a.rep != REP_SHORTSTRING) return false;
+        if (a.data.as_chars == b.data()) return true;
+        for (uint32 i = 0; i < b.size(); i++) {
+            if (a.data.as_chars[i] != b[i]) return false;
+        }
+        return true;
+    }
+    else {
+        if (a.rep != REP_LONGSTRING) return false;
+        auto vc = static_cast<const TreeData<char[0]>*>(a.data.as_ptr);
+        if (vc->value == b.data()) return true;
+        return std::memcmp(vc->value, b.data(), b.size()) == 0;
+    }
+}
+
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::TreeForm,

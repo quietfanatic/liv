@@ -19,14 +19,15 @@ bool scan_trav (
     if (cb(trav, loc)) return true;
     switch (trav.desc->preference()) {
         case Description::PREFER_OBJECT: {
-            StrVector ks;
+            std::vector<TreeString> ks;
             ser_collect_keys(trav, ks);
-            for (auto k : ks) {
+            for (auto& k : ks) {
                  // Initialize to false because in only_addressable mode, the
                  // callback may not be called.
                 bool r = false;
-                ser_attr(trav, k, ACR_READ, [&](const Traversal& child){
-                    r = scan_trav(child, Location(loc, k), cb);
+                 // TODO: Avoid string copy
+                ser_attr(trav, Str(k), ACR_READ, [&](const Traversal& child){
+                    r = scan_trav(child, Location(loc, Str(k)), cb);
                 });
                 if (r) return true;
             }

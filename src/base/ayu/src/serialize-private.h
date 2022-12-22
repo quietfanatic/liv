@@ -51,26 +51,9 @@ struct IFTContext {
 void ser_from_tree (const Traversal&, const Tree&);
 
 ///// ATTR OPERATIONS
- // StrVector behaves just like a std::vector<Str>, but has extra storage in
- // case it needs to take ownership of any strings.  Ideally, the storage will
- // be unused and remain empty.
-struct OwnedStringNode {
-    std::string s;
-    std::unique_ptr<OwnedStringNode> next;
-};
-struct StrVector : std::vector<Str> {
-    using std::vector<Str>::vector;
-     // Moving a std::string might invalidate its Str, so we can't keep them in
-     // a resizable std::vector.  Just use a singly-linked list because we don't
-     // actually need to DO anything with these, we just need to keep them
-     // around.
-    std::unique_ptr<OwnedStringNode> owned_strings;
-};
-
- // Implement get_keys by adding keys to a StrVector
-void ser_collect_key_str (StrVector&, Str);
-void ser_collect_key_string (StrVector&, Str);
-void ser_collect_keys (const Traversal&, StrVector&);
+ // Implement get_keys by adding keys to a vector of TreeStrings
+void ser_collect_key (std::vector<TreeString>&, Tree&&);
+void ser_collect_keys (const Traversal&, std::vector<TreeString>&);
 
  // Implement set_keys by removing keys from a std::vector<Str>
 bool ser_claim_key (std::vector<Str>&, Str);

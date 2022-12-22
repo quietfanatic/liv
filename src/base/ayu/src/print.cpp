@@ -212,6 +212,7 @@ struct Printer {
                 );
             }
             case REP_LONGSTRING:
+                 // TODO: Pass all flags and expand based on length
                 return print_string(
                     p, tree_longStr(t), t.flags & PREFER_EXPANDED
                 );
@@ -282,7 +283,7 @@ struct Printer {
                             p = pchar(p, opts & JSON ? ',' : ' ');
                         }
                     }
-                    p = print_string(p, attr.first, false);
+                    p = print_subtree(p, attr.first, ind + expand);
                     p = pchar(p, ':');
                     if (expand) p = pchar(p, ' ');
                     p = print_subtree(p, attr.second, ind + expand);

@@ -34,7 +34,7 @@ struct Location {
      // Constructs a root location from a Resource.
     explicit Location (Resource);
      // Constructs a location based on another one with an added attribute key
-     // or element index.
+     // or element index.  TODO: Take a Tree
     Location (Location parent, String&& key);
     Location (Location parent, Str key) : Location(parent, String(key)) { }
     Location (Location parent, usize index);

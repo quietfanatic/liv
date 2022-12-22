@@ -71,6 +71,7 @@ struct Tree {
     {
         const_cast<TreeForm&>(o.form) = UNDEFINED;
         const_cast<int8&>(o.rep) = 0;
+         // TODO: These are not needed
         o.flags = 0;
         const_cast<uint32&>(o.length) = 0;
         const_cast<int64&>(o.data.as_int64) = 0;
@@ -149,12 +150,18 @@ struct Tree {
     const Tree& operator[] (usize index) const;
 };
 
+ // Tree used as a String.
+using StringTree = Tree;
+
  // Test for equality.  Trees of different forms are considered unequal.
  // Objects are equal if all their attributes are the same; the attributes
  // don't have to be in the same order.  Unlike with normal floating point
  // comparisons, Tree(NAN) == Tree(NAN).  -0.0 and +0.0 are considered equal.
 bool operator == (const Tree& a, const Tree& b);
  // Theoretically we could add < and friends, but it's a pain to program.
+
+ // If we're gonna start using Trees as strings, we'll want this
+bool operator == (const Tree& a, Str b);
 
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.
