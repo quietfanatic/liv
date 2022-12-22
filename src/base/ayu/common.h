@@ -100,8 +100,8 @@ String cat (Args&&... args) {
 template <class... Args>
 String cat (String&& s, Args... args) {
     String r = std::move(s);
-    ((s += in::to_string(std::forward<Args>(args))), ...);
-    return s;
+    ((r += in::to_string(std::forward<Args>(args))), ...);
+    return r;
 }
 
 ///// UTILITY
