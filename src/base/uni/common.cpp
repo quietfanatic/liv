@@ -1,20 +1,26 @@
 #include "common.h"
 
-#include "../ayu/describe.h"
+#include <iostream>
 
 namespace uni {
+using namespace std::literals;
 
-void assert_failed_general (const char* function, const char* filename, uint line) {
-    throw ayu::X<AssertionFailed>(function, filename, line);
+[[gnu::cold]]
+void throw_requirement_failed (std::source_location loc) {
+    throw RequirementFailed(loc);
+}
+[[gnu::cold]]
+void abort_requirement_failed (std::source_location loc) {
+    std::cerr << RequirementFailed(loc).what() << std::endl;
+    std::abort();
+}
+
+[[gnu::cold]]
+const char* RequirementFailed::what () const noexcept {
+    mess_cache = "ERROR: require() failed at "s + loc.file_name()
+               + ':' + std::to_string(loc.line())
+               + "\n       in " + loc.function_name();
+    return mess_cache.c_str();
 }
 
 } using namespace uni;
-
-AYU_DESCRIBE(uni::AssertionFailed,
-    delegate(base<ayu::Error>()),
-    elems(
-        elem(&AssertionFailed::function),
-        elem(&AssertionFailed::filename),
-        elem(&AssertionFailed::line)
-    )
-)

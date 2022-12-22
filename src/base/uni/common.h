@@ -1,14 +1,12 @@
 #pragma once
 
-#include <csignal>
 #include <cstdint>
-#include <cwchar>
+#include <exception>
 #include <string>
 #include <string_view>
+#include <source_location>
 #include <type_traits>
-
-#include "../ayu/common.h"
-#include "../ayu/exception.h"
+#include <utility>
 
 namespace uni {
 using namespace std::literals;
@@ -41,53 +39,75 @@ using Str16 = std::u16string_view;
 using Str32 = std::u32string_view;
 using WStr = std::wstring_view;
 
-///// ASSERTIONS (use macros.h)
+ // Abort if the condition isn't true.
+template <class T>
+static constexpr T&& require (
+    T&& v, std::source_location loc = std::source_location::current()
+);
 
-struct AssertionFailed : ayu::Error {
-     // TODO: Replace with std::source_location
-    Str function;
-    Str filename;
-    uint line;
+ // Throw if the condition isn't true
+template <class T>
+static constexpr T&& require_throw (
+    T&& v, std::source_location loc = std::source_location::current()
+);
+
+ // Either aborts or triggers undefined behavior if the condition isn't true,
+ // depending on NDEBUG.  Always evaluates the argument in either case.  If the
+ // argument can't be optimized out, check NDEBUG yourself.
+template <class T>
+static constexpr T&& expect (
+    T&& v, std::source_location loc = std::source_location::current()
+);
+
+struct RequirementFailed : std::exception {
+    std::source_location loc;
+    RequirementFailed (
+        std::source_location loc = std::source_location::current()
+    ) : loc(loc) { }
+    mutable std::string mess_cache;
+    const char* what () const noexcept override;
 };
 
-void assert_failed_general (const char* function, const char* filename, uint line);
+[[noreturn]]
+void throw_requirement_failed (std::source_location = std::source_location::current());
+[[noreturn]]
+void abort_requirement_failed (std::source_location = std::source_location::current());
+
+[[gnu::always_inline]]
+static inline void undefined_behavior (
+    [[maybe_unused]] std::source_location loc = std::source_location::current()
+) {
+#ifdef NDEBUG
+#if __GNUC__
+    __builtin_unreachable();
+#elif _MSC_VER
+    __assume(false);
+#else
+    *(int*)null = 0;
+#endif
+#else
+    abort_requirement_failed(loc);
+#endif
+}
 
 template <class T>
-static constexpr T&& assert_general (
-    T&& v, const char* function, const char* filename, uint line
-) {
-    if (!v) {
-        if (std::is_constant_evaluated()) {
-            throw ayu::X<AssertionFailed>(function, filename, line);
-        }
-        else assert_failed_general(function, filename, line);
-    }
+[[gnu::always_inline]]
+static constexpr T&& require (T&& v, std::source_location loc) {
+    if (!v) [[unlikely]] abort_requirement_failed(loc);
     return std::forward<T>(v);
 }
 
-static inline void unreachable () {
-     // It would be nice if __builtin_unreachable() would trap in debug builds,
-     // but it doesn't.  Instead GCC just gives up on compiling the rest of the
-     // function and lets the CPU run off the end, corrupting the stack and
-     // making debugging difficult.
-#if __GNUC__
-#ifdef NDEBUG
-    __builtin_unreachable();
-#endif
-    __builtin_trap();
-#elif _MSC_VER
-#ifdef NDEBUG
-    __assume(false);
-#endif
-    __debug_break
-#else
-    std::abort();
-#endif
+template <class T>
+[[gnu::always_inline]]
+static constexpr T&& require_throw (T&& v, std::source_location loc) {
+    if (!v) [[unlikely]] throw_requirement_failed(loc);
+    return std::forward<T>(v);
 }
 
 template <class T>
-static constexpr T&& debug_assert (T&& v) {
-    if (!v) unreachable();
+[[gnu::always_inline]]
+static constexpr T&& expect (T&& v, std::source_location loc) {
+    if (!v) [[unlikely]] undefined_behavior(loc);
     return std::forward<T>(v);
 }
 

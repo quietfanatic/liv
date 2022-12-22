@@ -24,5 +24,6 @@ T& operator = (const T& o) noexcept { \
     return *new (this) T (o); \
 }
 
-#define AA(v) ::uni::assert_general(v, __FUNCTION__, __FILE__, __LINE__)
-#define DA(v) ::uni::debug_assert(v)
+ // TODO: Remove these
+#define AA(v) ::uni::require_throw(v)
+#define DA(v) ::uni::expect(v)
