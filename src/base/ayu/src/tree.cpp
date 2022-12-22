@@ -80,27 +80,7 @@ Tree::Tree (Str v) :
         const_cast<RefCounted*&>(data.as_ptr) = vc;
     }
 }
-Tree::Tree (String&& v) :
-    form(STRING), rep(), data{.as_int64 = 0}
-{
-    if (v.size() <= 8) {
-        const_cast<int8&>(rep) = REP_0CHARS + v.size();
-        for (usize i = 0; i < v.size(); i++) {
-            const_cast<char&>(data.as_chars[i]) = v[i];
-        }
-    }
-    else {
-        const_cast<int8&>(rep) = REP_VARCHAR;
-        auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
-        vc->ref_count = 1;
-        vc->value.size = v.size();
-        for (usize i = 0; i < v.size(); i++) {
-            vc->value.data[i] = v[i];
-        }
-        const_cast<RefCounted*&>(data.as_ptr) = vc;
-    }
-}
-Tree::Tree (String16&& v) : Tree(from_utf16(v)) { }
+Tree::Tree (Str16 v) : Tree(from_utf16(v)) { }
 Tree::Tree (Array v) :
     form(ARRAY), rep(REP_ARRAY), data{
         .as_ptr = new TreeData<Array>({1}, std::move(v))

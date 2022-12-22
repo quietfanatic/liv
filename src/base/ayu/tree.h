@@ -107,9 +107,7 @@ struct Tree {
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
     explicit Tree (Str v);
-    explicit Tree (String&& v);
-    explicit Tree (Str16 v) : Tree(String16(v)) { }
-    explicit Tree (String16&& v); // Converts to UTF8 internally
+    explicit Tree (Str16 v); // Converts to UTF8 internally
     explicit Tree (const char* v) : Tree(String(v)) { }
     explicit Tree (Array v);
     explicit Tree (Object v);
