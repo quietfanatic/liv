@@ -1,5 +1,6 @@
 #include "tree-private.h"
 
+#include <cstring>
 #include "../compat.h"
 #include "../print.h"
 #include "../describe.h"
@@ -8,7 +9,7 @@ namespace ayu {
 using namespace in;
 
 Tree::Tree (const Tree& o) :
-    form(o.form), rep(o.rep), flags(o.flags), data(o.data)
+    form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
 {
     if (rep < 0) {
         data.as_ptr->ref_count++;
@@ -18,7 +19,7 @@ Tree::Tree (const Tree& o) :
 [[gnu::noinline]]
 void delete_data (const Tree& t) {
     switch (t.rep) {
-        case REP_VARCHAR: {
+        case REP_LONGSTRING: {
             free((void*)t.data.as_ptr);
             break;
         }
@@ -47,52 +48,52 @@ Tree::~Tree () {
 }
 
 Tree::Tree (Null) :
-    form(NULLFORM), rep(REP_NULL), data{}
+    form(NULLFORM), rep(REP_NULL), flags(0), length(0), data{.as_int64 = 0}
 { }
+ // use .as_int64 to write all of data
 Tree::Tree (ExplicitBool v) :
-    form(BOOL), rep(REP_BOOL), data{.as_bool = v.v}
+    form(BOOL), rep(REP_BOOL), flags(0), length(0), data{.as_int64 = v.v}
 { }
 Tree::Tree (int64 v) :
-    form(NUMBER), rep(REP_INT64), data{.as_int64 = v}
+    form(NUMBER), rep(REP_INT64), flags(0), length(0), data{.as_int64 = v}
 { }
 Tree::Tree (double v) :
-    form(NUMBER), rep(REP_DOUBLE), data{.as_double = v}
+    form(NUMBER), rep(REP_DOUBLE), flags(0), length(0), data{.as_double = v}
 { }
 Tree::Tree (Str v) :
-    form(STRING), rep(), data{}
+    form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
+    flags(0), length(v.size()), data{}
 {
+    assert(v.size() <= uint32(-1));
     if (v.size() <= 8) {
          // zero unused char slots
         const_cast<int64&>(data.as_int64) = 0;
-        const_cast<int8&>(rep) = REP_0CHARS + v.size();
         for (usize i = 0; i < v.size(); i++) {
             const_cast<char&>(data.as_chars[i]) = v[i];
         }
     }
     else {
-        const_cast<int8&>(rep) = REP_VARCHAR;
-        auto vc = (TreeData<VarChar>*)malloc(sizeof(TreeData<VarChar>) + v.size());
+        auto vc = (TreeData<char[0]>*)malloc(sizeof(TreeData<char[0]>) + v.size());
         vc->ref_count = 1;
-        vc->value.size = v.size();
         for (usize i = 0; i < v.size(); i++) {
-            vc->value.data[i] = v[i];
+            vc->value[i] = v[i];
         }
         const_cast<RefCounted*&>(data.as_ptr) = vc;
     }
 }
 Tree::Tree (Str16 v) : Tree(from_utf16(v)) { }
 Tree::Tree (Array v) :
-    form(ARRAY), rep(REP_ARRAY), data{
+    form(ARRAY), rep(REP_ARRAY), flags(0), length(0), data{
         .as_ptr = new TreeData<Array>({1}, std::move(v))
     }
 { }
 Tree::Tree (Object v) :
-    form(OBJECT), rep(REP_OBJECT), data{
+    form(OBJECT), rep(REP_OBJECT), flags(0), length(0), data{
         .as_ptr = new TreeData<Object>({1}, std::move(v))
     }
 { }
 Tree::Tree (std::exception_ptr v) :
-    form(ERROR), rep(REP_ERROR), data{
+    form(ERROR), rep(REP_ERROR), flags(0), length(0), data{
         .as_ptr = new TreeData<std::exception_ptr>({1}, std::move(v))
     }
 { }
@@ -107,29 +108,20 @@ static void bad_form (const Tree& t, TreeForm form) {
 }
 
 Tree::operator Null () const {
-    if (form != NULLFORM) bad_form(*this, NULLFORM);
+    if (rep != REP_NULL) bad_form(*this, NULLFORM);
     return null;
 }
 Tree::operator bool () const {
-    if (form != BOOL) bad_form(*this, BOOL);
+    if (rep != REP_BOOL) bad_form(*this, BOOL);
     return data.as_bool;
 }
 Tree::operator char () const {
-    if (rep == REP_1CHARS) {
+    if (rep == REP_SHORTSTRING) {
         return data.as_chars[0];
     }
-    else {
-        [[unlikely]]
-        switch (rep) {
-            case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
-            case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
-            case REP_8CHARS: case REP_VARCHAR: {
-                 // We guarantee in construction that trees with REP_VARCHAR will
-                 // never have 8 or less characters.
-                throw X<CantRepresent>("char", *this);
-            }
-            default: bad_form(*this, STRING);
-        }
+    else [[unlikely]] {
+        if (rep == REP_LONGSTRING) throw X<CantRepresent>("char", *this);
+        else bad_form(*this, STRING);
     }
 }
 #define INTEGRAL_CONVERSION(T) \
@@ -168,14 +160,8 @@ Tree::operator double () const {
 }
 Tree::operator Str () const {
     switch (rep) {
-        case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
-        case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
-        case REP_8CHARS: {
-            return tree_shortStr(*this);
-        }
-        case REP_VARCHAR: {
-            return tree_longStr(*this);
-        }
+        case REP_SHORTSTRING: return tree_shortStr(*this);
+        case REP_LONGSTRING: return tree_longStr(*this);
         default: bad_form(*this, STRING);
     }
 }
@@ -230,9 +216,9 @@ bool operator == (const Tree& a, const Tree& b) {
         else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
             return a.data.as_double == b.data.as_int64;
         }
-         // Otherwise different reps = different values.  We don't need to compare
-         // REP_*CHARS to REP_STRING because we guarantee that REP_STRING will never
-         // have 8 or less chars.
+         // Otherwise different reps = different values.  We don't need to
+         // compare REP_SHORTSTRING to REP_LONGSTRING because we guarantee that
+         // REP_LONGSTRING has at least 9 characters.
         return false;
     }
     else switch (a.rep) {
@@ -244,7 +230,13 @@ bool operator == (const Tree& a, const Tree& b) {
             double bv = b.data.as_double;
             return av == bv || (av != av && bv != bv);
         }
-        case REP_VARCHAR: {
+        case REP_SHORTSTRING: {
+            if (a.length != b.length) return false;
+             // Unused char slots are zeroed out so we can compare them all at
+             // once.
+            return a.data.as_int64 == b.data.as_int64;
+        }
+        case REP_LONGSTRING: {
             if (a.data.as_ptr == b.data.as_ptr) return true;
             return tree_longStr(a) == tree_longStr(b);
         }
@@ -271,13 +263,6 @@ bool operator == (const Tree& a, const Tree& b) {
             return true;
         }
         case REP_ERROR: return false;
-        case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
-        case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
-        case REP_8CHARS: {
-             // Unused char slots are zeroed out so we can compare them all at
-             // once.
-            return a.data.as_int64 == b.data.as_int64;
-        }
         default: AYU_INTERNAL_UGUU();
     }
 }
@@ -332,7 +317,8 @@ static tap::TestSet tests ("base/ayu/tree", []{
     is(Tree(3), Tree(3.0), "Compare integers with floats");
     isnt(Tree(3), Tree(3.1), "Compare integers with floats (!=)");
     is(Tree(0.0/0.0), Tree(0.0/0.0), "Tree of NAN equals Tree of NAN");
-    is(Str(Tree("asdf")), "asdf"sv, "Round-trip strings");
+    is(Str(Tree("asdfg"sv)), "asdfg"sv, "Round-trip strings");
+    is(Str(Tree("qwertyuiop"sv)), "qwertyuiop"sv, "Round-trip long strings");
     throws<WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
     try_is<int>([]{ return int(Tree(3.0)); }, 3, "Convert floating to integer");
     try_is<double>([]{ return double(Tree(3)); }, 3.0, "Convert integer to floating");

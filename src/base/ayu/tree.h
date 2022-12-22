@@ -47,7 +47,9 @@ struct Tree {
     const TreeForm form;
     const int8 rep;
      // Only the flags can be modified after construction.
-    TreeFlags flags = 0;
+    TreeFlags flags;
+     // Currently only defined for certain forms.
+    const uint32 length;
     const union {
         bool as_bool;
         int64 as_int64;
@@ -60,14 +62,17 @@ struct Tree {
 
      // Default construction.  The only valid operation on an UNDEFINED tree is
      // has_value().
-    constexpr Tree () : form(UNDEFINED), rep(0), data{.as_int64 = 0} { }
+    constexpr Tree () :
+        form(UNDEFINED), rep(0), flags(0), length(0), data{.as_int64 = 0}
+    { }
      // Move construction.
     constexpr Tree (Tree&& o) :
-        form(o.form), rep(o.rep), flags(o.flags), data(o.data)
+        form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
     {
         const_cast<TreeForm&>(o.form) = UNDEFINED;
         const_cast<int8&>(o.rep) = 0;
         o.flags = 0;
+        const_cast<uint32&>(o.length) = 0;
         const_cast<int64&>(o.data.as_int64) = 0;
     }
      // Copy construction.  May twiddle reference counts.
@@ -77,13 +82,11 @@ struct Tree {
 
     Tree& operator = (const Tree& o) {
         this->~Tree();
-        new (this) Tree(o);
-        return *this;
+        return *new (this) Tree(o);
     }
     Tree& operator = (Tree&& o) {
         this->~Tree();
-        new (this) Tree(std::move(o));
-        return *this;
+        return *new (this) Tree(std::move(o));
     }
 
     explicit Tree (Null);
@@ -106,9 +109,8 @@ struct Tree {
     explicit Tree (uint64 v) : Tree(int64(v)) { }
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
-    explicit Tree (Str v);
-    explicit Tree (Str16 v); // Converts to UTF8 internally
-    explicit Tree (const char* v) : Tree(String(v)) { }
+    explicit Tree (Str v);  // Does a copy, can only store up to 4GB
+    explicit Tree (Str16 v); // Converts to UTF8
     explicit Tree (Array v);
     explicit Tree (Object v);
     explicit Tree (std::exception_ptr p);
@@ -128,8 +130,8 @@ struct Tree {
     explicit operator uint64 () const;
     explicit operator float () const { return double(*this); }
     explicit operator double () const;
-    explicit operator Str () const;
-    explicit operator String () const;  // Does a copy
+    explicit operator Str () const;  // Is not NUL-terminated.
+    explicit operator String () const;  // Does a copy.
     explicit operator String16 () const;
     explicit operator const Array& () const;
     explicit operator const Object& () const;
@@ -153,7 +155,6 @@ struct Tree {
  // comparisons, Tree(NAN) == Tree(NAN).  -0.0 and +0.0 are considered equal.
 bool operator == (const Tree& a, const Tree& b);
  // Theoretically we could add < and friends, but it's a pain to program.
-inline bool operator != (const Tree& a, const Tree& b) { return !(a == b); }
 
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.

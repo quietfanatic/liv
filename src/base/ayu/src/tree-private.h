@@ -15,18 +15,9 @@ enum : TreeRep {
     REP_BOOL,
     REP_INT64,
     REP_DOUBLE,
-     // Short string's length is encoded here
-    REP_0CHARS,
-    REP_1CHARS,
-    REP_2CHARS,
-    REP_3CHARS,
-    REP_4CHARS,
-    REP_5CHARS,
-    REP_6CHARS,
-    REP_7CHARS,
-    REP_8CHARS,
+    REP_SHORTSTRING,
      // Types requiring reference counting
-    REP_VARCHAR = -1,
+    REP_LONGSTRING = -1,
     REP_ARRAY = -2,
     REP_OBJECT = -3,
     REP_ERROR = -4,
@@ -34,23 +25,17 @@ enum : TreeRep {
 
 template <class T>
 struct TreeData : RefCounted {
-    T value;
-};
-
-struct VarChar {
-    usize size;
-    char data[0];
+    alignas(uint64) T value;
 };
 
 inline Str tree_shortStr (const Tree& t) {
-    assert(t.rep >= REP_0CHARS && t.rep <= REP_8CHARS);
-    return Str(t.data.as_chars, t.rep - REP_0CHARS);
+    assert(t.rep == REP_SHORTSTRING && t.length <= 8);
+    return Str(t.data.as_chars, t.length);
 }
 inline Str tree_longStr (const Tree& t) {
-    assert(t.rep == REP_VARCHAR);
-    auto& vc = ((const TreeData<VarChar>*)t.data.as_ptr)->value;
-    assert(vc.size > 8);
-    return Str(vc.data, vc.size);
+    assert(t.rep == REP_LONGSTRING && t.length > 8);
+    const char* vc = ((const TreeData<char[0]>*)t.data.as_ptr)->value;
+    return Str(vc, t.length);
 }
 inline const Array& tree_Array (const Tree& t) {
     assert(t.rep == REP_ARRAY);

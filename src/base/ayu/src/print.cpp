@@ -206,7 +206,12 @@ struct Printer {
                     return print_double(p, v, hex);
                 }
             }
-            case REP_VARCHAR:
+            case REP_SHORTSTRING: {
+                return print_string(
+                    p, tree_shortStr(t), t.flags & PREFER_EXPANDED
+                );
+            }
+            case REP_LONGSTRING:
                 return print_string(
                     p, tree_longStr(t), t.flags & PREFER_EXPANDED
                 );
@@ -300,13 +305,6 @@ struct Printer {
                     return pchar(pstr(pstr(p, "?("sv), name), ')');
                 }
                 AYU_INTERNAL_UGUU();
-            }
-            case REP_0CHARS: case REP_1CHARS: case REP_2CHARS: case REP_3CHARS:
-            case REP_4CHARS: case REP_5CHARS: case REP_6CHARS: case REP_7CHARS:
-            case REP_8CHARS: {
-                return print_string(
-                    p, tree_shortStr(t), t.flags & PREFER_EXPANDED
-                );
             }
             default: AYU_INTERNAL_UGUU();
         }
