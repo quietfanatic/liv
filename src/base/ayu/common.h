@@ -12,6 +12,7 @@
 #include <vector>
 #include "../uni/callback.h"
 #include "../uni/common.h"
+#include "../uni/string.h"
 
 namespace iri { struct IRI; }
 
@@ -35,14 +36,6 @@ struct Type;
  // Using a Tree as a string-like type.
 using TreeString = Tree;
 
- // String is for storage and function return.  Str is for function parameters.
- // (you can also take String&& as a parameter if you're going to store it)
-using String = std::string;
-using Str = std::string_view;
- // Ayu works natively with UTF-8, but can convert to and from UTF-16.
-using String16 = std::u16string;
-using Str16 = std::u16string_view;
-
 using Array = std::vector<Tree>;
 using Pair = std::pair<TreeString, Tree>;
 using Object = std::vector<Pair>;
@@ -56,36 +49,6 @@ using Object = std::vector<Pair>;
  //   - This does not track constness (in general there shouldn't be any
  //     const Mu&).
 struct Mu;
-
-///// STRINGS
-
-namespace in {
-    template <class T>
-    static auto to_string (T&& s) {
-        if constexpr (
-            !std::is_same_v<std::decay_t<T>, char>
-            && requires (T v) { std::to_string(v); }
-        ) return std::to_string(std::forward<T>(s));
-        else return std::forward<T>(s);
-    }
-}
-
- // I'm sick and tired of weirdness around string concatenation operators.
- // Just use this.  It will probably end up being more efficient anyway.
- // TODO: Simplify the overloads
-template <class... Args>
-String cat (Args&&... args) {
-    String r; // Should we reserve()?  Profile!
-    ((r += in::to_string(std::forward<Args>(args))), ...);
-    return r;
-}
- // Optimization to skip a copy
-template <class... Args>
-String cat (String&& s, Args... args) {
-    String r = std::move(s);
-    ((r += in::to_string(std::forward<Args>(args))), ...);
-    return r;
-}
 
 ///// UTILITY
 

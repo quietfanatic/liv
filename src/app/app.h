@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include "../base/geo/vec.h"
+#include "../base/uni/string.h"
 #include "../base/wind/passive_loop.h"
 #include "common.h"
 #include "book.h"

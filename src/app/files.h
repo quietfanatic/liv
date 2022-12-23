@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../base/uni/common.h"
+#include "../base/uni/string.h"
 #include "common.h"
 
 namespace app {

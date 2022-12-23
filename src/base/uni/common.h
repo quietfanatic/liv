@@ -36,7 +36,6 @@ constexpr Null null = nullptr;
 constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 constexpr float inf = std::numeric_limits<float>::infinity();
 
-using String = std::string;
 using Str = std::string_view;
 using Str8 = std::u8string_view;
 using Str16 = std::u16string_view;
