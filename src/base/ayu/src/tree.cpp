@@ -1,7 +1,7 @@
 #include "tree-private.h"
 
 #include <cstring>
-#include "../compat.h"
+#include "../../uni/utf.h"
 #include "../print.h"
 #include "../describe.h"
 

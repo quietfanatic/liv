@@ -3,7 +3,7 @@
 #include <cstring>
 #include <charconv>
 
-#include "../compat.h"
+#include "../../uni/utf.h"
 #include "../describe-base.h"
 #include "../exception.h"
 #include "../type.h"

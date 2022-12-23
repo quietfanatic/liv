@@ -6,8 +6,8 @@
 #pragma once
 
 #include "../iri/iri.h"
+#include "../uni/utf.h"
 #include "common.h"
-#include "compat.h"
 #include "type.h"
 
 namespace ayu {

@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "../compat.h"
+#include "../../uni/utf.h"
 #include "../describe.h"
 #include "../serialize.h"
 

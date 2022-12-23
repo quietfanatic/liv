@@ -1,11 +1,11 @@
 #include "command-builtins.h"
 
-#include "../ayu/compat.h"
+#include "../uni/utf.h"
 
 namespace control::command {
 
 static void echo_ (String s) {
-    ayu::print_utf8(s);
+    uni::print_utf8(s);
 }
 Command echo (echo_, "echo", "Print a string to stdout");
 

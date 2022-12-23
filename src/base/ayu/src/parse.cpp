@@ -4,7 +4,7 @@
 #include <charconv>
 #include <limits>
 
-#include "../compat.h"
+#include "../../uni/utf.h"
 #include "../describe.h"
 #include "../print.h"
 #include "char-cases-private.h"

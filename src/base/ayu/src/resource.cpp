@@ -2,7 +2,7 @@
 
 #include <cerrno>
 #include <cstring>  // strerror
-#include "../compat.h"
+#include "../../uni/utf.h"
 #include "../dynamic.h"
 #include "../describe.h"
 #include "../describe-standard.h"

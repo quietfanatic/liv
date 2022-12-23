@@ -1,11 +1,11 @@
-#include "../compat.h"
+#include "utf.h"
 
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
 #endif
 
-namespace ayu {
+namespace uni {
 
  // Yes, I did write my own UTF conversion routines instead of taking a
  // dependency on something else.
@@ -193,10 +193,10 @@ int remove_utf8 (const char* filename) {
 #endif
 }
 
-} using namespace ayu;
+} using namespace uni;
 
 #ifndef TAP_DISABLE_TESTS
-#include "../../tap/tap.h"
+#include "../tap/tap.h"
 
 static tap::TestSet tests ("base/ayu/compat", []{
     using namespace tap;

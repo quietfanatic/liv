@@ -72,7 +72,6 @@ my @sources = (qw(
     base/ayu/describe-standard.cpp
     base/ayu/src/accessors.cpp
     base/ayu/src/common.cpp
-    base/ayu/src/compat.cpp
     base/ayu/src/document.cpp
     base/ayu/src/dynamic.cpp
     base/ayu/src/exception.cpp
@@ -105,6 +104,7 @@ my @sources = (qw(
     base/iri/iri.cpp
     base/uni/common.cpp
     base/uni/text.cpp
+    base/uni/utf.cpp
     base/wind/passive_loop.cpp
     base/wind/window.cpp
 ),

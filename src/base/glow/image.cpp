@@ -1,7 +1,6 @@
 #include "image.h"
 
 #include <cerrno>
-#include "../ayu/compat.h"
 #include "../ayu/describe.h"
 #include "gl.h"
 

@@ -7,8 +7,9 @@
 #include <cstdio>
 
 #include "common.h"
+#include "string.h"
 
-namespace ayu {
+namespace uni {
 
 ///// UTF-8/UTF-16 CONVERSION
 
@@ -40,4 +41,4 @@ void warn_utf8 (Str s);
  // Delete a file
 int remove_utf8 (const char* filename);
 
-} // namespace ayu
+} // namespace uni

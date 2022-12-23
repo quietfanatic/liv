@@ -1,7 +1,7 @@
 #include "page.h"
 
 #include "../base/glow/program.h"
-#include "../base/ayu/compat.h"
+#include "../base/uni/utf.h"
 #include "../base/ayu/describe.h"
 #include "../base/ayu/resource.h"
 #include "app.h"

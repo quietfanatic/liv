@@ -1,4 +1,5 @@
 // Implements an ultra-simple hashing algorithm for strings.
+// TODO: Replace with FNV1a hash
 
 #pragma once
 
