@@ -66,7 +66,7 @@ struct Traversal {
         current_traversal = this;
     }
     ~Traversal() {
-        assert(current_traversal == this);
+        expect(current_traversal == this);
         current_traversal = parent;
     }
 };
@@ -159,7 +159,7 @@ static inline void trav_ref (
 static inline void trav_delegate (
     const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallback cb
 ) {
-    assert(&parent == current_traversal);
+    expect(&parent == current_traversal);
     Traversal trav;
     trav.op = DELEGATE;
     trav_acr(trav, parent, acr, mode, cb);
@@ -169,7 +169,7 @@ static inline void trav_attr (
     const Traversal& parent, const Accessor* acr, const Str& key,
     AccessMode mode, TravCallback cb
 ) {
-    assert(&parent == current_traversal);
+    expect(&parent == current_traversal);
     Traversal trav;
     trav.op = ATTR;
     trav.key = &key;
@@ -180,7 +180,7 @@ static inline void trav_attr_func (
     const Traversal& parent, const Reference& ref,
     Reference(* func )(Mu&, Str), const Str& key, AccessMode mode, TravCallback cb
 ) {
-    assert(&parent == current_traversal);
+    expect(&parent == current_traversal);
     Traversal trav;
     trav.op = ATTR_FUNC;
     trav.attr_func = func;
@@ -192,7 +192,7 @@ static inline void trav_elem (
     const Traversal& parent, const Accessor* acr, usize index,
     AccessMode mode, TravCallback cb
 ) {
-    assert(&parent == current_traversal);
+    expect(&parent == current_traversal);
     Traversal trav;
     trav.op = ELEM;
     trav.index = index;
@@ -203,7 +203,7 @@ static inline void trav_elem_func (
     const Traversal& parent, const Reference& ref,
     Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallback cb
 ) {
-    assert(&parent == current_traversal);
+    expect(&parent == current_traversal);
     Traversal trav;
     trav.op = ELEM_FUNC;
     trav.elem_func = func;
@@ -230,7 +230,7 @@ static Reference trav_reference (const Traversal& trav) {
                 return parent.chain_attr_func(trav.attr_func, *trav.key);
             case ELEM_FUNC:
                 return parent.chain_elem_func(trav.elem_func, trav.index);
-            default: AYU_INTERNAL_UGUU();
+            default: never();
         }
     }
 }
@@ -247,7 +247,7 @@ static Location trav_location (const Traversal& trav) {
                 return Location(parent, *trav.key);
             case ELEM: case ELEM_FUNC:
                 return Location(parent, trav.index);
-            default: AYU_INTERNAL_UGUU();
+            default: never();
         }
     }
 }

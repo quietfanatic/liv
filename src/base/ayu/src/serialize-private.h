@@ -39,7 +39,7 @@ struct IFTContext {
         current = this;
     }
     ~IFTContext () {
-        assert(current == this);
+        expect(current == this);
         current = previous;
     }
 

@@ -17,14 +17,8 @@ const char* ExceptionBase::what () const noexcept {
 }
 
 void in::unrecoverable_exception (std::exception& e, Str when) {
-    std::cerr << "Unrecoverable exception "sv << when
+    std::cerr << "ERROR: Unrecoverable exception "sv << when
               << ": "sv << e.what() << std::endl;
-    std::abort();
-}
-void in::internal_error (std::source_location loc) {
-    std::cerr << "Internal error in "sv << loc.function_name()
-              << " at "sv << loc.file_name()
-              << ":"sv << loc.line() << std::endl;
     std::abort();
 }
 

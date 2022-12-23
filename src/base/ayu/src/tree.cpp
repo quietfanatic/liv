@@ -35,7 +35,7 @@ void delete_data (const Tree& t) {
             delete static_cast<const TreeData<std::exception_ptr>*>(t.data.as_ptr);
             break;
         }
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 
@@ -72,7 +72,7 @@ Tree::Tree (Str v) :
     form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
     flags(0), length(v.size()), data{}
 {
-    assert(v.size() <= uint32(-1));
+    require(v.size() <= uint32(-1));
     if (v.size() <= 8) {
          // zero unused char slots
         const_cast<int64&>(data.as_int64) = 0;
@@ -109,9 +109,7 @@ Tree::Tree (std::exception_ptr v) :
 [[noreturn]]
 static void bad_form (const Tree& t, TreeForm form) {
     if (t.rep == REP_ERROR) std::rethrow_exception(tree_Error(t));
-    else if (t.form == form) {
-        AYU_INTERNAL_UGUU();
-    }
+    else if (t.form == form) never();
     else throw X<WrongForm>(form, t);
 }
 
@@ -271,7 +269,7 @@ bool operator == (const Tree& a, const Tree& b) {
             return true;
         }
         case REP_ERROR: return false;
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 

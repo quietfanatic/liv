@@ -45,14 +45,6 @@ namespace in {
  // from its destructor.
 [[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
 
- // Some internal error has occured, such as an invalid enum value, and it
- // isn't safe to continue execution.
-[[noreturn]] void internal_error (
-    std::source_location = std::source_location::current()
-);
-#define AYU_INTERNAL_UGUU() \
-[[unlikely]] ::ayu::in::internal_error();
-
 } // namespace in
 
 } // namespace ayu

@@ -31,7 +31,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFINT64: return Tree(*(const int64*)name());
                 case VFDOUBLE: return Tree(*(const double*)name());
                 case VFSTR: return Tree(*(const Str*)name());
-                default: AYU_INTERNAL_UGUU();
+                default: never();
             }
         }
         else return Tree();
@@ -76,7 +76,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                         && tree_longStr(tree) == *(const Str*)name();
                 }
             }
-            default: AYU_INTERNAL_UGUU();
+            default: never();
         }
     }
     Mu* tree_to_value (const Tree& tree) const {

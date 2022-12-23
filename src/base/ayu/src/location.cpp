@@ -56,12 +56,10 @@ Location make_error_location (std::exception_ptr&& e) {
 
 [[noreturn]]
 static void rethrow (const Location& l) {
-    if (l.data->form == ERROR_LOC) {
-        std::rethrow_exception(
-            static_cast<ErrorLocation*>(l.data.p)->error
-        );
-    }
-    else AYU_INTERNAL_UGUU();
+    expect(l.data->form == ERROR_LOC);
+    std::rethrow_exception(
+        static_cast<ErrorLocation*>(l.data.p)->error
+    );
 }
 
 void delete_LocationData (LocationData* p) {
@@ -71,7 +69,7 @@ void delete_LocationData (LocationData* p) {
         case INDEX: delete static_cast<IndexLocation*>(p); break;
          // Okay to delete without throwing
         case ERROR_LOC: delete static_cast<ErrorLocation*>(p); break;
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 
@@ -138,7 +136,8 @@ Location::Location (const IRI& iri) {
 IRI Location::as_iri () const {
     if (!*this) return IRI();
     String fragment;
-    for (const Location* l = this; l; l = l->parent()) {
+    for (const Location* l = this;; l = l->parent()) {
+        expect(l);
         if (!l->data) {
             if (fragment.empty()) return IRI("anonymous-item:"sv);
             else return IRI(cat("anonymous-item:"sv, "#", fragment));
@@ -173,10 +172,9 @@ IRI Location::as_iri () const {
                 break;
             }
             case ERROR_LOC: rethrow(*l);
-            default: AYU_INTERNAL_UGUU();
+            default: never();
         }
     }
-    AYU_INTERNAL_UGUU();
 }
 
 const Resource* Location::resource () const {
@@ -193,7 +191,7 @@ const Location* Location::parent () const {
         case KEY: return &static_cast<KeyLocation*>(data.p)->parent;
         case INDEX: return &static_cast<IndexLocation*>(data.p)->parent;
         case ERROR_LOC: rethrow(*this);
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 const String* Location::key () const {
@@ -229,7 +227,7 @@ const Resource* Location::root_resource () const {
         case INDEX: return static_cast<IndexLocation*>(data.p)->parent.root_resource();
         case KEY: return static_cast<KeyLocation*>(data.p)->parent.root_resource();
         case ERROR_LOC: rethrow(*this);
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 
@@ -255,7 +253,7 @@ bool operator == (const Location& a, const Location& b) {
             auto bb = static_cast<IndexLocation*>(b.data.p);
             return aa->index == bb->index && aa->parent == bb->parent;
         }
-        default: AYU_INTERNAL_UGUU();
+        default: never();
     }
 }
 
@@ -268,12 +266,12 @@ Reference reference_from_location (Location loc) {
         else if (auto index = loc.index()) {
             return reference_from_location(*parent).elem(*index);
         }
-        else AYU_INTERNAL_UGUU();
+        else never();
     }
     else if (auto res = loc.resource()) {
         return res->ref();
     }
-    else AYU_INTERNAL_UGUU();
+    else never();
 }
 
 } using namespace ayu;

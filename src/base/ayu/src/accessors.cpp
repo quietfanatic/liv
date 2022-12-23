@@ -54,7 +54,7 @@ void ConstRefFuncAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,
     Mu& from, Callback<void(Mu&)> cb
 ) {
-    assert(mode == ACR_READ);
+    expect(mode == ACR_READ);
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
     cb(const_cast<Mu&>((self->f)(from)));
 }
@@ -71,7 +71,7 @@ void ConstantPointerAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,
     Mu&, Callback<void(Mu&)> cb
 ) {
-    assert(mode == ACR_READ);
+    expect(mode == ACR_READ);
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
     cb(*const_cast<Mu*>(self->pointer));
 }
@@ -91,7 +91,7 @@ void ReferenceFuncAcr1::_access (
 Mu* ReferenceFuncAcr1::_address (const Accessor* acr, Mu& from) {
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
     auto ref = self->f(from);
-    assert(ref.type());
+    expect(ref.type());
     return ref.address();
 }
 

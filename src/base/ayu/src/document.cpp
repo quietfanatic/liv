@@ -140,7 +140,7 @@ void Document::delete_ (Type t, Mu* p) {
         auto header = static_cast<DocumentItemHeader*>(link);
         if (header->data() == p) goto we_good;
     }
-    throw X<DocumentDeleteNotOwned>();
+    never();
     we_good:;
 #endif
     auto header = (DocumentItemHeader*)p - 1;
@@ -265,9 +265,6 @@ AYU_DESCRIBE(ayu::DocumentDeleteWrongType,
         elem(&DocumentDeleteWrongType::existing),
         elem(&DocumentDeleteWrongType::deleted_as)
     )
-)
-AYU_DESCRIBE(ayu::DocumentDeleteNotOwned,
-    elems(elem(base<DocumentError>(), inherit))
 )
 AYU_DESCRIBE(ayu::DocumentDeleteMissing,
     elems(

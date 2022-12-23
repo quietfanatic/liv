@@ -43,7 +43,9 @@ struct Document {
         }
     }
 
-     // Throws DocumentDeleteWrongType if T is not the type of *p
+     // Throws DocumentDeleteWrongType if T is not the type of *p.
+     // In debug mode, verifies that the given object actually belongs to this
+     // Document.
     template <class T>
     void delete_ (T* p) {
         delete_(Type::CppType<T>(), (Mu*)p);
@@ -75,10 +77,6 @@ struct DocumentDeleteWrongType : DocumentError {
     Type existing;
     Type deleted_as;
 };
- // (Debug only) Tried to delete a document item by pointer, but the given
- // pointer doesn't belong to this document.  TODO: Replace this with a
- // debug assert.
-struct DocumentDeleteNotOwned : DocumentError { };
  // Tried to delete a document item by name, but the given name isn't in
  // this document.
 struct DocumentDeleteMissing : DocumentError {

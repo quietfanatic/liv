@@ -76,8 +76,8 @@ void throw_requirement_failed (std::source_location = std::source_location::curr
 [[noreturn]]
 void abort_requirement_failed (std::source_location = std::source_location::current());
 
-[[gnu::always_inline]]
-static inline void undefined_behavior (
+[[noreturn]]
+static inline void never (
     [[maybe_unused]] std::source_location loc = std::source_location::current()
 ) {
 #ifdef NDEBUG
@@ -110,7 +110,7 @@ static constexpr T&& require_throw (T&& v, std::source_location loc) {
 template <class T>
 [[gnu::always_inline]]
 static constexpr T&& expect (T&& v, std::source_location loc) {
-    if (!v) [[unlikely]] undefined_behavior(loc);
+    if (!v) [[unlikely]] never(loc);
     return std::forward<T>(v);
 }
 

@@ -8,14 +8,14 @@ using namespace in;
 
 ///// TO_TREE
 namespace in {
-    static int64 diagnostic_serialization = 0;
+    static uint64 diagnostic_serialization = 0;
 }
 DiagnosticSerialization::DiagnosticSerialization () {
     diagnostic_serialization += 1;
 }
 DiagnosticSerialization::~DiagnosticSerialization () {
+    expect(diagnostic_serialization > 0);
     diagnostic_serialization -= 1;
-    assert(diagnostic_serialization >= 0);
 }
 
 Tree in::ser_to_tree (const Traversal& trav) {
@@ -539,9 +539,9 @@ bool in::ser_maybe_attr (
                  // optimize this, then in claim_keys we could build up a
                  // structure mirroring the inheritance diagram and follow it,
                  // instead of just keeping the flat list of keys.
-                AccessMode inherit_op = mode == ACR_WRITE ? ACR_MODIFY : mode;
+                AccessMode inherit_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
                 trav_attr(
-                    trav, acr, attr->key, inherit_op,
+                    trav, acr, attr->key, inherit_mode,
                     [&](const Traversal& child)
                 {
                     found = ser_maybe_attr(child, key, mode, cb);

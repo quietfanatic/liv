@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <typeinfo>
 
 #include "../common.h"
@@ -126,10 +125,8 @@ struct Accessor {
 
     Type type (Mu* from) const { return vt->type(this, from); }
     void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {
-        assert(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
-        if (mode != ACR_READ && accessor_flags & ACR_READONLY) {
-            AYU_INTERNAL_UGUU();
-        }
+        expect(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
+        require(mode == ACR_READ || ~(accessor_flags & ACR_READONLY));
         vt->access(this, mode, from, cb);
     }
     void read (Mu& from, Callback<void(Mu&)> cb) const {
@@ -347,7 +344,7 @@ template <class To>
 void ValueFuncAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) AYU_INTERNAL_UGUU();
+    expect(mode == ACR_READ);
     auto self = static_cast<const ValueFuncAcr2<Mu, To>*>(acr);
     cb.reinterpret<void(const To&)>()(self->f(from));
 }
@@ -543,7 +540,7 @@ template <class To>
 void ConstantAcr1<To>::_access (
     const Accessor* acr, AccessMode mode, Mu&, Callback<void(Mu&)> cb
 ) {
-    if (mode != ACR_READ) AYU_INTERNAL_UGUU();
+    expect(mode == ACR_READ);
     auto self = static_cast<const ConstantAcr2<Mu, To>*>(acr);
     cb(reinterpret_cast<Mu&>(const_cast<To&>(self->value)));
 }

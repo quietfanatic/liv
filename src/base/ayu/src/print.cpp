@@ -70,7 +70,7 @@ struct Printer {
         auto [ptr, ec] = std::to_chars(
             p, p+20, v, hex ? 16 : 10
         );
-        if (ec != std::errc()) AYU_INTERNAL_UGUU();
+        expect(ec == std::errc());
         return ptr;
     }
 
@@ -103,7 +103,7 @@ struct Printer {
                 ? std::chars_format::hex
                 : std::chars_format::general
         );
-        if (ec != std::errc()) AYU_INTERNAL_UGUU();
+        expect(ec == std::errc());
         return ptr;
     }
 
@@ -305,9 +305,8 @@ struct Printer {
                     }
                     return pchar(pstr(pstr(p, "?("sv), name), ')');
                 }
-                AYU_INTERNAL_UGUU();
             }
-            default: AYU_INTERNAL_UGUU();
+            default: never();
         }
     }
     [[nodiscard]]
