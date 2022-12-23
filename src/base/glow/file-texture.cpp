@@ -9,7 +9,7 @@
 
 namespace glow {
 
-FileTexture::FileTexture (String filename, uint32 target) : Texture(target) {
+FileTexture::FileTexture (std::string filename, uint32 target) : Texture(target) {
     static const bool init [[maybe_unused]] = []{
          // TODO: Get a newer version of SDL_image that supports avif
         auto flags = IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF

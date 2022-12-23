@@ -13,7 +13,7 @@ void ResourceScheme::activate () const {
     auto& schemes = universe().schemes;
      // Validate
     if (scheme_name.size() == 0) {
-        throw X<InvalidResourceScheme>(String(scheme_name));
+        throw X<InvalidResourceScheme>(std::string(scheme_name));
     }
     for (const char& c : scheme_name)
     switch (c) {
@@ -22,13 +22,13 @@ void ResourceScheme::activate () const {
         case ANY_DECIMAL_DIGIT:
         case '+': case '-': case '.':
             if (&c == &scheme_name.front()) {
-                throw X<InvalidResourceScheme>(String(scheme_name));
+                throw X<InvalidResourceScheme>(std::string(scheme_name));
             }
             else break;
     }
      // Register
     auto [iter, emplaced] = schemes.emplace(scheme_name, this);
-    if (!emplaced) throw X<DuplicateResourceScheme>(String(scheme_name));
+    if (!emplaced) throw X<DuplicateResourceScheme>(std::string(scheme_name));
 }
 void ResourceScheme::deactivate () const {
     auto& schemes = universe().schemes;

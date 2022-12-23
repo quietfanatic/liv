@@ -8,7 +8,7 @@
 namespace app {
 
 FilesToOpen expand_files (
-    const Settings* settings, std::vector<String>&& specified
+    const Settings* settings, std::vector<std::string>&& specified
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
 
@@ -30,7 +30,7 @@ FilesToOpen expand_files (
             if (dotpos != std::string::npos) {
                 extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
             }
-            if (!extensions.count(String(extension))) continue;
+            if (!extensions.count(std::string(extension))) continue;
             r.files.emplace_back(std::move(name));
         }
         std::sort(
@@ -65,7 +65,7 @@ FilesToOpen expand_files (
                     if (dotpos != std::string::npos) {
                         extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
                     }
-                    if (!extensions.count(String(extension))) continue;
+                    if (!extensions.count(std::string(extension))) continue;
                     r.files.emplace_back(std::move(name));
                 }
                 std::sort(
@@ -84,8 +84,8 @@ FilesToOpen expand_files (
     }
 }
 
-std::vector<String> read_list (Str list_filename) {
-    std::vector<String> lines {""};
+std::vector<std::string> read_list (Str list_filename) {
+    std::vector<std::string> lines {""};
     if (list_filename == "-") {
          // TODO: Make ayu support stdin for string_from_file.
         for (;;) {

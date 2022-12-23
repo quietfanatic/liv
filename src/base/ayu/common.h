@@ -71,11 +71,11 @@ struct Error {
 };
  // Unclassified error
 struct GenericError : Error {
-    String mess;
+    std::string mess;
 };
  // General IO-related problem
 struct IOError : Error {
-    String filename;
+    std::string filename;
     int errnum; // TODO: use std::errc
 };
  // Failure to open a file

@@ -56,11 +56,11 @@ Window::~Window () {
 
 AYU_DESCRIBE(wind::Window,
     attrs(
-        attr("title", mixed_funcs<String>(
+        attr("title", mixed_funcs<std::string>(
             [](const Window& window){
-                return String(SDL_GetWindowTitle(window));
+                return std::string(SDL_GetWindowTitle(window));
             },
-            [](Window& window, const String& title){
+            [](Window& window, const std::string& title){
                 SDL_SetWindowTitle(window, title.c_str());
             }
         ), optional),

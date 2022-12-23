@@ -22,8 +22,8 @@ using Function = F;
 struct Command {
     Function<void(void*, void*)>* wrapper;
     void* function;
-    String name;
-    String description;
+    std::string name;
+    std::string description;
     usize required_arg_count;
     Function<ayu::Type()>* args_type;
     Function<std::vector<ayu::Type>()>* arg_types;
@@ -84,12 +84,12 @@ struct Statement {
 
  // TODO: CommandError
 struct ConflictingCommandName : ayu::Error {
-    String name;
-    String desc_a;
-    String desc_b;
+    std::string name;
+    std::string desc_a;
+    std::string desc_b;
 };
 struct CommandNotFound : ayu::Error {
-    String name;
+    std::string name;
 };
 struct StatementWrongArgsType : ayu::Error {
     ayu::Type expected;

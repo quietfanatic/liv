@@ -216,7 +216,7 @@ void remove_source (Resource);
 bool source_exists (Resource);
 
  // Get the filename of the file backing this resource, if it has one.
-String resource_filename (Resource);
+std::string resource_filename (Resource);
 
  // Returns the resource currently being processed, if any.
 Resource current_resource ();
@@ -236,7 +236,7 @@ struct InvalidResourceState : ResourceError {
 };
  // Tried to create a resource with an empty value.
 struct EmptyResourceValue : ResourceError {
-    String name;
+    std::string name;
 };
  // Tried to unload a resource, but there's still a reference somewhere
  // referencing an item inside it.

@@ -26,7 +26,7 @@ const Command* lookup_command (Str name) {
 const Command* require_command (Str name) {
     auto iter = commands_by_name().find(name);
     if (iter != commands_by_name().end()) return iter->second;
-    else throw ayu::X<CommandNotFound>(String(name));
+    else throw ayu::X<CommandNotFound>(std::string(name));
 }
 
 Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(std::move(a)) {
@@ -46,11 +46,11 @@ void Statement::operator() () const {
 } using namespace control;
 
 AYU_DESCRIBE(const Command*,
-    delegate(const_ref_funcs<String>(
-        [](const Command* const& c)->const String&{
+    delegate(const_ref_funcs<std::string>(
+        [](const Command* const& c)->const std::string&{
             return c->name;
         },
-        [](const Command*& c, const String& s){
+        [](const Command*& c, const std::string& s){
             c = require_command(s);
         }
     ))

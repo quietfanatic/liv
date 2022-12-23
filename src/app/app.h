@@ -16,7 +16,7 @@ struct App {
     App();
     ~App();
 
-    void open_files (std::vector<String>&& files);
+    void open_files (std::vector<std::string>&& files);
     void open_list (Str filename);
 
     void close_book (Book*);

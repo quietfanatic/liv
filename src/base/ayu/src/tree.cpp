@@ -163,10 +163,10 @@ Tree::operator Str () const {
         default: bad_form(*this, STRING);
     }
 }
-Tree::operator String () const {
-    return String(Str(*this));
+Tree::operator std::string () const {
+    return std::string(Str(*this));
 }
-Tree::operator String16 () const {
+Tree::operator std::u16string () const {
     return to_utf16(Str(*this));
 }
 Tree::operator const Array& () const {

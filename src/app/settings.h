@@ -65,7 +65,7 @@ struct ControlSettings {
     std::optional<float> drag_speed;
 };
 struct FilesSettings {
-    std::optional<std::set<String>> supported_extensions;
+    std::optional<std::set<std::string>> supported_extensions;
 };
 struct MemorySettings {
     std::optional<uint32> preload_ahead;

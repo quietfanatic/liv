@@ -6,7 +6,7 @@
 using namespace geo;
 
 template <class T>
-void test_type (String name) {
+void test_type (std::string name) {
     using namespace tap;
      // defined
     ok(!defined(T(GNAN)), name + " defined(GNAN)");

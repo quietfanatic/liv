@@ -28,7 +28,7 @@ const Settings builtin_default_settings = {
         .drag_speed = 1,
     },
     FilesSettings{
-        .supported_extensions = std::set<String>{
+        .supported_extensions = std::set<std::string>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg", "png",
             "tif", "tiff", "xbm", "xpm", "webp",
         },

@@ -64,12 +64,12 @@ struct Document {
 struct DocumentError : Error { };
  // Tried to create a document item with an illegal name.
 struct DocumentInvalidName : DocumentError {
-    String name;
+    std::string name;
 };
  // Tried to create a document item with a name that's already in use in
  // this document.
 struct DocumentDuplicateName : DocumentError {
-    String name;
+    std::string name;
 };
  // Tried to delete a document item, but the wrong type was given during
  // deletion.
@@ -80,7 +80,7 @@ struct DocumentDeleteWrongType : DocumentError {
  // Tried to delete a document item by name, but the given name isn't in
  // this document.
 struct DocumentDeleteMissing : DocumentError {
-    String name;
+    std::string name;
 };
 
 } // namespace ayu

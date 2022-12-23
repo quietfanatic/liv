@@ -62,10 +62,8 @@
 
 namespace iri {
 
- // Alias STL types for easy drop-in replacement
-using String = std::string;
+ // Alias some types for tersity
 using Str = std::string_view;
-
 using uint32 = std::uint32_t;
 using uint16 = std::uint16_t;
 using uint8 = std::uint8_t;
@@ -73,10 +71,10 @@ using uint8 = std::uint8_t;
 constexpr uint32 maximum_length = uint16(-1);
 
  // Replace reserved characters with % sequences
-String encode (Str);
+std::string encode (Str);
  // Replace % sequences with their characters.  If there's an invalid escape
  // sequence, leaves it as is.
-String decode (Str);
+std::string decode (Str);
 
  // The first component that the given IRI reference has
 enum IRIRelativity : uint8 {
@@ -105,7 +103,7 @@ struct IRI {
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
     IRI (
-        String&& spec,
+        std::string&& spec,
         uint16 colon_position, uint16 path_position,
         uint16 question_position, uint16 hash_position
     );
@@ -126,21 +124,21 @@ struct IRI {
     explicit operator bool () const;
 
      // Gets the full text of the IRI only if this IRI is valid.
-    const String& spec () const;
+    const std::string& spec () const;
      // Get full text of IRI even it is not valid.  This is only for diagnosing
      // what is wrong with the IRI.  Don't use it for anything important.
-    const String& possibly_invalid_spec () const;
+    const std::string& possibly_invalid_spec () const;
 
      // Steal the spec string, leaving this IRI empty.
-    String move_spec ();
+    std::string move_spec ();
      // Steal the spec string even if it's invalid.
-    String move_possibly_invalid_spec ();
+    std::string move_possibly_invalid_spec ();
 
      // Returns an IRI reference that's relative to base, or just spec() if
      // this IRI has nothing in common with base.  Returning relative paths is
      // not yet implemented, so if this IRI and base differ in their paths, an
      // absolute path starting with / will be returned.
-    String spec_relative_to (const IRI& base) const;
+    std::string spec_relative_to (const IRI& base) const;
 
      // Check for existence of components.
     bool has_scheme () const;
@@ -220,7 +218,7 @@ struct IRI {
 
   private:
      // Full text of the IRI
-    String spec_;
+    std::string spec_;
      // All the following markers are 0 for an invalid IRI.
      // Offset of the : after the scheme.
     uint16 colon_ = 0;

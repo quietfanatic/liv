@@ -14,7 +14,7 @@
 namespace app {
 
 struct PageBlock {
-    String folder; // empty if not in a folder
+    std::string folder; // empty if not in a folder
     std::vector<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 

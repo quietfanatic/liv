@@ -254,7 +254,7 @@ AYU_DESCRIBE_TEMPLATE(
         else if CE (std::is_same_v<T, int64>) return "geo::LRange"sv;
         else if CE (std::is_same_v<T, bool>) return "geo::BRange"sv;
         else {
-            static String r = "geo::GRange<" + String(
+            static std::string r = "geo::GRange<" + std::string(
                 ayu::Type::CppType<T>().name()
             ) + ">";
             return Str(r);

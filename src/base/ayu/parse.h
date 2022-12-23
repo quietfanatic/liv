@@ -11,13 +11,13 @@ namespace ayu {
  // non-throwing function.
 Tree tree_from_string (Str, Str filename = ""sv);
 
-String string_from_file (Str filename);
+std::string string_from_file (Str filename);
 
 Tree tree_from_file (Str filename);
 
 struct ParseError : Error {
-    String mess;
-    String filename;
+    std::string mess;
+    std::string filename;
     uint line;
     uint col;
 };

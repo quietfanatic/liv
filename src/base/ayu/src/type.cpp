@@ -209,7 +209,7 @@ const Description* get_description_for_name (Str name) {
 const Description* need_description_for_name (Str name) {
     auto desc = get_description_for_name(name);
     if (desc) return desc;
-    else throw X<TypeNotFound>(String(name));
+    else throw X<TypeNotFound>(std::string(name));
 }
 void throw_UnknownType (const std::type_info& t) {
     throw X<UnknownType>(t);

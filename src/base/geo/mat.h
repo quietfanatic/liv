@@ -383,7 +383,7 @@ AYU_DESCRIBE_TEMPLATE(
                 else if CE (rows == 4) return "geo::DMat4"sv;
             }
         }
-        static String r = "geo::GMat<" + ayu::Type::CppType<T>().name() +
+        static std::string r = "geo::GMat<" + ayu::Type::CppType<T>().name() +
                           ", " + std::to_string(cols) +
                           ", " + std::to_string(rows) + ">";
         return Str(r);

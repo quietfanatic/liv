@@ -22,7 +22,7 @@ struct ChainAcr : Accessor {
 struct AttrFuncAcr : Accessor {
     Reference(* fp )(Mu&, Str);
      // TODO: Can we replace some of these with Str?
-    String key;
+    std::string key;
     static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
     static Mu* _address (const Accessor* acr, Mu& v);

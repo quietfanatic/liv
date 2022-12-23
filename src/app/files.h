@@ -8,14 +8,14 @@
 namespace app {
 
 struct FilesToOpen {
-    std::vector<String> files;
-    String folder = ""s;
+    std::vector<std::string> files;
+    std::string folder = ""s;
     usize start_index = 0;
 };
 
-FilesToOpen expand_files (const Settings*, std::vector<String>&& filenames);
+FilesToOpen expand_files (const Settings*, std::vector<std::string>&& filenames);
  // Note: This will set the working directory to the folder containing
  // list_filename.
-std::vector<String> read_list (Str list_filename);
+std::vector<std::string> read_list (Str list_filename);
 
 } // namespace files

@@ -20,7 +20,7 @@ enum : PrintOptions {
     VALID_PRINT_OPTION_BITS = COMPACT | PRETTY | JSON
 };
 
-String tree_to_string (TreeRef, PrintOptions opts = 0);
+std::string tree_to_string (TreeRef, PrintOptions opts = 0);
 
 void string_to_file (Str, Str filename);
 

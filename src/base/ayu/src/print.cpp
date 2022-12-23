@@ -328,23 +328,23 @@ static void validate_print_options (PrintOptions opts) {
 
 } using namespace in;
 
-String tree_to_string (TreeRef t, PrintOptions opts) {
+std::string tree_to_string (TreeRef t, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & PRETTY)) opts |= COMPACT;
     Printer printer (opts);
     char* p = printer.print_tree(printer.start, t);
-    return String(printer.start, p - printer.start);
+    return std::string(printer.start, p - printer.start);
 }
 
  // Forget C++ IO and its crummy diagnostics
 void string_to_file (Str content, Str filename) {
-    FILE* f = fopen_utf8(String(filename).c_str(), "wb");
+    FILE* f = fopen_utf8(std::string(filename).c_str(), "wb");
     if (!f) {
-        throw X<OpenFailed>(String(filename), errno);
+        throw X<OpenFailed>(std::string(filename), errno);
     }
     fwrite(content.data(), 1, content.size(), f);
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(String(filename), errno);
+        throw X<CloseFailed>(std::string(filename), errno);
     }
 }
 
@@ -376,17 +376,17 @@ static tap::TestSet tests ("base/ayu/print", []{
 
     test::TestEnvironment env;
 
-    String pretty = string_from_file(resource_filename("ayu-test:/print-pretty.ayu"));
-    String compact = string_from_file(resource_filename("ayu-test:/print-compact.ayu"));
-    String pretty_json = string_from_file(resource_filename("ayu-test:/print-pretty.json"));
-    String compact_json = string_from_file(resource_filename("ayu-test:/print-compact.json"));
+    std::string pretty = string_from_file(resource_filename("ayu-test:/print-pretty.ayu"));
+    std::string compact = string_from_file(resource_filename("ayu-test:/print-compact.ayu"));
+    std::string pretty_json = string_from_file(resource_filename("ayu-test:/print-pretty.json"));
+    std::string compact_json = string_from_file(resource_filename("ayu-test:/print-compact.json"));
      // Remove final LF
     compact.pop_back();
     compact_json.pop_back();
 
     Tree t = tree_from_string(pretty);
 
-    auto test = [](Str got, Str expected, String name){
+    auto test = [](Str got, Str expected, std::string name){
         if (!is(got, expected, name)) {
             usize i = 0;
             for (; i < got.size() && i < expected.size(); i++) {

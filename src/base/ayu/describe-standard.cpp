@@ -48,7 +48,7 @@ AYU_DESCRIBE(std::string_view,
  // cause a duplicate definition error from the linker.
 
 AYU_DESCRIBE(iri::IRI,
-    delegate(mixed_funcs<String>(
+    delegate(mixed_funcs<std::string>(
         [](const iri::IRI& v) {
              // current_location().as_iri() would be more intentful, but also
              // slower since it does a bunch of string concatenation to build
@@ -58,7 +58,7 @@ AYU_DESCRIBE(iri::IRI,
             }
             else return v.spec();
         },
-        [](iri::IRI& v, const String& s){
+        [](iri::IRI& v, const std::string& s){
             using namespace std::string_literals;
             if (s.empty()) {
                 v = iri::IRI();
@@ -91,15 +91,15 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
     });
     is(s16_got, s16, "Can deserialize wstring");
      // Test tuples
-    std::tuple<int32, String, std::vector<int32>> data;
-    std::tuple<int32, String, std::vector<int32>> expected_data
+    std::tuple<int32, std::string, std::vector<int32>> data;
+    std::tuple<int32, std::string, std::vector<int32>> expected_data
         = {45, "asdf"s, {3, 4, 5}};
     Str s = "[45 asdf [3 4 5]]"sv;
     doesnt_throw([&]{
         return item_from_string(&data, s);
     }, "item_from_string on tuple");
     is(data, expected_data, "gives correct result");
-    String got_s;
+    std::string got_s;
     doesnt_throw([&]{
         got_s = item_to_string(&expected_data);
     }, "item_to_string on tuple");

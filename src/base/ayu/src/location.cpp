@@ -32,8 +32,8 @@ struct RootLocation : LocationData {
 
 struct KeyLocation : LocationData {
     Location parent;
-    String key;
-    KeyLocation (Location p, String&& k) :
+    std::string key;
+    KeyLocation (Location p, std::string&& k) :
         LocationData(KEY), parent(p), key(k)
     { }
 };
@@ -78,7 +78,7 @@ void delete_LocationData (LocationData* p) {
 Location::Location (Resource res) :
     data(new RootLocation(std::move(res)))
 { }
-Location::Location (LocationRef p, String&& k) :
+Location::Location (LocationRef p, std::string&& k) :
     data(new KeyLocation(p, std::move(k)))
 { }
 Location::Location (LocationRef p, usize i) :
@@ -135,7 +135,7 @@ Location::Location (const IRI& iri) {
 
 IRI Location::as_iri () const {
     if (!*this) return IRI();
-    String fragment;
+    std::string fragment;
     for (const Location* l = this;; l = l->parent()) {
         expect(l);
         if (!l->data) {
@@ -154,7 +154,7 @@ IRI Location::as_iri () const {
                 Str key = static_cast<KeyLocation*>(
                     l->data.p
                 )->key;
-                String segment;
+                std::string segment;
                 if (key.empty() || key[0] == '\'' || std::isdigit(key[0])) {
                     segment = cat('\'', iri::encode(key));
                 }
@@ -194,7 +194,7 @@ const Location* Location::parent () const {
         default: never();
     }
 }
-const String* Location::key () const {
+const std::string* Location::key () const {
     if (!data) return null;
     switch (data->form) {
         case KEY: return &static_cast<KeyLocation*>(data.p)->key;
@@ -309,11 +309,11 @@ static tap::TestSet tests ("base/ayu/location", []{
     l = l->parent();
     is(*l->index(), 33u, "Index 33");
     l = l->parent();
-    is(*l->key(), "bu/p", "String key with /");
+    is(*l->key(), "bu/p", "std::string key with /");
     l = l->parent();
     is(*l->index(), 1u, "Index 1");
     l = l->parent();
-    is(*l->key(), "bar", "String key");
+    is(*l->key(), "bar", "std::string key");
     l = l->parent();
     is(*l->resource(), Resource("ayu-test:/"), "Resource root");
     ok(!l->parent());

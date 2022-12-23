@@ -65,7 +65,7 @@ static usize to_utf16_buffer (char16_t* buffer, Str s) {
     return p - buffer;
 }
 
-String16 to_utf16 (Str s) {
+std::u16string to_utf16 (Str s) {
      // Buffer is not null-terminated
      // Worst-case inflation is 1 code unit (2 bytes) per byte
     usize buffer_size = s.size();
@@ -73,7 +73,7 @@ String16 to_utf16 (Str s) {
     if (buffer_size < 10000 / sizeof(char16_t)) {
         char16_t buffer [buffer_size];
         usize len = to_utf16_buffer(buffer, s);
-        return String16(buffer, len);
+        return std::u16string(buffer, len);
     }
     else {
          // Modern virtual memory systems mean that for big enough allocations,
@@ -81,7 +81,7 @@ String16 to_utf16 (Str s) {
          // physical RAM than we write to.
         auto buffer = (char16_t*)malloc(sizeof(char16_t) * buffer_size);
         usize len = to_utf16_buffer(buffer, s);
-        auto r = String16(buffer, len);
+        auto r = std::u16string(buffer, len);
         free(buffer);
         return r;
     }
@@ -127,7 +127,7 @@ static usize from_utf16_buffer (char* buffer, Str16 s) {
     return p - buffer;
 }
 
-String from_utf16 (Str16 s) {
+std::string from_utf16 (Str16 s) {
      // Buffer is not null-terminated
      // Worst-case inflation is 3 bytes per code unit (1.5x)
     usize buffer_size = s.size() * 3;
@@ -135,7 +135,7 @@ String from_utf16 (Str16 s) {
     if (buffer_size < 10000 / sizeof(char)) {
         char buffer [buffer_size];
         usize len = from_utf16_buffer(buffer, s);
-        return String(buffer, len);
+        return std::string(buffer, len);
     }
     else {
          // Modern virtual memory systems mean that for big enough allocations,
@@ -143,7 +143,7 @@ String from_utf16 (Str16 s) {
          // physical RAM than we write to.
         auto buffer = (char*)malloc(sizeof(char) * buffer_size);
         usize len = from_utf16_buffer(buffer, s);
-        auto r = String(buffer, len);
+        auto r = std::string(buffer, len);
         free(buffer);
         return r;
     }

@@ -139,16 +139,16 @@ AYU_DESCRIBE(glow::Shader,
                 }
             }
         )),
-        attr("source", mixed_funcs<String>(
+        attr("source", mixed_funcs<std::string>(
             [](const Shader& v){
                 require(v.id);
                 int len = 0;
                 glGetShaderiv(v.id, GL_SHADER_SOURCE_LENGTH, &len);
-                String r (len-1, 0);
+                std::string r (len-1, 0);
                 glGetShaderSource(v.id, len, null, r.data());
                 return r;
             },
-            [](Shader& v, const String& s){
+            [](Shader& v, const std::string& s){
                 const char* src_p = s.c_str();
                 int src_len = s.size();
                 glShaderSource(v.id, 1, &src_p, &src_len);

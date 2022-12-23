@@ -11,7 +11,7 @@
 // representation of a Reference, explaining how to reach the referend from the
 // root Resource by a chain of item_attr() and item_elem() calls. In ADT syntax,
 //     data Location = RootLocation Resource
-//                   | KeyLocation Location String
+//                   | KeyLocation Location std::string
 //                   | IndexLocation Location usize
 //
 // TODO: Provide functions to translate References directly to and from IRIs
@@ -35,8 +35,8 @@ struct Location {
     explicit Location (Resource);
      // Constructs a location based on another one with an added attribute key
      // or element index.  TODO: Take a Tree
-    Location (LocationRef parent, String&& key);
-    Location (LocationRef parent, Str key) : Location(parent, String(key)) { }
+    Location (LocationRef parent, std::string&& key);
+    Location (LocationRef parent, Str key) : Location(parent, std::string(key)) { }
     Location (LocationRef parent, usize index);
      // Parses an IRI into a location.  All of the IRI up to the fragment will
      // be used as the resource name for the root, and the fragment will be
@@ -54,7 +54,7 @@ struct Location {
      // Returns null if this is a root.
     const Location* parent () const;
      // Returns null if this location is a root or has an index.
-    const String* key () const;
+    const std::string* key () const;
      // Returns null if this location is a root or has a key.
     const usize* index () const;
      // Returns 1 for root, plus 1 for every key or index in the list.

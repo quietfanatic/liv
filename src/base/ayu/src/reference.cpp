@@ -36,7 +36,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
-        else throw X<AttrNotFound>(reference_to_location(*this), String(k));
+        else throw X<AttrNotFound>(reference_to_location(*this), std::string(k));
     }
     else {
          // Extra read just to check if the func returns null Reference.
@@ -45,7 +45,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) {
-                throw X<AttrNotFound>(reference_to_location(*this), String(k));
+                throw X<AttrNotFound>(reference_to_location(*this), std::string(k));
             }
         });
         return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, k)));

@@ -76,8 +76,8 @@ namespace iri {
          IRI_UPPERCASE: case IRI_LOWERCASE: case IRI_DIGIT: \
     case IRI_UNRESERVED_SYMBOL: case IRI_UTF8_HIGH
 
-String encode (Str input) {
-    String r;
+std::string encode (Str input) {
+    std::string r;
     r.reserve(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         switch (input[i]) {
@@ -97,8 +97,8 @@ String encode (Str input) {
     return r;
 }
 
-String decode (Str input) {
-    String r;
+std::string decode (Str input) {
+    std::string r;
     r.reserve(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         if (input[i] == '%' && i + 2 < input.size()) {
@@ -491,7 +491,7 @@ IRI::IRI (Str input, const IRI& base) :
     }
 }
 
-IRI::IRI (String&& spec, uint16 c, uint16 p, uint16 q, uint16 h) :
+IRI::IRI (std::string&& spec, uint16 c, uint16 p, uint16 q, uint16 h) :
     spec_(std::move(spec)), colon_(c), path_(p), question_(q), hash_(h)
 { }
 
@@ -518,29 +518,29 @@ bool IRI::is_valid () const { return colon_; }
 bool IRI::is_empty () const { return spec_.empty(); }
 IRI::operator bool () const { return colon_; }
 
-static const String empty = "";
+static const std::string empty = "";
 
-const String& IRI::spec () const {
+const std::string& IRI::spec () const {
     if (colon_) return spec_;
     else return empty;
 }
-const String& IRI::possibly_invalid_spec () const {
+const std::string& IRI::possibly_invalid_spec () const {
     return spec_;
 }
 
-String IRI::move_spec () {
+std::string IRI::move_spec () {
     if (colon_) return empty;
-    String r = std::move(spec_);
+    std::string r = std::move(spec_);
     *this = IRI();
     return r;
 }
-String IRI::move_possibly_invalid_spec () {
-    String r = std::move(spec_);
+std::string IRI::move_possibly_invalid_spec () {
+    std::string r = std::move(spec_);
     *this = IRI();
     return r;
 }
 
-String IRI::spec_relative_to (const IRI& base) const {
+std::string IRI::spec_relative_to (const IRI& base) const {
     if (!*this || !base) {
         return "";
     }
@@ -551,19 +551,19 @@ String IRI::spec_relative_to (const IRI& base) const {
         return spec();
     }
     else if (has_authority() && authority() != base.authority()) {
-        return String(&spec_[colon_ + 1], spec_.size() - (colon_ + 1));
+        return std::string(&spec_[colon_ + 1], spec_.size() - (colon_ + 1));
     }
     else if ((!has_query() && !has_fragment())
            || path() != base.path()
     ) {
          // Pulling apart path is NYI
-        return String(&spec_[path_], spec_.size() - path_);
+        return std::string(&spec_[path_], spec_.size() - path_);
     }
     else if (has_query() && (!has_fragment() || query() != base.query())) {
-        return String(&spec_[question_], spec_.size() - question_);
+        return std::string(&spec_[question_], spec_.size() - question_);
     }
     else {
-        return String(&spec_[hash_], spec_.size() - (hash_));
+        return std::string(&spec_[hash_], spec_.size() - (hash_));
     }
 }
 
@@ -601,14 +601,14 @@ Str IRI::fragment () const {
 
 IRI IRI::iri_with_scheme () const {
     if (has_scheme()) return IRI(
-        String(&spec_[0], colon_+1),
+        std::string(&spec_[0], colon_+1),
         colon_, colon_+1, colon_+1, colon_+1
     );
     else return IRI();
 }
 IRI IRI::iri_with_origin () const {
     return IRI(
-        String(spec_with_origin()),
+        std::string(spec_with_origin()),
         colon_, path_, path_, path_
     );
 }
@@ -617,7 +617,7 @@ IRI IRI::iri_without_filename () const {
         uint32 i = question_;
         while (spec_[i] != '/') i--;
         return IRI(
-            String(&spec_[0], i+1),
+            std::string(&spec_[0], i+1),
             colon_, path_, i+1, i+1
         );
     }
@@ -625,13 +625,13 @@ IRI IRI::iri_without_filename () const {
 }
 IRI IRI::iri_without_query () const {
     return IRI(
-        String(&spec_[0], hash_),
+        std::string(&spec_[0], hash_),
         colon_, path_, question_, question_
     );
 }
 IRI IRI::iri_without_fragment () const {
     return IRI(
-        String(&spec_[0], hash_),
+        std::string(&spec_[0], hash_),
         colon_, path_, question_, hash_
     );
 }

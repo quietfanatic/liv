@@ -310,10 +310,10 @@ void in::ser_collect_keys (const Traversal& trav, std::vector<TreeString>& ks) {
                 }
             });
         }
-        else if (keys_type == Type::CppType<std::vector<String>>()) {
-             // Capitulate to std::vector<String> too.
+        else if (keys_type == Type::CppType<std::vector<std::string>>()) {
+             // Capitulate to std::vector<std::string> too.
             acr->read(*trav.address, [&](Mu& v){
-                auto& ksv = reinterpret_cast<const std::vector<String>&>(v);
+                auto& ksv = reinterpret_cast<const std::vector<std::string>&>(v);
                 for (auto& k : ksv) {
                     ser_collect_key(ks, Tree(k));
                 }
@@ -401,11 +401,11 @@ void in::ser_claim_keys (
                     reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
                 });
             }
-            else if (keys_type == Type::CppType<std::vector<String>>()) {
-                 // Compromise for std::vector<String> too
+            else if (keys_type == Type::CppType<std::vector<std::string>>()) {
+                 // Compromise for std::vector<std::string> too
                 acr->write(*trav.address, [&](Mu& ksv){
-                    reinterpret_cast<std::vector<String>&>(ksv) =
-                        std::vector<String>(ks.begin(), ks.end());
+                    reinterpret_cast<std::vector<std::string>&>(ksv) =
+                        std::vector<std::string>(ks.begin(), ks.end());
                 });
             }
             else {
@@ -433,7 +433,7 @@ void in::ser_claim_keys (
                     optional = false;
                 }
                 else if (!optional) {
-                    throw X<MissingAttr>(trav_location(trav), String(k));
+                    throw X<MissingAttr>(trav_location(trav), std::string(k));
                 }
             }
             return;
@@ -463,7 +463,7 @@ void in::ser_claim_keys (
                  // Allow omitting optional or inherited attrs
             }
             else {
-                throw X<MissingAttr>(trav_location(trav), String(attr->key));
+                throw X<MissingAttr>(trav_location(trav), std::string(attr->key));
             }
         }
          // Then check inherited attrs
@@ -497,7 +497,7 @@ void in::ser_claim_keys (
 void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
     ser_claim_keys(trav, ks, false);
     if (!ks.empty()) {
-        throw X<UnwantedAttr>(trav_location(trav), String(ks[0]));
+        throw X<UnwantedAttr>(trav_location(trav), std::string(ks[0]));
     }
 }
 
@@ -573,7 +573,7 @@ void in::ser_attr (
     const Traversal& trav, Str key, AccessMode mode, TravCallback cb
 ) {
     if (!ser_maybe_attr(trav, key, mode, cb)) {
-        throw X<AttrNotFound>(trav_location(trav), String(key));
+        throw X<AttrNotFound>(trav_location(trav), std::string(key));
     }
 }
 
@@ -594,7 +594,7 @@ Reference item_attr (const Reference& item, Str key, LocationRef loc) {
     if (Reference r = item_maybe_attr(item, key)) {
         return r;
     }
-    else throw X<AttrNotFound>(loc, String(key));
+    else throw X<AttrNotFound>(loc, std::string(key));
 }
 
 ///// ELEM OPERATIONS
@@ -871,13 +871,13 @@ namespace ayu::test {
         std::vector<int> xs;
     };
 
-     // Test usage of keys() with type std::vector<String>
+     // Test usage of keys() with type std::vector<std::string>
     struct AttrsTest {
-        std::unordered_map<String, int> xs;
+        std::unordered_map<std::string, int> xs;
     };
      // Test usage of keys() with type std::vector<Str>
     struct AttrsTest2 {
-        std::unordered_map<String, int> xs;
+        std::unordered_map<std::string, int> xs;
     };
 
     struct DelegateTest {
@@ -967,15 +967,15 @@ AYU_DESCRIBE(ayu::test::ElemsTest,
     })
 )
 AYU_DESCRIBE(ayu::test::AttrsTest,
-    keys(mixed_funcs<std::vector<String>>(
+    keys(mixed_funcs<std::vector<std::string>>(
         [](const AttrsTest& v){
-            std::vector<String> r;
+            std::vector<std::string> r;
             for (auto& p : v.xs) {
                 r.emplace_back(p.first);
             }
             return r;
         },
-        [](AttrsTest& v, const std::vector<String>& ks){
+        [](AttrsTest& v, const std::vector<std::string>& ks){
             v.xs.clear();
             for (auto& k : ks) {
                 v.xs.emplace(k, 0);
@@ -983,7 +983,7 @@ AYU_DESCRIBE(ayu::test::AttrsTest,
         }
     )),
     attr_func([](AttrsTest& v, Str k){
-        return Reference(&v.xs.at(String(k)));
+        return Reference(&v.xs.at(std::string(k)));
     })
 )
 AYU_DESCRIBE(ayu::test::AttrsTest2,
@@ -1003,7 +1003,7 @@ AYU_DESCRIBE(ayu::test::AttrsTest2,
         }
     )),
     attr_func([](AttrsTest2& v, Str k){
-        return Reference(&v.xs.at(String(k)));
+        return Reference(&v.xs.at(std::string(k)));
     })
 )
 AYU_DESCRIBE(ayu::test::DelegateTest,
@@ -1062,7 +1062,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         try_is<Tree, Tree>(
             [&item]{ return item_to_tree(item); },
             tree_from_string(tree),
-            String(name)
+            std::string(name)
         );
     };
 

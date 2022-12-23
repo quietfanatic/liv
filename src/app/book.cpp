@@ -200,7 +200,7 @@ bool Book::draw_if_needed () {
         spread_page.page->draw(page_params, layout.zoom, screen_rect);
     }
      // Generate title
-    String title;
+    std::string title;
     IRange visible = visible_pages();
     if (block.count() == 0) {
         title = "Little Image Viewer (nothing loaded)"s;
@@ -265,7 +265,7 @@ static tap::TestSet tests ("app/book", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());
-    String exe_folder = base;
+    std::string exe_folder = base;
     SDL_free(base);
 
     IVec size = {120, 120};

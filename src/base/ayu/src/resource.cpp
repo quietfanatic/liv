@@ -25,14 +25,14 @@ namespace in {
         const Tree& tree
     ) {
         if (tree.form == NULLFORM) {
-            throw X<EmptyResourceValue>(String(res.name().spec()));
+            throw X<EmptyResourceValue>(std::string(res.name().spec()));
         }
         const Array& a = static_cast<const Array&>(tree);
         if (a.size() == 2) {
             Type type = Type(Str(a[0]));
             if (!scheme->accepts_type(type)) {
                 throw X<UnacceptableResourceType>{
-                    String(res.name().spec()), type
+                    std::string(res.name().spec()), type
                 };
             }
         }
@@ -68,11 +68,11 @@ Resource::Resource (const IRI& name) {
         return;
     }
     if (!name) {
-        throw X<InvalidResourceName>(String(name.possibly_invalid_spec()));
+        throw X<InvalidResourceName>(std::string(name.possibly_invalid_spec()));
     }
     auto scheme = universe().require_scheme(name);
     if (!scheme->accepts_iri(name)) {
-        throw X<UnacceptableResourceName>(String(name.spec()));
+        throw X<UnacceptableResourceName>(std::string(name.spec()));
     }
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
@@ -91,11 +91,11 @@ Resource::Resource (IRI&& name) {
         new (this) Resource(name.iri_without_fragment());
     }
     if (!name) {
-        throw X<InvalidResourceName>(String(name.possibly_invalid_spec()));
+        throw X<InvalidResourceName>(std::string(name.possibly_invalid_spec()));
     }
     auto scheme = universe().require_scheme(name);
     if (!scheme->accepts_iri(name)) {
-        throw X<UnacceptableResourceName>(String(name.spec()));
+        throw X<UnacceptableResourceName>(std::string(name.spec()));
     }
     auto& resources = universe().resources;
     auto iter = resources.find(name.spec());
@@ -121,7 +121,7 @@ Resource::Resource (IRI name, Dynamic&& value) :
     Resource(std::move(name))
 {
     if (!value.has_value()) {
-        throw X<EmptyResourceValue>(String(name.spec()));
+        throw X<EmptyResourceValue>(std::string(name.spec()));
     }
     if (data->state == UNLOADED) set_value(std::move(value));
     else throw X<InvalidResourceState>("construct"sv, *this, data->state);
@@ -141,13 +141,13 @@ Dynamic& Resource::get_value () const {
 }
 void Resource::set_value (Dynamic&& value) const {
     if (!value.has_value()) {
-        throw X<EmptyResourceValue>(String(data->name.spec()));
+        throw X<EmptyResourceValue>(std::string(data->name.spec()));
     }
     if (data->name) {
         auto scheme = universe().require_scheme(data->name);
         if (!scheme->accepts_type(value.type)) {
             throw X<UnacceptableResourceType>{
-                String(data->name.spec()), value.type
+                std::string(data->name.spec()), value.type
             };
         }
     }
@@ -192,7 +192,7 @@ void load (const std::vector<Resource>& reses) {
         }
         for (auto res : rs) {
             auto scheme = universe().require_scheme(res.data->name);
-            String filename = scheme->get_file(res.data->name);
+            std::string filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
             item_from_tree(
@@ -255,16 +255,16 @@ void save (const std::vector<Resource>& reses) {
             for (usize i = 0; i < reses.size(); i++) {
                 Resource res = reses[i];
                 if (!res.data->value.has_value()) {
-                    throw X<EmptyResourceValue>(String(res.data->name.spec()));
+                    throw X<EmptyResourceValue>(std::string(res.data->name.spec()));
                 }
                 auto scheme = universe().require_scheme(res.data->name);
                 if (!scheme->accepts_type(res.data->value.type)) {
                     throw X<UnacceptableResourceType>{
-                        String(res.data->name.spec()),
+                        std::string(res.data->name.spec()),
                         res.data->value.type
                     };
                 }
-                String filename = scheme->get_file(res.data->name);
+                std::string filename = scheme->get_file(res.data->name);
                 auto contents = tree_to_string(
                     item_to_tree(&res.data->value, Location(res))
                 );
@@ -419,7 +419,7 @@ void reload (const std::vector<Resource>& reses) {
          // Construct step
         for (auto res : reses) {
             auto scheme = universe().require_scheme(res.data->name);
-            String filename = scheme->get_file(res.data->name);
+            std::string filename = scheme->get_file(res.data->name);
             Tree tree = tree_from_file(filename);
             verify_tree_for_scheme(res, scheme, tree);
              // Do not DELAY_SWIZZLE for reload.  TODO: Forbid reload while a
@@ -526,20 +526,20 @@ void reload (const std::vector<Resource>& reses) {
     }
 }
 
-String resource_filename (Resource res) {
+std::string resource_filename (Resource res) {
     auto scheme = universe().require_scheme(res.data->name);
     return scheme->get_file(res.data->name);
 }
 
 void remove_source (Resource res) {
     auto scheme = universe().require_scheme(res.data->name);
-    String filename = scheme->get_file(res.data->name);
+    std::string filename = scheme->get_file(res.data->name);
     remove_utf8(filename.c_str());
 }
 
 bool source_exists (Resource res) {
     auto scheme = universe().require_scheme(res.data->name);
-    String filename = scheme->get_file(res.data->name);
+    std::string filename = scheme->get_file(res.data->name);
     if (std::FILE* f = fopen_utf8(filename.c_str())) {
         fclose(f);
         return true;
@@ -629,9 +629,9 @@ AYU_DESCRIBE(ayu::RemoveSourceFailed,
     elems(
         elem(base<ResourceError>(), inherit),
         elem(&RemoveSourceFailed::res),
-        elem(value_func<String>(
+        elem(value_func<std::string>(
             [](const RemoveSourceFailed& v){
-                return String(std::strerror(v.errnum));
+                return std::string(std::strerror(v.errnum));
             }
         ))
     )

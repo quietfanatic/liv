@@ -46,7 +46,7 @@ strings.  There is only one +nan, which is the canonical NaN for the platform.
 The reference implementation supports floating-point numbers of double precision
 and all integers between -2^63 and 2^63-1.
 
-##### String
+##### std::string
 
 A UTF-8 string.  Double quotes (`"`) delimit a string.  Strings that don't
 contain any whitespace or syntactic characters do not require quotes, except for

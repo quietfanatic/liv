@@ -26,10 +26,10 @@ void in::unrecoverable_exception (std::exception& e, Str when) {
 
 AYU_DESCRIBE(std::source_location,
     elems(
-        elem(value_func<String>([](const std::source_location& v) -> String {
+        elem(value_func<std::string>([](const std::source_location& v) -> std::string {
             return v.file_name();
         })),
-        elem(value_func<String>([](const std::source_location& v) -> String {
+        elem(value_func<std::string>([](const std::source_location& v) -> std::string {
             return v.function_name();
         })),
         elem(value_method<uint32, &std::source_location::line>()),

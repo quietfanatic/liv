@@ -479,7 +479,7 @@ AYU_DESCRIBE_TEMPLATE(
             else if CE (n == 3) { return "geo::BVec3"sv; }
             else if CE (n == 4) { return "geo::BVec4"sv; }
         }
-        static String r = "geo::GVec<" + String(ayu::Type::CppType<T>().name())
+        static std::string r = "geo::GVec<" + std::string(ayu::Type::CppType<T>().name())
                         + ", " + std::to_string(n) + ">";
         return Str(r);
     }),

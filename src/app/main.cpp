@@ -15,8 +15,8 @@ int main (int argc, char** argv) {
     glow::require_sdl(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = glow::require_sdl(SDL_GetBasePath());
      // TODO: allow resource schemes to be readonly
-    ayu::FileResourceScheme res_scheme ("res", String(base) + "res");
-    ayu::FileResourceScheme data_scheme ("data", String(base));
+    ayu::FileResourceScheme res_scheme ("res", std::string(base) + "res");
+    ayu::FileResourceScheme data_scheme ("data", std::string(base));
     SDL_free(base);
 
     tap::allow_testing(argc, argv);
@@ -35,7 +35,7 @@ int main (int argc, char** argv) {
             else if (argv[i] == "--list"sv) {
                 list = true;
             }
-            else throw ayu::X<ayu::GenericError>("Unrecognized option " + String(argv[i]));
+            else throw ayu::X<ayu::GenericError>("Unrecognized option " + std::string(argv[i]));
         }
         else args.emplace_back(argv[i]);
     }

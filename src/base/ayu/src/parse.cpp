@@ -16,7 +16,7 @@ namespace in {
 
  // Parsing is simple enough that we don't need a separate lexer step.
 struct Parser {
-    String filename;
+    std::string filename;
     const char* begin;
     const char* p;
     const char* end;
@@ -43,13 +43,13 @@ struct Parser {
         if (d > 9) return 'A' + d;
         else return '0' + d;
     }
-    String show_char (int c) {
+    std::string show_char (int c) {
         switch (c) {
             case EOF: return "<EOF>"s;
             case ' ': return "<space>"s;
             default: {
                 if (c > 0x20 && c < 0x7e) {
-                    return String(1, c);
+                    return std::string(1, c);
                 }
                 else {
                     return cat(
@@ -75,7 +75,7 @@ struct Parser {
             }
         }
         uint col = p - nl;
-        throw X<ParseError>(cat(std::forward<Args>(args)...), String(filename), line, col);
+        throw X<ParseError>(cat(std::forward<Args>(args)...), std::string(filename), line, col);
     }
 
     void skip_comment () {
@@ -117,12 +117,12 @@ struct Parser {
         p++;  // for the "
         std::vector<char> r;
         for (;;) switch (look()) {
-            case EOF: error("String not terminated by end of input"sv);
+            case EOF: error("std::string not terminated by end of input"sv);
             case '"': p++; return Tree(Str(r.data(), r.size()));
             case '\\': {
                 p++;
                 switch (look()) {
-                    case EOF: error("String not terminated by end of input"sv);
+                    case EOF: error("std::string not terminated by end of input"sv);
                     case '"': r.push_back('"'); break;
                     case '\\': r.push_back('\\'); break;
                      // Dunno why this is in json
@@ -427,24 +427,24 @@ Tree tree_from_string (Str s, Str filename) {
     return Parser(s, filename).parse();
 }
 
-String string_from_file (Str filename) {
-    FILE* f = fopen_utf8(String(filename).c_str(), "rb");
+std::string string_from_file (Str filename) {
+    FILE* f = fopen_utf8(std::string(filename).c_str(), "rb");
     if (!f) {
-        throw X<OpenFailed>(String(filename), errno);
+        throw X<OpenFailed>(std::string(filename), errno);
     }
 
     fseek(f, 0, SEEK_END);
     usize size = ftell(f);
     rewind(f);
 
-    String r (size, 0);
+    std::string r (size, 0);
     usize did_read = fread(const_cast<char*>(r.data()), 1, size, f);
     if (did_read != size) {
-        throw X<ReadFailed>(String(filename), errno);
+        throw X<ReadFailed>(std::string(filename), errno);
     }
 
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(String(filename), errno);
+        throw X<CloseFailed>(std::string(filename), errno);
     }
     return r;
 }

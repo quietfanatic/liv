@@ -13,7 +13,7 @@ namespace ayu {
 struct ExceptionBase : std::exception {
      // Gotta cache the generated error message or the exception handling
      // system will reference stack garbage.
-    mutable String mess_cache;
+    mutable std::string mess_cache;
      // Calls item_to_string on whatever the error type is.
     const char* what () const noexcept final;
     virtual Pointer ptr () const noexcept = 0;

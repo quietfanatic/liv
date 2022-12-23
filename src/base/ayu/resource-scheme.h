@@ -27,7 +27,7 @@ using iri::IRI;
  // manipulate any Types until main() starts.
 struct ResourceScheme {
      // Must be a valid scheme name matching [a-z][a-z0-9+.-]*
-    const String scheme_name;
+    const std::string scheme_name;
 
      // If you want to do some of your own validation besides the standard IRI
      // validation.  If this returns false, UnacceptableResourceName will
@@ -46,7 +46,7 @@ struct ResourceScheme {
      // Turn an IRI into a filename.  If "" is returned, it means there is no
      // valid filename for this IRI.  It is okay to return non-existent
      // filenames.
-    virtual String get_file (const IRI&) const { return ""s; }
+    virtual std::string get_file (const IRI&) const { return ""s; }
      // TODO: Non-file resource schemes
 
     explicit ResourceScheme (Str scheme_name, bool auto_activate = true) :
@@ -72,18 +72,18 @@ struct ResourceScheme {
 
  // Maps resource names to the contents of a folder.
 struct FileResourceScheme : ResourceScheme {
-    String folder;
+    std::string folder;
 
     bool accepts_iri (const IRI& iri) const override {
         return iri && !iri.has_authority() && !iri.has_query()
             && iri.is_hierarchical();
     }
 
-    String get_file (const IRI& iri) const override {
+    std::string get_file (const IRI& iri) const override {
         return folder + iri::decode(iri.path());
     }
 
-    FileResourceScheme (String scheme, String folder, bool auto_activate = true)
+    FileResourceScheme (std::string scheme, std::string folder, bool auto_activate = true)
         : ResourceScheme(scheme, auto_activate), folder(folder)
     { }
 };
@@ -91,29 +91,29 @@ struct FileResourceScheme : ResourceScheme {
 struct ResourceNameError : Error { };
  // An invalid IRI was given as a resource name.
 struct InvalidResourceName : ResourceNameError {
-    String name;
+    std::string name;
 };
  // Tried to use an IRI as a resource name but its scheme was not registered
 struct UnknownResourceScheme : ResourceNameError {
-    String name;
+    std::string name;
 };
  // A valid IRI was given but its ResourceScheme didn't like it.
 struct UnacceptableResourceName : ResourceNameError {
-    String name;
+    std::string name;
 };
  // Tried to load or set_value a resource with a type that the
  // ResourceScheme didn't accept.
 struct UnacceptableResourceType : ResourceNameError {
-    String name;
+    std::string name;
     Type type;
 };
  // Tried to register a ResourceScheme with an invalid name.
 struct InvalidResourceScheme : ResourceNameError {
-    String scheme;
+    std::string scheme;
 };
  // Tried to register multiple ResourceSchemes with the same name.
 struct DuplicateResourceScheme : ResourceNameError {
-    String scheme;
+    std::string scheme;
 };
 
 } // namespace ayu

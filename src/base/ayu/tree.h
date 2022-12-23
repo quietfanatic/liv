@@ -100,7 +100,7 @@ struct Tree {
     explicit Tree (T v) : Tree(ExplicitBool{v}) { }
 
      // plain (not signed or unsigned) chars are represented as strings
-    explicit Tree (char v) : Tree(String(1,v)) { }
+    explicit Tree (char v) : Tree(std::string(1,v)) { }
     explicit Tree (int8 v) : Tree(int64(v)) { }
     explicit Tree (uint8 v) : Tree(int64(v)) { }
     explicit Tree (int16 v) : Tree(int64(v)) { }
@@ -138,8 +138,8 @@ struct Tree {
      // Tree exists).  If you need to access the string later, copy the whole
      // Tree (it's cheap).
     explicit operator Str () const;
-    explicit operator String () const;  // Does a copy.
-    explicit operator String16 () const;
+    explicit operator std::string () const;  // Does a copy.
+    explicit operator std::u16string () const;
     explicit operator const Array& () const;
     explicit operator const Object& () const;
 
@@ -158,7 +158,7 @@ struct Tree {
  // Make sure earlier CRef<Tree, 16> alias is correct
 static_assert(sizeof(Tree) == 16);
 
- // Tree used as a String.
+ // Tree used as a std::string.
 using StringTree = Tree;
 
  // Test for equality.  Trees of different forms are considered unequal.
@@ -180,7 +180,7 @@ struct WrongForm : TreeError {
  // Tried to extract a number from a tree, but the tree's number won't fit
  // into the requested type.
 struct CantRepresent : TreeError {
-    String type_name;
+    std::string type_name;
     Tree tree;
 };
 

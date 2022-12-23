@@ -4,7 +4,7 @@
 
 namespace control::command {
 
-static void echo_ (String s) {
+static void echo_ (std::string s) {
     uni::print_utf8(s);
 }
 Command echo (echo_, "echo", "Print a string to stdout");

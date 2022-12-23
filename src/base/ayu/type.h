@@ -174,7 +174,7 @@ struct UnknownType : TypeError {
 };
  // Tried to look up a type by name, but there is no type with that name.
 struct TypeNotFound : TypeError {
-    String name;
+    std::string name;
 };
  // Tried to default construct a type that has no default constructor.
 struct CannotDefaultConstruct : TypeError {

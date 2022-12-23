@@ -138,7 +138,7 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
     );
 }
 
-void App::open_files (std::vector<String>&& files) {
+void App::open_files (std::vector<std::string>&& files) {
     add_book(*this, std::make_unique<Book>(
         *this, expand_files(settings, std::move(files))
     ));
@@ -185,7 +185,7 @@ static tap::TestSet tests ("app/app", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());
-    String exe_folder = base;
+    std::string exe_folder = base;
     SDL_free(base);
 
     App app;

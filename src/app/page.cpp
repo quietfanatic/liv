@@ -15,7 +15,7 @@ PageParams::PageParams (const Settings* settings) :
     interpolation_mode(settings->get(&PageSettings::interpolation_mode))
 { }
 
-Page::Page (String&& filename) :
+Page::Page (std::string&& filename) :
     filename(std::move(filename))
 { }
 Page::~Page () { }
@@ -107,7 +107,7 @@ static tap::TestSet tests ("app/page", []{
     using namespace tap;
 
     char* base = require_sdl(SDL_GetBasePath());
-    String exe_folder = base;
+    std::string exe_folder = base;
     SDL_free(base);
 
     IVec test_size = {120, 120};

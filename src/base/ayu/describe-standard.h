@@ -30,7 +30,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
     desc::name([]{
-        static uni::String r = uni::cat(ayu::Type::CppType<T>().name(), '?');
+        static std::string r = uni::cat(ayu::Type::CppType<T>().name(), '?');
         return uni::Str(r);
     }),
     desc::values(
@@ -51,7 +51,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::vector<"sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
@@ -71,7 +71,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::unordered_map<std::string, "sv,
             ayu::Type::CppType<T>().name(), '>'
         );
@@ -109,7 +109,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::map<std::string, T>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::map<std::string, "sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
@@ -145,7 +145,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_set<T>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::unordered_set<"sv,
             ayu::Type::CppType<T>().name(), '>'
         );
@@ -199,7 +199,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::set<T>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::set<"sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
@@ -242,7 +242,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(T*),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(ayu::Type::CppType<T>().name(), '*');
+        static std::string r = uni::cat(ayu::Type::CppType<T>().name(), '*');
         return uni::Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
@@ -264,7 +264,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             ayu::Type::CppType<T>().name(),
             '[', n, ']'
         );
@@ -285,7 +285,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat("char["sv, n, ']');
+        static std::string r = uni::cat("char["sv, n, ']');
         return uni::Str(r);
     }),
      // Serialize as a string
@@ -328,7 +328,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::array<"sv + ayu::Type::CppType<T>().name(),
             ", "sv, n, '>'
         );
@@ -347,7 +347,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
     desc::name([]{
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::pair<"sv, ayu::Type::CppType<A>().name(),
             ", "sv, ayu::Type::CppType<B>().name(), '>'
         );
@@ -369,19 +369,19 @@ namespace ayu::in {
     struct TupleNames;
     template <>
     struct TupleNames<> {
-        static uni::String make () {
+        static std::string make () {
             return ""s;
         }
     };
     template <class T>
     struct TupleNames<T> {
-        static uni::String make () {
-            return uni::String(Type::CppType<T>().name());
+        static std::string make () {
+            return std::string(Type::CppType<T>().name());
         }
     };
     template <class A, class B, class... Ts>
     struct TupleNames<A, B, Ts...> {
-        static uni::String make () {
+        static std::string make () {
             return uni::cat(
                 ayu::Type::CppType<A>().name(),
                 ", "sv, TupleNames<B, Ts...>::make()
@@ -423,7 +423,7 @@ AYU_DESCRIBE_TEMPLATE(
             "Cannot instantiate AYU description of a tuple with references as type parameters"
         );
         using namespace std::literals;
-        static uni::String r = uni::cat(
+        static std::string r = uni::cat(
             "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'
         );
         return uni::Str(r);

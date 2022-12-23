@@ -53,7 +53,7 @@ void item_from_tree (
 );
 
 ///// MAIN OPERATION SHORTCUTS
-inline String item_to_string (
+inline std::string item_to_string (
     const Reference& item, PrintOptions opts = 0,
     LocationRef loc = Location()
 ) {
@@ -156,12 +156,12 @@ struct NoValueForName : SerError {
  // Tried to deserialize an item from an object tree, but the tree is
  // an attribute that the item requires.
 struct MissingAttr : SerError {
-    String key;
+    std::string key;
 };
  // Tried to deserialize an item from an object tree, but the item rejected
  // one of the attributes in the tree.
 struct UnwantedAttr : SerError {
-    String key;
+    std::string key;
 };
  // Tried to deserialize an item from an array tree, but the array has too
  // few or too many elements for the item.
@@ -179,7 +179,7 @@ struct NoElems : SerError { };
  // Tried to get an attribute from an item, but it doesn't have an attribute
  // with the given key.
 struct AttrNotFound : SerError {
-    String key;
+    std::string key;
 };
  // Tried to get an element from an item, but it doesn't have an element
  // with the given index.

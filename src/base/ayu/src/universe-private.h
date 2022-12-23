@@ -18,12 +18,12 @@ namespace ayu::in {
 
     struct Universe {
         std::unordered_map<Str, std::unique_ptr<ResourceData>> resources;
-        std::unordered_map<String, const ResourceScheme*> schemes;
+        std::unordered_map<std::string, const ResourceScheme*> schemes;
         const ResourceScheme* require_scheme (const IRI& name) {
             Str scheme = name.scheme();
-            auto iter = schemes.find(String(scheme));
+            auto iter = schemes.find(std::string(scheme));
             if (iter != schemes.end()) return iter->second;
-            else throw X<UnknownResourceScheme>(String(scheme));
+            else throw X<UnknownResourceScheme>(std::string(scheme));
         }
     };
 

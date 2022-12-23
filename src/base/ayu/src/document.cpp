@@ -18,7 +18,7 @@ static usize parse_numbered_name (Str name) {
      // TODO: use std::from_chars
     return atoll(name.data() + 1);
 }
-static String print_numbered_name (usize id) {
+static std::string print_numbered_name (usize id) {
     return cat('_', id);
 }
 
@@ -42,7 +42,7 @@ struct DocumentLinks {
  // TODO: make sure item is aligned properly
 struct DocumentItemHeader : DocumentLinks {
     usize id = 0;
-    String* name_p;
+    std::string* name_p;
     Type type;
     DocumentItemHeader (DocumentLinks* links, Type t, usize id) :
         DocumentLinks(links),
@@ -50,10 +50,10 @@ struct DocumentItemHeader : DocumentLinks {
         name_p(null),
         type(t)
     { }
-    DocumentItemHeader (DocumentLinks* links, Type t, usize id, String&& name) :
+    DocumentItemHeader (DocumentLinks* links, Type t, usize id, std::string&& name) :
         DocumentLinks(links),
         id(id),
-        name_p(new String(std::move(name))),
+        name_p(new std::string(std::move(name))),
         type(t)
     { }
     ~DocumentItemHeader () {
@@ -61,7 +61,7 @@ struct DocumentItemHeader : DocumentLinks {
     }
     Str name () {
         if (!name_p) {
-            name_p = new String(print_numbered_name(id));
+            name_p = new std::string(print_numbered_name(id));
         }
         return *name_p;
     }
@@ -112,23 +112,23 @@ void* Document::allocate (Type t) {
 void* Document::allocate_named (Type t, Str name) {
     usize id = parse_numbered_name(name);
 
-    if (name.empty()) throw X<DocumentInvalidName>(String(name));
+    if (name.empty()) throw X<DocumentInvalidName>(std::string(name));
     if (id == usize(-1) && name[0] == '_') {
-        throw X<DocumentInvalidName>(String(name));
+        throw X<DocumentInvalidName>(std::string(name));
     }
-    auto ref = DocumentItemRef(data, String(name));
-    if (ref.header) throw X<DocumentDuplicateName>(String(name));
+    auto ref = DocumentItemRef(data, std::string(name));
+    if (ref.header) throw X<DocumentDuplicateName>(std::string(name));
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, String(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::string(name));
         return header+1;
     }
     else { // Actually a numbered item
         if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id"s);
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, String(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::string(name));
         return header+1;
     }
 }
@@ -151,7 +151,7 @@ void Document::delete_ (Type t, Mu* p) {
 }
 
 void Document::delete_named (Str name) {
-    auto ref = DocumentItemRef(data, String(name));
+    auto ref = DocumentItemRef(data, std::string(name));
     if (ref.header) {
         if (ref.header->type) {
             ref.header->type.destroy(ref.header->data());
@@ -160,7 +160,7 @@ void Document::delete_named (Str name) {
         free(ref.header);
         return;
     }
-    else throw X<DocumentDeleteMissing>(String(name));
+    else throw X<DocumentDeleteMissing>(std::string(name));
 }
 
 void Document::deallocate (void* p) {
@@ -195,7 +195,7 @@ AYU_DESCRIBE(ayu::Document,
             return Reference(&v.data->next_id);
         }
         else {
-            auto ref = DocumentItemRef(v.data, String(k));
+            auto ref = DocumentItemRef(v.data, std::string(k));
             if (ref.header) {
                 return Reference(
                     v, variable(std::move(ref), pass_through_addressable)
