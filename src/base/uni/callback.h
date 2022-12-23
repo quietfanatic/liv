@@ -5,8 +5,10 @@
 namespace ayu {
 
 template <class F, class Ret, class... Args>
-concept IsMFP = requires { &F::operator(); } &&
-    std::is_same_v<std::invoke_result_t<F, Args...>, Ret>;
+concept HasExactCallOperator = std::is_convertible_v<
+    decltype(&F::operator()),
+    Ret (F::*)(Args...)
+>;
 
  // A super lightweight callback class with reference semantics (std::function
  // has value semantics and can be copied and moved, so it's way bigger.)
@@ -23,7 +25,7 @@ struct CallbackV<Ret(Args...)> {
      // compiler does that pretty well already), it's to clean up the stack
      // for debugging.
     template <class F> requires(
-        IsMFP<F, Ret, Args...>
+        HasExactCallOperator<F, Ret, Args...>
     )
     [[gnu::always_inline]]
     constexpr CallbackV (const F& f) :
@@ -31,7 +33,7 @@ struct CallbackV<Ret(Args...)> {
         wrapper((decltype(wrapper))(&F::operator()))
     { }
     template <class F> requires(
-        !IsMFP<F, Ret, Args...> &&
+        !HasExactCallOperator<F, Ret, Args...> &&
         std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
     )
     [[gnu::always_inline]]
