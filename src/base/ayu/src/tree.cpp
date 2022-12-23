@@ -17,22 +17,22 @@ Tree::Tree (const Tree& o) :
 }
 
 [[gnu::noinline]]
-void delete_data (const Tree& t) {
-    switch (t.rep) {
+void delete_data (TreeRef t) {
+    switch (t->rep) {
         case REP_LONGSTRING: {
-            free((void*)t.data.as_ptr);
+            free((void*)t->data.as_ptr);
             break;
         }
         case REP_ARRAY: {
-            delete static_cast<const TreeData<Array>*>(t.data.as_ptr);
+            delete static_cast<const TreeData<Array>*>(t->data.as_ptr);
             break;
         }
         case REP_OBJECT: {
-            delete static_cast<const TreeData<Object>*>(t.data.as_ptr);
+            delete static_cast<const TreeData<Object>*>(t->data.as_ptr);
             break;
         }
         case REP_ERROR: {
-            delete static_cast<const TreeData<std::exception_ptr>*>(t.data.as_ptr);
+            delete static_cast<const TreeData<std::exception_ptr>*>(t->data.as_ptr);
             break;
         }
         default: never();
@@ -45,14 +45,6 @@ Tree::~Tree () {
             delete_data(*this);
         }
     }
-}
-
-struct Foo {
-    alignas(void*) char data [8];
-};
-
-void foo (const Foo& f) {
-    if (f.data[3]) { std::cout << "3" << std::endl; }
 }
 
 Tree::Tree (Null) :
@@ -107,9 +99,9 @@ Tree::Tree (std::exception_ptr v) :
 { }
 
 [[noreturn]]
-static void bad_form (const Tree& t, TreeForm form) {
-    if (t.rep == REP_ERROR) std::rethrow_exception(tree_Error(t));
-    else if (t.form == form) never();
+static void bad_form (TreeRef t, TreeForm form) {
+    if (t->rep == REP_ERROR) std::rethrow_exception(tree_Error(t));
+    else if (t->form == form) never();
     else throw X<WrongForm>(form, t);
 }
 
@@ -211,50 +203,48 @@ const Tree& Tree::operator[] (usize index) const {
     ));
 }
 
-bool operator == (const Tree& a, const Tree& b) {
-     // Shortcut if same address
-    if (&a == &b) return true;
-    else if (a.rep != b.rep) {
+bool operator == (TreeRef a, TreeRef b) {
+    if (a->rep != b->rep) {
          // Special case int/float comparisons
-        if (a.rep == REP_INT64 && b.rep == REP_DOUBLE) {
-            return a.data.as_int64 == b.data.as_double;
+        if (a->rep == REP_INT64 && b->rep == REP_DOUBLE) {
+            return a->data.as_int64 == b->data.as_double;
         }
-        else if (a.rep == REP_DOUBLE && b.rep == REP_INT64) {
-            return a.data.as_double == b.data.as_int64;
+        else if (a->rep == REP_DOUBLE && b->rep == REP_INT64) {
+            return a->data.as_double == b->data.as_int64;
         }
          // Otherwise different reps = different values.  We don't need to
          // compare REP_SHORTSTRING to REP_LONGSTRING because we guarantee that
          // REP_LONGSTRING has at least 9 characters.
         return false;
     }
-    else switch (a.rep) {
+    else switch (a->rep) {
         case REP_NULL: return true;
-        case REP_BOOL: return a.data.as_bool == b.data.as_bool;
-        case REP_INT64: return a.data.as_int64 == b.data.as_int64;
+        case REP_BOOL: return a->data.as_bool == b->data.as_bool;
+        case REP_INT64: return a->data.as_int64 == b->data.as_int64;
         case REP_DOUBLE: {
-            double av = a.data.as_double;
-            double bv = b.data.as_double;
+            double av = a->data.as_double;
+            double bv = b->data.as_double;
             return av == bv || (av != av && bv != bv);
         }
         case REP_SHORTSTRING: {
-            if (a.length != b.length) return false;
+            if (a->length != b->length) return false;
              // Unused char slots are zeroed out so we can compare them all at
              // once.
-            return a.data.as_int64 == b.data.as_int64;
+            return a->data.as_int64 == b->data.as_int64;
         }
         case REP_LONGSTRING: {
-            if (a.data.as_ptr == b.data.as_ptr) return true;
+            if (a->data.as_ptr == b->data.as_ptr) return true;
             return tree_longStr(a) == tree_longStr(b);
         }
         case REP_ARRAY: {
              // From my investigations, the STL does NOT, in general,
              // short-circuit container comparisons where the containers have
              // the same address.
-            if (a.data.as_ptr == b.data.as_ptr) return true;
+            if (a->data.as_ptr == b->data.as_ptr) return true;
             return tree_Array(a) == tree_Array(b);
         }
         case REP_OBJECT: {
-            if (a.data.as_ptr == b.data.as_ptr) return true;
+            if (a->data.as_ptr == b->data.as_ptr) return true;
             const Object& ao = tree_Object(a);
             const Object& bo = tree_Object(b);
             if (ao.size() != bo.size()) return false;
@@ -273,19 +263,19 @@ bool operator == (const Tree& a, const Tree& b) {
     }
 }
 
-bool operator == (const Tree& a, Str b) {
-    if (a.length != b.size()) return false;
+bool operator == (TreeRef a, Str b) {
+    if (a->length != b.size()) return false;
     if (b.size() <= 8) {
-        if (a.rep != REP_SHORTSTRING) return false;
-        if (a.data.as_chars == b.data()) return true;
+        if (a->rep != REP_SHORTSTRING) return false;
+        if (a->data.as_chars == b.data()) return true;
         for (uint32 i = 0; i < b.size(); i++) {
-            if (a.data.as_chars[i] != b[i]) return false;
+            if (a->data.as_chars[i] != b[i]) return false;
         }
         return true;
     }
     else {
-        if (a.rep != REP_LONGSTRING) return false;
-        auto vc = static_cast<const TreeData<char[0]>*>(a.data.as_ptr);
+        if (a->rep != REP_LONGSTRING) return false;
+        auto vc = static_cast<const TreeData<char[0]>*>(a->data.as_ptr);
         if (vc->value == b.data()) return true;
         return std::memcmp(vc->value, b.data(), b.size()) == 0;
     }

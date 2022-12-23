@@ -12,6 +12,7 @@
 #include <vector>
 #include "../uni/callback.h"
 #include "../uni/common.h"
+#include "../uni/copy-ref.h"
 #include "../uni/string.h"
 
 namespace iri { struct IRI; }
@@ -31,6 +32,7 @@ struct Pointer;
 struct Reference;
 struct Resource;
 struct Tree;
+using TreeRef = CRef<Tree, 16>;
 struct Type;
 
  // Using a Tree as a string-like type.

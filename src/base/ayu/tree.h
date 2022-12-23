@@ -6,6 +6,7 @@
 
 #include <exception>
 #include "internal/common-internal.h"
+#include "../uni/copy-ref.h"
 
 namespace ayu {
 
@@ -157,11 +158,11 @@ using StringTree = Tree;
  // Objects are equal if all their attributes are the same; the attributes
  // don't have to be in the same order.  Unlike with normal floating point
  // comparisons, Tree(NAN) == Tree(NAN).  -0.0 and +0.0 are considered equal.
-bool operator == (const Tree& a, const Tree& b);
+bool operator == (TreeRef a, TreeRef b);
  // Theoretically we could add < and friends, but it's a pain to program.
 
  // If we're gonna start using Trees as strings, we'll want this
-bool operator == (const Tree& a, Str b);
+bool operator == (TreeRef a, Str b);
 
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.
