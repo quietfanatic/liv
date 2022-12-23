@@ -327,7 +327,7 @@ void unload (const std::vector<Resource>& reses) {
             for (auto res : rs) {
                 scan_resource_references(
                     res,
-                    [&](const Reference& ref, Location loc) {
+                    [&](const Reference& ref, LocationRef loc) {
                         ref_set.emplace(ref, loc);
                         return false;
                     }
@@ -337,7 +337,7 @@ void unload (const std::vector<Resource>& reses) {
             for (auto other : others) {
                 scan_resource_references(
                     other,
-                    [&](Reference ref_ref, Location loc) {
+                    [&](Reference ref_ref, LocationRef loc) {
                          // TODO: Check for Pointer as well
                         if (ref_ref.type() != Type::CppType<Reference>()) return false;
                         Reference ref = ref_ref.get_as<Reference>();
@@ -446,7 +446,7 @@ void reload (const std::vector<Resource>& reses) {
             for (auto res : reses) {
                 scan_references(
                     res.data->old_value.ptr(), Location(res),
-                    [&](const Reference& ref, Location loc) {
+                    [&](const Reference& ref, LocationRef loc) {
                         old_refs.emplace(ref, loc);
                         return false;
                     }
@@ -456,7 +456,7 @@ void reload (const std::vector<Resource>& reses) {
             for (auto other : others) {
                 scan_resource_references(
                     other,
-                    [&](Reference ref_ref, Location loc) {
+                    [&](Reference ref_ref, LocationRef loc) {
                          // TODO: scan Pointers as well
                         if (ref_ref.type() != Type::CppType<Reference>()) return false;
                         Reference ref = ref_ref.get_as<Reference>();

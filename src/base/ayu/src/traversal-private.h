@@ -55,7 +55,7 @@ struct Traversal {
     };
     union {
          // START
-        const Location* location;
+        LocationRef location;
          // ATTR, ATTR_FUNC
          // Can't include Str directly because it has non-trivial constructor
         const Str* key;
@@ -76,7 +76,7 @@ using TravCallback = Callback<void(const Traversal&)>;
  // If only_addressable is true, will skip over any items that aren't
  // addressable and don't have pass_through_addressable.
 static inline void trav_start (
-    const Reference& ref, const Location& loc, bool only_addressable,
+    const Reference& ref, LocationRef loc, bool only_addressable,
     AccessMode mode, TravCallback cb
 ) {
     Traversal trav;
@@ -89,7 +89,7 @@ static inline void trav_start (
     trav.only_addressable = only_addressable;
     trav.op = START;
     trav.reference = &ref;
-    trav.location = &loc;
+    trav.location = loc;
     if (trav.address) {
         cb(trav);
     }
@@ -237,7 +237,7 @@ static Reference trav_reference (const Traversal& trav) {
 
 static Location trav_location (const Traversal& trav) {
     if (trav.op == START) {
-        return *trav.location;
+        return trav.location;
     }
     else {
         Location parent = trav_location(*trav.parent);

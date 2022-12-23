@@ -54,8 +54,8 @@ struct KeepLocationCache {
  //     location.  If the callback returns true, the scan will be stopped.
  //   returns: true if the callback ever returned true.
 bool scan_pointers (
-    Pointer base_item, const Location& base_loc,
-    Callback<bool(Pointer, const Location&)> cb
+    Pointer base_item, LocationRef base_loc,
+    Callback<bool(Pointer, LocationRef)> cb
 );
 
  // Scans all visible items under the given reference, whether or not they are
@@ -70,25 +70,25 @@ bool scan_pointers (
  //     location.  If the callback returns true, the scan will be stopped.
  //   returns: true if the callback ever returned true.
 bool scan_references (
-    const Reference& base_item, const Location& base_loc,
-    Callback<bool(const Reference&, const Location&)> cb
+    const Reference& base_item, LocationRef base_loc,
+    Callback<bool(const Reference&, LocationRef)> cb
 );
 
  // Scan under a particular resource's data.  The location is automatically
  // determined from the resource's name.  This silently does nothing and returns
  // false if the resource's state is UNLOADED.
 bool scan_resource_pointers (
-    const Resource& res, Callback<bool(Pointer, const Location&)> cb
+    const Resource& res, Callback<bool(Pointer, LocationRef)> cb
 );
 bool scan_resource_references (
-    const Resource& res, Callback<bool(const Reference&, const Location&)> cb
+    const Resource& res, Callback<bool(const Reference&, LocationRef)> cb
 );
  // Scan all loaded resources.
 bool scan_universe_pointers (
-    Callback<bool(Pointer, const Location&)> cb
+    Callback<bool(Pointer, LocationRef)> cb
 );
 bool scan_universe_references (
-    Callback<bool(const Reference&, const Location&)> cb
+    Callback<bool(const Reference&, LocationRef)> cb
 );
 
  // Required the location of a reference, but a global scan or cache lookup

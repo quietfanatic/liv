@@ -35,9 +35,9 @@ struct Location {
     explicit Location (Resource);
      // Constructs a location based on another one with an added attribute key
      // or element index.  TODO: Take a Tree
-    Location (Location parent, String&& key);
-    Location (Location parent, Str key) : Location(parent, String(key)) { }
-    Location (Location parent, usize index);
+    Location (LocationRef parent, String&& key);
+    Location (LocationRef parent, Str key) : Location(parent, String(key)) { }
+    Location (LocationRef parent, usize index);
      // Parses an IRI into a location.  All of the IRI up to the fragment will
      // be used as the resource name for the root, and the fragment will be
      // split on / and each segment used as either a key or index.  To force a
@@ -64,10 +64,7 @@ struct Location {
     const Resource* root_resource () const;
 };
 
-bool operator == (const Location& a, const Location& b);
-inline bool operator != (const Location& a, const Location& b) {
-    return !(a == b);
-}
+bool operator == (LocationRef a, LocationRef b);
 
  // Convert a Location to a Reference.  This will not have to do any scanning,
  // so it should be fairly quick.  Well, quicker than reference_to_location.

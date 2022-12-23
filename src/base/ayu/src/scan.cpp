@@ -13,8 +13,8 @@ namespace ayu {
 namespace in {
 
 bool scan_trav (
-    const Traversal& trav, const Location& loc,
-    Callback<bool(const Traversal&, const Location&)> cb
+    const Traversal& trav, LocationRef loc,
+    Callback<bool(const Traversal&, LocationRef)> cb
 ) {
     if (cb(trav, loc)) return true;
     switch (trav.desc->preference()) {
@@ -67,7 +67,7 @@ static usize keep_location_cache_count = 0;
 std::unordered_map<Pointer, Location>* get_location_cache () {
     if (!keep_location_cache_count) return null;
     if (!have_location_cache) {
-        scan_universe_pointers([&](Pointer ptr, const Location& loc){
+        scan_universe_pointers([&](Pointer ptr, LocationRef loc){
             location_cache.emplace(ptr, loc);
             return false;
         });
@@ -89,13 +89,13 @@ KeepLocationCache::~KeepLocationCache () {
 }
 
 bool scan_pointers (
-    Pointer base_item, const Location& base_loc,
-    Callback<bool(Pointer, const Location&)> cb
+    Pointer base_item, LocationRef base_loc,
+    Callback<bool(Pointer, LocationRef)> cb
 ) {
     bool r = false;
     trav_start(base_item, base_loc, true, ACR_READ, [&](const Traversal& trav){
         r = scan_trav(
-            trav, base_loc, [&](const Traversal& trav, const Location& loc)
+            trav, base_loc, [&](const Traversal& trav, LocationRef loc)
         {
             if (trav.addressable) {
                 return cb(Pointer(trav.address, trav.desc), loc);
@@ -107,13 +107,13 @@ bool scan_pointers (
 }
 
 bool scan_references (
-    const Reference& base_item, const Location& base_loc,
-    Callback<bool(const Reference&, const Location&)> cb
+    const Reference& base_item, LocationRef base_loc,
+    Callback<bool(const Reference&, LocationRef)> cb
 ) {
     bool r = false;
     trav_start(base_item, base_loc, false, ACR_READ, [&](const Traversal& trav){
         r = scan_trav(
-            trav, base_loc, [&](const Traversal& trav, const Location& loc)
+            trav, base_loc, [&](const Traversal& trav, LocationRef loc)
         {
             return cb(trav_reference(trav), loc);
         });
@@ -122,20 +122,20 @@ bool scan_references (
 }
 
 bool scan_resource_pointers (
-    const Resource& res, Callback<bool(Pointer, const Location&)> cb
+    const Resource& res, Callback<bool(Pointer, LocationRef)> cb
 ) {
     if (res.state() == UNLOADED) return false;
     return scan_pointers(res.get_value().ptr(), Location(res), cb);
 }
 bool scan_resource_references (
-    const Resource& res, Callback<bool(const Reference&, const Location&)> cb
+    const Resource& res, Callback<bool(const Reference&, LocationRef)> cb
 ) {
     if (res.state() == UNLOADED) return false;
     return scan_references(res.get_value().ptr(), Location(res), cb);
 }
 
 bool scan_universe_pointers (
-    Callback<bool(Pointer, const Location&)> cb
+    Callback<bool(Pointer, LocationRef)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
         if (scan_resource_pointers(&*resdat, cb)) return true;
@@ -144,7 +144,7 @@ bool scan_universe_pointers (
 }
 
 bool scan_universe_references (
-    Callback<bool(const Reference&, const Location&)> cb
+    Callback<bool(const Reference&, LocationRef)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
         if (scan_resource_references(&*resdat, cb)) return true;
@@ -161,7 +161,7 @@ Location find_pointer (Pointer item) {
     }
     else {
         Location r;
-        scan_universe_pointers([&](Pointer p, const Location& loc){
+        scan_universe_pointers([&](Pointer p, LocationRef loc){
             if (p == item) {
                 r = loc;
                 return true;
@@ -191,7 +191,7 @@ Location find_reference (const Reference& item) {
                 Location r;
                 scan_references(
                     Reference(item.host), it->second,
-                    [&](const Reference& ref, const Location& loc)
+                    [&](const Reference& ref, LocationRef loc)
                 {
                     if (ref == item) {
                         r = loc;
@@ -208,7 +208,7 @@ Location find_reference (const Reference& item) {
          // We don't have the location cache!  Time to do a global search.
         Location r;
         scan_universe_references(
-            [&](const Reference& ref, const Location& loc)
+            [&](const Reference& ref, LocationRef loc)
         {
             if (ref == item) {
                 r = loc;

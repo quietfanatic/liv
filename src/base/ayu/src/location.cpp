@@ -55,10 +55,10 @@ Location make_error_location (std::exception_ptr&& e) {
 }
 
 [[noreturn]]
-static void rethrow (const Location& l) {
-    expect(l.data->form == ERROR_LOC);
+static void rethrow (LocationRef l) {
+    expect(l->data->form == ERROR_LOC);
     std::rethrow_exception(
-        static_cast<ErrorLocation*>(l.data.p)->error
+        static_cast<ErrorLocation*>(l->data.p)->error
     );
 }
 
@@ -78,10 +78,10 @@ void delete_LocationData (LocationData* p) {
 Location::Location (Resource res) :
     data(new RootLocation(std::move(res)))
 { }
-Location::Location (Location p, String&& k) :
+Location::Location (LocationRef p, String&& k) :
     data(new KeyLocation(p, std::move(k)))
 { }
-Location::Location (Location p, usize i) :
+Location::Location (LocationRef p, usize i) :
     data(new IndexLocation(p, i))
 { }
 
@@ -231,26 +231,26 @@ const Resource* Location::root_resource () const {
     }
 }
 
-bool operator == (const Location& a, const Location& b) {
-    if (a.data == b.data) return true;
-    if (!a.data || !b.data) return false;
-    if (a.data->form == ERROR_LOC) rethrow(a);
-    if (b.data->form == ERROR_LOC) rethrow(b);
-    if (a.data->form != b.data->form) return false;
-    switch (a.data->form) {
+bool operator == (LocationRef a, LocationRef b) {
+    if (a->data == b->data) return true;
+    if (!a->data || !b->data) return false;
+    if (a->data->form == ERROR_LOC) rethrow(a);
+    if (b->data->form == ERROR_LOC) rethrow(b);
+    if (a->data->form != b->data->form) return false;
+    switch (a->data->form) {
         case ROOT: {
-            auto aa = static_cast<RootLocation*>(a.data.p);
-            auto bb = static_cast<RootLocation*>(b.data.p);
+            auto aa = static_cast<RootLocation*>(a->data.p);
+            auto bb = static_cast<RootLocation*>(b->data.p);
             return aa->resource == bb->resource;
         }
         case KEY: {
-            auto aa = static_cast<KeyLocation*>(a.data.p);
-            auto bb = static_cast<KeyLocation*>(b.data.p);
+            auto aa = static_cast<KeyLocation*>(a->data.p);
+            auto bb = static_cast<KeyLocation*>(b->data.p);
             return aa->key == bb->key && aa->parent == bb->parent;
         }
         case INDEX: {
-            auto aa = static_cast<IndexLocation*>(a.data.p);
-            auto bb = static_cast<IndexLocation*>(b.data.p);
+            auto aa = static_cast<IndexLocation*>(a->data.p);
+            auto bb = static_cast<IndexLocation*>(b->data.p);
             return aa->index == bb->index && aa->parent == bb->parent;
         }
         default: never();

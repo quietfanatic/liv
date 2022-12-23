@@ -28,6 +28,7 @@ using iri::IRI;
 struct Document;
 struct Dynamic;
 struct Location;
+using LocationRef = CopyRef<Location>;
 struct Pointer;
 struct Reference;
 struct Resource;

@@ -29,6 +29,10 @@ namespace uni {
 
 template <class T>
 struct CopyRef {
+     // Default constructible, but if you reference this before assigning to it,
+     // the behavior will be very undefined.
+    [[gnu::always_inline]]
+    CopyRef () = default;
      // Make trivially copyable
     [[gnu::always_inline]]
     CopyRef (const CopyRef<T>&) = default;
@@ -56,8 +60,17 @@ struct CopyRef {
     const T* operator-> () const {
         return reinterpret_cast<const T*>(storage);
     }
-     // No assignment allowed (use placement new if you really need to)
-    CopyRef<T>& operator= (const CopyRef<T>&) = delete;
+     // Allow assigning
+    [[gnu::always_inline]]
+    CopyRef<T>& operator= (const CopyRef<T>& o) {
+         // Can't default this because you can't assign arrays.
+        std::memcpy(this, &o, sizeof(T));
+        return *this;
+    }
+     // Forbid assigning from a T, as that's probably a mistake (T's copy
+     // constructor and copy assigner will not be called).  Explictly cast to
+     // CopyRef<T> first.
+    CopyRef<T>& operator= (const T&) = delete;
   private:
     alignas(T) const char storage [sizeof(T)];
 };

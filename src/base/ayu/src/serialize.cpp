@@ -105,7 +105,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
         else throw;
     }
 }
-Tree item_to_tree (const Reference& item, const Location& loc) {
+Tree item_to_tree (const Reference& item, LocationRef loc) {
     Tree r;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         r = ser_to_tree(trav);
@@ -261,7 +261,7 @@ void in::IFTContext::do_inits () {
 IFTContext* IFTContext::current = null;
 
 void item_from_tree (
-    const Reference& item, TreeRef tree, const Location& loc,
+    const Reference& item, TreeRef tree, LocationRef loc,
     ItemFromTreeFlags flags
 ) {
      // TODO: Replace with expect()
@@ -363,7 +363,7 @@ void in::ser_collect_keys (const Traversal& trav, std::vector<TreeString>& ks) {
 }
 
 std::vector<TreeString> item_get_keys (
-    const Reference& item, const Location& loc
+    const Reference& item, LocationRef loc
 ) {
     std::vector<TreeString> ks;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
@@ -503,7 +503,7 @@ void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
 
 void item_set_keys (
     const Reference& item, const std::vector<Str>& ks,
-    const Location& loc
+    LocationRef loc
 ) {
     trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
         auto ks_copy = ks;
@@ -578,7 +578,7 @@ void in::ser_attr (
 }
 
 Reference item_maybe_attr (
-    const Reference& item, Str key, const Location& loc
+    const Reference& item, Str key, LocationRef loc
 ) {
     Reference r;
      // Is ACR_READ correct here?  Will we instead have to chain up the
@@ -590,7 +590,7 @@ Reference item_maybe_attr (
     });
     return r;
 }
-Reference item_attr (const Reference& item, Str key, const Location& loc) {
+Reference item_attr (const Reference& item, Str key, LocationRef loc) {
     if (Reference r = item_maybe_attr(item, key)) {
         return r;
     }
@@ -621,7 +621,7 @@ usize in::ser_get_length (const Traversal& trav) {
     else throw X<NoElems>(trav_location(trav));
 }
 
-usize item_get_length (const Reference& item, const Location& loc) {
+usize item_get_length (const Reference& item, LocationRef loc) {
     usize len;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         len = ser_get_length(trav);
@@ -670,7 +670,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
     else throw X<NoElems>(trav_location(trav));
 }
 
-void item_set_length (const Reference& item, usize len, const Location& loc) {
+void item_set_length (const Reference& item, usize len, LocationRef loc) {
     trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
         ser_set_length(trav, len);
     });
@@ -712,7 +712,7 @@ void in::ser_elem (
     }
 }
 Reference item_maybe_elem (
-    const Reference& item, usize index, const Location& loc
+    const Reference& item, usize index, LocationRef loc
 ) {
     Reference r;
      // TODO: We probably don't need to set up a whole traversal stack for this,
@@ -724,7 +724,7 @@ Reference item_maybe_elem (
     });
     return r;
 }
-Reference item_elem (const Reference& item, usize index, const Location& loc) {
+Reference item_elem (const Reference& item, usize index, LocationRef loc) {
     if (Reference r = item_maybe_elem(item, index)) {
         return r;
     }

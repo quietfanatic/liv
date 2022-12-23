@@ -19,7 +19,7 @@ namespace ayu {
  // Convert an item to a tree.  The optional location should match the
  // reference's location if provided.
 Tree item_to_tree (
-    const Reference&, const Location& loc = Location()
+    const Reference&, LocationRef loc = Location()
 );
 
  // Flags to change the behavior of item_from_tree.
@@ -48,31 +48,31 @@ enum : ItemFromTreeFlags {
  // fresh item, call item_from_tree on that, and then move it onto the original
  // item (this is what ayu::reload() on resources does).
 void item_from_tree (
-    const Reference&, TreeRef, const Location& loc = Location(),
+    const Reference&, TreeRef, LocationRef loc = Location(),
     ItemFromTreeFlags flags = 0
 );
 
 ///// MAIN OPERATION SHORTCUTS
 inline String item_to_string (
     const Reference& item, PrintOptions opts = 0,
-    const Location& loc = Location()
+    LocationRef loc = Location()
 ) {
     return tree_to_string(item_to_tree(item, loc), opts);
 }
 inline void item_to_file (
     const Reference& item, Str filename,
-    PrintOptions opts = 0, const Location& loc = Location()
+    PrintOptions opts = 0, LocationRef loc = Location()
 ) {
     return tree_to_file(item_to_tree(item, loc), filename, opts);
 }
  // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (
-    const Reference& item, Str src, const Location& loc = Location()
+    const Reference& item, Str src, LocationRef loc = Location()
 ) {
     return item_from_tree(item, tree_from_string(src), loc);
 }
 inline void item_from_file (
-    const Reference& item, Str filename, const Location& loc = Location()
+    const Reference& item, Str filename, LocationRef loc = Location()
 ) {
     return item_from_tree(item, tree_from_file(filename), loc);
 }
@@ -80,38 +80,38 @@ inline void item_from_file (
 ///// ACCESS OPERATIONS
  // Get a list of the keys in a object-like item.
 std::vector<TreeString> item_get_keys (
-    const Reference&, const Location& loc = Location()
+    const Reference&, LocationRef loc = Location()
 );
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
 void item_set_keys (
     const Reference&, const std::vector<Str>&,
-    const Location& loc = Location()
+    LocationRef loc = Location()
 );
  // Get an attribute of an object-like item by its key, or empty Reference if
  // the attribute doesn't exist.
 Reference item_maybe_attr (
-    const Reference&, Str, const Location& loc = Location());
+    const Reference&, Str, LocationRef loc = Location());
  // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or
  // null Reference.
-Reference item_attr (const Reference&, Str, const Location& loc = Location());
+Reference item_attr (const Reference&, Str, LocationRef loc = Location());
 
  // Get the length of an array-like item.
-usize item_get_length (const Reference&, const Location& loc = Location());
+usize item_get_length (const Reference&, LocationRef loc = Location());
  // Set the length of an array-like item.  This may clear some or all of the
  // contents of the item.
 void item_set_length (
-    const Reference&, usize, const Location& loc = Location()
+    const Reference&, usize, LocationRef loc = Location()
 );
  // Get an element of an array-like item by its index.  Returns an empty
  // Reference if te element doesn't exist.
 Reference item_maybe_elem (
-    const Reference&, usize, const Location& loc = Location()
+    const Reference&, usize, LocationRef loc = Location()
 );
  // Throws if the element doesn't exist.  Guaranteed not to return an empty or
  // null Reference.
 Reference item_elem (
-    const Reference&, usize, const Location& loc = Location()
+    const Reference&, usize, LocationRef loc = Location()
 );
 
 ///// MISC
