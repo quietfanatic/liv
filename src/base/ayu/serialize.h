@@ -48,7 +48,7 @@ enum : ItemFromTreeFlags {
  // fresh item, call item_from_tree on that, and then move it onto the original
  // item (this is what ayu::reload() on resources does).
 void item_from_tree (
-    const Reference&, const Tree&, const Location& loc = Location(),
+    const Reference&, TreeRef, const Location& loc = Location(),
     ItemFromTreeFlags flags = 0
 );
 

@@ -311,7 +311,7 @@ struct Parser {
         }
         shortcuts.emplace_back(std::move(name), std::move(value));
     }
-    const Tree& get_shortcut (const TreeString& name) {
+    TreeRef get_shortcut (TreeRef name) {
         for (auto& p : shortcuts) {
             if (p.first == name) return p.second;
         }

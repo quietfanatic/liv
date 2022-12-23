@@ -132,7 +132,12 @@ struct Tree {
     explicit operator uint64 () const;
     explicit operator float () const { return double(*this); }
     explicit operator double () const;
-    explicit operator Str () const;  // Is not NUL-terminated.
+     // Warning 1: The returned Str() is not NUL-terminated.
+     // Warning 2: If you get a Str() from a Tree or a TreeRef, that Str() will
+     // only be valid while that Tree or TreeRef exists (even if the original
+     // Tree exists).  If you need to access the string later, copy the whole
+     // Tree (it's cheap).
+    explicit operator Str () const;
     explicit operator String () const;  // Does a copy.
     explicit operator String16 () const;
     explicit operator const Array& () const;
@@ -150,6 +155,8 @@ struct Tree {
      // Throws if the tree is not an array or the index is out of bounds.
     const Tree& operator[] (usize index) const;
 };
+ // Make sure earlier CRef<Tree, 16> alias is correct
+static_assert(sizeof(Tree) == 16);
 
  // Tree used as a String.
 using StringTree = Tree;

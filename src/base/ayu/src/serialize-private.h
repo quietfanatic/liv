@@ -17,9 +17,11 @@ struct SwizzleOp {
     using FP = void(*)(Mu&, const Tree&);
     FP f;
     Reference item;
+     // This can't be TreeRef because the referenced Tree could go away after a
+     // nested from_tree is called with DELAY_SWIZZLE
     Tree tree;
     Location loc;
-    SwizzleOp (FP f, const Reference& r, const Tree& t) :
+    SwizzleOp (FP f, const Reference& r, TreeRef t) :
         f(f), item(r), tree(t), loc(trav_location(*current_traversal))
     { }
 };
@@ -48,11 +50,11 @@ struct IFTContext {
     void do_swizzles ();
     void do_inits ();
 };
-void ser_from_tree (const Traversal&, const Tree&);
+void ser_from_tree (const Traversal&, TreeRef);
 
 ///// ATTR OPERATIONS
  // Implement get_keys by adding keys to a vector of TreeStrings
-void ser_collect_key (std::vector<TreeString>&, Tree&&);
+void ser_collect_key (std::vector<TreeString>&, Tree);
 void ser_collect_keys (const Traversal&, std::vector<TreeString>&);
 
  // Implement set_keys by removing keys from a std::vector<Str>

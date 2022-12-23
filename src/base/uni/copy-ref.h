@@ -6,13 +6,15 @@
 //   - has a non-trivial move constructor
 //   - has no members marked as mutable
 //   - has no behavior that depends on its address staying constant
+//   - will not be modified by other code while you have a reference to it.
 //
 // Alternatively, CopyRef<T> can be though of as a way to copy objects while
 // dodging their copy constructors and destructors, e.g. for an object that
 // counts references this skips the reference increment/decrement.
 //
 // CRef<T> selects between CopyRef<T> and const T& depending on its size and the
-// current ABI.  However, it cannot be used on types that haven't been defined
+// current ABI.  If T has not been defined yet, its size cannot be determined,
+// so you have to pass the size as a second template parameter e.g. CRef<T, 16>
 //
 // Like all reference-like types, undefined behavior will result if you keep a
 // CopyRef<T> or CRef<T> around longer than the lifetime of the object it

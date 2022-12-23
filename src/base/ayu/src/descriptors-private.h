@@ -36,27 +36,27 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
         }
         else return Tree();
     }
-    bool matches_tree (const Tree& tree) const {
+    bool matches_tree (TreeRef tree) const {
         switch (form) {
             case VFNULL:
-                return tree.rep == REP_NULL;
+                return tree->rep == REP_NULL;
             case VFBOOL:
-                return tree.rep == REP_BOOL
-                    && tree.data.as_bool == *(const bool*)name();
+                return tree->rep == REP_BOOL
+                    && tree->data.as_bool == *(const bool*)name();
             case VFINT64:
-                switch (tree.rep) {
+                switch (tree->rep) {
                     case REP_INT64:
-                        return tree.data.as_int64 == *(const int64*)name();
+                        return tree->data.as_int64 == *(const int64*)name();
                     case REP_DOUBLE:
-                        return tree.data.as_double == *(const int64*)name();
+                        return tree->data.as_double == *(const int64*)name();
                     default: return false;
                 }
             case VFDOUBLE:
-                switch (tree.rep) {
+                switch (tree->rep) {
                     case REP_INT64:
-                        return tree.data.as_int64 == *(const double*)name();
+                        return tree->data.as_int64 == *(const double*)name();
                     case REP_DOUBLE: {
-                        double a = tree.data.as_double;
+                        double a = tree->data.as_double;
                         double b = *(const double*)name();
                         return a == b || (a != a && b != b);
                     }
@@ -65,21 +65,21 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
             case VFSTR: {
                 Str n = *(const Str*)name();
                 if (n.size() <= 8) {
-                    if (tree.rep != REP_SHORTSTRING) return false;
+                    if (tree->rep != REP_SHORTSTRING) return false;
                     for (usize i = 0; i < n.size(); i++) {
-                        if (tree.data.as_chars[i] != n[i]) return false;
+                        if (tree->data.as_chars[i] != n[i]) return false;
                     }
                     return true;
                 }
                 else {
-                    return tree.rep == REP_LONGSTRING
+                    return tree->rep == REP_LONGSTRING
                         && tree_longStr(tree) == *(const Str*)name();
                 }
             }
             default: never();
         }
     }
-    Mu* tree_to_value (const Tree& tree) const {
+    Mu* tree_to_value (TreeRef tree) const {
         if (matches_tree(tree)) return get_value();
         else return null;
     }

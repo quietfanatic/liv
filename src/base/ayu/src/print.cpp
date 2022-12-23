@@ -173,19 +173,19 @@ struct Printer {
     }
 
     [[nodiscard]]
-    char* print_subtree (char* p, const Tree& t, uint ind) {
-        switch (t.rep) {
+    char* print_subtree (char* p, TreeRef t, uint ind) {
+        switch (t->rep) {
             case REP_NULL: return pstr(p, "null"sv);
             case REP_BOOL: {
-                Str s = t.data.as_bool ? "true"sv : "false"sv;
+                Str s = t->data.as_bool ? "true"sv : "false"sv;
                 return pstr(p, s);
             }
             case REP_INT64: {
-                bool hex = !(opts & JSON) && t.flags & PREFER_HEX;
-                return print_int64(p, t.data.as_int64, hex);
+                bool hex = !(opts & JSON) && t->flags & PREFER_HEX;
+                return print_int64(p, t->data.as_int64, hex);
             }
             case REP_DOUBLE: {
-                double v = t.data.as_double;
+                double v = t->data.as_double;
                 if (v != v) {
                     return pstr(p, opts & JSON ? "null"sv : "+nan"sv);
                 }
@@ -202,19 +202,19 @@ struct Printer {
                     return pchar(p, '0');
                 }
                 else {
-                    bool hex = !(opts & JSON) && t.flags & PREFER_HEX;
+                    bool hex = !(opts & JSON) && t->flags & PREFER_HEX;
                     return print_double(p, v, hex);
                 }
             }
             case REP_SHORTSTRING: {
                 return print_string(
-                    p, tree_shortStr(t), t.flags & PREFER_EXPANDED
+                    p, tree_shortStr(t), t->flags & PREFER_EXPANDED
                 );
             }
             case REP_LONGSTRING:
                  // TODO: Pass all flags and expand based on length
                 return print_string(
-                    p, tree_longStr(t), t.flags & PREFER_EXPANDED
+                    p, tree_longStr(t), t->flags & PREFER_EXPANDED
                 );
             case REP_ARRAY: {
                 const Array& a = tree_Array(t);
@@ -225,8 +225,8 @@ struct Printer {
                  // Print "small" arrays compactly.
                  // TODO: Revise this?
                 bool expand = !(opts & PRETTY) ? false
-                            : t.flags & PREFER_EXPANDED ? true
-                            : t.flags & PREFER_COMPACT ? false
+                            : t->flags & PREFER_EXPANDED ? true
+                            : t->flags & PREFER_COMPACT ? false
                             : a.size() > 4;
 
                 bool show_indices = expand
@@ -263,8 +263,8 @@ struct Printer {
 
                  // TODO: Decide what to do if both PREFER flags are set
                 bool expand = !(opts & PRETTY) ? false
-                            : t.flags & PREFER_EXPANDED ? true
-                            : t.flags & PREFER_COMPACT ? false
+                            : t->flags & PREFER_EXPANDED ? true
+                            : t->flags & PREFER_COMPACT ? false
                             : o.size() > 1;
 
                 p = pchar(p, '{');
@@ -310,7 +310,7 @@ struct Printer {
         }
     }
     [[nodiscard]]
-    char* print_tree (char* p, const Tree& t) {
+    char* print_tree (char* p, TreeRef t) {
         p = print_subtree(p, t, 0);
         if (opts & PRETTY) p = pchar(p, '\n');
         return p;
@@ -328,7 +328,7 @@ static void validate_print_options (PrintOptions opts) {
 
 } using namespace in;
 
-String tree_to_string (const Tree& t, PrintOptions opts) {
+String tree_to_string (TreeRef t, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & PRETTY)) opts |= COMPACT;
     Printer printer (opts);
@@ -348,7 +348,7 @@ void string_to_file (Str content, Str filename) {
     }
 }
 
-void tree_to_file (const Tree& t, Str filename, PrintOptions opts) {
+void tree_to_file (TreeRef t, Str filename, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & COMPACT)) opts |= PRETTY;
     Printer printer (opts);

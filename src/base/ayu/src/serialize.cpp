@@ -114,14 +114,14 @@ Tree item_to_tree (const Reference& item, const Location& loc) {
 }
 
 ///// FROM_TREE
-void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
+void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
      // If description has a from_tree, just use that.
     if (auto from_tree = trav.desc->from_tree()) {
         from_tree->f(*trav.address, tree);
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
-    switch (tree.form) {
+    switch (tree->form) {
         case OBJECT: {
             if (trav.desc->accepts_object()) {
                 auto& o = tree_Object(tree);
@@ -186,12 +186,12 @@ void in::ser_from_tree (const Traversal& trav, const Tree& tree) {
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong
      // TODO: make this cold
-    if (tree.form == OBJECT &&
+    if (tree->form == OBJECT &&
         (trav.desc->values() || trav.desc->accepts_array())
     ) {
         throw X<InvalidForm>(trav_location(trav), tree);
     }
-    else if (tree.form == ARRAY &&
+    else if (tree->form == ARRAY &&
         (trav.desc->values() || trav.desc->accepts_object())
     ) {
         throw X<InvalidForm>(trav_location(trav), tree);
@@ -261,10 +261,11 @@ void in::IFTContext::do_inits () {
 IFTContext* IFTContext::current = null;
 
 void item_from_tree (
-    const Reference& item, const Tree& tree, const Location& loc,
+    const Reference& item, TreeRef tree, const Location& loc,
     ItemFromTreeFlags flags
 ) {
-    if (tree.form == UNDEFINED) {
+     // TODO: Replace with expect()
+    if (tree->form == UNDEFINED) {
         throw X<GenericError>("Undefined tree passed to item_from_tree");
     }
     if (flags & DELAY_SWIZZLE && IFTContext::current) {
@@ -286,7 +287,7 @@ void item_from_tree (
 }
 
 ///// ATTR OPERATIONS
-void in::ser_collect_key (std::vector<TreeString>& ks, Tree&& k) {
+void in::ser_collect_key (std::vector<TreeString>& ks, Tree k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
