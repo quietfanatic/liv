@@ -21,6 +21,8 @@ struct ExceptionBase : std::exception {
 
 template <class Err>
 struct X : ExceptionBase, Err {
+     // TODO: This gets the source location of the constructor, not the source
+     // of the throw, add another function raise<>()
     std::source_location loc = std::source_location::current();
     Pointer ptr () const noexcept final {
         return static_cast<const Err*>(this);

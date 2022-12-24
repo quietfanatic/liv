@@ -9,6 +9,21 @@
 #include <type_traits>
 #include <utility>
 
+ // If this leads to a conflict I'm sorry
+#define CE constexpr
+
+ // These need to be before CE
+#if __GNUC__
+#define ALWAYS_INLINE [[gnu::always_inline]] inline
+#define NOINLINE [[gnu::noinline]]
+#elif _MSC_VER
+#define ALWAYS_INLINE __forceinline inline
+#define NOINLINE __declspec(noinline)
+#else
+#define ALWAYS_INLINE inline
+#define NOINLINE
+#endif
+
 namespace uni {
 using namespace std::literals;
 
@@ -31,10 +46,10 @@ static_assert(std::is_same_v<usize, uint32> || std::is_same_v<usize, uint64>);
 static_assert(std::is_same_v<usize, std::size_t>);
 
 using Null = std::nullptr_t;
-constexpr Null null = nullptr;
+CE Null null = nullptr;
 
-constexpr float nan = std::numeric_limits<float>::quiet_NaN();
-constexpr float inf = std::numeric_limits<float>::infinity();
+CE float nan = std::numeric_limits<float>::quiet_NaN();
+CE float inf = std::numeric_limits<float>::infinity();
 
 using Str = std::string_view;
 using Str8 = std::u8string_view;
@@ -42,76 +57,19 @@ using Str16 = std::u16string_view;
 using Str32 = std::u32string_view;
 using WStr = std::wstring_view;
 
- // Abort if the condition isn't true.
-template <class T>
-static constexpr T&& require (
-    T&& v, std::source_location loc = std::source_location::current()
-);
+///// UTILITY TEMPLATES
 
- // Throw if the condition isn't true
+ // Intended for explicitly-named arguments
 template <class T>
-static constexpr T&& require_throw (
-    T&& v, std::source_location loc = std::source_location::current()
-);
-
- // Either aborts or triggers undefined behavior if the condition isn't true,
- // depending on NDEBUG.  Always evaluates the argument in either case.  If the
- // argument can't be optimized out, check NDEBUG yourself.
-template <class T>
-static constexpr T&& expect (
-    T&& v, std::source_location loc = std::source_location::current()
-);
-
-struct RequirementFailed : std::exception {
-    std::source_location loc;
-    RequirementFailed (
-        std::source_location loc = std::source_location::current()
-    ) : loc(loc) { }
-    mutable std::string mess_cache;
-    const char* what () const noexcept override;
+struct Named {
+    T v;
+    CE explicit Named () : v() { }
+    CE explicit Named (const T& v) : v(v) { }
+    CE operator T () const { return v; }
 };
 
-[[noreturn]]
-void throw_requirement_failed (std::source_location = std::source_location::current());
-[[noreturn]]
-void abort_requirement_failed (std::source_location = std::source_location::current());
-
-[[noreturn]]
-static inline void never (
-    [[maybe_unused]] std::source_location loc = std::source_location::current()
-) {
-#ifdef NDEBUG
-#if __GNUC__
-    __builtin_unreachable();
-#elif _MSC_VER
-    __assume(false);
-#else
-    *(int*)null = 0;
-#endif
-#else
-    abort_requirement_failed(loc);
-#endif
-}
-
+ // Intended to overload functions based on return value.
 template <class T>
-[[gnu::always_inline]]
-static constexpr T&& require (T&& v, std::source_location loc) {
-    if (!v) [[unlikely]] abort_requirement_failed(loc);
-    return std::forward<T>(v);
-}
-
-template <class T>
-[[gnu::always_inline]]
-static constexpr T&& require_throw (T&& v, std::source_location loc) {
-    if (!v) [[unlikely]] throw_requirement_failed(loc);
-    return std::forward<T>(v);
-}
-
-template <class T>
-[[gnu::always_inline]]
-static constexpr T&& expect (T&& v, std::source_location loc) {
-    if (!v) [[unlikely]] never(loc);
-    return std::forward<T>(v);
-}
+struct Ret { };
 
 } // namespace uni

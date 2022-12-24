@@ -2,12 +2,15 @@
 // string type
 #pragma once
 
+#include <type_traits>
+#include "common.h"
+
 namespace uni {
 
 namespace in {
     template <class T>
     static auto to_string (T&& s) {
-        if constexpr (
+        if CE (
             !std::is_same_v<std::decay_t<T>, char>
             && requires (T v) { std::to_string(v); }
         ) return std::to_string(std::forward<T>(s));
@@ -30,4 +33,5 @@ std::string cat (std::string&& s, Args... args) {
     ((r += in::to_string(std::forward<Args>(args))), ...);
     return r;
 }
-}
+
+} // namespace uni
