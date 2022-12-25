@@ -23,7 +23,7 @@ struct Image {
      // it.
     RGBA8* const pixels;
 
-    CE Image () : pixels(null) { }
+    constexpr Image () : pixels(null) { }
      // Create from already-allocated pixels.
     Image (IVec s, RGBA8*&& p) : size(s), pixels(p) { p = nullptr; }
      // Allocate new pixels array
@@ -34,7 +34,7 @@ struct Image {
     }
     ~Image ();
 
-    CE explicit operator bool () const { return pixels; }
+    constexpr explicit operator bool () const { return pixels; }
 
      // A rectangle containins all square pixels
     IRect bounds () const {
@@ -66,12 +66,12 @@ struct SubImage {
      // Can't check if the bounds or image size is changed later.
     void validate ();
 
-    CE SubImage () { }
+    constexpr SubImage () { }
     explicit SubImage (const Image* image, const IRect& bounds = GINF) :
         image(image), bounds(bounds)
     { validate(); }
 
-    CE explicit operator bool () { return image && *image; }
+    constexpr explicit operator bool () { return image && *image; }
 
     IVec size () const {
         if (bounds != GINF) return geo::size(bounds);

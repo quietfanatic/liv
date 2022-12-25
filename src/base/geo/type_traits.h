@@ -12,94 +12,94 @@ namespace geo {
 template <class T>
 struct TypeTraits {
     using Widened = T;
-    static CE bool integral = false;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = false;
+    static constexpr bool integral = false;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = false;
 };
 template <> struct TypeTraits<int8> {
     using Widened = int16;
     using MakeUnsigned = uint8;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = true;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = true;
 };
 template <> struct TypeTraits<uint8> {
     using Widened = uint16;
     using MakeSigned = int8;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = false;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = false;
 };
 template <> struct TypeTraits<int16> {
     using Widened = int32;
     using MakeUnis_signed = uint16;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = true;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = true;
 };
 template <> struct TypeTraits<uint16> {
     using Widened = uint32;
     using MakeSigned = int16;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = false;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = false;
 };
 template <> struct TypeTraits<int32> {
     using Widened = int64;
     using MakeUnis_signed = uint32;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = true;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = true;
 };
 template <> struct TypeTraits<uint32> {
     using Widened = uint64;
     using MakeSigned = int32;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = false;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = false;
 };
 template <> struct TypeTraits<int64> {
     using Widened = int64;
     using MakeUnis_signed = int64;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = true;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = true;
 };
 template <> struct TypeTraits<uint64> {
     using Widened = uint64;
     using MakeSigned = int64;
-    static CE bool integral = true;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = false;
+    static constexpr bool integral = true;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = false;
 };
 template <> struct TypeTraits<float> {
     using Widened = float;
     using SameSizeInt = int32;
-    static CE bool integral = false;
-    static CE bool floating = true;
-    static CE bool fractional = true;
-    static CE bool is_signed = true;
+    static constexpr bool integral = false;
+    static constexpr bool floating = true;
+    static constexpr bool fractional = true;
+    static constexpr bool is_signed = true;
      // A number of functions in this library assume standard floating point
      // layout.
-    static CE uint32 SIGN_BIT = 0x8000'0000;
-    static CE uint32 EXPONENT_MASK = 0x7f80'0000;
-    static CE float MINUS_INF = std::bit_cast<float>(0xff80'0000);
-    static CE float MINUS_HUGE = std::bit_cast<float>(0xff7f'ffff);
-    static CE float MINUS_TINY = std::bit_cast<float>(0x8000'0001);
-    static CE float MINUS_ZERO = std::bit_cast<float>(0x8000'0000);
-    static CE float PLUS_ZERO = std::bit_cast<float>(0x0000'0000);
-    static CE float PLUS_TINY = std::bit_cast<float>(0x0000'0001);
-    static CE float PLUS_HUGE = std::bit_cast<float>(0x7f7f'ffff);
-    static CE float PLUS_INF = std::bit_cast<float>(0x7f80'0000);
+    static constexpr uint32 SIGN_BIT = 0x8000'0000;
+    static constexpr uint32 EXPONENT_MASK = 0x7f80'0000;
+    static constexpr float MINUS_INF = std::bit_cast<float>(0xff80'0000);
+    static constexpr float MINUS_HUGE = std::bit_cast<float>(0xff7f'ffff);
+    static constexpr float MINUS_TINY = std::bit_cast<float>(0x8000'0001);
+    static constexpr float MINUS_ZERO = std::bit_cast<float>(0x8000'0000);
+    static constexpr float PLUS_ZERO = std::bit_cast<float>(0x0000'0000);
+    static constexpr float PLUS_TINY = std::bit_cast<float>(0x0000'0001);
+    static constexpr float PLUS_HUGE = std::bit_cast<float>(0x7f7f'ffff);
+    static constexpr float PLUS_INF = std::bit_cast<float>(0x7f80'0000);
     static_assert(std::numeric_limits<float>::infinity() == PLUS_INF);
     static_assert(std::numeric_limits<float>::max() == PLUS_HUGE);
     static_assert(std::numeric_limits<float>::lowest() == MINUS_HUGE);
@@ -108,20 +108,20 @@ template <> struct TypeTraits<float> {
 template <> struct TypeTraits<double> {
     using Widened = double;
     using SameSizeInt = int64;
-    static CE bool integral = false;
-    static CE bool floating = true;
-    static CE bool fractional = true;
-    static CE bool is_signed = true;
-    static CE uint64 SIGN_BIT = 0x8000'0000'0000'0000;
-    static CE uint64 EXPONENT_MASK = 0x7ff0'0000'0000'0000;
-    static CE double MINUS_INF = std::bit_cast<double>(0xfff0'0000'0000'0000);
-    static CE double MINUS_HUGE = std::bit_cast<double>(0xffef'ffff'ffff'ffff);
-    static CE double MINUS_TINY = std::bit_cast<double>(0x8000'0000'0000'0001);
-    static CE double MINUS_ZERO = std::bit_cast<double>(0x8000'0000'0000'0000);
-    static CE double PLUS_ZERO = std::bit_cast<double>(uint64(0x0000'0000'0000'0000));
-    static CE double PLUS_TINY = std::bit_cast<double>(uint64(0x0000'0000'0000'0001));
-    static CE double PLUS_HUGE = std::bit_cast<double>(0x7fef'ffff'ffff'ffff);
-    static CE double PLUS_INF = std::bit_cast<double>(0x7ff0'0000'0000'0000);
+    static constexpr bool integral = false;
+    static constexpr bool floating = true;
+    static constexpr bool fractional = true;
+    static constexpr bool is_signed = true;
+    static constexpr uint64 SIGN_BIT = 0x8000'0000'0000'0000;
+    static constexpr uint64 EXPONENT_MASK = 0x7ff0'0000'0000'0000;
+    static constexpr double MINUS_INF = std::bit_cast<double>(0xfff0'0000'0000'0000);
+    static constexpr double MINUS_HUGE = std::bit_cast<double>(0xffef'ffff'ffff'ffff);
+    static constexpr double MINUS_TINY = std::bit_cast<double>(0x8000'0000'0000'0001);
+    static constexpr double MINUS_ZERO = std::bit_cast<double>(0x8000'0000'0000'0000);
+    static constexpr double PLUS_ZERO = std::bit_cast<double>(uint64(0x0000'0000'0000'0000));
+    static constexpr double PLUS_TINY = std::bit_cast<double>(uint64(0x0000'0000'0000'0001));
+    static constexpr double PLUS_HUGE = std::bit_cast<double>(0x7fef'ffff'ffff'ffff);
+    static constexpr double PLUS_INF = std::bit_cast<double>(0x7ff0'0000'0000'0000);
     static_assert(std::numeric_limits<double>::infinity() == PLUS_INF);
     static_assert(std::numeric_limits<double>::max() == PLUS_HUGE);
     static_assert(std::numeric_limits<double>::lowest() == MINUS_HUGE);
@@ -146,7 +146,7 @@ template <class T>
 using Widen = TypeTraits<T>::Widened;
 
 template <class T>
-CE Widen<T> widen (const T& v) { return v; }
+constexpr Widen<T> widen (const T& v) { return v; }
 
 template <class T>
 using MakeUnsigned = TypeTraits<T>::MakeUnsigned;

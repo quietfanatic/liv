@@ -13,24 +13,24 @@ namespace geo {
 struct GNAN_t {
      // Only define coercion to one floating point type to avoid ambiguous
      // overloads.
-    CE operator float () const {
+    constexpr operator float () const {
         return std::numeric_limits<float>::quiet_NaN();
     }
      // Explicitly forbid coercion to non-floating-point types
     template <class T> requires (std::is_integral_v<T>)
-    CE operator T () const {
+    constexpr operator T () const {
         static_assert((T*)nullptr, "Cannot coerce GNAN to integer type");
     }
-    CE GNAN_t operator + () const { return *this; }
-    CE GNAN_t operator - () const { return *this; }
+    constexpr GNAN_t operator + () const { return *this; }
+    constexpr GNAN_t operator - () const { return *this; }
 };
-CE GNAN_t GNAN;
+constexpr GNAN_t GNAN;
 
  // Represents the minimum or maximum value of whatever it's cast to.
 struct GINF_t {
     bool minus = false;
     template <class T> requires (std::numeric_limits<T>::is_specialized)
-    CE operator T () const {
+    constexpr operator T () const {
         if constexpr (std::numeric_limits<T>::has_infinity) {
             return minus ? -std::numeric_limits<T>::infinity()
                          : std::numeric_limits<T>::infinity();
@@ -40,10 +40,10 @@ struct GINF_t {
                          : std::numeric_limits<T>::max();
         }
     }
-    CE GINF_t operator + () const { return *this; }
-    CE GINF_t operator - () const { return {!minus}; }
+    constexpr GINF_t operator + () const { return *this; }
+    constexpr GINF_t operator - () const { return {!minus}; }
 };
-CE GINF_t GINF;
+constexpr GINF_t GINF;
 
  // Comparisons directly with GINF to avoid ambiguous conversions.  There is no
  // equivalent comparison with GNAN because comparing with GNAN always returns
@@ -51,11 +51,11 @@ CE GINF_t GINF;
 
 #define GINF_COMPARISON(op) \
 template <class T> \
-CE bool operator op (GINF_t a, const T& b) { \
+constexpr bool operator op (GINF_t a, const T& b) { \
     return T(a) op b; \
 } \
 template <class T> \
-CE bool operator op (const T& a, GINF_t b) { \
+constexpr bool operator op (const T& a, GINF_t b) { \
     return a op T(b); \
 }
 GINF_COMPARISON(==)

@@ -37,12 +37,12 @@ template <class T, usize cols, usize rows>
 struct GMat {
     GVec<GVec<T, rows>, cols> e;
 
-    CE GMat () { }
+    constexpr GMat () { }
 
      // Construct from individual elements
     template <class... Args>
         requires (sizeof...(Args) == cols * rows)
-    CE GMat (Args... args) {
+    constexpr GMat (Args... args) {
          // Hope this is optimizable
         T es [cols * rows] {T(args)...};
          // You're not allowed to make a matrix with some but not all elements
@@ -59,7 +59,7 @@ struct GMat {
      // Construct from column vectors
     template <class... Args>
         requires (sizeof...(Args) == cols)
-    CE GMat (Args... args) : e{GVec<T, rows>{args}...} {
+    constexpr GMat (Args... args) : e{GVec<T, rows>{args}...} {
 #ifndef NDEBUG
         expect(valid(*this));
 #endif
@@ -69,7 +69,7 @@ struct GMat {
      // Mat(diag) * p == diag * p
     template <usize n>
         requires (n == cols && n == rows)
-    CE explicit GMat (GVec<T, n> diag) {
+    constexpr explicit GMat (GVec<T, n> diag) {
          // TODO: Check for definedness
         for (usize i = 0; i < n; i++) {
             e[i][i] = diag[i];
@@ -80,7 +80,7 @@ struct GMat {
      // Mat(scale) * p == scale * p
     template <class = void>
         requires (cols == rows)
-    CE explicit GMat (T scale) {
+    constexpr explicit GMat (T scale) {
          // TODO: Check for definedness
         for (usize i = 0; i < cols; i++) {
             e[i][i] = scale;
@@ -88,25 +88,25 @@ struct GMat {
     }
 
      // Construct the undefined matrix
-    CE GMat (GNAN_t nan) {
+    constexpr GMat (GNAN_t nan) {
         for (usize c = 0; c < cols; c++) {
             e[c] = nan;
         }
     }
 
      // Get a column as a vector
-    CE GVec<float, rows>& operator [] (usize c) {
+    constexpr GVec<float, rows>& operator [] (usize c) {
         expect(c < cols);
         return e[c];
     }
      // Same but const
-    CE const GVec<float, rows>& operator [] (usize c) const {
+    constexpr const GVec<float, rows>& operator [] (usize c) const {
         expect(c < cols);
         return e[c];
     }
      // Don't use this to check for definedness.  This only checks if each
      // element is exactly zero.
-    CE explicit operator bool () const {
+    constexpr explicit operator bool () const {
         for (usize c = 0; c < cols; c++) {
             if (!e[c]) return false;
         }
@@ -118,17 +118,17 @@ struct GMat {
 template <class T, usize cols, usize rows>
 struct TypeTraits<GMat<T, cols, rows>> {
     using Widened = GMat<Widen<T>, cols, rows>;
-    static CE bool integral = false;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = TypeTraits<T>::is_signed;
+    static constexpr bool integral = false;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = TypeTraits<T>::is_signed;
 };
 
 ///// PROPERTIES
 
 template <class T, usize cols, usize rows>
-CE bool valid (const GMat<T, cols, rows>& a) {
-    if CE (requires (T v) { defined(v); } && cols * rows > 0) {
+constexpr bool valid (const GMat<T, cols, rows>& a) {
+    if constexpr (requires (T v) { defined(v); } && cols * rows > 0) {
         bool is_defined = defined(a[0][0]);
         for (usize c = 0; c < cols; c++)
         for (usize r = 0; r < rows; r++) {
@@ -141,18 +141,18 @@ CE bool valid (const GMat<T, cols, rows>& a) {
 }
 
 template <class T, usize cols, usize rows>
-CE bool defined (const GMat<T, cols, rows>& a) {
+constexpr bool defined (const GMat<T, cols, rows>& a) {
 #ifndef NDEBUG
     expect(valid(a));
 #endif
-    if CE (cols * rows > 0) {
+    if constexpr (cols * rows > 0) {
         return defined(a[0][0]);
     }
     else return true;
 }
 
 template <class T, usize n>
-CE bool is_diagonal (const GMat<T, n, n>& a) {
+constexpr bool is_diagonal (const GMat<T, n, n>& a) {
     for (usize c = 0; c < n; c++)
     for (usize r = 0; r < n; r++) {
         if (r != c && a[c][r]) return false;
@@ -160,7 +160,7 @@ CE bool is_diagonal (const GMat<T, n, n>& a) {
     return true;
 }
 template <class T, usize n>
-CE GVec<T, n> diagonal (const GMat<T, n, n>& a) {
+constexpr GVec<T, n> diagonal (const GMat<T, n, n>& a) {
     GVec<T, n> ret;
     for (usize i = 0; i < n; i++) {
         ret[i] = a[i][i];
@@ -174,7 +174,7 @@ CE GVec<T, n> diagonal (const GMat<T, n, n>& a) {
 
 #define GMAT_UNARY_OP(op) \
 template <class T, usize cols, usize rows> \
-CE auto operator op (const GMat<T, cols, rows>& a) { \
+constexpr auto operator op (const GMat<T, cols, rows>& a) { \
     GMat<decltype(op T()), cols, rows> ret; \
     for (usize c = 0; c < cols; c++) \
     for (usize r = 0; r < rows; r++) { \
@@ -187,7 +187,7 @@ GMAT_UNARY_OP(-)
 #undef GMAT_UNARY_OP
 
 template <class T, usize cols, usize rows>
-CE GMat<T, cols, rows> transpose (const GMat<T, rows, cols>& a) {
+constexpr GMat<T, cols, rows> transpose (const GMat<T, rows, cols>& a) {
     GMat<T, cols, rows> ret;
     for (usize c = 0; c < cols; c++)
     for (usize r = 0; r < rows; r++) {
@@ -201,7 +201,7 @@ CE GMat<T, cols, rows> transpose (const GMat<T, rows, cols>& a) {
 ///// RELATIONSHIPS
 
 template <class A, class B, usize cols, usize rows>
-CE bool operator == (
+constexpr bool operator == (
     const GMat<A, cols, rows>& a, const GMat<B, cols, rows>& b
 ) {
     for (usize c = 0; c < cols; c++) {
@@ -210,7 +210,7 @@ CE bool operator == (
     return true;
 }
 template <class A, class B, usize cols, usize rows>
-CE bool operator != (
+constexpr bool operator != (
     const GMat<A, cols, rows>& a, const GMat<B, cols, rows>& b
 ) {
     return !(a == b);
@@ -219,7 +219,7 @@ CE bool operator != (
 ///// COMBINERS
  // Matrix addition
 template <class A, class B, usize cols, usize rows>
-CE auto operator + (
+constexpr auto operator + (
     const GMat<A, cols, rows>& a, const GMat<B, cols, rows>& b
 ) {
     GMat<decltype(A() + B()), cols, rows> ret;
@@ -231,7 +231,7 @@ CE auto operator + (
 }
 
 template <class A, class B, usize cols, usize rows>
-CE auto operator - (
+constexpr auto operator - (
     const GMat<A, cols, rows>& a, const GMat<B, cols, rows>& b
 ) {
     GMat<decltype(A() - B()), cols, rows> ret;
@@ -244,7 +244,7 @@ CE auto operator - (
 
  // Matrix multiplication
 template <class A, class B, usize cols, usize mid, usize rows>
-CE auto operator * (
+constexpr auto operator * (
     const GMat<A, mid, rows>& a, const GMat<B, cols, mid>& b
 ) {
     GMat<decltype(A() * B()), cols, rows> ret;
@@ -258,7 +258,7 @@ CE auto operator * (
 
  // Scale by a scalar
 template <class A, class B, usize cols, usize rows>
-CE auto operator * (const GMat<A, cols, rows>& a, B b) {
+constexpr auto operator * (const GMat<A, cols, rows>& a, B b) {
     GMat<decltype(A() * B()), cols, rows> ret;
     for (usize c = 0; c < cols; c++)
     for (usize r = 0; r < rows; r++) {
@@ -268,7 +268,7 @@ CE auto operator * (const GMat<A, cols, rows>& a, B b) {
 }
 
 template <class A, class B, usize cols, usize rows>
-CE auto operator * (A a, const GMat<B, cols, rows>& b) {
+constexpr auto operator * (A a, const GMat<B, cols, rows>& b) {
     GMat<decltype(A() * B()), cols, rows> ret;
     for (usize c = 0; c < cols; c++)
     for (usize r = 0; r < rows; r++) {
@@ -278,7 +278,7 @@ CE auto operator * (A a, const GMat<B, cols, rows>& b) {
 }
 
 template <class A, class B, usize cols, usize rows>
-CE auto operator / (const GMat<A, cols, rows>& a, B b) {
+constexpr auto operator / (const GMat<A, cols, rows>& a, B b) {
     GMat<decltype(A() / B()), cols, rows> ret;
     for (usize c = 0; c < cols; c++)
     for (usize r = 0; r < rows; r++) {
@@ -289,7 +289,7 @@ CE auto operator / (const GMat<A, cols, rows>& a, B b) {
 
  // Multiply vector by matrix to get vector
 template <class A, class B, usize cols, usize rows>
-CE auto operator * (const GMat<A, cols, rows>& a, const GVec<B, rows>& b) {
+constexpr auto operator * (const GMat<A, cols, rows>& a, const GVec<B, rows>& b) {
     GVec<decltype(A() * B()), cols> ret;
     for (usize c = 0; c < cols; c++)
     for (usize r = 0; r < rows; r++) {
@@ -301,7 +301,7 @@ CE auto operator * (const GMat<A, cols, rows>& a, const GVec<B, rows>& b) {
  // Assignment operators.  Not bothering to write these in in-place style.
 #define GMAT_ASSIGN_OP(opeq, op) \
 template <class A, class B, usize cols, usize rows> \
-CE GMat<A, cols, rows> operator opeq (GMat<A, cols, rows>& a, const B& b) { \
+constexpr GMat<A, cols, rows> operator opeq (GMat<A, cols, rows>& a, const B& b) { \
     return (a = a op b); \
 }
 GMAT_ASSIGN_OP(+=, +)
@@ -311,7 +311,7 @@ GMAT_ASSIGN_OP(/=, /)
 #undef GMAT_ASSIGN_OP
 
 template <class A, class B, usize cols, usize rows>
-CE GMat<A, cols+1, rows> add_column (
+constexpr GMat<A, cols+1, rows> add_column (
     const GMat<A, cols, rows>& m,
     const GVec<B, rows>& v
 ) {
@@ -327,7 +327,7 @@ CE GMat<A, cols+1, rows> add_column (
 }
 
 template <class A, class B, usize cols, usize rows>
-CE GMat<A, cols, rows+1> add_row (
+constexpr GMat<A, cols, rows+1> add_row (
     const GMat<A, cols, rows>& m,
     const GVec<B, cols>& v
 ) {
@@ -349,38 +349,38 @@ AYU_DESCRIBE_TEMPLATE(
     desc::name([]{
         using namespace std::literals;
         using namespace uni;
-        if CE (std::is_same_v<T, float>) {
-            if CE (cols == 2) {
-                if CE (rows == 2) return "geo::Mat"sv;
-                else if CE (rows == 3) return "geo::Mat2x3"sv;
-                else if CE (rows == 4) return "geo::Mat2x4"sv;
+        if constexpr (std::is_same_v<T, float>) {
+            if constexpr (cols == 2) {
+                if constexpr (rows == 2) return "geo::Mat"sv;
+                else if constexpr (rows == 3) return "geo::Mat2x3"sv;
+                else if constexpr (rows == 4) return "geo::Mat2x4"sv;
             }
-            else if CE (cols == 3) {
-                if CE (rows == 2) return "geo::Mat3x2"sv;
-                else if CE (rows == 3) return "geo::Mat3"sv;
-                else if CE (rows == 4) return "geo::Mat3x4"sv;
+            else if constexpr (cols == 3) {
+                if constexpr (rows == 2) return "geo::Mat3x2"sv;
+                else if constexpr (rows == 3) return "geo::Mat3"sv;
+                else if constexpr (rows == 4) return "geo::Mat3x4"sv;
             }
-            else if CE (cols == 4) {
-                if CE (rows == 2) return "geo::Mat4x2"sv;
-                else if CE (rows == 3) return "geo::Mat4x3"sv;
-                else if CE (rows == 4) return "geo::Mat4"sv;
+            else if constexpr (cols == 4) {
+                if constexpr (rows == 2) return "geo::Mat4x2"sv;
+                else if constexpr (rows == 3) return "geo::Mat4x3"sv;
+                else if constexpr (rows == 4) return "geo::Mat4"sv;
             }
         }
-        else if CE (std::is_same_v<T, double>) {
-            if CE (cols == 2) {
-                if CE (rows == 2) return "geo::DMat"sv;
-                else if CE (rows == 3) return "geo::DMat2x3"sv;
-                else if CE (rows == 4) return "geo::DMat2x4"sv;
+        else if constexpr (std::is_same_v<T, double>) {
+            if constexpr (cols == 2) {
+                if constexpr (rows == 2) return "geo::DMat"sv;
+                else if constexpr (rows == 3) return "geo::DMat2x3"sv;
+                else if constexpr (rows == 4) return "geo::DMat2x4"sv;
             }
-            else if CE (cols == 3) {
-                if CE (rows == 2) return "geo::DMat3x2"sv;
-                else if CE (rows == 3) return "geo::DMat3"sv;
-                else if CE (rows == 4) return "geo::DMat3x4"sv;
+            else if constexpr (cols == 3) {
+                if constexpr (rows == 2) return "geo::DMat3x2"sv;
+                else if constexpr (rows == 3) return "geo::DMat3"sv;
+                else if constexpr (rows == 4) return "geo::DMat3x4"sv;
             }
-            else if CE (cols == 4) {
-                if CE (rows == 2) return "geo::DMat4x2"sv;
-                else if CE (rows == 3) return "geo::DMat4x3"sv;
-                else if CE (rows == 4) return "geo::DMat4"sv;
+            else if constexpr (cols == 4) {
+                if constexpr (rows == 2) return "geo::DMat4x2"sv;
+                else if constexpr (rows == 3) return "geo::DMat4x3"sv;
+                else if constexpr (rows == 4) return "geo::DMat4"sv;
             }
         }
         static std::string r = "geo::GMat<" + ayu::Type::CppType<T>().name() +
@@ -390,7 +390,7 @@ AYU_DESCRIBE_TEMPLATE(
     }),
     []{
         using namespace geo;
-        if CE (cols == 2 && rows == 2) {
+        if constexpr (cols == 2 && rows == 2) {
              // Have some extra names for 2x2 matrices
             return desc::values(
                 desc::value(double(GNAN), GMat<T, 2, 2>(GNAN)),

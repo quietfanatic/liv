@@ -45,10 +45,6 @@ using WStr = std::wstring_view;
 
 ///// MACROS
 
- // DEPRECATED because although CE is much cleaner, constexpr is easier on my
- // right pinky finger.
-#define CE constexpr
-
 #ifndef HAS_BUILTIN
     #ifdef __has_builtin
         #define HAS_BUILTIN(f) __has_builtin(f)

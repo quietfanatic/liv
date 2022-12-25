@@ -20,16 +20,16 @@ template <class T>
 struct GRange {
     T l;
     T r;
-    CE GRange () : l(), r() { }
-    CE GRange (GNAN_t n) : l(n), r(n) { }
-    CE GRange (GINF_t i) : l(-i), r(i) { }
+    constexpr GRange () : l(), r() { }
+    constexpr GRange (GNAN_t n) : l(n), r(n) { }
+    constexpr GRange (GINF_t i) : l(-i), r(i) { }
     template <class A, class B>
-    CE GRange (A l, B r) : l(l), r(r) {
+    constexpr GRange (A l, B r) : l(l), r(r) {
         expect(valid(*this));
     }
      // Why am I even doing this, this is so dumb
     template <class Ix>
-    CE auto operator [] (Ix i) const {
+    constexpr auto operator [] (Ix i) const {
         expect(i < r - l);
         return l[i];
     }
@@ -40,27 +40,27 @@ struct GRange {
 template <class T>
 struct TypeTraits<GRange<T>> {
     using Widened = GRange<Widen<T>>;
-    static CE bool integral = false;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = TypeTraits<T>::is_signed;
+    static constexpr bool integral = false;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = TypeTraits<T>::is_signed;
 };
 
 ///// PROPERTIES
 
  // If T is a pointer, supports range-for-loops.  Yay!
 template <class T>
-CE const T& begin (const GRange<T>& a) { return a.l; }
+constexpr const T& begin (const GRange<T>& a) { return a.l; }
 template <class T>
-CE const T& end (const GRange<T>& a) { return a.r; }
+constexpr const T& end (const GRange<T>& a) { return a.r; }
 template <class T>
-CE auto size (const GRange<T>& a) { return a.r - a.l; }
+constexpr auto size (const GRange<T>& a) { return a.r - a.l; }
 
 template <class T>
-CE auto center (const GRange<T>& a) { return (a.l + a.r) / 2; }
+constexpr auto center (const GRange<T>& a) { return (a.l + a.r) / 2; }
 
 template <class T>
-CE bool valid (const GRange<T>& a) {
+constexpr bool valid (const GRange<T>& a) {
     if constexpr (requires (T v) { defined(v); }) {
         return defined(a.l) == defined(a.r);
     }
@@ -68,23 +68,23 @@ CE bool valid (const GRange<T>& a) {
 }
 
 template <class T>
-CE bool defined (const GRange<T>& a) {
+constexpr bool defined (const GRange<T>& a) {
     expect(valid(a));
     return defined(a.l);
 }
 
 template <class T>
-CE bool finite (const GRange<T>& a) {
+constexpr bool finite (const GRange<T>& a) {
     return finite(a.l) && finite(a.r);
 }
 
 template <class T>
-CE bool empty (const GRange<T>& a) {
+constexpr bool empty (const GRange<T>& a) {
     return a.l == a.r;
 }
 
 template <class T>
-CE bool proper (const GRange<T>& a) {
+constexpr bool proper (const GRange<T>& a) {
     return a.l <= a.r;
 }
 
@@ -92,39 +92,39 @@ CE bool proper (const GRange<T>& a) {
 
  // Change inclusivity
 template <class T>
-CE GRange<T> exclude_l (const GRange<T>& a) {
+constexpr GRange<T> exclude_l (const GRange<T>& a) {
     return {next_quantum(a.l), a.r};
 }
 template <class T>
-CE GRange<T> include_r (const GRange<T>& a) {
+constexpr GRange<T> include_r (const GRange<T>& a) {
     return {a.l, next_quantum(a.r)};
 }
 
 template <class T>
-CE GRange<T> invert (const GRange<T>& a) {
+constexpr GRange<T> invert (const GRange<T>& a) {
     return {a.r, a.l};
 }
 
 template <class T>
-CE GRange<T> properize (const GRange<T>& a) {
+constexpr GRange<T> properize (const GRange<T>& a) {
     return {min(a.l, a.r), max(a.r, a.l)};
 }
 
 ///// RELATIONSHIPS
 
 template <class T>
-CE bool operator== (const GRange<T>& a, const GRange<T>& b) {
+constexpr bool operator== (const GRange<T>& a, const GRange<T>& b) {
     return a.l == b.l && a.r == b.r;
 }
 
 template <class T>
-CE bool operator!= (const GRange<T>& a, const GRange<T>& b) {
+constexpr bool operator!= (const GRange<T>& a, const GRange<T>& b) {
     return a.l != b.l || a.r != b.r;
 }
 
 #define GRANGE_UNARY_OP(op) \
 template <class T> \
-CE auto operator op (const GRange<T>& a) { \
+constexpr auto operator op (const GRange<T>& a) { \
     return GRange<decltype(op a.l)>{op a.l, op a.r}; \
 }
 GRANGE_UNARY_OP(+)
@@ -138,25 +138,25 @@ GRANGE_UNARY_OP(~)
  // Returns true if the ranges are strictly overlapping (not just touching).
  // overlaps(a, b) == !empty(a & b)
 template <class T>
-CE bool overlaps (const GRange<T>& a, const GRange<T>& b) {
+constexpr bool overlaps (const GRange<T>& a, const GRange<T>& b) {
     return a.l < b.r && a.r < b.l;
 }
  // Returns true if overlapping or touching.
  // touches(a, b) == proper(a & b)
 template <class T>
-CE bool touches (const GRange<T>& a, const GRange<T>& b) {
+constexpr bool touches (const GRange<T>& a, const GRange<T>& b) {
     return a.l <= b.r && a.r <= b.l;
 }
 
  // b is fully contained in a.
  // contains(a, b) == ((a | b) == a) == ((a & b) == b)
 template <class T>
-CE bool contains (const GRange<T>& a, const GRange<T>& b) {
+constexpr bool contains (const GRange<T>& a, const GRange<T>& b) {
     return a.l <= b.l && b.r <= a.r;
 }
  // contains(a, b) == (clamp(b, a) == b)
 template <class T>
-CE bool contains (const GRange<T>& a, const T& b) {
+constexpr bool contains (const GRange<T>& a, const T& b) {
     return a.l <= b && b < a.r;
 }
 
@@ -164,11 +164,11 @@ CE bool contains (const GRange<T>& a, const T& b) {
 
 #define GRANGE_BINARY_OP(op) \
 template <class TA, class TB> \
-CE auto operator op (const GRange<TA>& a, const TB& b) { \
+constexpr auto operator op (const GRange<TA>& a, const TB& b) { \
     return GRange<decltype(a.l op b)>{a.l op b, a.r op b}; \
 } \
 template <class TA, class TB> \
-CE auto operator op (const TA& a, const GRange<TB>& b) { \
+constexpr auto operator op (const TA& a, const GRange<TB>& b) { \
     return GRange<decltype(a op b.l)>{a op b.l, a op b.r}; \
 }
 GRANGE_BINARY_OP(+)
@@ -181,7 +181,7 @@ GRANGE_BINARY_OP(/)
 
 #define GRANGE_ASSIGN_OP(op) \
 template <class TA, class TB> \
-CE GRange<TA> operator op (GRange<TA>& a, const TB& b) { \
+constexpr GRange<TA> operator op (GRange<TA>& a, const TB& b) { \
     a.l op b; \
     a.r op b; \
     return a; \
@@ -194,21 +194,21 @@ GRANGE_ASSIGN_OP(/=)
 
  // Range union, like for Rects but 1-dimensional
 template <class T>
-CE GRange<T> operator | (const GRange<T>& a, const GRange<T>& b) {
+constexpr GRange<T> operator | (const GRange<T>& a, const GRange<T>& b) {
     return {min(a.l, b.l), max(a.r, b.r)};
 }
 template <class T>
-CE GRange<T>& operator |= (GRange<T>& a, const GRange<T>& b) {
+constexpr GRange<T>& operator |= (GRange<T>& a, const GRange<T>& b) {
     return a = a | b;
 }
  // Range intersection.  If a and b aren't intersecting, the result is not
  // proper.
 template <class T>
-CE GRange<T> operator & (const GRange<T>& a, const GRange<T>& b) {
+constexpr GRange<T> operator & (const GRange<T>& a, const GRange<T>& b) {
     return {max(a.l, b.l), min(a.r, b.r)};
 }
 template <class T>
-CE GRange<T>& operator &= (GRange<T>& a, const GRange<T>& b) {
+constexpr GRange<T>& operator &= (GRange<T>& a, const GRange<T>& b) {
     return a = a & b;
 }
 
@@ -216,13 +216,13 @@ CE GRange<T>& operator &= (GRange<T>& a, const GRange<T>& b) {
  // that because the right side of the range is exclusive, this will never
  // return a.r.  To allow returning a.r, use clamp(p, r.include_r())
 template <class TA, class TB>
-CE TA clamp (const TA& p, const GRange<TB>& r) {
+constexpr TA clamp (const TA& p, const GRange<TB>& r) {
     return p < r.l ? TA(r.l) : p >= r.r ? TB(prev_quantum(r.r)) : p;
 }
 
  // Lerp between two ranges
 template <class A, class B, Fractional T>
-CE auto lerp (
+constexpr auto lerp (
     const GRange<A>& a, const GRange<B>& b, const T& t
 ) {
     return GRange<decltype(lerp(a.l, b.l, t))>(
@@ -234,7 +234,7 @@ CE auto lerp (
 
  // Lerp within one range
 template <class A, Fractional T>
-CE A lerp (const GRange<A>& a, T t) {
+constexpr A lerp (const GRange<A>& a, T t) {
     return lerp(a.l, a.r, t);
 }
 
@@ -248,11 +248,11 @@ AYU_DESCRIBE_TEMPLATE(
     desc::name([]{
         using namespace std::literals;
         using namespace uni;
-        if CE (std::is_same_v<T, float>) return "geo::Range"sv;
-        else if CE (std::is_same_v<T, double>) return "geo::DRange"sv;
-        else if CE (std::is_same_v<T, int32>) return "geo::IRange"sv;
-        else if CE (std::is_same_v<T, int64>) return "geo::LRange"sv;
-        else if CE (std::is_same_v<T, bool>) return "geo::BRange"sv;
+        if constexpr (std::is_same_v<T, float>) return "geo::Range"sv;
+        else if constexpr (std::is_same_v<T, double>) return "geo::DRange"sv;
+        else if constexpr (std::is_same_v<T, int32>) return "geo::IRange"sv;
+        else if constexpr (std::is_same_v<T, int64>) return "geo::LRange"sv;
+        else if constexpr (std::is_same_v<T, bool>) return "geo::BRange"sv;
         else {
             static std::string r = "geo::GRange<" + std::string(
                 ayu::Type::CppType<T>().name()

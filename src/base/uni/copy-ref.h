@@ -87,11 +87,11 @@ struct CopyRef {
      // Because C++ doesn't have Perl's ref->[i] and ref->(foo) syntax, and
      // nobody wants to write (*ref)[i]
     template <class Ix>
-    ALWAYS_INLINE CE auto operator [] (Ix i) const {
+    ALWAYS_INLINE auto operator [] (Ix i) const {
         return reinterpret_cast<const T&>(*this)[i];
     }
     template <class... Args>
-    ALWAYS_INLINE CE auto operator () (Args&&... args) const {
+    ALWAYS_INLINE auto operator () (Args&&... args) const {
         return reinterpret_cast<const T&>(*this)(std::forward<Args>(args)...);
     }
   private:

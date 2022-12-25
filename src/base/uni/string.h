@@ -11,7 +11,7 @@ namespace uni {
 namespace in {
     template <class T>
     static auto to_string (T&& s) {
-        if CE (
+        if constexpr (
             !std::is_same_v<std::decay_t<T>, char>
             && requires (T v) { std::to_string(v); }
         ) return std::to_string(std::forward<T>(s));

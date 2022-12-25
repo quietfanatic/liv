@@ -28,7 +28,7 @@ struct Command {
     Function<std::vector<ayu::Type>()>* arg_types;
 
     template <class... Args>
-    CE Command (
+    constexpr Command (
         Function<void(Args...)> f,
         Str name, Str desc, usize req = sizeof...(Args)
     ) :
@@ -64,7 +64,7 @@ struct Statement {
     const Command* command = null;
     ayu::Dynamic args;  // Type must be command->args_type (std::tuple)
 
-    CE Statement() { }
+    constexpr Statement() { }
     Statement (Command* c, ayu::Dynamic&& a);
     template <class... Args>
     Statement (Command* c, Args... args) :

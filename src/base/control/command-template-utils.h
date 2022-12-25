@@ -21,7 +21,7 @@ struct CommandWrapper {
         real_f(std::get<is>(*real_args)...);
     }
     template <usize... is>
-    static CE decltype(&unwrap<is...>) get_unwrap (std::index_sequence<is...>) {
+    static constexpr decltype(&unwrap<is...>) get_unwrap (std::index_sequence<is...>) {
         return &unwrap<is...>;
     }
 };

@@ -117,11 +117,11 @@ struct GVecStorage<T, 4> {
 template <class T, usize n>
 struct GVec : GVecStorage<T, n> {
      // Default constructor
-    CE GVec () : GVecStorage<T, n>{.e = {}} { }
+    constexpr GVec () : GVecStorage<T, n>{.e = {}} { }
 
      // Construct from individual elements
     template <class... Args> requires(sizeof...(Args) == n)
-    CE GVec (Args... args) :
+    constexpr GVec (Args... args) :
         GVecStorage<T, n>{.e = {T(args)...}}
     {
 #ifndef NDEBUG
@@ -130,7 +130,7 @@ struct GVec : GVecStorage<T, n> {
     }
 
      // Construct from a scalar (will be copied to all elements)
-    CE explicit GVec (const T& v) {
+    constexpr explicit GVec (const T& v) {
         for (usize i = 0; i < n; i++) {
             this->e[i] = v;
         }
@@ -139,27 +139,27 @@ struct GVec : GVecStorage<T, n> {
     template <class = void> requires (
         requires (GNAN_t nan) { T(nan); }
     )
-    CE GVec (GNAN_t nan) : GVec(T(nan)) { }
+    constexpr GVec (GNAN_t nan) : GVec(T(nan)) { }
 
      // Implicitly coerce from another vector
     template <class T2>
-    CE GVec (const GVec<T2, n>& o) {
+    constexpr GVec (const GVec<T2, n>& o) {
         for (usize i = 0; i < n; i++) {
             this->e[i] = o[i];
         }
     }
 
      // Get individual element
-    CE T& operator [] (usize i) {
+    constexpr T& operator [] (usize i) {
         expect(i < n);
         return this->e[i];
     }
-    CE const T& operator [] (usize i) const {
+    constexpr const T& operator [] (usize i) const {
         expect(i < n);
         return this->e[i];
     }
      // Check for the zero vector.  Does not check definedness.
-    CE explicit operator bool () const {
+    constexpr explicit operator bool () const {
         for (usize i = 0; i < n; i++) {
             if (!this->e[i]) return false;
         }
@@ -170,10 +170,10 @@ struct GVec : GVecStorage<T, n> {
 template <class T, usize n>
 struct TypeTraits<GVec<T, n>> {
     using Widened = GVec<Widen<T>, n>;
-    static CE bool integral = false;
-    static CE bool floating = false;
-    static CE bool fractional = false;
-    static CE bool is_signed = TypeTraits<T>::is_signed;
+    static constexpr bool integral = false;
+    static constexpr bool floating = false;
+    static constexpr bool fractional = false;
+    static constexpr bool is_signed = TypeTraits<T>::is_signed;
 };
 
 template <usize i, class T, usize n> requires (i < n)
@@ -183,8 +183,8 @@ auto get (const GVec<T, n>& a) { return a[i]; }
 
  // A Vec is valid is all elements are defined or no elements are defined.
 template <class T, usize n>
-CE bool valid (const GVec<T, n>& a) {
-    if CE (n > 0 && requires (T v) { defined(v); }) {
+constexpr bool valid (const GVec<T, n>& a) {
+    if constexpr (n > 0 && requires (T v) { defined(v); }) {
         bool is_defined = defined(a[0]);
         for (usize i = 1; i < n; i++) {
             if (defined(a[0]) != is_defined) return false;
@@ -195,7 +195,7 @@ CE bool valid (const GVec<T, n>& a) {
 
  // Will debug assert if some but not all elements are defined
 template <class T, usize n>
-CE bool defined (const GVec<T, n>& a) {
+constexpr bool defined (const GVec<T, n>& a) {
 #ifndef NDEBUG
     expect(valid(a));
 #endif
@@ -204,7 +204,7 @@ CE bool defined (const GVec<T, n>& a) {
 
  // Returns false if any elements are NAN or INF
 template <class T, usize n>
-CE bool finite (const GVec<T, n>& a) {
+constexpr bool finite (const GVec<T, n>& a) {
     for (usize i = 0; i < n; i++) {
         if (!finite(a[i])) return false;
     }
@@ -214,7 +214,7 @@ CE bool finite (const GVec<T, n>& a) {
  // length squared.  Faster than length.
  // length2(a) == dot(a, a)
 template <class T, usize n>
-CE auto length2 (const GVec<T, n>& a) {
+constexpr auto length2 (const GVec<T, n>& a) {
     Widen<T> r = 0;
     for (usize i = 0; i < n; i++) {
         r += widen(a[i]) * widen(a[i]);
@@ -222,14 +222,14 @@ CE auto length2 (const GVec<T, n>& a) {
     return r;
 }
 template <class T, usize n>
-CE T length (const GVec<T, n>& a) {
+constexpr T length (const GVec<T, n>& a) {
     return root2(length2(a));
 }
 
  // Can be negative.
  // For 2-Vecs, equivalent to area(GRect{{0}, a})
 template <class T, usize n>
-CE auto area (const GVec<T, n>& a) {
+constexpr auto area (const GVec<T, n>& a) {
     Widen<T> r = 1;
     for (usize i = 0; i < n; i++) {
         r *= a[i];
@@ -238,19 +238,19 @@ CE auto area (const GVec<T, n>& a) {
 }
 
 template <class T, usize n>
-CE bool normal (const GVec<T, n>& a) {
+constexpr bool normal (const GVec<T, n>& a) {
     return length2(a) == T(1);
 }
 
  // Slope of the line from the origin to a.
 template <class T>
-CE T slope (const GVec<T, 2>& a) {
+constexpr T slope (const GVec<T, 2>& a) {
     return a.y / a.x;
 }
  // 1 / slope(a).  This is separate because floating point arithmetic doesn't
  // optimize very well.
 template <class T>
-CE T aspect (const GVec<T, 2>& a) {
+constexpr T aspect (const GVec<T, 2>& a) {
     return a.x / a.y;
 }
 
@@ -258,7 +258,7 @@ CE T aspect (const GVec<T, 2>& a) {
 
 #define GVEC_UNARY_OP(op) \
 template <class T, usize n> \
-CE auto operator op (const GVec<T, n>& a) { \
+constexpr auto operator op (const GVec<T, n>& a) { \
     GVec<decltype(op a[0]), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = op a[i]; \
@@ -275,7 +275,7 @@ GVEC_UNARY_OP(~)
  // Vector version of rounding functions that just call the same function on
  // each element.
 template <class T, usize n>
-CE auto round (const GVec<T, n>& a) {
+constexpr auto round (const GVec<T, n>& a) {
     GVec<decltype(round(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = round(a[i]);
@@ -283,7 +283,7 @@ CE auto round (const GVec<T, n>& a) {
     return r;
 }
 template <class T, usize n>
-CE auto floor (const GVec<T, n>& a) {
+constexpr auto floor (const GVec<T, n>& a) {
     GVec<decltype(floor(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = floor(a[i]);
@@ -291,7 +291,7 @@ CE auto floor (const GVec<T, n>& a) {
     return r;
 }
 template <class T, usize n>
-CE auto ceil (const GVec<T, n>& a) {
+constexpr auto ceil (const GVec<T, n>& a) {
     GVec<decltype(ceil(a[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = ceil(a[i]);
@@ -302,7 +302,7 @@ CE auto ceil (const GVec<T, n>& a) {
  // Get vector that has the same direction but with a length of 1.  Returns the
  // zero vector if given the zero vector.
 template <class T, usize n>
-CE GVec<T, n> normalize (const GVec<T, n>& a) {
+constexpr GVec<T, n> normalize (const GVec<T, n>& a) {
     return a ? a / length(a) : a;
 }
 
@@ -310,7 +310,7 @@ CE GVec<T, n> normalize (const GVec<T, n>& a) {
 
 #define GVEC_COMPARISON_OP(op, res, def) \
 template <class TA, class TB, usize n> \
-CE bool operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
+constexpr bool operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
     for (usize i = 0; i < n; i++) { \
         if (a[i] != b[i]) return res; \
     } \
@@ -329,7 +329,7 @@ GVEC_COMPARISON_OP(>=, a[i] >= b[i], true)
  // Binary operators with vec-vec, vec-scalar, and scalar-vec.
 #define GVEC_BINARY_OP(op) \
 template <class TA, class TB, usize n> \
-CE auto operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
+constexpr auto operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
     GVec<decltype(a[0] op b[0]), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = a[i] op b[i]; \
@@ -337,7 +337,7 @@ CE auto operator op (const GVec<TA, n>& a, const GVec<TB, n>& b) { \
     return r; \
 } \
 template <class TA, class TB, usize n> \
-CE auto operator op (const GVec<TA, n>& a, const TB& b) { \
+constexpr auto operator op (const GVec<TA, n>& a, const TB& b) { \
     GVec<decltype(a[0] op b), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = a[i] op b; \
@@ -345,7 +345,7 @@ CE auto operator op (const GVec<TA, n>& a, const TB& b) { \
     return r; \
 } \
 template <class TA, class TB, usize n> \
-CE auto operator op (const TA& a, const GVec<TB, n>& b) { \
+constexpr auto operator op (const TA& a, const GVec<TB, n>& b) { \
     GVec<decltype(a op b[0]), n> r; \
     for (usize i = 0; i < n; i++) { \
         r[i] = a op b[i]; \
@@ -367,14 +367,14 @@ GVEC_BINARY_OP(>>)
  // Assignment operators vec-vec and vec-scalar
 #define GVEC_ASSIGN_OP(op) \
 template <class TA, class TB, usize n> \
-CE GVec<TA, n>& operator op (GVec<TA, n>& a, const GVec<TB, n>& b) { \
+constexpr GVec<TA, n>& operator op (GVec<TA, n>& a, const GVec<TB, n>& b) { \
     for (usize i = 0; i < n; i++) { \
         a[i] op b[i]; \
     } \
     return a; \
 } \
 template <class TA, class TB, usize n> \
-CE GVec<TA, n>& operator op (GVec<TA, n>& a, const TB& b) { \
+constexpr GVec<TA, n>& operator op (GVec<TA, n>& a, const TB& b) { \
     for (usize i = 0; i < n; i++) { \
         a[i] op b; \
     } \
@@ -394,7 +394,7 @@ GVEC_ASSIGN_OP(>>=)
 
  // mod and rem are basically binary operators
 template <class TA, class TB, usize n>
-CE auto mod (const GVec<TA, n>& a, const GVec<TB, n>& b) {
+constexpr auto mod (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     GVec<decltype(mod(a[0], b[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = mod(a[i], b[i]);
@@ -402,7 +402,7 @@ CE auto mod (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     return r;
 }
 template <class TA, class TB, usize n>
-CE auto rem (const GVec<TA, n>& a, const GVec<TB, n>& b) {
+constexpr auto rem (const GVec<TA, n>& a, const GVec<TB, n>& b) {
     GVec<decltype(rem(a[0], b[0])), n> r;
     for (usize i = 0; i < n; i++) {
         r[i] = rem(a[i], b[i]);
@@ -412,7 +412,7 @@ CE auto rem (const GVec<TA, n>& a, const GVec<TB, n>& b) {
 
  // Dot product of two vectors.
 template <class T, usize n>
-CE auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
+constexpr auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
     decltype(wide_multiply(a[0], b[0])) r = 0;
     for (usize i = 0; i < n; i++) {
         r += wide_multiply(a[i], b[i]);
@@ -422,7 +422,7 @@ CE auto dot (const GVec<T, n>& a, const GVec<T, n>& b) {
 
  // Linearly interpolate between two vectors.
 template <class T, usize n>
-CE GVec<T, n> lerp (
+constexpr GVec<T, n> lerp (
     const GVec<T, n>& a,
     const GVec<T, n>& b,
     std::conditional_t<std::is_same_v<T, float>, float, double> t
@@ -436,7 +436,7 @@ CE GVec<T, n> lerp (
 
  // Cross product of 3-dimensional vectors.
 template <class A, class B>
-CE auto cross (const GVec<A, 3>& a, const GVec<B, 3>& b) {
+constexpr auto cross (const GVec<A, 3>& a, const GVec<B, 3>& b) {
     return GVec<decltype(A() * B()), 3>{
        a.y * b.z - a.z * b.y,
        a.z * b.x - a.x * b.z,
@@ -454,30 +454,30 @@ AYU_DESCRIBE_TEMPLATE(
     desc::name([]{
         using namespace std::literals;
         using namespace uni;
-        if CE (std::is_same_v<T, float>) {
-            if CE (n == 2) { return "geo::Vec"sv; }
-            else if CE (n == 3) { return "geo::Vec3"sv; }
-            else if CE (n == 4) { return "geo::Vec4"sv; }
+        if constexpr (std::is_same_v<T, float>) {
+            if constexpr (n == 2) { return "geo::Vec"sv; }
+            else if constexpr (n == 3) { return "geo::Vec3"sv; }
+            else if constexpr (n == 4) { return "geo::Vec4"sv; }
         }
-        else if CE (std::is_same_v<T, double>) {
-            if CE (n == 2) { return "geo::DVec"sv; }
-            else if CE (n == 3) { return "geo::DVec3"sv; }
-            else if CE (n == 4) { return "geo::DVec4"sv; }
+        else if constexpr (std::is_same_v<T, double>) {
+            if constexpr (n == 2) { return "geo::DVec"sv; }
+            else if constexpr (n == 3) { return "geo::DVec3"sv; }
+            else if constexpr (n == 4) { return "geo::DVec4"sv; }
         }
-        else if CE (std::is_same_v<T, int32>) {
-            if CE (n == 2) { return "geo::IVec"sv; }
-            else if CE (n == 3) { return "geo::IVec3"sv; }
-            else if CE (n == 4) { return "geo::IVec4"sv; }
+        else if constexpr (std::is_same_v<T, int32>) {
+            if constexpr (n == 2) { return "geo::IVec"sv; }
+            else if constexpr (n == 3) { return "geo::IVec3"sv; }
+            else if constexpr (n == 4) { return "geo::IVec4"sv; }
         }
-        else if CE (std::is_same_v<T, int64>) {
-            if CE (n == 2) { return "geo::LVec"sv; }
-            else if CE (n == 3) { return "geo::LVec3"sv; }
-            else if CE (n == 4) { return "geo::LVec4"sv; }
+        else if constexpr (std::is_same_v<T, int64>) {
+            if constexpr (n == 2) { return "geo::LVec"sv; }
+            else if constexpr (n == 3) { return "geo::LVec3"sv; }
+            else if constexpr (n == 4) { return "geo::LVec4"sv; }
         }
-        else if CE (std::is_same_v<T, bool>) {
-            if CE (n == 2) { return "geo::BVec"sv; }
-            else if CE (n == 3) { return "geo::BVec3"sv; }
-            else if CE (n == 4) { return "geo::BVec4"sv; }
+        else if constexpr (std::is_same_v<T, bool>) {
+            if constexpr (n == 2) { return "geo::BVec"sv; }
+            else if constexpr (n == 3) { return "geo::BVec3"sv; }
+            else if constexpr (n == 4) { return "geo::BVec4"sv; }
         }
         static std::string r = "geo::GVec<" + std::string(ayu::Type::CppType<T>().name())
                         + ", " + std::to_string(n) + ">";
