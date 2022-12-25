@@ -9,7 +9,6 @@
 #include "../ayu/describe-standard.h"
 #include "../ayu/type.h"
 #include "../uni/common.h"
-#include "../uni/macros.h"
 #include "command-template-utils.h"
 
 namespace control {

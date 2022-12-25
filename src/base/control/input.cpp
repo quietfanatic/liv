@@ -4,7 +4,6 @@
 #include <SDL2/SDL_events.h>
 #include "../ayu/describe.h"
 #include "../uni/hash.h"
-#include "../uni/macros.h"
 
 namespace control {
 

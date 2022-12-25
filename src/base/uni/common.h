@@ -9,8 +9,14 @@
 #include <type_traits>
 #include <utility>
 
- // If this leads to a conflict I'm sorry
+ // If this leads to a conflict I'm sorry.
 #define CE constexpr
+
+#ifdef __has_builtin
+#define HAS_BUILTIN(f) __has_builtin(f)
+#else
+#define HAS_BUILTIN(f)
+#endif
 
  // These need to be before CE
 #if __GNUC__
@@ -23,6 +29,17 @@
 #define ALWAYS_INLINE inline
 #define NOINLINE
 #endif
+
+#define ASSIGN_BY_MOVE(T) \
+    T& operator= (T&& o) { \
+        this->~T(); \
+        return *new (this) T(std::move(o)); \
+    }
+#define ASSIGN_BY_COPY(T) \
+    T& operator= (const T& o) { \
+        this->~T(); \
+        return *new (this) T(o); \
+    }
 
 namespace uni {
 using namespace std::literals;
@@ -60,16 +77,12 @@ using WStr = std::wstring_view;
 ///// UTILITY TEMPLATES
 
  // Intended for explicitly-named arguments
-template <class T>
+template <class T, class Rep = T>
 struct Named {
-    T v;
-    CE explicit Named () : v() { }
-    CE explicit Named (const T& v) : v(v) { }
-    CE operator T () const { return v; }
+    Rep v;
+    ALWAYS_INLINE CE explicit Named () : v() { }
+    ALWAYS_INLINE CE explicit Named (const T& v) : v(v) { }
+    ALWAYS_INLINE CE operator T () const { return v; }
 };
-
- // Intended to overload functions based on return value.
-template <class T>
-struct Ret { };
 
 } // namespace uni

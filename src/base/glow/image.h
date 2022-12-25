@@ -33,7 +33,6 @@ struct Image {
         const_cast<RGBA8*&>(o.pixels) = null;
     }
     ~Image ();
-    ASSIGN_BY_MOVE(Image)
 
     CE explicit operator bool () const { return pixels; }
 

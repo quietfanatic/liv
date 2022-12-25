@@ -1,7 +1,6 @@
 #include "program.h"
 
 #include "../ayu/describe.h"
-#include "../uni/macros.h"
 #include "gl.h"
 
 namespace glow {
