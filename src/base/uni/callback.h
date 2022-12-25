@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace ayu {
+namespace uni {
 
 template <class F, class Ret, class... Args>
 concept HasExactCallOperator = std::is_convertible_v<
@@ -73,4 +73,4 @@ struct CallbackV<Ret(Args...)> {
 template <class Sig>
 using Callback = const CallbackV<Sig>;
 
-} // namespace ayu
+} // namespace uni

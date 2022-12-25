@@ -13,7 +13,7 @@
 #include "../uni/callback.h"
 #include "../uni/common.h"
 #include "../uni/copy-ref.h"
-#include "../uni/require.h"
+#include "../uni/requirements.h"
 #include "../uni/string.h"
 
 namespace iri { struct IRI; }

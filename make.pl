@@ -102,7 +102,7 @@ my @sources = (qw(
     base/glow/test-environment.cpp
     base/glow/texture-program.cpp
     base/iri/iri.cpp
-    base/uni/require.cpp
+    base/uni/requirements.cpp
     base/uni/text.cpp
     base/uni/utf.cpp
     base/wind/passive_loop.cpp

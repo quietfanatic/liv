@@ -1,18 +1,21 @@
 #pragma once
+#include <exception>
+#include <string>
 #include <source_location>
 #include "common.h"
 
 namespace uni {
+inline namespace requirements {
 
  // Abort if the condition isn't true.
 template <class T>
-static CE T&& require (
+static constexpr T&& require (
     T&& v, std::source_location loc = std::source_location::current()
 );
 
  // Throw if the condition isn't true
 template <class T>
-static CE T&& require_throw (
+static constexpr T&& require_throw (
     T&& v, std::source_location loc = std::source_location::current()
 );
 
@@ -20,7 +23,7 @@ static CE T&& require_throw (
  // depending on NDEBUG.  Always evaluates the argument in either case.  If the
  // argument can't be optimized out, check NDEBUG yourself.
 template <class T>
-static CE T&& expect (
+static constexpr T&& expect (
     T&& v, std::source_location loc = std::source_location::current()
 );
 
@@ -58,21 +61,22 @@ static inline void never (
 }
 
 template <class T>
-ALWAYS_INLINE static CE T&& require (T&& v, std::source_location loc) {
+ALWAYS_INLINE static constexpr T&& require (T&& v, std::source_location loc) {
     if (!v) [[unlikely]] abort_requirement_failed(loc);
     return std::forward<T>(v);
 }
 
 template <class T>
-ALWAYS_INLINE static CE T&& require_throw (T&& v, std::source_location loc) {
+ALWAYS_INLINE static constexpr T&& require_throw (T&& v, std::source_location loc) {
     if (!v) [[unlikely]] throw_requirement_failed(loc);
     return std::forward<T>(v);
 }
 
 template <class T>
-ALWAYS_INLINE static CE T&& expect (T&& v, std::source_location loc) {
+ALWAYS_INLINE static constexpr T&& expect (T&& v, std::source_location loc) {
     if (!v) [[unlikely]] never(loc);
     return std::forward<T>(v);
 }
 
-} // namespace uni
+} // requirements
+} // uni

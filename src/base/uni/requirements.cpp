@@ -1,9 +1,9 @@
-#include "require.h"
+#include "requirements.h"
 
 #include <iostream>
 
 namespace uni {
-using namespace std::literals;
+inline namespace requirements {
 
 [[gnu::cold]]
 void throw_requirement_failed (std::source_location loc) {
@@ -23,4 +23,5 @@ const char* RequirementFailed::what () const noexcept {
     return mess_cache.c_str();
 }
 
-} using namespace uni;
+} // requirements
+} // uni

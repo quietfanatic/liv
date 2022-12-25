@@ -2,6 +2,7 @@
 // string type
 #pragma once
 
+#include <string>
 #include <type_traits>
 #include "common.h"
 

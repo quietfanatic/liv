@@ -128,4 +128,4 @@ using CRef = std::conditional_t<
     CopyRef<T>, ConstRef<T>
 >;
 
-} // namespace uni
+} // uni
