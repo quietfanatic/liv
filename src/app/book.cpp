@@ -271,7 +271,7 @@ static tap::TestSet tests ("app/book", []{
     IVec size = {120, 120};
 
     App app;
-    app.hidden = true;
+    //app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, FilesToOpen{{
         ayu::cat(exe_folder, "/res/base/glow/test/image.png"sv),

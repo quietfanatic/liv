@@ -117,6 +117,9 @@ static tap::TestSet tests ("app/page", []{
          // restrictions screws up this test
         test_size
     );
+    SDL_MinimizeWindow(window);
+    SDL_ShowWindow(window);
+    SDL_MinimizeWindow(window);
     glow::init();
 
     Page page (exe_folder + "/res/base/glow/test/image.png");

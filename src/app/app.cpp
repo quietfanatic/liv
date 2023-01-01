@@ -189,7 +189,8 @@ static tap::TestSet tests ("app/app", []{
     SDL_free(base);
 
     App app;
-    app.hidden = true;
+     // TODO: Figure out how to get headless rendering working on nvidia drivers
+    //app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
             ayu::cat(exe_folder, "/res/base/glow/test/image.png"sv),

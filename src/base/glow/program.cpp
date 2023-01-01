@@ -191,7 +191,6 @@ AYU_DESCRIBE(glow::ProgramLinkFailed,
 static tap::TestSet tests ("base/glow/program", []{
     using namespace tap;
     using namespace geo;
-    IVec test_size = {120, 120};
     TestEnvironment env;
 
     Program* program;
@@ -211,22 +210,26 @@ static tap::TestSet tests ("base/glow/program", []{
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }, "glDrawArrays");
 
-    std::vector<RGBA8> expected_pixels (area(test_size));
-    for (int y = 0; y < test_size.y; y++)
-    for (int x = 0; x < test_size.x; x++) {
-        if (y >= test_size.y / 4 && y < test_size.y * 3 / 4
-         && x >= test_size.x / 4 && x < test_size.x * 3 / 4) {
-            expected_pixels[y*test_size.x+x] = RGBA8(30, 40, 50, 60);
+    std::vector<RGBA8> expected_pixels (area(env.size));
+    for (int y = 0; y < env.size.y; y++)
+    for (int x = 0; x < env.size.x; x++) {
+        if (y >= env.size.y / 4 && y < env.size.y * 3 / 4
+         && x >= env.size.x / 4 && x < env.size.x * 3 / 4) {
+            expected_pixels[y*env.size.x+x] = RGBA8(30, 40, 50, 60);
         }
         else {
-            expected_pixels[y*test_size.x+x] = RGBA8(0, 0, 0, 0);
+            expected_pixels[y*env.size.x+x] = RGBA8(0, 0, 0, 0);
         }
     }
 
-    std::vector<RGBA8> got_pixels (area(test_size));
-    glReadPixels(0, 0, test_size.x, test_size.y, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
+    std::vector<RGBA8> got_pixels (area(env.size));
+    glFinish();
+    glReadPixels(0, 0, env.size.x, env.size.y, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
 
-    is(got_pixels, expected_pixels, "Rendered correct image");
+    if (!is(got_pixels, expected_pixels, "Rendered correct image")) {
+        diag(ayu::item_to_string(&got_pixels, ayu::COMPACT));
+        diag(ayu::item_to_string(&expected_pixels, ayu::COMPACT));
+    }
 
     done_testing();
 });
