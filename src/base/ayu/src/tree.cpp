@@ -11,28 +11,37 @@ using namespace in;
 Tree::Tree (const Tree& o) :
     form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
 {
-    if (rep < 0) {
-        data.as_ptr->ref_count++;
+    if (rep < 0 && data.as_char_ptr) {
+        ++ArrayOwnedHeader::get(data.as_char_ptr)->ref_count;
     }
 }
 
 [[gnu::noinline]]
 void delete_data (TreeRef t) {
+     // Delete by manifesting an array and letting its destructor run.
     switch (t->rep) {
         case REP_LONGSTRING: {
-            free((void*)t->data.as_ptr);
+            UniqueArray<char>::Materialize(
+                (char*)t->data.as_char_ptr, t->length
+            );
             break;
         }
         case REP_ARRAY: {
-            delete static_cast<const TreeData<Array>*>(t->data.as_ptr);
+            UniqueArray<Tree>::Materialize(
+                (Tree*)t->data.as_array_ptr, t->length
+            );
             break;
         }
         case REP_OBJECT: {
-            delete static_cast<const TreeData<Object>*>(t->data.as_ptr);
+            UniqueArray<TreePair>::Materialize(
+                (TreePair*)t->data.as_object_ptr, t->length
+            );
             break;
         }
         case REP_ERROR: {
-            delete static_cast<const TreeData<std::exception_ptr>*>(t->data.as_ptr);
+            UniqueArray<std::exception_ptr>::Materialize(
+                (std::exception_ptr*)t->data.as_error_ptr, t->length
+            );
             break;
         }
         default: never();
@@ -40,8 +49,12 @@ void delete_data (TreeRef t) {
 }
 
 Tree::~Tree () {
-    if (rep < 0) {
-        if (!--data.as_ptr->ref_count) {
+    if (rep < 0 && data.as_char_ptr) {
+        auto header = ArrayOwnedHeader::get(data.as_char_ptr);
+        if (header->ref_count) {
+            --header->ref_count;
+        }
+        else {
             delete_data(*this);
         }
     }
@@ -60,7 +73,7 @@ Tree::Tree (int64 v) :
 Tree::Tree (double v) :
     form(NUMBER), rep(REP_DOUBLE), flags(0), length(0), data{.as_double = v}
 { }
-Tree::Tree (Str v) :
+Tree::Tree (GenericStr<char> v) :
     form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
     flags(0), length(v.size()), data{}
 {
@@ -73,30 +86,49 @@ Tree::Tree (Str v) :
         }
     }
     else {
-        auto vc = (TreeData<char[0]>*)malloc(sizeof(TreeData<char[0]>) + v.size());
-        vc->ref_count = 1;
-        for (usize i = 0; i < v.size(); i++) {
-            vc->value[i] = v[i];
-        }
-        const_cast<RefCounted*&>(data.as_ptr) = vc;
+        auto s = UniqueString::Copy(v);
+        const_cast<char*&>(data.as_char_ptr) = s.data();
+        s.dematerialize();
     }
 }
 Tree::Tree (Str16 v) : Tree(from_utf16(v)) { }
-Tree::Tree (Array v) :
-    form(ARRAY), rep(REP_ARRAY), flags(0), length(0), data{
-        .as_ptr = new TreeData<Array>({1}, std::move(v))
+Tree::Tree (SharedArray<char> v) :
+    form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
+    flags(0), length(v.size()), data{}
+{
+    require(v.size() <= uint32(-1));
+    if (v.size() <= 8) {
+        const_cast<int64&>(data.as_int64) = 0;
+        for (usize i = 0; i < v.size(); i++) {
+            const_cast<char&>(data.as_chars[i]) = v[i];
+        }
     }
-{ }
-Tree::Tree (Object v) :
-    form(OBJECT), rep(REP_OBJECT), flags(0), length(0), data{
-        .as_ptr = new TreeData<Object>({1}, std::move(v))
+    else {
+        const_cast<const char*&>(data.as_char_ptr) = v.data();
+        v.dematerialize();
     }
-{ }
+}
+Tree::Tree (TreeArray v) :
+    form(ARRAY), rep(REP_ARRAY), flags(0),
+    length(v.size()), data{.as_array_ptr = v.data()}
+{
+    require(v.size() <= uint32(-1));
+    v.dematerialize();
+}
+Tree::Tree (TreeObject v) :
+    form(OBJECT), rep(REP_OBJECT), flags(0),
+    length(v.size()), data{.as_object_ptr = v.data()}
+{
+    require(v.size() <= uint32(-1));
+    v.dematerialize();
+}
 Tree::Tree (std::exception_ptr v) :
-    form(ERROR), rep(REP_ERROR), flags(0), length(0), data{
-        .as_ptr = new TreeData<std::exception_ptr>({1}, std::move(v))
-    }
-{ }
+    form(ERROR), rep(REP_ERROR), flags(0), length(1), data{}
+{
+    auto e = UniqueArray<std::exception_ptr>(1, v);
+    const_cast<const std::exception_ptr*&>(data.as_error_ptr) = e.data();
+    e.dematerialize();
+}
 
 [[noreturn]]
 static void bad_form (TreeRef t, TreeForm form) {
@@ -169,13 +201,21 @@ Tree::operator std::string () const {
 Tree::operator std::u16string () const {
     return to_utf16(Str(*this));
 }
-Tree::operator const Array& () const {
+Tree::operator TreeArraySlice () const {
     if (rep != REP_ARRAY) bad_form(*this, ARRAY);
     return tree_Array(*this);
 }
-Tree::operator const Object& () const {
+Tree::operator TreeArray () const {
+    if (rep != REP_ARRAY) bad_form(*this, ARRAY);
+    return TreeArray(tree_Array(*this));
+}
+Tree::operator TreeObjectSlice () const {
     if (rep != REP_OBJECT) bad_form(*this, OBJECT);
     return tree_Object(*this);
+}
+Tree::operator TreeObject () const {
+    if (rep != REP_OBJECT) bad_form(*this, OBJECT);
+    return TreeObject(tree_Object(*this));
 }
 
 const Tree* Tree::attr (Str key) const {
@@ -192,13 +232,13 @@ const Tree* Tree::elem (usize index) const {
 }
 const Tree& Tree::operator[] (Str key) const {
     if (const Tree* r = attr(key)) return *r;
-    else throw X<GenericError>(cat(
+    else throw X<GenericError>(old_cat(
         "This tree has no attr with key \""sv, key, '"'
     ));
 }
 const Tree& Tree::operator[] (usize index) const {
     if (const Tree* r = elem(index)) return *r;
-    else throw X<GenericError>(cat(
+    else throw X<GenericError>(old_cat(
         "This tree has no elem with index \""sv, index, '"'
     ));
 }
@@ -233,20 +273,14 @@ bool operator == (TreeRef a, TreeRef b) {
             return a->data.as_int64 == b->data.as_int64;
         }
         case REP_LONGSTRING: {
-            if (a->data.as_ptr == b->data.as_ptr) return true;
             return tree_longStr(a) == tree_longStr(b);
         }
         case REP_ARRAY: {
-             // From my investigations, the STL does NOT, in general,
-             // short-circuit container comparisons where the containers have
-             // the same address.
-            if (a->data.as_ptr == b->data.as_ptr) return true;
             return tree_Array(a) == tree_Array(b);
         }
         case REP_OBJECT: {
-            if (a->data.as_ptr == b->data.as_ptr) return true;
-            const Object& ao = tree_Object(a);
-            const Object& bo = tree_Object(b);
+            TreeObjectSlice ao = tree_Object(a);
+            TreeObjectSlice bo = tree_Object(b);
             if (ao.size() != bo.size()) return false;
             else for (auto& ap : ao) {
                 for (auto& bp : bo) {
@@ -275,9 +309,7 @@ bool operator == (TreeRef a, Str b) {
     }
     else {
         if (a->rep != REP_LONGSTRING) return false;
-        auto vc = static_cast<const TreeData<char[0]>*>(a->data.as_ptr);
-        if (vc->value == b.data()) return true;
-        return std::memcmp(vc->value, b.data(), b.size()) == 0;
+        return Slice<char>(tree_longStr(a)) == Slice<char>(b);
     }
 }
 
@@ -345,16 +377,16 @@ static tap::TestSet tests ("base/ayu/tree", []{
     throws<CantRepresent>([]{
         uint8(Tree(-1));
     }, "Can't convert -1 to uint8");
-    is(Tree(Array{Tree(3), Tree(4)}), Tree(Array{Tree(3), Tree(4)}), "Compare arrays.");
-    isnt(Tree(Array{Tree(3), Tree(4)}), Tree(Array{Tree(4), Tree(3)}), "Compare unequal arrays.");
+    is(Tree(TreeArray{Tree(3), Tree(4)}), Tree(TreeArray{Tree(3), Tree(4)}), "Compare arrays.");
+    isnt(Tree(TreeArray{Tree(3), Tree(4)}), Tree(TreeArray{Tree(4), Tree(3)}), "Compare unequal arrays.");
     is(
-        Tree(Object{Pair{"a", Tree(0)}, Pair{"b", Tree(1)}}),
-        Tree(Object{Pair{"b", Tree(1)}, Pair{"a", Tree(0)}}),
-        "Object with same attributes in different order are equal"
+        Tree(TreeObject{TreePair{"a", Tree(0)}, TreePair{"b", Tree(1)}}),
+        Tree(TreeObject{TreePair{"b", Tree(1)}, TreePair{"a", Tree(0)}}),
+        "TreeObject with same attributes in different order are equal"
     );
     isnt(
-        Tree(Object{Pair{"a", Tree(0)}, Pair{"b", Tree(1)}}),
-        Tree(Object{Pair{"b", Tree(1)}, Pair{"a", Tree(0)}, Pair{"c", Tree(3)}}),
+        Tree(TreeObject{TreePair{"a", Tree(0)}, TreePair{"b", Tree(1)}}),
+        Tree(TreeObject{TreePair{"b", Tree(1)}, TreePair{"a", Tree(0)}, TreePair{"c", Tree(3)}}),
         "Extra attribute in second object makes it unequal"
     );
     done_testing();

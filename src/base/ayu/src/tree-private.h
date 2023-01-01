@@ -23,11 +23,6 @@ enum : TreeRep {
     REP_ERROR = -4,
 };
 
-template <class T>
-struct TreeData : RefCounted {
-    alignas(uint64) T value;
-};
-
  // Can't be TreeRef because then t.data.as_chars will be invalidated when this
  // function returns.
 inline Str tree_shortStr (const Tree& t) {
@@ -36,30 +31,35 @@ inline Str tree_shortStr (const Tree& t) {
 }
 inline Str tree_longStr (TreeRef t) {
     expect(t->rep == REP_LONGSTRING && t->length > 8);
-    const char* vc = ((const TreeData<char[0]>*)t->data.as_ptr)->value;
-    return Str(vc, t->length);
+    return Str(t->data.as_char_ptr, t->length);
 }
-inline const Array& tree_Array (TreeRef t) {
+inline TreeArraySlice tree_Array (TreeRef t) {
     expect(t->rep == REP_ARRAY);
-    return ((const TreeData<Array>*)t->data.as_ptr)->value;
+    return TreeArraySlice(t->data.as_array_ptr, t->length);
 }
-inline Array&& tree_Array (Tree&& t) {
+inline TreeArray tree_Array (Tree&& t) {
     expect(t.rep == REP_ARRAY);
-    expect(t.data.as_ptr->ref_count == 1);
-    return std::move(((TreeData<Array>*)t.data.as_ptr)->value);
+    auto r = TreeArray::Materialize(
+        (Tree*)t.data.as_array_ptr, t.length
+    );
+    new (&t) Tree();
+    return r;
 }
-inline const Object& tree_Object (TreeRef t) {
+inline TreeObjectSlice tree_Object (TreeRef t) {
     expect(t->rep == REP_OBJECT);
-    return ((const TreeData<Object>*)t->data.as_ptr)->value;
+    return TreeObjectSlice(t->data.as_object_ptr, t->length);
 }
-inline Object&& tree_Object (Tree&& t) {
-    expect(t.data.as_ptr->ref_count == 1);
+inline TreeObject tree_Object (Tree&& t) {
     expect(t.rep == REP_OBJECT);
-    return std::move(((TreeData<Object>*)t.data.as_ptr)->value);
+    auto r = TreeObject::Materialize(
+        (TreePair*)t.data.as_object_ptr, t.length
+    );
+    new (&t) Tree();
+    return r;
 }
 inline const std::exception_ptr& tree_Error (TreeRef t) {
     expect(t->rep == REP_ERROR);
-    return ((const TreeData<std::exception_ptr>*)t->data.as_ptr)->value;
+    return *t->data.as_error_ptr;
 }
 
 } // namespace ayu::in

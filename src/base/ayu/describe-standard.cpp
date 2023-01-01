@@ -70,7 +70,7 @@ AYU_DESCRIBE(iri::IRI,
                 else {
                     v = iri::IRI(s);
                 }
-                if (!v) throw ayu::X<GenericError>(cat("Invalid IRI "sv, s));
+                if (!v) throw ayu::X<GenericError>(old_cat("Invalid IRI "sv, s));
             }
         }
     ))

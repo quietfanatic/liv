@@ -15,7 +15,7 @@ AYU_DESCRIBE(glow::RGBA8,
             v = RGBA8(int32(t));
         }
         else if (t.form == ayu::ARRAY) {
-            auto& a = static_cast<const ayu::Array&>(t);
+            auto a = ayu::TreeArraySlice(t);
             if (a.size() != 4) {
                 throw ayu::X<ayu::WrongLength>(
                     ayu::current_location(), 4u, 4u, a.size()

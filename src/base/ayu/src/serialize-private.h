@@ -45,8 +45,8 @@ struct IFTContext {
         current = previous;
     }
 
-    std::vector<SwizzleOp> swizzle_ops;
-    std::vector<InitOp> init_ops;
+    UniqueArray<SwizzleOp> swizzle_ops;
+    UniqueArray<InitOp> init_ops;
     void do_swizzles ();
     void do_inits ();
 };
@@ -54,13 +54,13 @@ void ser_from_tree (const Traversal&, TreeRef);
 
 ///// ATTR OPERATIONS
  // Implement get_keys by adding keys to a vector of TreeStrings
-void ser_collect_key (std::vector<TreeString>&, Tree);
-void ser_collect_keys (const Traversal&, std::vector<TreeString>&);
+void ser_collect_key (UniqueArray<TreeString>&, Tree);
+void ser_collect_keys (const Traversal&, UniqueArray<TreeString>&);
 
  // Implement set_keys by removing keys from a std::vector<Str>
-bool ser_claim_key (std::vector<Str>&, Str);
-void ser_claim_keys (const Traversal&, std::vector<Str>&, bool optional);
-void ser_set_keys (const Traversal&, std::vector<Str>&&);
+bool ser_claim_key (UniqueArray<Str>&, Str);
+void ser_claim_keys (const Traversal&, UniqueArray<Str>&, bool optional);
+void ser_set_keys (const Traversal&, UniqueArray<Str>&&);
 
  // If the attr isn't found, returns false and doesn't call the callback
 bool ser_maybe_attr (const Traversal&, Str, AccessMode, TravCallback);

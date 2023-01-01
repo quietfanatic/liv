@@ -158,7 +158,7 @@ Str input_to_string (const Input& input) {
 
 AYU_DESCRIBE(control::Input,
     to_tree([](const Input& input){
-        ayu::Array a;
+        ayu::TreeArray a;
         if (input.type == NONE) return ayu::Tree(a);
         if (input.ctrl) a.emplace_back("ctrl"s);
         if (input.alt) a.emplace_back("alt"s);
@@ -190,7 +190,7 @@ AYU_DESCRIBE(control::Input,
         return ayu::Tree(a);
     }),
     from_tree([](Input& input, const ayu::Tree& tree) {
-        const auto& a = ayu::Array(tree);
+        auto a = ayu::TreeArraySlice(tree);
         input = {};
         for (auto& e : a) {
             if (e.form == ayu::NUMBER) {
@@ -228,12 +228,12 @@ static tap::TestSet tests ("base/control/input", []{
     auto test2 = [](Str s, Input expect, Str s2){
         Input got;
         ayu::item_from_string(&got, s);
-        is(got.type, expect.type, ayu::cat(s, " - type is correct"));
-        is(got.ctrl, expect.ctrl, ayu::cat(s, " - ctrl is correct"));
-        is(got.alt, expect.alt, ayu::cat(s, " - alt is correct"));
-        is(got.shift, expect.shift, ayu::cat(s, " - shift is correct"));
-        is(got.code, expect.code, ayu::cat(s, " - code is correct"));
-        is(ayu::item_to_string(&expect), s2, ayu::cat(s, " - item_to_string"));
+        is(got.type, expect.type, ayu::old_cat(s, " - type is correct"));
+        is(got.ctrl, expect.ctrl, ayu::old_cat(s, " - ctrl is correct"));
+        is(got.alt, expect.alt, ayu::old_cat(s, " - alt is correct"));
+        is(got.shift, expect.shift, ayu::old_cat(s, " - shift is correct"));
+        is(got.code, expect.code, ayu::old_cat(s, " - code is correct"));
+        is(ayu::item_to_string(&expect), s2, ayu::old_cat(s, " - item_to_string"));
     };
     auto test = [&](Str s, Input expect){
         test2(s, expect, s);

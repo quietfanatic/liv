@@ -79,13 +79,13 @@ inline void item_from_file (
 
 ///// ACCESS OPERATIONS
  // Get a list of the keys in a object-like item.
-std::vector<TreeString> item_get_keys (
+AnyArray<TreeString> item_get_keys (
     const Reference&, LocationRef loc = Location()
 );
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
 void item_set_keys (
-    const Reference&, const std::vector<Str>&,
+    const Reference&, Slice<Str>,
     LocationRef loc = Location()
 );
  // Get an attribute of an object-like item by its key, or empty Reference if

@@ -10,6 +10,7 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+#include "../uni/arrays.h"
 #include "../uni/callback.h"
 #include "../uni/common.h"
 #include "../uni/copy-ref.h"
@@ -38,11 +39,14 @@ using TreeRef = CRef<Tree, 16>;
 struct Type;
 
  // Using a Tree as a string-like type.
+ // TODO: use uni::AnyString (TODO: implement uni::AnyString)
 using TreeString = Tree;
 
-using Array = std::vector<Tree>;
-using Pair = std::pair<TreeString, Tree>;
-using Object = std::vector<Pair>;
+using TreeArray = SharedArray<Tree>;
+using TreeArraySlice = Slice<Tree>;
+using TreePair = std::pair<TreeString, Tree>;
+using TreeObject = SharedArray<TreePair>;
+using TreeObjectSlice = Slice<TreePair>;
 
  // Unknown type that will never be defined.  This has a similar role to void,
  // except:

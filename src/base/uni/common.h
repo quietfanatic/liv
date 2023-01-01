@@ -15,23 +15,31 @@ using int16 = std::int16_t;
 using int32 = std::int32_t;
 using int64 = std::int64_t;
 using isize = std::intptr_t;
-static_assert(std::is_same_v<isize, int32> || std::is_same_v<isize, int64>);
 using uint = unsigned int;  // 32 bits on most platforms
 using uint8 = std::uint8_t;
 using uint16 = std::uint16_t;
 using uint32 = std::uint32_t;
 using uint64 = std::uint64_t;
 using usize = std::uintptr_t;
-static_assert(std::is_same_v<usize, uint32> || std::is_same_v<usize, uint64>);
  // I once met a compiler that defined uint32 as unsigned int, uint64 as
  // unsigned long long, but size_t as unsigned long.  If that happens, fiddle
- // with the compiler flags until it doesn't happen any more.
+ // with the compiler flags until it doesn't.
+static_assert(std::is_same_v<isize, int32> || std::is_same_v<isize, int64>);
+static_assert(std::is_same_v<usize, uint32> || std::is_same_v<usize, uint64>);
 static_assert(std::is_same_v<usize, std::size_t>);
 
 using Null = std::nullptr_t;
 constexpr Null null = nullptr;
 
+#ifdef nan
+#warning "Somebody defined nan as a macro, undefining it"
+#undef nan
+#endif
 constexpr float nan = std::numeric_limits<float>::quiet_NaN();
+#ifdef inf
+#warning "Somebody defined inf as a macro, undefining it"
+#undef inf
+#endif
 constexpr float inf = std::numeric_limits<float>::infinity();
 
 using Str = std::string_view;
@@ -39,6 +47,8 @@ using Str8 = std::u8string_view;
 using Str16 = std::u16string_view;
 using Str32 = std::u32string_view;
 using WStr = std::wstring_view;
+
+using std::move;
 
 } // common
 } // uni
@@ -56,7 +66,7 @@ using WStr = std::wstring_view;
  // These need to be before constexpr
 #ifndef ALWAYS_INLINE
     #if __GNUC__
-        #define ALWAYS_INLINE [[gnu::always_inline]] inline
+        #define ALWAYS_INLINE [[gnu::artificial]] inline
     #elif _MSC_VER
         #define ALWAYS_INLINE __forceinline
     #else

@@ -247,38 +247,38 @@ static tap::TestSet tests ("base/ayu/accessors", []{
         is(
             acr.address(reinterpret_cast<Mu&>(t)),
             reinterpret_cast<Mu*>(&t.b),
-            cat(type, "::address"sv).c_str()
+            old_cat(type, "::address"sv).c_str()
         );
         acr.read(reinterpret_cast<Mu&>(t), [&](Mu& v){
-            is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
+            is(reinterpret_cast<const int&>(v), 2, old_cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) = 4;
         });
-        is(t.b, 4, cat(type, "::write"sv).c_str());
+        is(t.b, 4, old_cat(type, "::write"sv).c_str());
         acr.modify(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) += 5;
         });
-        is(t.b, 9, cat(type, "::modify"sv).c_str());
+        is(t.b, 9, old_cat(type, "::modify"sv).c_str());
     };
     auto test_unaddressable = [&](Str type, auto acr){
         Thing t {1, 2};
         is(
             acr.address(reinterpret_cast<Mu&>(t)),
             null,
-            cat(type, "::address return null"sv).c_str()
+            old_cat(type, "::address return null"sv).c_str()
         );
         acr.read(reinterpret_cast<Mu&>(t), [&](Mu& v){
-            is(reinterpret_cast<const int&>(v), 2, cat(type, "::read"sv).c_str());
+            is(reinterpret_cast<const int&>(v), 2, old_cat(type, "::read"sv).c_str());
         });
         acr.write(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) = 4;
         });
-        is(t.b, 4, cat(type, "::write"sv).c_str());
+        is(t.b, 4, old_cat(type, "::write"sv).c_str());
         acr.modify(reinterpret_cast<Mu&>(t), [&](Mu& v){
             reinterpret_cast<int&>(v) += 5;
         });
-        is(t.b, 9, cat(type, "::modify"sv).c_str());
+        is(t.b, 9, old_cat(type, "::modify"sv).c_str());
     };
 
     test_addressable("MemberAcr"sv, deduce_MemberAcr(&Thing::b));

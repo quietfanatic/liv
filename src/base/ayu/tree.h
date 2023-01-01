@@ -49,14 +49,17 @@ struct Tree {
     const int8 rep;
      // Only the flags can be modified after construction.
     TreeFlags flags;
-     // Currently only defined for certain forms.
+     // Only defined for certain forms.
     const uint32 length;
     const union {
         bool as_bool;
         int64 as_int64;
         double as_double;
         char as_chars [8];
-        const in::RefCounted* as_ptr;
+        const char* as_char_ptr;
+        const Tree* as_array_ptr;
+        const TreePair* as_object_ptr;
+        std::exception_ptr* as_error_ptr;
     } data;
 
     bool has_value () const { return form != UNDEFINED; }
@@ -111,10 +114,11 @@ struct Tree {
     explicit Tree (uint64 v) : Tree(int64(v)) { }
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
-    explicit Tree (Str v);  // Does a copy, can only store up to 4GB
+    explicit Tree (GenericStr<char> v);
+    explicit Tree (SharedArray<char> v);
     explicit Tree (Str16 v); // Converts to UTF8
-    explicit Tree (Array v);
-    explicit Tree (Object v);
+    explicit Tree (TreeArray v);
+    explicit Tree (TreeObject v);
     explicit Tree (std::exception_ptr p);
 
      // These throw if the tree is not the right form or if
@@ -140,8 +144,10 @@ struct Tree {
     explicit operator Str () const;
     explicit operator std::string () const;  // Does a copy.
     explicit operator std::u16string () const;
-    explicit operator const Array& () const;
-    explicit operator const Object& () const;
+    explicit operator TreeArraySlice () const;
+    explicit operator TreeArray () const;
+    explicit operator TreeObjectSlice () const;
+    explicit operator TreeObject () const;
 
      // Returns null if the invocant is not an OBJECT or does not have an
      // attribute with the given key.

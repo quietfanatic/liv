@@ -232,7 +232,7 @@ std::string get_demangled_name (const std::type_info& t) {
 #if __has_include(<cxxabi.h>)
     int status;
     char* demangled = abi::__cxa_demangle(t.name(), nullptr, nullptr, &status);
-    if (status != 0) return cat("?(Failed to demangle "sv, t.name(), ')');
+    if (status != 0) return old_cat("?(Failed to demangle "sv, t.name(), ')');
     std::string r = const_cast<const char*>(demangled);
     free(demangled);
     return r;
@@ -252,7 +252,7 @@ AYU_DESCRIBE(ayu::Type,
     delegate(mixed_funcs<std::string>(
         [](const Type& v){
             if (v.readonly()) {
-                return cat("(readonly)", v.name());
+                return old_cat("(readonly)", v.name());
             }
             else return std::string(v.name());
         },

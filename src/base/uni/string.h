@@ -22,14 +22,14 @@ namespace in {
  // I'm tired of all the weirdness around string concatenation operators.
  // Just use this instead.
 template <class... Args>
-std::string cat (Args&&... args) {
+std::string old_cat (Args&&... args) {
     std::string r; // Should we reserve()?  Profile!
     ((r += in::to_string(std::forward<Args>(args))), ...);
     return r;
 }
  // Optimization to skip a copy
 template <class... Args>
-std::string cat (std::string&& s, Args... args) {
+std::string old_cat (std::string&& s, Args... args) {
     std::string r = std::move(s);
     ((r += in::to_string(std::forward<Args>(args))), ...);
     return r;

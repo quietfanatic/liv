@@ -31,8 +31,8 @@ Tree in::ser_to_tree (const Traversal& trav) {
         }
         switch (trav.desc->preference()) {
             case Description::PREFER_OBJECT: {
-                Object o;
-                std::vector<TreeString> ks;
+                TreeObject o;
+                UniqueArray<TreeString> ks;
                 ser_collect_keys(trav, ks);
                 for (auto& k : ks) {
                     ser_attr(
@@ -61,7 +61,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                 return Tree(std::move(o));
             }
             case Description::PREFER_ARRAY: {
-                Array a;
+                TreeArray a;
                 usize l = ser_get_length(trav);
                 for (usize i = 0; i < l; i++) {
                     ser_elem(
@@ -124,8 +124,8 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
     switch (tree->form) {
         case OBJECT: {
             if (trav.desc->accepts_object()) {
-                auto& o = tree_Object(tree);
-                std::vector<Str> ks;
+                TreeObjectSlice o = tree_Object(tree);
+                UniqueArray<Str> ks;
                 for (auto& p : o) {
                     ks.emplace_back(p.first);
                 }
@@ -143,7 +143,7 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
         }
         case ARRAY: {
             if (trav.desc->accepts_array()) {
-                auto& a = tree_Array(tree);
+                TreeArraySlice a = tree_Array(tree);
                 ser_set_length(trav, a.size());
                 for (usize i = 0; i < a.size(); i++) {
                     ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
@@ -184,8 +184,8 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
      // Still nothing?  Allow swizzle with no from_tree.
     if (trav.desc->swizzle()) goto done;
      // If we got here, we failed to find any method to from_tree this item.
-     // Go through maybe a little too much effort to figure out what went wrong
-     // TODO: make this cold
+     // Go through maybe a little too much effort to figure out what went wrong.
+    [[unlikely]]
     if (tree->form == OBJECT &&
         (trav.desc->values() || trav.desc->accepts_array())
     ) {
@@ -287,18 +287,19 @@ void item_from_tree (
 }
 
 ///// ATTR OPERATIONS
-void in::ser_collect_key (std::vector<TreeString>& ks, Tree k) {
+void in::ser_collect_key (UniqueArray<TreeString>& ks, Tree k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(std::move(k));
 }
 
-void in::ser_collect_keys (const Traversal& trav, std::vector<TreeString>& ks) {
+void in::ser_collect_keys (const Traversal& trav, UniqueArray<TreeString>& ks) {
     if (auto acr = trav.desc->keys_acr()) {
         Type keys_type = acr->type(trav.address);
          // Compare Type not std::type_info, since std::type_info can require a
          // string comparison.
+         // TODO: support *Array
         if (keys_type == Type::CppType<std::vector<Str>>()) {
              // Optimize for std::vector<Str>
             acr->read(*trav.address, [&](Mu& v){
@@ -328,11 +329,11 @@ void in::ser_collect_keys (const Traversal& trav, std::vector<TreeString>& ks) {
                 if (tree.form != ARRAY) {
                     throw X<InvalidKeysType>(trav_location(trav), keys_type);
                 }
-                for (Tree& e : tree_Array(std::move(tree))) {
+                for (const Tree& e : tree_Array(std::move(tree))) {
                     if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
-                    ser_collect_key(ks, std::move(e));
+                    ser_collect_key(ks, e);
                 }
             });
         }
@@ -362,25 +363,25 @@ void in::ser_collect_keys (const Traversal& trav, std::vector<TreeString>& ks) {
     else throw X<NoAttrs>(trav_location(trav));
 }
 
-std::vector<TreeString> item_get_keys (
+AnyArray<TreeString> item_get_keys (
     const Reference& item, LocationRef loc
 ) {
-    std::vector<TreeString> ks;
+    UniqueArray<TreeString> ks;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
     return ks;
 }
 
-bool in::ser_claim_key (std::vector<Str>& ks, Str k) {
+bool in::ser_claim_key (UniqueArray<Str>& ks, Str k) {
      // This algorithm overall is O(N^3), we may be able to speed it up by
      // setting a flag if there are no inherited attrs, or maybe by using an
      // unordered_set?
      // TODO: Just use a bool array for claiming instead of erasing from
      // the vector.
-    for (auto it = ks.begin(); it != ks.end(); it++) {
-        if (*it == k) {
-            ks.erase(it);
+    for (usize i = 0; i < ks.size(); ++i) {
+        if (ks[i] == k) {
+            ks.erase(i);
             return true;
         }
     }
@@ -389,7 +390,7 @@ bool in::ser_claim_key (std::vector<Str>& ks, Str k) {
 
 void in::ser_claim_keys (
     const Traversal& trav,
-    std::vector<Str>& ks,
+    UniqueArray<Str>& ks,
     bool optional
 ) {
     if (auto acr = trav.desc->keys_acr()) {
@@ -398,7 +399,8 @@ void in::ser_claim_keys (
             if (keys_type == Type::CppType<std::vector<Str>>()) {
                  // Optimize for std::vector<Str>
                 acr->write(*trav.address, [&](Mu& ksv){
-                    reinterpret_cast<std::vector<Str>&>(ksv) = std::move(ks);
+                    reinterpret_cast<std::vector<Str>&>(ksv) =
+                        std::vector<Str>(ks.begin(), ks.end());
                 });
             }
             else if (keys_type == Type::CppType<std::vector<std::string>>()) {
@@ -411,7 +413,7 @@ void in::ser_claim_keys (
             else {
                  // General case: call item_from_tree on the keys.  This will
                  // be slow.
-                Array a (ks.size());
+                UniqueArray<Tree> a (ks.size());
                 for (usize i = 0; i < ks.size(); i++) {
                     a[i] = Tree(ks[i]);
                 }
@@ -426,7 +428,7 @@ void in::ser_claim_keys (
         else {
              // For readonly keys, get the keys and compare them.
              // TODO: This can probably be optimized more
-            std::vector<TreeString> got_ks;
+            UniqueArray<TreeString> got_ks;
             ser_collect_keys(trav, got_ks);
             for (auto& k : got_ks) {
                 if (ser_claim_key(ks, Str(k))) {
@@ -494,7 +496,7 @@ void in::ser_claim_keys (
     else throw X<NoAttrs>(trav_location(trav));
 }
 
-void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
+void in::ser_set_keys (const Traversal& trav, UniqueArray<Str>&& ks) {
     ser_claim_keys(trav, ks, false);
     if (!ks.empty()) {
         throw X<UnwantedAttr>(trav_location(trav), std::string(ks[0]));
@@ -502,12 +504,11 @@ void in::ser_set_keys (const Traversal& trav, std::vector<Str>&& ks) {
 }
 
 void item_set_keys (
-    const Reference& item, const std::vector<Str>& ks,
+    const Reference& item, Slice<Str> ks,
     LocationRef loc
 ) {
     trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
-        auto ks_copy = ks;
-        ser_set_keys(trav, std::move(ks_copy));
+        ser_set_keys(trav, ks);
     });
 }
 
@@ -1194,7 +1195,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     is(est.xs.at(3), 4, "item_from_tree works with elem_func");
 
     auto ast = AttrsTest{{{"a", 11}, {"b", 22}}};
-    std::vector<TreeString> keys = item_get_keys(&ast);
+    auto keys = item_get_keys(&ast);
     is(keys.size(), 2u, "item_get_keys (size)");
     ok((keys[0] == "a" && keys[1] == "b") || (keys[0] == "b" && keys[1] == "a"),
         "item_get_keys (contents)"
@@ -1208,7 +1209,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_attr(&ast, "c");
     }, "item_attr can throw on missing key (from user-defined function)");
     auto ks = std::vector<Str>{"c", "d"};
-    item_set_keys(&ast, ks);
+    item_set_keys(&ast, Slice<Str>(ks));
     is(ast.xs.find("a"), ast.xs.end(), "item_set_keys removed key");
     is(ast.xs.at("c"), 0, "item_set_keys added key");
     doesnt_throw([&]{
@@ -1236,7 +1237,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
         item_attr(&ast2, "c");
     }, "item_attr can throw on missing key (from user-defined function)");
     ks = std::vector<Str>{"c", "d"};
-    item_set_keys(&ast2, ks);
+    item_set_keys(&ast2, Slice<Str>(ks));
     is(ast2.xs.find("a"), ast2.xs.end(), "item_set_keys removed key");
     is(ast2.xs.at("c"), 0, "item_set_keys added key");
     doesnt_throw([&]{

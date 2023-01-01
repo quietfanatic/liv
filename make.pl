@@ -15,9 +15,10 @@ my @linker = 'g++';
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
-    -fstrict-aliasing -finline-small-functions
-    -Wall -Wextra
-    -fmax-errors=5 -fdiagnostics-color -fno-diagnostics-show-caret
+    -fstrict-aliasing -finline-small-functions -fdce
+    -Wall -Wextra -Wno-terminate
+    -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
+    -fconcepts-diagnostics-depth=4
 ));
 my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #my @link_opts = (('-L' . rel2abs("$mingw_sdl2/lib")), qw(
@@ -37,7 +38,7 @@ my %configs = (
         opts => [qw(-m32 -fno-pie -O3 -DNDEBUG -ggdb -flto)],
     },
     val => {
-        opts => [qw(-O3 -DNDEBUG -ggdb)],
+        opts => [qw(-O3 -DNDEBUG -ggdb -flto -fno-inline-functions -fno-inline-small-functions)],
     },
     san => {
         opts => [qw(-ggdb), '-fsanitize=address,undefined', '-fno-sanitize=enum'],
@@ -102,6 +103,7 @@ my @sources = (qw(
     base/glow/test-environment.cpp
     base/glow/texture-program.cpp
     base/iri/iri.cpp
+    base/uni/arrays.cpp
     base/uni/requirements.cpp
     base/uni/text.cpp
     base/uni/utf.cpp

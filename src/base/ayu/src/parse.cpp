@@ -21,11 +21,11 @@ struct Parser {
     const char* p;
     const char* end;
 
-     // std::unordered_map is supposedly slow, so we'll use std::vector instead.
+     // std::unordered_map is supposedly slow, so we'll use an array instead.
      // We'll rethink if we ever need to parse a document with a large amount
      // of shortcuts (I can't imagine for my use cases having more than 20
      // or so).
-    Object shortcuts;
+    UniqueArray<TreePair> shortcuts;
 
     Parser (Str s, Str filename = ""sv) :
         filename(filename),
@@ -52,7 +52,7 @@ struct Parser {
                     return std::string(1, c);
                 }
                 else {
-                    return cat(
+                    return old_cat(
                         '<', show_hex_digit((c >> 4) & 0x0f),
                         show_hex_digit(c & 0xf), '>'
                     );
@@ -75,7 +75,7 @@ struct Parser {
             }
         }
         uint col = p - nl;
-        throw X<ParseError>(cat(std::forward<Args>(args)...), std::string(filename), line, col);
+        throw X<ParseError>(old_cat(std::forward<Args>(args)...), std::string(filename), line, col);
     }
 
     void skip_comment () {
@@ -115,10 +115,10 @@ struct Parser {
 
     Tree got_string () {
         p++;  // for the "
-        std::vector<char> r;
+        UniqueArray<char> r;
         for (;;) switch (look()) {
             case EOF: error("std::string not terminated by end of input"sv);
-            case '"': p++; return Tree(Str(r.data(), r.size()));
+            case '"': p++; return Tree(SharedArray<char>(std::move(r)));
             case '\\': {
                 p++;
                 switch (look()) {
@@ -249,8 +249,8 @@ struct Parser {
         }
     }
 
-    Array got_array () {
-        Array a;
+    TreeArray got_array () {
+        UniqueArray<Tree> a;
         p++;  // for the [
         for (;;) {
             skip_commas();
@@ -263,8 +263,8 @@ struct Parser {
         }
     }
 
-    Object got_object () {
-        Object o;
+    TreeObject got_object () {
+        UniqueArray<TreePair> o;
         p++;  // for the {
         for (;;) {
             skip_commas();
@@ -470,7 +470,7 @@ AYU_DESCRIBE(ayu::ParseError,
 static tap::TestSet tests ("base/ayu/parse", []{
     using namespace tap;
     auto y = [](const char* s, const Tree& t){
-        try_is<Tree>([&]{return tree_from_string(s);}, t, cat("yes: "s, s).c_str());
+        try_is<Tree>([&]{return tree_from_string(s);}, t, old_cat("yes: "s, s).c_str());
     };
     auto n = [](const char* s){
         throws<ParseError>([&]{
@@ -505,37 +505,37 @@ static tap::TestSet tests ("base/ayu/parse", []{
     y("\"null\"", Tree("null"));
     y("\"true\"", Tree("true"));
     y("\"false\"", Tree("false"));
-    y("[]", Tree(Array{}));
-    y("[,,,,,]", Tree(Array{}));
-    y("[0 1 foo]", Tree(Array{Tree(0), Tree(1), Tree("foo")}));
-    y("{}", Tree(Object{}));
-    y("{\"asdf\":\"foo\"}", Tree(Object{Pair{"asdf", Tree("foo")}}));
-    y("{\"asdf\":0}", Tree(Object{Pair{"asdf", Tree(0)}}));
-    y("{asdf:0}", Tree(Object{Pair{"asdf", Tree(0)}}));
+    y("[]", Tree(TreeArray{}));
+    y("[,,,,,]", Tree(TreeArray{}));
+    y("[0 1 foo]", Tree(TreeArray{Tree(0), Tree(1), Tree("foo")}));
+    y("{}", Tree(TreeObject{}));
+    y("{\"asdf\":\"foo\"}", Tree(TreeObject{TreePair{"asdf", Tree("foo")}}));
+    y("{\"asdf\":0}", Tree(TreeObject{TreePair{"asdf", Tree(0)}}));
+    y("{asdf:0}", Tree(TreeObject{TreePair{"asdf", Tree(0)}}));
     n("{0:0}");
     y("{a:0 \"null\":1 \"0\":foo}",
-        Tree(Object{
-            Pair{"a", Tree(0)},
-            Pair{"null", Tree(1)},
-            Pair{"0", Tree("foo")}
+        Tree(TreeObject{
+            TreePair{"a", Tree(0)},
+            TreePair{"null", Tree(1)},
+            TreePair{"0", Tree("foo")}
         })
     );
     y("[[0 1] [[2] [3 4]]]",
-        Tree(Array{
-            Tree(Array{Tree(0), Tree(1)}),
-            Tree(Array{
-                Tree(Array{Tree(2)}),
-                Tree(Array{Tree(3), Tree(4)})
+        Tree(TreeArray{
+            Tree(TreeArray{Tree(0), Tree(1)}),
+            Tree(TreeArray{
+                Tree(TreeArray{Tree(2)}),
+                Tree(TreeArray{Tree(3), Tree(4)})
             })
         })
     );
     y("&foo 1", Tree(1));
     y("&foo:1 *foo", Tree(1));
     y("&\"null\":4 *\"null\"", Tree(4));
-    y("[&foo 1 *foo]", Tree(Array{Tree(1), Tree(1)}));
-    y("[&foo:1 *foo]", Tree(Array{Tree(1)}));
-    y("{&key asdf:*key}", Tree(Object{Pair{"asdf", Tree("asdf")}}));
-    y("{&borp:\"bump\" *borp:*borp}", Tree(Object{Pair{"bump", Tree("bump")}}));
+    y("[&foo 1 *foo]", Tree(TreeArray{Tree(1), Tree(1)}));
+    y("[&foo:1 *foo]", Tree(TreeArray{Tree(1)}));
+    y("{&key asdf:*key}", Tree(TreeObject{TreePair{"asdf", Tree("asdf")}}));
+    y("{&borp:\"bump\" *borp:*borp}", Tree(TreeObject{TreePair{"bump", Tree("bump")}}));
     y("3 //4", Tree(3));
     y("#", Tree("#"));
     y("#foo", Tree("#foo"));

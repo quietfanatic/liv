@@ -11,7 +11,7 @@ using namespace in;
 const char* ExceptionBase::what () const noexcept {
     if (mess_cache.empty()) {
         Pointer p = ptr();
-        mess_cache = cat('[', p.type.name(), ' ', item_to_string(p), ']');
+        mess_cache = old_cat('[', p.type.name(), ' ', item_to_string(p), ']');
     }
     return mess_cache.c_str();
 }

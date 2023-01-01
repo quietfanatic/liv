@@ -140,7 +140,7 @@ IRI Location::as_iri () const {
         expect(l);
         if (!l->data) {
             if (fragment.empty()) return IRI("anonymous-item:"sv);
-            else return IRI(cat("anonymous-item:"sv, "#", fragment));
+            else return IRI(old_cat("anonymous-item:"sv, "#", fragment));
         }
         else switch (l->data->form) {
             case ROOT: {
@@ -148,7 +148,7 @@ IRI Location::as_iri () const {
                     l->data.p
                 )->resource.name();
                 if (fragment.empty()) return base;
-                else return IRI(cat('#', fragment), base);
+                else return IRI(old_cat('#', fragment), base);
             }
             case KEY: {
                 Str key = static_cast<KeyLocation*>(
@@ -156,19 +156,19 @@ IRI Location::as_iri () const {
                 )->key;
                 std::string segment;
                 if (key.empty() || key[0] == '\'' || std::isdigit(key[0])) {
-                    segment = cat('\'', iri::encode(key));
+                    segment = old_cat('\'', iri::encode(key));
                 }
                 else segment = iri::encode(key);
                 if (fragment.empty()) fragment = segment;
-                else fragment = cat(segment, '/', fragment);
+                else fragment = old_cat(segment, '/', fragment);
                 break;
             }
             case INDEX: {
                 usize index = static_cast<IndexLocation*>(
                     l->data.p
                 )->index;
-                if (fragment.empty()) fragment = cat(index);
-                else fragment = cat(index, '/', fragment);
+                if (fragment.empty()) fragment = old_cat(index);
+                else fragment = old_cat(index, '/', fragment);
                 break;
             }
             case ERROR_LOC: rethrow(*l);

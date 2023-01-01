@@ -217,7 +217,7 @@ struct Printer {
                     p, tree_longStr(t), t->flags & PREFER_EXPANDED
                 );
             case REP_ARRAY: {
-                const Array& a = tree_Array(t);
+                TreeArraySlice a = tree_Array(t);
                 if (a.empty()) {
                     return pstr(p, "[]"sv);
                 }
@@ -256,7 +256,7 @@ struct Printer {
                 return pchar(p, ']');
             }
             case REP_OBJECT: {
-                const Object& o = tree_Object(t);
+                TreeObjectSlice o = tree_Object(t);
                 if (o.empty()) {
                     return pstr(p, "{}"sv);
                 }
@@ -391,14 +391,14 @@ static tap::TestSet tests ("base/ayu/print", []{
             usize i = 0;
             for (; i < got.size() && i < expected.size(); i++) {
                 if (got[i] != expected[i]) {
-                    diag(cat("First difference at ",
+                    diag(old_cat("First difference at ",
                         i, " |", got[i], '|', expected[i], '|'
                     ));
                     return;
                 }
             }
             if (got.size() != expected.size()) {
-                diag(cat("Size difference got ",
+                diag(old_cat("Size difference got ",
                     got.size(), " expected ", expected.size()
                 ));
             }

@@ -27,7 +27,7 @@ namespace in {
         if (tree.form == NULLFORM) {
             throw X<EmptyResourceValue>(std::string(res.name().spec()));
         }
-        const Array& a = static_cast<const Array&>(tree);
+        auto a = TreeArraySlice(tree);
         if (a.size() == 2) {
             Type type = Type(Str(a[0]));
             if (!scheme->accepts_type(type)) {

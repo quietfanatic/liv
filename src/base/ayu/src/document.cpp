@@ -19,7 +19,7 @@ static usize parse_numbered_name (Str name) {
     return atoll(name.data() + 1);
 }
 static std::string print_numbered_name (usize id) {
-    return cat('_', id);
+    return old_cat('_', id);
 }
 
 struct DocumentLinks {

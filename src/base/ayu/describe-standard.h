@@ -30,7 +30,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
     desc::name([]{
-        static std::string r = uni::cat(ayu::Type::CppType<T>().name(), '?');
+        static std::string r = uni::old_cat(ayu::Type::CppType<T>().name(), '?');
         return uni::Str(r);
     }),
     desc::values(
@@ -51,7 +51,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::vector<T>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::vector<"sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
@@ -71,7 +71,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::unordered_map<std::string, "sv,
             ayu::Type::CppType<T>().name(), '>'
         );
@@ -109,7 +109,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::map<std::string, T>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::map<std::string, "sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
@@ -145,7 +145,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_set<T>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::unordered_set<"sv,
             ayu::Type::CppType<T>().name(), '>'
         );
@@ -155,7 +155,7 @@ AYU_DESCRIBE_TEMPLATE(
      // doesn't make sense, so use to_tree and from_tree instead of length and
      // elem_func
     desc::to_tree([](const std::unordered_set<T>& v){
-        ayu::Array a;
+        ayu::TreeArray a;
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(e));
         }
@@ -165,7 +165,7 @@ AYU_DESCRIBE_TEMPLATE(
         if (tree.form != ayu::ARRAY) {
             throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
-        auto& a = static_cast<const ayu::Array&>(tree);
+        auto a = ayu::TreeArraySlice(tree);
         v.reserve(a.size());
          // If we use C++17's node interface, we can get away with not doing a
          // move() on the element, thereby supporting elements without a move
@@ -183,7 +183,7 @@ AYU_DESCRIBE_TEMPLATE(
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {
-                throw ayu::X<ayu::GenericError>{uni::cat(
+                throw ayu::X<ayu::GenericError>{uni::old_cat(
                     "Duplicate element given for ",
                     ayu::Type::CppType<std::unordered_set<T>>().name()
                 )};
@@ -199,13 +199,13 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::set<T>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::set<"sv, ayu::Type::CppType<T>().name(), '>'
         );
         return uni::Str(r);
     }),
     desc::to_tree([](const std::set<T>& v){
-        ayu::Array a;
+        ayu::TreeArray a;
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(&e));
         }
@@ -215,7 +215,7 @@ AYU_DESCRIBE_TEMPLATE(
         if (tree.form != ayu::ARRAY) {
             throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
         }
-        auto& a = static_cast<const ayu::Array&>(tree);
+        auto a = ayu::TreeArraySlice(tree);
         std::set<T> source;
         auto loc = ayu::current_location();
         uni::usize i = 0;
@@ -226,7 +226,7 @@ AYU_DESCRIBE_TEMPLATE(
             auto res = v.insert(std::move(node));
              // Check for duplicates.
             if (!res.inserted) {
-                throw ayu::X<ayu::GenericError>{uni::cat(
+                throw ayu::X<ayu::GenericError>{uni::old_cat(
                     "Duplicate element given for ",
                     ayu::Type::CppType<std::set<T>>().name()
                 )};
@@ -242,7 +242,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(T*),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(ayu::Type::CppType<T>().name(), '*');
+        static std::string r = uni::old_cat(ayu::Type::CppType<T>().name(), '*');
         return uni::Str(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
@@ -264,7 +264,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(T[n]),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             ayu::Type::CppType<T>().name(),
             '[', n, ']'
         );
@@ -285,7 +285,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(char[n]),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat("char["sv, n, ']');
+        static std::string r = uni::old_cat("char["sv, n, ']');
         return uni::Str(r);
     }),
      // Serialize as a string
@@ -304,7 +304,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
         else if (tree.form == ayu::ARRAY) {
-            auto& a = static_cast<const ayu::Array&>(tree);
+            auto a = ayu::TreeArraySlice(tree);
             if (a.size() != n) {
                 throw ayu::X<ayu::WrongLength>(&v, n, n, a.size());
             }
@@ -328,7 +328,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::array<T, n>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::array<"sv + ayu::Type::CppType<T>().name(),
             ", "sv, n, '>'
         );
@@ -347,7 +347,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::pair<A, B>),
     desc::name([]{
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::pair<"sv, ayu::Type::CppType<A>().name(),
             ", "sv, ayu::Type::CppType<B>().name(), '>'
         );
@@ -382,7 +382,7 @@ namespace ayu::in {
     template <class A, class B, class... Ts>
     struct TupleNames<A, B, Ts...> {
         static std::string make () {
-            return uni::cat(
+            return uni::old_cat(
                 ayu::Type::CppType<A>().name(),
                 ", "sv, TupleNames<B, Ts...>::make()
             );
@@ -423,7 +423,7 @@ AYU_DESCRIBE_TEMPLATE(
             "Cannot instantiate AYU description of a tuple with references as type parameters"
         );
         using namespace std::literals;
-        static std::string r = uni::cat(
+        static std::string r = uni::old_cat(
             "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'
         );
         return uni::Str(r);
