@@ -77,8 +77,6 @@ using WStr = std::wstring_view;
  // Automatically define assignment operators based on constructors.
  // WARNING: If the constructor throws an exception, the lvalue will be left
  // uninitialized.
- //
- // You can prefix these with function attributes/specifiers like constexpr.
 #define ASSIGN_BY_MOVE(T) \
     T& operator= (T&& o) { \
         this->~T(); \
