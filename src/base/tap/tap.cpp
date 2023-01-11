@@ -357,7 +357,7 @@ static tap::TestSet self_tests ("base/tap/tap", []{
     doesnt_throw([]{}, "doesnt_throw can pass");
     throws<int>([]{throw (int)3;}, "throws<int> can pass");
     throws_is([]{throw (int)3;}, 3, "throws_is can compare the exception");
-    throws_check<int>([]{throw (int)3;}, [](int x){return x==3;}, "throws can test the exception");
+    throws_check<int>([]{throw (int)3;}, [](int x){return x==3;}, "throws_check can test the exception");
     struct bad : scary_exception { };
     throws<bad>([]{
         try_ok([]{throw bad{}; return true;}, "Shouldn't reach this");
