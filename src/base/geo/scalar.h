@@ -9,7 +9,8 @@
 
 namespace geo {
 
- // min and max propagate NANs and prefer left side if equal
+ // Variadic min and max.  These return whichever is the smallest or largest of
+ // their arguments.  They propagate NANs and prefer the left side if equal.
 template <class T>
 constexpr auto min (T a) {
     return a;
@@ -35,7 +36,8 @@ constexpr auto max (A a, B b, Ts&&... rest) {
          : max(b, std::forward<Ts>(rest)...);
 }
 
- // clamp returns NAN if any argument is NAN.
+ // clamp(a, low, high) is equivalent to min(max(a, low), high).
+ // Returns NAN if any argument is NAN.
 template <class T, class Low, class High>
 constexpr T clamp (T a, Low low, High high) {
     if (a != a) return a;

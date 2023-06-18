@@ -107,7 +107,7 @@ constexpr GRange<T> invert (const GRange<T>& a) {
 
 template <class T>
 constexpr GRange<T> properize (const GRange<T>& a) {
-    return {min(a.l, a.r), max(a.r, a.l)};
+    return proper(a) ? a : invert(a);
 }
 
 ///// RELATIONSHIPS
@@ -115,11 +115,6 @@ constexpr GRange<T> properize (const GRange<T>& a) {
 template <class T>
 constexpr bool operator== (const GRange<T>& a, const GRange<T>& b) {
     return a.l == b.l && a.r == b.r;
-}
-
-template <class T>
-constexpr bool operator!= (const GRange<T>& a, const GRange<T>& b) {
-    return a.l != b.l || a.r != b.r;
 }
 
 #define GRANGE_UNARY_OP(op) \
@@ -214,7 +209,7 @@ constexpr GRange<T>& operator &= (GRange<T>& a, const GRange<T>& b) {
 
  // If p is outside of a, returns the closest value to p contained in a.  Note
  // that because the right side of the range is exclusive, this will never
- // return a.r.  To allow returning a.r, use clamp(p, r.include_r())
+ // return a.r.  To allow returning a.r, use clamp(p, r.include_r()).
 template <class TA, class TB>
 constexpr TA clamp (const TA& p, const GRange<TB>& r) {
     return p < r.l ? TA(r.l) : p >= r.r ? TB(prev_quantum(r.r)) : p;

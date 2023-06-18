@@ -32,7 +32,8 @@ using BVec4 = GVec<bool, 4>;
 
 ///// VECTOR STORAGE
 // Some uniony magic to allow you to reference elements with either operator[]
-// or .x, .y, etc
+// or .x, .y, etc.  We're not going so far as to implement swizzling like .zxy
+// and stuff.
 
 template <class T, usize n>
 using GVecStorageGeneric = T[n];
@@ -119,7 +120,8 @@ struct GVec : GVecStorage<T, n> {
      // Default constructor
     constexpr GVec () : GVecStorage<T, n>{.e = {}} { }
 
-     // Construct from individual elements
+     // Construct from individual elements.  Will trigger a debug assert if some
+     // but not all elements are NAN.
     template <class... Args> requires(sizeof...(Args) == n)
     constexpr GVec (Args... args) :
         GVecStorage<T, n>{.e = {T(args)...}}
@@ -161,9 +163,9 @@ struct GVec : GVecStorage<T, n> {
      // Check for the zero vector.  Does not check definedness.
     constexpr explicit operator bool () const {
         for (usize i = 0; i < n; i++) {
-            if (!this->e[i]) return false;
+            if (this->e[i]) return true;
         }
-        return true;
+        return false;
     }
 };
 
@@ -181,7 +183,7 @@ auto get (const GVec<T, n>& a) { return a[i]; }
 
 ///// PROPERTIES
 
- // A Vec is valid is all elements are defined or no elements are defined.
+ // A Vec is valid if all elements are defined or no elements are defined.
 template <class T, usize n>
 constexpr bool valid (const GVec<T, n>& a) {
     if constexpr (n > 0 && requires (T v) { defined(v); }) {
@@ -272,32 +274,22 @@ GVEC_UNARY_OP(-)
 GVEC_UNARY_OP(~)
 #undef GVEC_UNARY_OP
 
- // Vector version of rounding functions that just call the same function on
+ // Vector versions of rounding functions that just call the same function on
  // each element.
-template <class T, usize n>
-constexpr auto round (const GVec<T, n>& a) {
-    GVec<decltype(round(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = round(a[i]);
-    }
-    return r;
+#define GVEC_ROUND_OP(op) \
+template <class T, usize n> \
+constexpr auto op (const GVec<T, n>& a) { \
+    GVec<decltype(op(a[0])), n> r; \
+    for (usize i = 0; i < n; i++) { \
+        r[i] = op(a[i]); \
+    } \
+    return r; \
 }
-template <class T, usize n>
-constexpr auto floor (const GVec<T, n>& a) {
-    GVec<decltype(floor(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = floor(a[i]);
-    }
-    return r;
-}
-template <class T, usize n>
-constexpr auto ceil (const GVec<T, n>& a) {
-    GVec<decltype(ceil(a[0])), n> r;
-    for (usize i = 0; i < n; i++) {
-        r[i] = ceil(a[i]);
-    }
-    return r;
-}
+GVEC_ROUND_OP(trunc)
+GVEC_ROUND_OP(round)
+GVEC_ROUND_OP(floor)
+GVEC_ROUND_OP(ceil)
+#undef GVEC_ROUND_OP
 
  // Get vector that has the same direction but with a length of 1.  Returns the
  // zero vector if given the zero vector.

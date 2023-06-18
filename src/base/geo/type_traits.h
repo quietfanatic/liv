@@ -35,7 +35,7 @@ template <> struct TypeTraits<uint8> {
 };
 template <> struct TypeTraits<int16> {
     using Widened = int32;
-    using MakeUnis_signed = uint16;
+    using MakeUnsigned = uint16;
     static constexpr bool integral = true;
     static constexpr bool floating = false;
     static constexpr bool fractional = false;
@@ -51,7 +51,7 @@ template <> struct TypeTraits<uint16> {
 };
 template <> struct TypeTraits<int32> {
     using Widened = int64;
-    using MakeUnis_signed = uint32;
+    using MakeUnsigned = uint32;
     static constexpr bool integral = true;
     static constexpr bool floating = false;
     static constexpr bool fractional = false;
@@ -67,7 +67,7 @@ template <> struct TypeTraits<uint32> {
 };
 template <> struct TypeTraits<int64> {
     using Widened = int64;
-    using MakeUnis_signed = int64;
+    using MakeUnsigned = uint64;
     static constexpr bool integral = true;
     static constexpr bool floating = false;
     static constexpr bool fractional = false;
@@ -127,7 +127,7 @@ template <> struct TypeTraits<double> {
     static_assert(std::numeric_limits<double>::lowest() == MINUS_HUGE);
     static_assert(std::numeric_limits<double>::denorm_min() == PLUS_TINY);
 };
- // long double is not supported by this library
+ // long double is not supported by this library.
 
  // Whether this is an integral type.  It is expected that you can cast from
  // integer literals, pass by value, and do basic arithmetic operations.
@@ -174,7 +174,7 @@ concept Fractional = TypeTraits<T>::fractional;
  // Captures pointer-like types
 template <class T>
 concept Pointing = requires (T p) {
-    *p; p[0]; p+1; p++; p-1; p--; p - p; p == p; p != p;
+    *p; p[0]; p+1; ++p; p++; p-1; --p; p--; p - p; p == p; p != p;
 };
 
  // Exact equality for everything but floats

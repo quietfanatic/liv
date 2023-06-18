@@ -153,7 +153,8 @@ constexpr GRect<T> include_rt (const GRect<T>& a) {
 }
 
  // Flip both horizontally and vertically but keep the center in the same place.
- // To flip around the origin, multiply by -1 instead.
+ // To flip around the origin, multiply by -1 instead.  Because both dimensions
+ // are flipped, this won't change the sign of the area.
 template <class T>
 constexpr GRect<T> invert (const GRect<T>& a) {
     return {a.r, a.t, a.l, a.b};
@@ -279,7 +280,7 @@ GRECT_SCALAR_OPEQ(*=)
 GRECT_SCALAR_OPEQ(/=)
 #undef GRECT_SCALAR_OPEQ
 
- // Box union
+ // Box union.  May give unintuitive results if a and b aren't both proper.
 template <class T>
 constexpr GRect<T> operator | (const GRect<T>& a, const GRect<T>& b) {
     return {min(a.l, b.l), min(a.b, b.b), max(a.r, b.r), max(a.t, b.t)};

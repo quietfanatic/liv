@@ -31,14 +31,15 @@ constexpr bool finite (T a) {
 }
  // TODO: Move these to separate testing file
 
+ // AKA sqr
 template <Floating T>
 constexpr T length2 (T v) { return v * v; }
  // Okay, I admit, I just wanted a constexpr abs
 template <Floating T>
-constexpr T length (T v) { return v >= 0 ? v : -v; }
+constexpr T length (T v) { return v < 0 ? -v : v; }
 
 ///// CONSTEXPR SQUARE ROOT
-// Calling this root2 instead of sqrt to avoid ambiguity with std::sqrt
+// Calling these root2 instead of sqrt to avoid ambiguity with std::sqrt
 
 template <Floating T>
 constexpr T slow_root2 (T v) {
@@ -107,6 +108,7 @@ constexpr SameSizeInt<T> floor (T a) {
     else return SameSizeInt<T>(-GINF) - trunc(SameSizeInt<T>(-GINF) - a);
 }
 
+ // Round toward positive infinity
 template <Floating T>
 constexpr SameSizeInt<T> ceil (T a) {
     if (a > 0) return SameSizeInt<T>(GINF) - trunc(SameSizeInt<T>(GINF) - a);
@@ -114,7 +116,7 @@ constexpr SameSizeInt<T> ceil (T a) {
 }
 
  // Get next larger representable value.
- // guarantees next_quantum(v) > v unless v is NAN or INF.
+ // guarantees next_quantum(v) > v unless v is NAN or +INF.
 template <Floating T>
 constexpr T next_quantum (T v) {
     if (!finite(v)) {

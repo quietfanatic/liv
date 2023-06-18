@@ -16,7 +16,7 @@ constexpr MakeUnsigned<Widen<T>> length2 (T v) {
     return widen(v) * widen(v);
 }
 
- // AKA sign
+ // AKA abs
 template <SignedIntegral T>
 constexpr MakeUnsigned<T> length (T v) {
      // Do we need to special-case when v is the smallest negative integer,
@@ -27,11 +27,13 @@ constexpr MakeUnsigned<T> length (T v) {
 
 ///// MODIFIERS
 
+ // AKA sign
 template <SignedIntegral T>
 constexpr T normalize (T v) {
     return v > 0 ? 1 : v < 0 ? -1 : v;
 }
 
+ // These aren't very interesting for integers.
 template <Integral T>
 constexpr T next_quantum (T v) { return v+1; }
 template <Pointing P>
@@ -44,17 +46,22 @@ constexpr P prev_quantum (P v) { return v-1; }
 
 ///// COMBINERS
 
+ // Ordinary modulus returns a result with the sign of the left side, resulting
+ // in a graph that looks like this around (0,0) for positive b.
+ //            /| /| /
+ //           / |/ |/
+ //    /| /| /
+ //   / |/ |/
 template <Integral A, Integral B>
 constexpr auto mod (A a, B b) { return a % b; }
 
- // rem is like mod, but always has the sign of the right side.
-template <SignedIntegral A, Integral B>
+ // rem is like mod, but always has the sign of the right side, making a more
+ // even graph.  This might be more intuitive in many cases.
+template <Integral A, Integral B>
 constexpr auto rem (A a, B b) {
     if (a >= 0) return a % b;
     else return -a % -b;
 }
-template <UnsignedIntegral A, Integral B>
-constexpr auto rem (A a, B b) { return a % b; }
 
  // AKA copysign
 template <SignedIntegral A, SignedIntegral B>
