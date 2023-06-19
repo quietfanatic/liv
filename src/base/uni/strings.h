@@ -1,5 +1,6 @@
 #pragma once
 
+#include <charconv>
 #include "arrays.h"
 
 namespace uni {
@@ -152,7 +153,9 @@ struct StringConversion<T> {
         return v.size();
     }
     static usize write (char* p, const GenericStr<char>& v) {
-        std::memcpy(p, v.data(), v.size());
+        for (usize i = 0; i < v.size(); i++) {
+            *p++ = v[i];
+        }
         return v.size();
     }
 };

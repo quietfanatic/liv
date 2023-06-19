@@ -46,6 +46,9 @@ AnyArray<int> t8 (const std::vector<int>& v) {
 void t9 (AnyArray<int>& a, const AnyArray<int>& b) {
     a = b;
 }
+void c9 (std::vector<int>& a, const std::vector<int>& b) {
+    a = b;
+}
 
 constexpr int foos [] = {2, 4, 6, 8, 10, 12};
 
@@ -190,6 +193,29 @@ UniqueString t31 () {
 
 UniqueString t32 (double d) {
     return cat("foo"_s, d, "bar"_s);
+}
+
+NOINLINE
+void t33a (AnyString&& a) {
+    printf("%s\n", a.c_str());
+}
+NOINLINE
+void t33b (AnyString a) {
+    t33a(std::move(a));
+}
+void t33c (AnyString&& a) {
+    t33b(std::move(a));
+}
+NOINLINE
+void c33a (std::string&& a) {
+    printf("%s\n", a.c_str());
+}
+NOINLINE
+void c33b (std::string a) {
+    c33a(std::move(a));
+}
+void c33c (std::string&& a) {
+    c33b(std::move(a));
 }
 
 static tap::TestSet tests ("base/uni/arrays", []{

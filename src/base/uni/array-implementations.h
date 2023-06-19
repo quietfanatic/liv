@@ -2,7 +2,6 @@
  // array classes.  These structs have no behavior associated with them, so if
  // you want to deal with them, you have to manage refcounts and such yourself.
 #pragma once
-#include <iterator>
 #include "common.h"
 
 namespace uni {

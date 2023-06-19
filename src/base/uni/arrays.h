@@ -1,9 +1,27 @@
  // Arrays that can be shared (ref-counted) or static
+ //
+ // This header provides a constellation of array and string classes that share
+ // a common interface and differ by ownership model.  They're largely
+ // compatible with STL containers, but not quite a drop-in replacement.
+ //
+ // THREAD-SAFETY
+ // SharedArray and AnyArray use reference counting which is not thread-safe.
+ // To pass arrays between threads you should use UniqueArray.
+ //
+ // EXCEPTION-SAFETY
+ // None of these classes generate their own exceptions.  If an out-of-bounds
+ // index or a too-large-for-capacity problem occurs, the program will be
+ // terminated.  If an element type throws an exception in its default
+ // constructor, copy constructor, or copy assignment operator, the array method
+ // provides a mostly-strong exception guarantee (except for multi-element
+ // insert): All semantic state will be rewound to before the method was called,
+ // but non-semantic state (such as capacity and whether a buffer is shared) may
+ // be altered.  However, if an element type throws an exception in its move
+ // constructor, move assignment constructor, or destructor, undefined behavior
+ // will occur (hopefully after a debug-only assertion).
 #pragma once
 
-#include <bit>
-#include <charconv>
-#include <cstring>
+#include <iterator>
 #include "array-implementations.h"
 #include "common.h"
 #include "requirements.h"
@@ -190,7 +208,7 @@ struct ArrayInterface {
     ALWAYS_INLINE constexpr
     ArrayInterface () : impl{} { }
 
-     // Move construct
+     // Move construct.
     constexpr
     ArrayInterface (ArrayInterface&& o) requires (!trivially_copyable) {
         impl = o.impl;
@@ -199,8 +217,8 @@ struct ArrayInterface {
      // Move conversion.  Tries to make the moved-to array have the same
      // ownership mode as the moved-from array, and if that isn't supported,
      // copies the buffer.  Although move conversion will never fail, it's
-     // disabled for StaticArray, and the copy constructor from AnyArray to
-     // StaticArray can fail.
+     // disabled for StaticArray and Slice, and the copy constructor from
+     // AnyArray to StaticArray can fail.
     template <ArrayClass ac2> constexpr
     ArrayInterface (ArrayInterface<ac2, T>&& o) requires (
         !trivially_copyable && !o.trivially_copyable
@@ -240,6 +258,8 @@ struct ArrayInterface {
             set_as_unowned(o.data(), o.size());
         }
     }
+     // Copy constructor is defaulted for StaticArray and Slice so that they can
+     // have the is_trivially_copy_constructible trait.
     constexpr
     ArrayInterface (const ArrayInterface&) requires (trivially_copyable)
         = default;
@@ -249,11 +269,20 @@ struct ArrayInterface {
      // that isn't supported, fails (usually at compile-time).
      //   - Explicit for converting from AnyArray to StaticArray, since that can
      //     fail at run time if the passed array isn't static.
-     //   - Converting from Slice is treated specially elsewhere.
+     //   - You are not allowed to convert from a Slice to a StaticArray at
+     //     runtime, because there's no guarantee that the data actually is
+     //     static.
     template <ArrayClass ac2> constexpr
     explicit(is_Static && ArrayInterface<ac2, T>::is_Any)
-    ArrayInterface (const ArrayInterface<ac2, T>& o) requires (!o.is_Slice) {
-        if constexpr (is_Slice) {
+    ArrayInterface (const ArrayInterface<ac2, T>& o) requires (
+        supports_copy || !o.is_Slice
+    ) {
+        if constexpr (o.is_Slice) {
+             // Always copy from Slice because we don't know where it came from
+             // or where it's going.
+            set_as_copy(o.data(), o.size());
+        }
+        else if constexpr (is_Slice) {
             set_as_unowned(o.data(), o.size());
         }
         else if constexpr (is_Unique || o.is_Unique) {
@@ -278,15 +307,6 @@ struct ArrayInterface {
         }
     }
 
-     // Implicit conversion from Slice is only allowed at runtime for
-     // SharedArray and UniqueArray, because for StaticArray, there's no
-     // guarantee that the referenced data is actually static.
-    template <ArrayClass ac2> constexpr
-    ArrayInterface (const ArrayInterface<ac2, T>& o) requires (
-        supports_copy && o.is_Slice
-    ) {
-        set_as_copy(o.data(), o.size());
-    }
      // However, at compile-time you can implicity construct a StaticArray from
      // a Slice, since it's nearly guaranteed to be static data (and if it
      // isn't, you'll get a compile error).
@@ -297,12 +317,11 @@ struct ArrayInterface {
         set_as_unowned(o.data(), o.size());
     }
 
-     // Implicit construction from other array-like types.  Is explicit unless
-     // you're constructing a Slice (or StaticArray at compile-time) and the
-     // inner type matches exactly.
+     // Copy construction from other array-like types.  Explicit except for
+     // Slice/Str.
     template <OtherArrayLike O> constexpr
-    explicit(!ArrayLikeFor<O, T> || !is_Slice)
-    ArrayInterface (const O& o) requires (!supports_static) {
+    explicit(!(is_Slice && ArrayLikeFor<O, T>))
+    ArrayInterface (const O& o) requires (!is_Static) {
         if constexpr (is_Slice) {
             static_assert(ArrayLikeFor<O, T>,
                 "Cannot construct Slice from array-like type if its element "
@@ -318,8 +337,11 @@ struct ArrayInterface {
             set_as_copy(o.data(), o.size());
         }
     }
+     // Actually, allow implicit construction of StaticArray from foreign
+     // array-like types, but only at compile-time.  If the data isn't actually
+     // static, a well-defined compile-time error will occur.
     template <OtherArrayLikeFor<T> O> consteval
-    ArrayInterface (const O& o) requires (supports_static) {
+    ArrayInterface (const O& o) requires (is_Static) {
         static_assert(ArrayContiguousIterator<decltype(o.data())>,
             "Cannot construct static array from array-like type if its data() "
             "returns a non-contiguous iterator."
@@ -327,9 +349,10 @@ struct ArrayInterface {
         set_as_unowned(o.data(), o.size());
     }
 
-     // Constructing from const T* is only allowed for String classes.
+     // Constructing from const T* is only allowed for String classes.  It will
+     // take elements until the first one that boolifies to false.
     constexpr
-    ArrayInterface (const T* p) requires (!supports_static && is_String) {
+    ArrayInterface (const T* p) requires (!is_Static && is_String) {
         expect(p);
         usize s = 0;
         while (p[s]) ++s;
@@ -340,8 +363,10 @@ struct ArrayInterface {
             set_as_copy(p, s);
         }
     }
+     // As usual, StaticString can only be implicitly constructed at
+     // compile-time.
     consteval
-    ArrayInterface (const T* p) requires (supports_static && is_String) {
+    ArrayInterface (const T* p) requires (is_Static && is_String) {
         expect(p);
         usize s = 0;
         while (p[s]) ++s;
@@ -351,6 +376,14 @@ struct ArrayInterface {
      // Constructing from C array is different for Array and String classes.
      // Array classes take the whole array, but String classes only take up to
      // (and not including) the first element that's equal to 0.
+     //
+     // In addition, for constructing from a C array, AnyString (and AnyArray)
+     // behaves like StaticString, not like SharedString, in that it borrows
+     // data at compile-time and isn't allowed at run-time.  This is a bit of a
+     // compromise to allow string literals to be assigned to AnyStrings without
+     // any runtime performance cost.  If you really need to assign a character
+     // array to an AnyString at runtime, you must explicitly choose between the
+     // Copy and Static named constructors.
     template <class T2, usize len> constexpr
     explicit(!std::is_same_v<T2, T> || !is_Slice)
     ArrayInterface (const T2(& o )[len]) requires (!supports_static) {
@@ -371,10 +404,6 @@ struct ArrayInterface {
             set_as_copy(o, s);
         }
     }
-     // In addition, constructing an AnyArray from a C array is made
-     // consteval-only.  This is to make construction of AnyString from
-     // undecorated string literals as optimal as possible.  To explicitly do a
-     // copy use the Copy named constructor or just construct a UniqueArray.
     template <usize len> consteval
     ArrayInterface (const T(& o )[len]) requires (supports_static) {
         usize s;
@@ -388,7 +417,7 @@ struct ArrayInterface {
 
      // Construct from a pointer(-like iterator) and a size
     template <ArrayIterator Ptr> constexpr
-    ArrayInterface (Ptr p, usize s) requires (!supports_static) {
+    ArrayInterface (Ptr p, usize s) requires (!is_Static) {
         if constexpr (is_Slice) {
             static_assert(ArrayIteratorFor<Ptr, T>,
                 "Cannot borrow Slice from iterator with non-exact element type."
@@ -403,7 +432,7 @@ struct ArrayInterface {
         }
     }
     template <ArrayIterator Ptr> consteval
-    ArrayInterface (Ptr p, usize s) requires (supports_static) {
+    ArrayInterface (Ptr p, usize s) requires (is_Static) {
         static_assert(ArrayIteratorFor<Ptr, T>,
             "Cannot construct static array from iterator with non-exact "
             "element type."
@@ -416,7 +445,7 @@ struct ArrayInterface {
 
      // Construct from a pair of iterators.
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> constexpr
-    ArrayInterface (Begin b, End e) requires (!supports_static) {
+    ArrayInterface (Begin b, End e) requires (!is_Static) {
         if constexpr (is_Slice) {
             static_assert(ArrayIteratorFor<Begin, T>,
                 "Cannot borrow Slice from iterator with non-exact element type."
@@ -435,7 +464,7 @@ struct ArrayInterface {
         }
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> consteval
-    ArrayInterface (Begin b, End e) {
+    ArrayInterface (Begin b, End e) requires (is_Static) {
         static_assert(ArrayIteratorFor<Begin, T>,
             "Cannot construct static array from iterator with non-exact "
             "element type."
@@ -451,6 +480,7 @@ struct ArrayInterface {
     }
 
      // Construct an array with a number of default-constructed elements.
+    explicit
     ArrayInterface (usize s) requires (supports_copy) {
         if (!s) {
             impl = {}; return;
@@ -473,8 +503,7 @@ struct ArrayInterface {
     }
 
      // This constructor constructs a repeating sequence of one element.  It's
-     // only available for owned array classes, and is equivalent to
-     // Repeat(s, Slice<T>(&v, 1))
+     // only available for owned array classes.
     ArrayInterface (usize s, const T& v) requires (supports_copy) {
         if (!s) {
             impl = {}; return;
@@ -498,7 +527,10 @@ struct ArrayInterface {
 
      // Finally, constructing from a std::intiializer_list always copies because
      // that's the only thing you can do with an initializer list.
-    ArrayInterface (std::initializer_list<T> l) requires (supports_copy) {
+    ArrayInterface (std::initializer_list<T> l) {
+        static_assert(supports_copy,
+            "Can't construct a non-owning array from a std::initializer_list."
+        );
         set_as_copy(std::data(l), std::size(l));
     }
 
@@ -534,7 +566,7 @@ struct ArrayInterface {
      // Explicitly reference static data.  Unlike the consteval constructors,
      // these are allowed at run time.  It's the caller's responsibility to make
      // sure that the referenced data outlives both the returned StaticArray AND
-     // any Arrays or StaticArray that may be constructed from it.
+     // all AnyArrays and StaticArrays that may be constructed from it.
     static constexpr
     Self Static (SelfSlice o) requires (supports_static) {
         static_assert(ArrayIteratorFor<decltype(ArrayLike_data(o)), T>,
@@ -581,7 +613,7 @@ struct ArrayInterface {
     }
 
      // Create an array with a given size but uninitialized data.  This is only
-     // allowed for elements types that are allowed to be uninitialized.
+     // allowed for element types that are allowed to be uninitialized.
     Self Uninitialized (usize s) requires (is_Unique) {
         static_assert(std::is_trivially_default_constructible_v<T>,
             "Cannot create Uninitialized array with type that isn't trivially "
@@ -620,6 +652,14 @@ struct ArrayInterface {
     ArrayInterface& operator= (const ArrayInterface&) requires (
         trivially_copyable
     ) = default;
+
+    ///// COERCION
+
+     // Okay okay
+    ALWAYS_INLINE constexpr
+    operator std::string_view () const requires (is_String) {
+        return std::string_view(data(), size());
+    }
 
     ///// DESTRUCTOR
     constexpr
@@ -664,8 +704,8 @@ struct ArrayInterface {
 
      // Maximum size differs depending on whether this array can be owned or
      // not.  The maximum size for owned arrays is the same on both 32-bit and
-     // 64-bit platforms.  If you need to process arrays larger than that
-     // you're probably already managing your own memory anyway.
+     // 64-bit platforms.  If you need to process arrays larger than 2 billion
+     // eleents, you're probably already managing your own memory anyway.
     static constexpr usize max_size_ =
         supports_copy ? 0x7fff'fff0 : usize(-1) >> 1;
     ALWAYS_INLINE constexpr
@@ -710,11 +750,11 @@ struct ArrayInterface {
         else require(false);
     }
 
-     // Access individual elements.  at() and mut_at() will fail at run time if
-     // the passed index is out of bounds.  operator[], get(), and mut_get() do
-     // not do bounds checks (except on debug builds).  Only the mut_* versions
-     // can trigger copy-on-write; the non-mut_* version are always const except
-     // for UniqueArray.
+     // Access individual elements.  at() and mut_at() will terminate if the
+     // passed index is out of bounds.  operator[], get(), and mut_get() do not
+     // do bounds checks (except on debug builds).  Only the mut_* versions can
+     // trigger copy-on-write; the non-mut_* version are always const except for
+     // UniqueArray.
     constexpr
     const T& at (usize i) const {
         require(i < size());
@@ -774,14 +814,22 @@ struct ArrayInterface {
         return (*this)[size() - 1];
     }
 
+     // Like substr. but doesn't do bounds checking.
     constexpr
     SelfSlice slice (usize offset, usize length) const {
         expect(offset < size() && offset + length < size());
         return SelfSlice(data() + offset, length);
     }
+     // Like slice, but capped at the end of the contents.
+    constexpr
+    SelfSlice substr (usize offset, usize length = usize(-1)) const {
+        if (offset >= size()) offset = size();
+        if (length > size() - offset) length = size() - offset;
+        return SelfSlice(data() + offset, length);
+    }
 
      // Get the current capacity of the owned buffer.  If this array is not
-     // owned, returns 0.
+     // owned, returns 0 even if the array is not empty.
     constexpr
     usize capacity () const {
         if (owned()) {
@@ -797,7 +845,7 @@ struct ArrayInterface {
 
      // Returns if this string is owned (has a shared or unique buffer).  If
      // this returns true, then there is an ArrayOwnedHeader right behind the
-     // pointer returned by data().
+     // pointer returned by data().  Returns false for empty arrays.
     constexpr
     bool owned () const {
         if constexpr (is_Any) {
@@ -819,8 +867,7 @@ struct ArrayInterface {
 
      // Returns if this string is unique (can be moved to a UniqueArray without
      // doing an allocation).  This is not a strict subset of owned(); in
-     // particular, it will return true for most empty arrays (capacity == 0),
-     // including empty non-owned arrays.
+     // particular, it will return true for most empty arrays (capacity == 0).
     constexpr
     bool unique () const {
         if constexpr (is_Unique) return true;
@@ -830,7 +877,7 @@ struct ArrayInterface {
             }
             else return !impl.data;
         }
-        else return !impl.data;
+        else return false;
     }
 
     ///// ITERATORS
@@ -904,7 +951,7 @@ struct ArrayInterface {
      // Make sure the array is both unique and has at least enough room for the
      // given number of elements.  The final capacity might be slightly higher
      // than the requested capacity.  Never reduces capacity (use shrink_to_fit
-     // to do that).  Calling with a capacity of 0 has the effect of requesting
+     // to do that).  Calling with a capacity of 1 has the effect of requesting
      // the minimum owned capacity.
     constexpr
     void reserve (usize cap) requires (supports_copy) {
@@ -948,8 +995,9 @@ struct ArrayInterface {
      // elements, and will reallocate if the new size is larger than the current
      // capacity.  When shrinking, destroys elements past the new size, and
      // never reallocates.  If the current array is not unique, makes it unique
-     // UNLESS it's shared and T is trivially destructible (which means that
-     // arrays can share the same buffer despite having different lengths).
+     // UNLESS it's shared and the elements are trivially destructible (which
+     // means that arrays can share the same buffer despite having different
+     // lengths).
     ALWAYS_INLINE
     void resize (usize new_size) requires (supports_copy) {
         usize old_size = size();
@@ -1002,7 +1050,7 @@ struct ArrayInterface {
     void emplace_back (Args&&... args) requires (supports_copy) {
         reserve_plenty(size() + 1);
         new (&impl.data[size()]) T(std::forward<Args>(args)...);
-        set_size(size() + 1);
+        add_size(1);
     }
 
      // emplace_back but skip the capacity and uniqueness check.
@@ -1011,7 +1059,7 @@ struct ArrayInterface {
         expect(size() + 1 <= max_size_);
         expect(unique() && capacity() > size());
         new (&impl.data[size()]) T(std::forward<Args>(args)...);
-        set_size(size() + 1);
+        add_size(1);
     }
 
      // Copy-construct onto the end of the array, increasing its size by 1.
@@ -1044,7 +1092,7 @@ struct ArrayInterface {
     void append (Ptr p, usize s) requires (supports_copy) {
         reserve_plenty(size() + s);
         copy_fill(impl.data + size(), std::move(p), s);
-        set_size(size() + s);
+        add_size(s);
     }
     void append (SelfSlice o) requires (supports_copy) {
         append(o.data(), o.size());
@@ -1055,7 +1103,7 @@ struct ArrayInterface {
             return append(std::move(b), usize(e - b));
         }
         else if constexpr (ArrayForwardIterator<Begin>) {
-            usize s;
+            usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
             return append(std::move(b), s);
         }
@@ -1072,7 +1120,7 @@ struct ArrayInterface {
         expect(size() + s <= max_size_);
         expect(unique() && capacity() >= size() + s);
         copy_fill(impl.data + size(), std::move(p), s);
-        set_size(size() + s);
+        add_size(s);
     }
     void append_expect_capacity (SelfSlice o) requires (supports_copy) {
         append_expect_capacity(o.data(), o.size());
@@ -1083,7 +1131,7 @@ struct ArrayInterface {
             return append_expect_capacity(std::move(b), usize(e - b));
         }
         else if constexpr (ArrayForwardIterator<Begin>) {
-            usize s;
+            usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
             return append_expect_capacity(std::move(b), s);
         }
@@ -1135,7 +1183,8 @@ struct ArrayInterface {
     }
 
      // Multiple-element insert.  If any of the iterator operators or the copy
-     // constructor throw, the program will crash.
+     // constructor throw, the program will crash.  This is the one exception to
+     // the mostly-strong exception guarantee.
     template <ArrayIterator Ptr>
     void insert (usize offset, Ptr p, usize s) requires (supports_copy) {
         expect(offset < size());
@@ -1147,9 +1196,7 @@ struct ArrayInterface {
             try {
                 copy_fill(dat + offset, std::move(p), s);
             }
-            catch (...) {
-                require(false);
-            }
+            catch (...) { require(false); }
             set_as_unique(dat, size() + s);
         }
     }
@@ -1167,7 +1214,7 @@ struct ArrayInterface {
             static_assert(ArrayForwardIterator<Begin>,
                 "Cannot call insert with non-sizeable single-use iterator"
             );
-            for (auto p = b; p != e; ++p) ++s;
+            s = 0; for (auto p = b; p != e; ++p) ++s;
         }
         insert(offset, std::move(b), s);
     }
@@ -1253,6 +1300,7 @@ struct ArrayInterface {
             dat = allocate_copy(std::to_address(std::move(ptr)), s);
         }
         else {
+             // don't noinline if we can't depolymorph ptr
             dat = allocate_owned(s);
             try {
                 copy_fill(dat, std::move(ptr), s);
@@ -1297,10 +1345,17 @@ struct ArrayInterface {
     ALWAYS_INLINE constexpr
     void set_size (usize s) {
         if constexpr (is_Any) {
-             // This optimizes better than shifting and oring
-            impl.sizex2_with_owned += (isize(s) - size()) << 1;
+            impl.sizex2_with_owned = s << 1 | (impl.sizex2_with_owned & 1);
         }
         else impl.size = s;
+    }
+     // Just an optimization for AnyArray
+    ALWAYS_INLINE constexpr
+    void add_size (usize change) {
+        if constexpr (is_Any) {
+            impl.sizex2_with_owned += change << 1;
+        }
+        else impl.size += change;
     }
 
     constexpr
@@ -1311,6 +1366,7 @@ struct ArrayInterface {
             }
         }
     }
+
     constexpr
     void remove_ref () {
         if (owned()) {
@@ -1323,14 +1379,25 @@ struct ArrayInterface {
                     return;
                 }
             }
-            if constexpr (!std::is_trivially_destructible_v<T>) {
-                for (usize i = size(); i > 0;) {
-                    impl.data[--i].~T();
-                }
-            }
-            deallocate_owned(impl.data);
+             // Noinline this for shared arrays with nontrivial element
+             // destructors.  We don't want to inline an entire loop of
+             // destructor calls in every place we remove a reference.
+            if constexpr (
+                supports_share && !std::is_trivially_destructible_v<T>
+            ) noinline_destroy(impl);
+            else destroy(impl);
         }
     }
+    static
+    void destroy (ArrayImplementation<ac, T> impl) {
+        Self& self = reinterpret_cast<Self&>(impl);
+        for (usize i = self.size(); i > 0;) {
+            impl.data[--i].~T();
+        }
+        deallocate_owned(impl.data);
+    }
+    NOINLINE static
+    void noinline_destroy (ArrayImplementation<ac, T> impl) { destroy(impl); }
 
     static constexpr
     usize capacity_for_size (usize s) {
@@ -1349,9 +1416,10 @@ struct ArrayInterface {
     T* allocate_owned (usize s) {
         require(s <= max_size_);
         usize cap = capacity_for_size(s);
-        auto header = (ArrayOwnedHeader*)std::malloc(
-            sizeof(ArrayOwnedHeader) + cap * sizeof(T)
-        );
+         // On 32-bit platforms we need to make sure we don't overflow usize
+        uint64 bytes = sizeof(ArrayOwnedHeader) + (uint64)cap * sizeof(T);
+        require(bytes < usize(-1));
+        auto header = (ArrayOwnedHeader*)std::malloc(bytes);
         const_cast<uint32&>(header->capacity) = cap;
         header->ref_count = 0;
         return (T*)(header + 1);
@@ -1372,10 +1440,8 @@ struct ArrayInterface {
         catch (...) {
              // You threw from the copy constructor!  Now we have to clean up
              // the mess.
-            if constexpr (!std::is_trivially_destructible_v<T>) {
-                while (i > 0) {
-                    dat[--i].~T();
-                }
+            while (i > 0) {
+                dat[--i].~T();
             }
             throw;
         }
@@ -1459,7 +1525,6 @@ struct ArrayInterface {
         Self& self = reinterpret_cast<Self&>(impl);
         expect(split <= self.size());
         expect(shift != 0);
-        require(self.size() + shift <= max_size_);
         usize cap = self.capacity();
         if (self.unique() && cap >= self.size() + shift) {
              // We have enough capacity so all we need to do is move the tail.
