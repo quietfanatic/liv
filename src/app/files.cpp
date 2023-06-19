@@ -25,10 +25,10 @@ FilesToOpen expand_files (
         for (auto& entry : fs::directory_iterator(folder_p)) {
             std::u8string u8name = entry.path().u8string();
             std::string& name = reinterpret_cast<std::string&>(u8name);
-            Str extension;
+            OldStr extension;
             usize dotpos = name.rfind('.');
             if (dotpos != std::string::npos) {
-                extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
+                extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
             }
             if (!extensions.count(std::string(extension))) continue;
             r.files.emplace_back(std::move(name));
@@ -60,10 +60,10 @@ FilesToOpen expand_files (
                 for (auto& entry : fs::recursive_directory_iterator(file)) {
                     std::u8string u8name = entry.path().u8string();
                     std::string& name = reinterpret_cast<std::string&>(u8name);
-                    Str extension;
+                    OldStr extension;
                     usize dotpos = name.rfind('.');
                     if (dotpos != std::string::npos) {
-                        extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
+                        extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
                     }
                     if (!extensions.count(std::string(extension))) continue;
                     r.files.emplace_back(std::move(name));
@@ -84,7 +84,7 @@ FilesToOpen expand_files (
     }
 }
 
-std::vector<std::string> read_list (Str list_filename) {
+std::vector<std::string> read_list (OldStr list_filename) {
     std::vector<std::string> lines {""};
     if (list_filename == "-") {
          // TODO: Make ayu support stdin for string_from_file.

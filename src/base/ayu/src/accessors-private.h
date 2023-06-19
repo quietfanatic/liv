@@ -20,8 +20,8 @@ struct ChainAcr : Accessor {
 
  // TODO: Do we need to do something with accessor_flags for this?
 struct AttrFuncAcr : Accessor {
-    Reference(* fp )(Mu&, Str);
-     // TODO: Can we replace some of these with Str?
+    Reference(* fp )(Mu&, OldStr);
+     // TODO: Can we replace some of these with OldStr?
     std::string key;
     static Type _type (const Accessor*, Mu*);
     static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
@@ -30,7 +30,7 @@ struct AttrFuncAcr : Accessor {
     static constexpr AccessorVT _vt = {
         &_type, &_access, &_address, null, &_destroy
     };
-    AttrFuncAcr (Reference(* fp )(Mu&, Str), Str k) :
+    AttrFuncAcr (Reference(* fp )(Mu&, OldStr), OldStr k) :
         Accessor(&_vt), fp(fp), key(k)
     { }
 };

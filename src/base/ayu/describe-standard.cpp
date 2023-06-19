@@ -32,13 +32,13 @@ AYU_DESCRIBE_SCALAR(std::string)
 AYU_DESCRIBE_SCALAR(std::u16string)
 #undef AYU_DESCRIBE_SCALAR
 
- // Str AKA string_view is a reference-like type so it can't be deserialized
+ // OldStr AKA string_view is a reference-like type so it can't be deserialized
  // because the data structure containing it would most likely outlive the tree
  // it came from.  However, allowing it to be serialized could be useful.  Plus
- // giving this a description means that std::vector<Str> can be used as the
+ // giving this a description means that std::vector<OldStr> can be used as the
  // type for keys().
 AYU_DESCRIBE(std::string_view,
-    to_tree([](const Str& v){
+    to_tree([](const OldStr& v){
         return Tree(v);
     })
 )
@@ -94,7 +94,7 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
     std::tuple<int32, std::string, std::vector<int32>> data;
     std::tuple<int32, std::string, std::vector<int32>> expected_data
         = {45, "asdf"s, {3, 4, 5}};
-    Str s = "[45 asdf [3 4 5]]"sv;
+    OldStr s = "[45 asdf [3 4 5]]"sv;
     doesnt_throw([&]{
         return item_from_string(&data, s);
     }, "item_from_string on tuple");

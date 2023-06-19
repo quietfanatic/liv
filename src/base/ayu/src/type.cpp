@@ -15,9 +15,9 @@
 
 namespace ayu {
 
-Str Type::name () const {
+OldStr Type::name () const {
     auto desc = in::DescriptionPrivate::get(*this);
-    if (!desc) return Str();
+    if (!desc) return OldStr();
     return in::get_description_name(desc);
 }
 
@@ -160,7 +160,7 @@ namespace in {
 
 struct Registry {
     std::unordered_map<std::type_index, const Description*> by_cpp_type;
-    std::unordered_map<Str, const Description*> by_name;
+    std::unordered_map<OldStr, const Description*> by_name;
     bool initted = false;
 };
 
@@ -199,14 +199,14 @@ const Description* need_description_for_type_info (const std::type_info& t) {
     else throw X<UnknownType>(t);
 }
 
-const Description* get_description_for_name (Str name) {
+const Description* get_description_for_name (OldStr name) {
     init_names();
     auto& ds = registry().by_name;
     auto iter = ds.find(name);
     if (iter != ds.end()) return iter->second;
     else return null;
 }
-const Description* need_description_for_name (Str name) {
+const Description* need_description_for_name (OldStr name) {
     auto desc = get_description_for_name(name);
     if (desc) return desc;
     else throw X<TypeNotFound>(std::string(name));
@@ -215,7 +215,7 @@ void throw_UnknownType (const std::type_info& t) {
     throw X<UnknownType>(t);
 }
 
-Str get_description_name (const Description* desc) {
+OldStr get_description_name (const Description* desc) {
     return desc->name_offset
         ? ((NameDcr<Mu>*)((char*)desc + desc->name_offset))->f()
         : !desc->name.empty() ? desc->name
@@ -258,7 +258,7 @@ AYU_DESCRIBE(ayu::Type,
         },
         [](Type& v, const std::string& m){
             if (m.starts_with("(readonly)")) {
-                v = Type(Str(m).substr(10), true);
+                v = Type(OldStr(m).substr(10), true);
             }
             else v = Type(m);
         }

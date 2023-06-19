@@ -77,7 +77,7 @@ enum ResourceState {
     RELOAD_COMMITTING,
 };
  // Get the string name of a resource state.
-Str show_ResourceState (ResourceState);
+OldStr show_ResourceState (ResourceState);
 
  // The Resource class refers to a resource with reference semantics.
  // This class itself is cheap to copy.
@@ -91,9 +91,9 @@ struct Resource {
     Resource (const IRI& name);
     Resource (IRI&& name);
      // Takes an IRI reference relative to the current resource if there is one.
-    Resource (Str name);
+    Resource (OldStr name);
      // Doesn't autoconvert for some reason
-    Resource (const char* name) : Resource(Str(name)) { }
+    Resource (const char* name) : Resource(OldStr(name)) { }
      // Creates the resource already loaded with the given data, without reading
      // from disk.  Will throw InvalidResourceState if a resource with this
      // name is already loaded or EmptyResourceValue if value is empty.
@@ -130,7 +130,7 @@ struct Resource {
 
      // Syntax sugar
     explicit operator bool () { return data; }
-    Reference operator [] (Str key) {
+    Reference operator [] (OldStr key) {
         return ref()[key];
     }
     Reference operator [] (usize index) {
@@ -230,7 +230,7 @@ struct ResourceError : Error { };
  // Tried an an operation on a resource when its state wasn't appropriate
  // for that operation.
 struct InvalidResourceState : ResourceError {
-    Str tried;
+    OldStr tried;
     Resource res;
     ResourceState state;
 };

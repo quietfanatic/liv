@@ -25,13 +25,13 @@ enum : TreeRep {
 
  // Can't be TreeRef because then t.data.as_chars will be invalidated when this
  // function returns.
-inline Str tree_shortStr (const Tree& t) {
+inline OldStr tree_shortStr (const Tree& t) {
     expect(t.rep == REP_SHORTSTRING && t.length <= 8);
-    return Str(t.data.as_chars, t.length);
+    return OldStr(t.data.as_chars, t.length);
 }
-inline Str tree_longStr (TreeRef t) {
+inline OldStr tree_longStr (TreeRef t) {
     expect(t->rep == REP_LONGSTRING && t->length > 8);
-    return Str(t->data.as_char_ptr, t->length);
+    return OldStr(t->data.as_char_ptr, t->length);
 }
 inline TreeArraySlice tree_Array (TreeRef t) {
     expect(t->rep == REP_ARRAY);

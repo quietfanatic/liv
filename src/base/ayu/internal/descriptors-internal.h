@@ -131,7 +131,7 @@ struct Description : ComparableAddress {
     uint32 cpp_size = 0;
     uint32 cpp_align = 0;
      // TODO: Merge this with the name dcr?
-    Str name;
+    OldStr name;
 
      // Do some property calculations ahead of time
     enum Flags {
@@ -187,7 +187,7 @@ struct DetachedDescriptor : Descriptor<T> {
 
 template <class T>
 struct NameDcr : AttachedDescriptor<T> {
-    Str(* f )();
+    OldStr(* f )();
 };
 
 template <class T>
@@ -297,12 +297,12 @@ struct ValuesDcrWith : ValuesDcr<T> {
 
 template <class T>
 struct AttrDcr : ComparableAddress {
-    Str key;
+    OldStr key;
 };
 template <class T, class Acr>
 struct AttrDcrWith : AttrDcr<T> {
     Acr acr;
-    constexpr AttrDcrWith (Str k, const Acr& a) :
+    constexpr AttrDcrWith (OldStr k, const Acr& a) :
         AttrDcr<T>{{}, k},
         acr(constexpr_acr(a))
     { }
@@ -373,7 +373,7 @@ struct KeysDcrWith : KeysDcr<T> {
 
 template <class T>
 struct AttrFuncDcr : AttachedDescriptor<T> {
-    Reference(* f )(T&, Str);
+    Reference(* f )(T&, OldStr);
 };
 
 template <class T>
@@ -440,7 +440,7 @@ static void elems_cannot_be_combined_with_length_and_elem_func_in_AYU_DESCRIBE (
 static void length_and_elem_func_must_be_together_in_AYU_DESCRIBE () { }
 
 template <class T, class... Dcrs>
-constexpr FullDescription<T, Dcrs...> make_description (Str name, const Dcrs&... dcrs) {
+constexpr FullDescription<T, Dcrs...> make_description (OldStr name, const Dcrs&... dcrs) {
     using Desc = FullDescription<T, Dcrs...>;
 
     static_assert(

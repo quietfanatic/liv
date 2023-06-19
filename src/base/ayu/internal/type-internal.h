@@ -29,11 +29,11 @@ namespace ayu::in {
     const Description* register_description (const Description*);
     const Description* get_description_for_type_info (const std::type_info&);
     const Description* need_description_for_type_info (const std::type_info&);
-    const Description* get_description_for_name (Str);
-    const Description* need_description_for_name (Str);
+    const Description* get_description_for_name (OldStr);
+    const Description* need_description_for_name (OldStr);
     [[noreturn]] void throw_UnknownType (const std::type_info&);
 
-    Str get_description_name (const Description*);
+    OldStr get_description_name (const Description*);
      // If this returns false, the type is probably a corrupted pointer and
      // shouldn't be dereferenced.
     bool is_valid_type (const Description*);

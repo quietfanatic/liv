@@ -55,7 +55,7 @@ struct Printer {
         return p+1;
     }
     [[nodiscard]]
-    char* pstr (char* p, Str s) {
+    char* pstr (char* p, OldStr s) {
         if (p + s.size() > end) [[unlikely]] p = extend(p, s.size());
         std::memcpy(p, s.data(), s.size());
         return p + s.size();
@@ -108,7 +108,7 @@ struct Printer {
     }
 
     [[nodiscard]]
-    char* print_quoted (char* p, Str s, bool expand) {
+    char* print_quoted (char* p, OldStr s, bool expand) {
         p = pchar(p, '"');
         for (auto c : s)
         switch (c) {
@@ -131,7 +131,7 @@ struct Printer {
     }
 
     [[nodiscard]]
-    char* print_string (char* p, Str s, bool expand) {
+    char* print_string (char* p, OldStr s, bool expand) {
         if (opts & JSON) {
             return print_quoted(p, s, false);
         }
@@ -177,7 +177,7 @@ struct Printer {
         switch (t->rep) {
             case REP_NULL: return pstr(p, "null"sv);
             case REP_BOOL: {
-                Str s = t->data.as_bool ? "true"sv : "false"sv;
+                OldStr s = t->data.as_bool ? "true"sv : "false"sv;
                 return pstr(p, s);
             }
             case REP_INT64: {
@@ -296,7 +296,7 @@ struct Printer {
                     std::rethrow_exception(tree_Error(t));
                 }
                 catch (const std::exception& e) {
-                    Str name;
+                    OldStr name;
                     try {
                         name = Type(typeid(e)).name();
                     }
@@ -337,7 +337,7 @@ std::string tree_to_string (TreeRef t, PrintOptions opts) {
 }
 
  // Forget C++ IO and its crummy diagnostics
-void string_to_file (Str content, Str filename) {
+void string_to_file (OldStr content, OldStr filename) {
     FILE* f = fopen_utf8(std::string(filename).c_str(), "wb");
     if (!f) {
         throw X<OpenFailed>(std::string(filename), errno);
@@ -348,12 +348,12 @@ void string_to_file (Str content, Str filename) {
     }
 }
 
-void tree_to_file (TreeRef t, Str filename, PrintOptions opts) {
+void tree_to_file (TreeRef t, OldStr filename, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & COMPACT)) opts |= PRETTY;
     Printer printer (opts);
     char* p = printer.print_tree(printer.start, t);
-    string_to_file(Str(printer.start, p - printer.start), filename);
+    string_to_file(OldStr(printer.start, p - printer.start), filename);
 }
 
 } using namespace ayu;
@@ -386,7 +386,7 @@ static tap::TestSet tests ("base/ayu/print", []{
 
     Tree t = tree_from_string(pretty);
 
-    auto test = [](Str got, Str expected, std::string name){
+    auto test = [](OldStr got, OldStr expected, std::string name){
         if (!is(got, expected, name)) {
             usize i = 0;
             for (; i < got.size() && i < expected.size(); i++) {

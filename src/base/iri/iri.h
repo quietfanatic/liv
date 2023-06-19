@@ -63,7 +63,7 @@
 namespace iri {
 
  // Alias some types for tersity
-using Str = std::string_view;
+using OldStr = std::string_view;
 using uint32 = std::uint32_t;
 using uint16 = std::uint16_t;
 using uint8 = std::uint8_t;
@@ -71,10 +71,10 @@ using uint8 = std::uint8_t;
 constexpr uint32 maximum_length = uint16(-1);
 
  // Replace reserved characters with % sequences
-std::string encode (Str);
+std::string encode (OldStr);
  // Replace % sequences with their characters.  If there's an invalid escape
  // sequence, leaves it as is.
-std::string decode (Str);
+std::string decode (OldStr);
 
  // The first component that the given IRI reference has
 enum IRIRelativity : uint8 {
@@ -90,7 +90,7 @@ enum IRIRelativity : uint8 {
  // Return what kind of relative reference this is.  This only does basic
  // detection, and when given an invalid reference, may return anything.  To be
  // sure that the reference is valid, resolve it into a full IRI.
-IRIRelativity classify_reference (Str);
+IRIRelativity classify_reference (OldStr);
 
 struct IRI {
      // Construct the empty IRI.  This is not a valid IRI.
@@ -99,7 +99,7 @@ struct IRI {
      // base is provided, resolved ref as a IRI reference (AKA a relative IRI)
      // with base as its base. If base is not provided, ref must be an absolute
      // IRI with scheme included.
-    explicit IRI (Str ref, const IRI& base = IRI());
+    explicit IRI (OldStr ref, const IRI& base = IRI());
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
     IRI (
@@ -115,7 +115,7 @@ struct IRI {
     IRI& operator = (IRI&& o);
 
      // Returns whether this IRI is valid or not.  If the IRI is invalid, all
-     // bool accessors will return false and all Str and IRI accessors will
+     // bool accessors will return false and all OldStr and IRI accessors will
      // return empty.
     bool is_valid () const;
      // Returns whether this IRI is empty.  The empty IRI is also invalid.
@@ -152,12 +152,12 @@ struct IRI {
 
      // Get the scheme of the IRI.  Doesn't include the :.
      // This will always return something for a valid IRI.
-    Str scheme () const;
+    OldStr scheme () const;
      // Get the authority (host and port).  Doesn't include the //.  Will
      // return empty if has_authority is false.  May still return empty if
      // has_authority is true, but the IRI has an empty authority (e.g.
      // file:///foo/bar)
-    Str authority () const;
+    OldStr authority () const;
      // Get the path component of the IRI.
      //   scheme://host/path => /path
      //   scheme://host/ => /
@@ -166,11 +166,11 @@ struct IRI {
      //   scheme:/path => /path
      //   scheme:path => path
      // If has_path is true, will always return non-empty.
-    Str path () const;
+    OldStr path () const;
      // Get the query.  Will not include the ?.  May be existent but empty.
-    Str query () const;
+    OldStr query () const;
      // Get the fragment.  Will not include the #.  May be existent but empty.
-    Str fragment () const;
+    OldStr fragment () const;
 
      // Returns a new IRI with just the scheme (and the colon).
     IRI iri_with_scheme () const;
@@ -185,16 +185,16 @@ struct IRI {
      // Get everything but the fragment
     IRI iri_without_fragment () const;
 
-     // The following are the same as above, but return a raw Str instead of a
+     // The following are the same as above, but return a raw OldStr instead of a
      // new IRI.  This saves a string copy, but can cost an extra parse if you
-     // turn the Str back into an IRI.
-    Str spec_with_scheme () const;
-    Str spec_with_origin () const;
-    Str spec_without_filename () const;
-    Str spec_without_query () const;
-    Str spec_without_fragment () const;
+     // turn the OldStr back into an IRI.
+    OldStr spec_with_scheme () const;
+    OldStr spec_with_origin () const;
+    OldStr spec_without_filename () const;
+    OldStr spec_without_query () const;
+    OldStr spec_without_fragment () const;
 
-    Str path_without_filename () const;
+    OldStr path_without_filename () const;
 
      // Destruct this object
     ~IRI ();

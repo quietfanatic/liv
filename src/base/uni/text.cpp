@@ -10,7 +10,7 @@ namespace uni {
  //   "001" < "01" | "01" < "001"
  //   "ab" < "a "  | "a " < "ab"
  // I'm going to side with nemo's behavior because it looks easier. : )
-int natural_compare (Str a, Str b) {
+int natural_compare (OldStr a, OldStr b) {
     auto ap = a.begin();
     auto bp = b.begin();
     while (ap != a.end() && bp != b.end()) {

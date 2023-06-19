@@ -144,7 +144,7 @@ void App::open_files (std::vector<std::string>&& files) {
     ));
 }
 
-void App::open_list (Str list_filename) {
+void App::open_list (OldStr list_filename) {
     return open_files(read_list(list_filename));
 }
 

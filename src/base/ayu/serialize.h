@@ -60,19 +60,19 @@ inline std::string item_to_string (
     return tree_to_string(item_to_tree(item, loc), opts);
 }
 inline void item_to_file (
-    const Reference& item, Str filename,
+    const Reference& item, OldStr filename,
     PrintOptions opts = 0, LocationRef loc = Location()
 ) {
     return tree_to_file(item_to_tree(item, loc), filename, opts);
 }
  // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (
-    const Reference& item, Str src, LocationRef loc = Location()
+    const Reference& item, OldStr src, LocationRef loc = Location()
 ) {
     return item_from_tree(item, tree_from_string(src), loc);
 }
 inline void item_from_file (
-    const Reference& item, Str filename, LocationRef loc = Location()
+    const Reference& item, OldStr filename, LocationRef loc = Location()
 ) {
     return item_from_tree(item, tree_from_file(filename), loc);
 }
@@ -85,16 +85,16 @@ AnyArray<TreeString> item_get_keys (
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
 void item_set_keys (
-    const Reference&, Slice<Str>,
+    const Reference&, Slice<OldStr>,
     LocationRef loc = Location()
 );
  // Get an attribute of an object-like item by its key, or empty Reference if
  // the attribute doesn't exist.
 Reference item_maybe_attr (
-    const Reference&, Str, LocationRef loc = Location());
+    const Reference&, OldStr, LocationRef loc = Location());
  // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or
  // null Reference.
-Reference item_attr (const Reference&, Str, LocationRef loc = Location());
+Reference item_attr (const Reference&, OldStr, LocationRef loc = Location());
 
  // Get the length of an array-like item.
 usize item_get_length (const Reference&, LocationRef loc = Location());

@@ -27,7 +27,7 @@ struct Parser {
      // or so).
     UniqueArray<TreePair> shortcuts;
 
-    Parser (Str s, Str filename = ""sv) :
+    Parser (OldStr s, OldStr filename = ""sv) :
         filename(filename),
         begin(s.data()),
         p(s.data()),
@@ -141,7 +141,7 @@ struct Parser {
         }
     }
 
-    Str got_word () {
+    OldStr got_word () {
         const char* start = p;
         p++;  // For the first character
         for (;;) switch (look()) {
@@ -153,7 +153,7 @@ struct Parser {
                     p += 2;
                     break;
                 }
-                else return Str(start, p - start);
+                else return OldStr(start, p - start);
             }
             case '"': {
                 error("\" cannot occur inside a word (are you missing the first \"?)"sv);
@@ -161,12 +161,12 @@ struct Parser {
             case ANY_RESERVED_SYMBOL: {
                 error(*p, " is a reserved symbol and can't be used outside of strings."sv);
             }
-            default: return Str(start, p - start);
+            default: return OldStr(start, p - start);
         }
     }
 
     Tree got_number () {
-        Str word = got_word();
+        OldStr word = got_word();
          // Detect special numbers
         if (word.size() == 4) {
             if (word[0] == '+' && word[1] == 'n' && word[2] == 'a' && word[3] == 'n') {
@@ -186,7 +186,7 @@ struct Parser {
                 minus = true;
                 [[fallthrough]];
             case '+':
-                word = Str(word.data()+1, word.size()-1);
+                word = OldStr(word.data()+1, word.size()-1);
                 if (word.empty() || !std::isdigit(word[0])) {
                     error("Malformed number"sv);
                 }
@@ -198,7 +198,7 @@ struct Parser {
          && (word[1] == 'x' || word[1] == 'X')
         ) {
             hex = true;
-            word = Str(word.data()+2, word.size()-2);
+            word = OldStr(word.data()+2, word.size()-2);
         }
          // Try integer
         {
@@ -369,7 +369,7 @@ struct Parser {
         switch (look()) {
             case EOF: error("Expected term but ran into end of document"sv);
             case ANY_WORD_STARTER: {
-                Str word = got_word();
+                OldStr word = got_word();
                 if (word.size() == 4) {
                     if (word[0] == 'n' && word[1] == 'u' &&
                         word[2] == 'l' && word[3] == 'l'
@@ -423,11 +423,11 @@ struct Parser {
 } using namespace in;
 
  // Finally:
-Tree tree_from_string (Str s, Str filename) {
+Tree tree_from_string (OldStr s, OldStr filename) {
     return Parser(s, filename).parse();
 }
 
-std::string string_from_file (Str filename) {
+std::string string_from_file (OldStr filename) {
     FILE* f = fopen_utf8(std::string(filename).c_str(), "rb");
     if (!f) {
         throw X<OpenFailed>(std::string(filename), errno);
@@ -449,7 +449,7 @@ std::string string_from_file (Str filename) {
     return r;
 }
 
-Tree tree_from_file (Str filename) {
+Tree tree_from_file (OldStr filename) {
     return tree_from_string(string_from_file(filename), filename);
 }
 

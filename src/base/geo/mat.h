@@ -386,7 +386,7 @@ AYU_DESCRIBE_TEMPLATE(
         static std::string r = "geo::GMat<" + ayu::Type::CppType<T>().name() +
                           ", " + std::to_string(cols) +
                           ", " + std::to_string(rows) + ">";
-        return Str(r);
+        return OldStr(r);
     }),
     []{
         using namespace geo;

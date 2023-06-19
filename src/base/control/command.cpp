@@ -4,8 +4,8 @@
 
 namespace control {
 
-static std::unordered_map<Str, const Command*>& commands_by_name () {
-    static std::unordered_map<Str, const Command*> r;
+static std::unordered_map<OldStr, const Command*>& commands_by_name () {
+    static std::unordered_map<OldStr, const Command*> r;
     return r;
 }
 
@@ -18,12 +18,12 @@ void Command::register_command () const {
     }
 }
 
-const Command* lookup_command (Str name) {
+const Command* lookup_command (OldStr name) {
     auto iter = commands_by_name().find(name);
     if (iter != commands_by_name().end()) return iter->second;
     else return nullptr;
 }
-const Command* require_command (Str name) {
+const Command* require_command (OldStr name) {
     auto iter = commands_by_name().find(name);
     if (iter != commands_by_name().end()) return iter->second;
     else throw ayu::X<CommandNotFound>(std::string(name));
@@ -72,7 +72,7 @@ AYU_DESCRIBE(Statement,
         if (a.size() == 0) {
             s = {}; return;
         }
-        s.command = require_command(Str(a[0]));
+        s.command = require_command(OldStr(a[0]));
         ayu::TreeArray args_a;
         for (usize i = 1; i < a.size(); i++) {
             args_a.push_back(a[i]);

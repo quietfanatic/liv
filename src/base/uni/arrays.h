@@ -68,7 +68,7 @@ using AnyString = AnyGenericString<char>;
 using SharedString = SharedGenericString<char>;
 using UniqueString = UniqueGenericString<char>;
 using StaticString = StaticGenericString<char>;
-//using Str = GenericStr<char>;
+using Str = GenericStr<char>;
 
 ///// ARRAYLIKE CONCEPTS
  // A general concept for array-like types.

@@ -91,7 +91,7 @@ Tree::Tree (GenericStr<char> v) :
         s.dematerialize();
     }
 }
-Tree::Tree (Str16 v) : Tree(from_utf16(v)) { }
+Tree::Tree (OldStr16 v) : Tree(from_utf16(v)) { }
 Tree::Tree (SharedArray<char> v) :
     form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
     flags(0), length(v.size()), data{}
@@ -188,7 +188,7 @@ Tree::operator double () const {
         default: bad_form(*this, NUMBER);
     }
 }
-Tree::operator Str () const {
+Tree::operator OldStr () const {
     switch (rep) {
         case REP_SHORTSTRING: return tree_shortStr(*this);
         case REP_LONGSTRING: return tree_longStr(*this);
@@ -196,10 +196,10 @@ Tree::operator Str () const {
     }
 }
 Tree::operator std::string () const {
-    return std::string(Str(*this));
+    return std::string(OldStr(*this));
 }
 Tree::operator std::u16string () const {
-    return to_utf16(Str(*this));
+    return to_utf16(OldStr(*this));
 }
 Tree::operator TreeArraySlice () const {
     if (rep != REP_ARRAY) bad_form(*this, ARRAY);
@@ -218,7 +218,7 @@ Tree::operator TreeObject () const {
     return TreeObject(tree_Object(*this));
 }
 
-const Tree* Tree::attr (Str key) const {
+const Tree* Tree::attr (OldStr key) const {
     if (rep != REP_OBJECT) bad_form(*this, OBJECT);
     for (auto& p : tree_Object(*this)) {
         if (p.first == key) return &p.second;
@@ -230,7 +230,7 @@ const Tree* Tree::elem (usize index) const {
     if (index >= tree_Array(*this).size()) return null;
     return &tree_Array(*this)[index];
 }
-const Tree& Tree::operator[] (Str key) const {
+const Tree& Tree::operator[] (OldStr key) const {
     if (const Tree* r = attr(key)) return *r;
     else throw X<GenericError>(old_cat(
         "This tree has no attr with key \""sv, key, '"'
@@ -297,7 +297,7 @@ bool operator == (TreeRef a, TreeRef b) {
     }
 }
 
-bool operator == (TreeRef a, Str b) {
+bool operator == (TreeRef a, OldStr b) {
     if (a->length != b.size()) return false;
     if (b.size() <= 8) {
         if (a->rep != REP_SHORTSTRING) return false;
@@ -363,8 +363,8 @@ static tap::TestSet tests ("base/ayu/tree", []{
     is(Tree(3), Tree(3.0), "Compare integers with floats");
     isnt(Tree(3), Tree(3.1), "Compare integers with floats (!=)");
     is(Tree(0.0/0.0), Tree(0.0/0.0), "Tree of NAN equals Tree of NAN");
-    is(Str(Tree("asdfg"sv)), "asdfg"sv, "Round-trip strings");
-    is(Str(Tree("qwertyuiop"sv)), "qwertyuiop"sv, "Round-trip long strings");
+    is(OldStr(Tree("asdfg"sv)), "asdfg"sv, "Round-trip strings");
+    is(OldStr(Tree("qwertyuiop"sv)), "qwertyuiop"sv, "Round-trip long strings");
     throws<WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
     try_is<int>([]{ return int(Tree(3.0)); }, 3, "Convert floating to integer");
     try_is<double>([]{ return double(Tree(3)); }, 3.0, "Convert integer to floating");

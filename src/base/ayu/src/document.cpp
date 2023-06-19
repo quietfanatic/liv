@@ -9,7 +9,7 @@
 namespace ayu {
 namespace in {
 
-static usize parse_numbered_name (Str name) {
+static usize parse_numbered_name (OldStr name) {
     if (name.empty() || name[0] != '_') return -1;
     for (usize i = 1; i < name.size(); i++) {
         if (!isdigit(name[i])) return usize(-1);
@@ -59,7 +59,7 @@ struct DocumentItemHeader : DocumentLinks {
     ~DocumentItemHeader () {
         delete name_p;
     }
-    Str name () {
+    OldStr name () {
         if (!name_p) {
             name_p = new std::string(print_numbered_name(id));
         }
@@ -85,7 +85,7 @@ struct DocumentData {
 
 struct DocumentItemRef {
     DocumentItemHeader* header;
-    DocumentItemRef (DocumentData* doc, Str name) {
+    DocumentItemRef (DocumentData* doc, OldStr name) {
         for (auto link = doc->items.next; link != &doc->items; link = link->next) {
             auto h = static_cast<DocumentItemHeader*>(link);
             if (h->name() == name) {
@@ -109,7 +109,7 @@ void* Document::allocate (Type t) {
     return header+1;
 }
 
-void* Document::allocate_named (Type t, Str name) {
+void* Document::allocate_named (Type t, OldStr name) {
     usize id = parse_numbered_name(name);
 
     if (name.empty()) throw X<DocumentInvalidName>(std::string(name));
@@ -150,7 +150,7 @@ void Document::delete_ (Type t, Mu* p) {
     free(header);
 }
 
-void Document::delete_named (Str name) {
+void Document::delete_named (OldStr name) {
     auto ref = DocumentItemRef(data, std::string(name));
     if (ref.header) {
         if (ref.header->type) {
@@ -172,16 +172,16 @@ void Document::deallocate (void* p) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::Document,
-    keys(mixed_funcs<std::vector<Str>>(
+    keys(mixed_funcs<std::vector<OldStr>>(
         [](const ayu::Document& v){
-            std::vector<Str> r;
+            std::vector<OldStr> r;
             for (auto link = v.data->items.next; link != &v.data->items; link = link->next) {
                 r.emplace_back(static_cast<DocumentItemHeader*>(link)->name());
             }
             r.emplace_back("_next_id"sv);
             return r;
         },
-        [](ayu::Document& v, const std::vector<Str>& ks){
+        [](ayu::Document& v, const std::vector<OldStr>& ks){
             v.data->~DocumentData();
             new (v.data) DocumentData;
             for (auto& k : ks) {
@@ -190,7 +190,7 @@ AYU_DESCRIBE(ayu::Document,
             }
         }
     )),
-    attr_func([](ayu::Document& v, Str k){
+    attr_func([](ayu::Document& v, OldStr k){
         if (k == "_next_id"sv) {
             return Reference(&v.data->next_id);
         }

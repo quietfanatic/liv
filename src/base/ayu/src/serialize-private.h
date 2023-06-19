@@ -57,15 +57,15 @@ void ser_from_tree (const Traversal&, TreeRef);
 void ser_collect_key (UniqueArray<TreeString>&, Tree);
 void ser_collect_keys (const Traversal&, UniqueArray<TreeString>&);
 
- // Implement set_keys by removing keys from a std::vector<Str>
-bool ser_claim_key (UniqueArray<Str>&, Str);
-void ser_claim_keys (const Traversal&, UniqueArray<Str>&, bool optional);
-void ser_set_keys (const Traversal&, UniqueArray<Str>&&);
+ // Implement set_keys by removing keys from a std::vector<OldStr>
+bool ser_claim_key (UniqueArray<OldStr>&, OldStr);
+void ser_claim_keys (const Traversal&, UniqueArray<OldStr>&, bool optional);
+void ser_set_keys (const Traversal&, UniqueArray<OldStr>&&);
 
  // If the attr isn't found, returns false and doesn't call the callback
-bool ser_maybe_attr (const Traversal&, Str, AccessMode, TravCallback);
+bool ser_maybe_attr (const Traversal&, OldStr, AccessMode, TravCallback);
  // Throws if the attr isn't found
-void ser_attr (const Traversal&, Str, AccessMode, TravCallback);
+void ser_attr (const Traversal&, OldStr, AccessMode, TravCallback);
 
  ///// Elem operations
 usize ser_get_length (const Traversal&);

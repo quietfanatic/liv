@@ -66,7 +66,7 @@ struct _AYU_DescribeBase {
      // of just a plain string, because you might need to read the names of
      // other types to generate the name, and those other names might not be
      // available at compile time.  For usage examples, see describe-standard.h.
-    static constexpr auto name (Str(* f )());
+    static constexpr auto name (OldStr(* f )());
      // Provides a function to transform an item of this type to an ayu::Tree
      // for serialization.  For most types this should not be needed; for
      // aggregate types you usually want attrs() or elems(), and for scalar
@@ -205,7 +205,7 @@ struct _AYU_DescribeBase {
      //   TODO: rename this to include
     template <class Acr>
     static constexpr auto attr (
-        Str key,
+        OldStr key,
         const Acr& accessor,
         in::AttrFlags flags = in::AttrFlags(0)
     );
@@ -213,12 +213,12 @@ struct _AYU_DescribeBase {
      // `accessor` must be the output of one of the accessor functions (see
      // ACCESSORS), and its child type can be anything that serializes to an
      // array of strings, but serialization will be fastest if its type is
-     // std::vector<Str> (AKA std::vector<std::string_view>).
+     // std::vector<OldStr> (AKA std::vector<std::string_view>).
      //
      // During serialization, the list of keys will be determined with
      // `accessor`'s read operation, and for each key, the attribute's value
      // will be set using either the attr_func() descriptor.  If the keys type
-     // is std::vector<Str>, the strings the Strs point to must live at least as
+     // is std::vector<OldStr>, the strings the Strs point to must live at least as
      // long as this item itself.
      //
      // During deserialization, `accessor`'s write operation will be called with
@@ -229,7 +229,7 @@ struct _AYU_DescribeBase {
      // will be called, and the list of provided keys must match exactly or an
      // exception will be thrown.  It is acceptable to ignore the provided list
      // of keys and instead clear the item and later autovivify attributes given
-     // to attr_func().  If the keys are of type Str (AKA std::string_view), you
+     // to attr_func().  If the keys are of type OldStr (AKA std::string_view), you
      // may need to copy them to take ownership.
      //
      // If keys() is present, attr_func() must also be present, and attrs() must
@@ -261,7 +261,7 @@ struct _AYU_DescribeBase {
      //
      // If attr_func() is present, keys() must also be present, and attrs() must
      // not be present.
-    static constexpr auto attr_func (Reference(* f )(T&, Str));
+    static constexpr auto attr_func (Reference(* f )(T&, OldStr));
 
     ///// DESCRIPTORS FOR ARRAY-LIKE TYPES
 
@@ -650,7 +650,7 @@ struct _AYU_DescribeBase {
     static constexpr in::AccessorFlags unaddressable = in::ACR_UNADDRESSABLE;
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
-        ayu::Str name, const Dcrs&... dcrs
+        ayu::OldStr name, const Dcrs&... dcrs
     );
 };
 

@@ -19,10 +19,10 @@ namespace uni {
  // UTF-16 surrogtes are encoded as-is into UTF-8.   UTF-16 is native-endian.
 
  // Convert a UTF-8 string into a native-endian UTF-16 string.
-std::u16string to_utf16 (Str);
+std::u16string to_utf16 (OldStr);
 
  // Convert a native-endian UTF-16 string into a UTF=8 string.
-std::string from_utf16 (Str16);
+std::string from_utf16 (OldStr16);
 
 ///// UTF-8 IO FUNCTIONS
 
@@ -32,11 +32,11 @@ std::FILE* fopen_utf8 (const char* filename, const char* mode = "rb");
  // Print UTF-8 formatted text to a file.  Might not fuse starting or trailing
  // umatched UTF-8 bytes between calls.
  // TODO: These will stop at NUL bytes, fix that.
-void fprint_utf8 (std::FILE* f, Str s);
+void fprint_utf8 (std::FILE* f, OldStr s);
  // Prints to stdout and flushes.
-void print_utf8 (Str s);
+void print_utf8 (OldStr s);
  // Prints to stderr and flushes.
-void warn_utf8 (Str s);
+void warn_utf8 (OldStr s);
 
  // Delete a file
 int remove_utf8 (const char* filename);

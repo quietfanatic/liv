@@ -473,7 +473,7 @@ AYU_DESCRIBE_TEMPLATE(
         }
         static std::string r = "geo::GVec<" + std::string(ayu::Type::CppType<T>().name())
                         + ", " + std::to_string(n) + ">";
-        return Str(r);
+        return OldStr(r);
     }),
     desc::length(desc::template constant<uni::usize>(n)),
     desc::elem_func([](geo::GVec<T, n>& v, uni::usize i){

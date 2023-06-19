@@ -76,7 +76,7 @@ namespace iri {
          IRI_UPPERCASE: case IRI_LOWERCASE: case IRI_DIGIT: \
     case IRI_UNRESERVED_SYMBOL: case IRI_UTF8_HIGH
 
-std::string encode (Str input) {
+std::string encode (OldStr input) {
     std::string r;
     r.reserve(input.size());
     for (size_t i = 0; i < input.size(); i++) {
@@ -97,7 +97,7 @@ std::string encode (Str input) {
     return r;
 }
 
-std::string decode (Str input) {
+std::string decode (OldStr input) {
     std::string r;
     r.reserve(input.size());
     for (size_t i = 0; i < input.size(); i++) {
@@ -120,7 +120,7 @@ std::string decode (Str input) {
     return r;
 }
 
-IRIRelativity classify_reference (Str ref) {
+IRIRelativity classify_reference (OldStr ref) {
     if (ref.size() == 0) return SCHEME;
     switch (ref[0]) {
         case ':': return SCHEME;
@@ -144,7 +144,7 @@ IRIRelativity classify_reference (Str ref) {
     return PATHRELATIVE;
 }
 
-IRI::IRI (Str input, const IRI& base) :
+IRI::IRI (OldStr input, const IRI& base) :
     colon_(0),
     path_(0),
     question_(0),
@@ -197,7 +197,7 @@ IRI::IRI (Str input, const IRI& base) :
             goto parse_scheme;
         }
         case AUTHORITY: {
-            Str prefix = base.spec_with_scheme();
+            OldStr prefix = base.spec_with_scheme();
             if (!prefix.size()) goto fail;
             spec_.reserve(prefix.size() + input.size());
             spec_ += prefix;
@@ -207,7 +207,7 @@ IRI::IRI (Str input, const IRI& base) :
         }
         case PATHABSOLUTE: {
             if (!base.is_hierarchical()) goto fail;
-            Str prefix = base.spec_with_origin();
+            OldStr prefix = base.spec_with_origin();
             assert(prefix.size());
             spec_.reserve(prefix.size() + input.size());
             spec_ += prefix;
@@ -218,7 +218,7 @@ IRI::IRI (Str input, const IRI& base) :
         }
         case PATHRELATIVE: {
             if (!base.is_hierarchical()) goto fail;
-            Str prefix = base.spec_without_filename();
+            OldStr prefix = base.spec_without_filename();
             assert(prefix.size());
             spec_.reserve(prefix.size() + input.size());
             spec_ += prefix;
@@ -228,7 +228,7 @@ IRI::IRI (Str input, const IRI& base) :
             goto parse_path;
         }
         case QUERY: {
-            Str prefix = base.spec_without_query();
+            OldStr prefix = base.spec_without_query();
             if (!prefix.size()) goto fail;
             spec_.reserve(prefix.size() + input.size());
             spec_ += prefix;
@@ -241,7 +241,7 @@ IRI::IRI (Str input, const IRI& base) :
             goto parse_query;
         }
         case FRAGMENT: {
-            Str prefix = base.spec_without_fragment();
+            OldStr prefix = base.spec_without_fragment();
             if (!prefix.size()) goto fail;
             spec_.reserve(prefix.size() + input.size());
             spec_ += prefix;
@@ -577,26 +577,26 @@ bool IRI::is_hierarchical () const {
     return has_path() && spec_[path_] == '/';
 }
 
-Str IRI::scheme () const {
-    return Str(&spec_[0], colon_);
+OldStr IRI::scheme () const {
+    return OldStr(&spec_[0], colon_);
 }
-Str IRI::authority () const {
+OldStr IRI::authority () const {
     return has_authority()
-        ? Str(&spec_[colon_ + 3], path_ - (colon_ + 3))
-        : Str();
+        ? OldStr(&spec_[colon_ + 3], path_ - (colon_ + 3))
+        : OldStr();
 }
-Str IRI::path () const {
-    return Str(&spec_[path_], question_ - path_);
+OldStr IRI::path () const {
+    return OldStr(&spec_[path_], question_ - path_);
 }
-Str IRI::query () const {
+OldStr IRI::query () const {
     return has_query()
-        ? Str(&spec_[question_ + 1], hash_ - (question_ + 1))
-        : Str();
+        ? OldStr(&spec_[question_ + 1], hash_ - (question_ + 1))
+        : OldStr();
 }
-Str IRI::fragment () const {
+OldStr IRI::fragment () const {
     return has_fragment()
-        ? Str(&spec_[hash_ + 1], spec_.size() - (hash_ + 1))
-        : Str();
+        ? OldStr(&spec_[hash_ + 1], spec_.size() - (hash_ + 1))
+        : OldStr();
 }
 
 IRI IRI::iri_with_scheme () const {
@@ -636,40 +636,40 @@ IRI IRI::iri_without_fragment () const {
     );
 }
 
-Str IRI::spec_with_scheme () const {
+OldStr IRI::spec_with_scheme () const {
     return has_scheme()
-        ? Str(&spec_[0], colon_ + 1)
-        : Str();
+        ? OldStr(&spec_[0], colon_ + 1)
+        : OldStr();
 }
-Str IRI::spec_with_origin () const {
+OldStr IRI::spec_with_origin () const {
     return has_authority()
-        ? Str(&spec_[0], path_)
+        ? OldStr(&spec_[0], path_)
         : colon_
-            ? Str(&spec_[0], colon_ + 1)
-            : Str();
+            ? OldStr(&spec_[0], colon_ + 1)
+            : OldStr();
 }
-Str IRI::spec_without_filename () const {
+OldStr IRI::spec_without_filename () const {
     if (is_hierarchical()) {
         uint32 i = question_;
         while (spec_[i] != '/') i--;
-        return Str(&spec_[0], i+1);
+        return OldStr(&spec_[0], i+1);
     }
     else {
-        return Str(&spec_[0], question_);
+        return OldStr(&spec_[0], question_);
     }
 }
-Str IRI::spec_without_query () const {
-    return Str(&spec_[0], question_);
+OldStr IRI::spec_without_query () const {
+    return OldStr(&spec_[0], question_);
 }
-Str IRI::spec_without_fragment () const {
-    return Str(&spec_[0], hash_);
+OldStr IRI::spec_without_fragment () const {
+    return OldStr(&spec_[0], hash_);
 }
 
-Str IRI::path_without_filename () const {
+OldStr IRI::path_without_filename () const {
     if (is_hierarchical()) {
         uint32 i = question_;
         while (spec_[i] != '/') i--;
-        return Str(&spec_[path_], i+1);
+        return OldStr(&spec_[path_], i+1);
     }
     else {
         return path();
@@ -686,13 +686,13 @@ IRI::~IRI () { }
 namespace iri::test {
 
 struct TestCase {
-    Str i = "";
-    Str b = "";
-    Str s = "";
-    Str a = "";
-    Str p = "";
-    Str q = "";
-    Str f = "";
+    OldStr i = "";
+    OldStr b = "";
+    OldStr s = "";
+    OldStr a = "";
+    OldStr p = "";
+    OldStr q = "";
+    OldStr f = "";
 };
 
  // TODO: Add a LOT more tests, this isn't nearly enough.

@@ -13,7 +13,7 @@ namespace glow {
 
     struct GLError : GlowError {
         uint error_code;
-        Str gl_function;
+        OldStr gl_function;
         std::source_location loc;
     };
 }

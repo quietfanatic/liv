@@ -99,7 +99,7 @@ int input_to_integer (const Input& input) {
     }
 }
 
-Input input_from_string (Str name) {
+Input input_from_string (OldStr name) {
     switch (x31_hash(name)) {
 #define KEY(name, sdlk) case x31_hash(name): return {.type = KEY, .code = sdlk};
 #define ALT(name, sdlk) KEY(name, sdlk)
@@ -126,7 +126,7 @@ Input input_from_string (Str name) {
     }
 }
 
-Str input_to_string (const Input& input) {
+OldStr input_to_string (const Input& input) {
     switch (input.type) {
         case NONE: return "none";
         case KEY: {
@@ -171,7 +171,7 @@ AYU_DESCRIBE(control::Input,
                         a.emplace_back(input.code - SDLK_0);
                         break;
                     default: {
-                        Str name = input_to_string(input);
+                        OldStr name = input_to_string(input);
                         if (!name.empty()) a.emplace_back(name);
                         else a.emplace_back(input_to_integer(input));
                         break;
@@ -180,7 +180,7 @@ AYU_DESCRIBE(control::Input,
                 break;
             }
             case BUTTON: {
-                Str name = input_to_string(input);
+                OldStr name = input_to_string(input);
                 require(!name.empty());
                 a.emplace_back(name);
                 break;
@@ -202,7 +202,7 @@ AYU_DESCRIBE(control::Input,
                 input.code = tmp.code;
             }
             else {
-                auto name = Str(e);
+                auto name = OldStr(e);
                 if (name == "ctrl") input.ctrl = true;
                 else if (name == "alt") input.alt = true;
                 else if (name == "shift") input.shift = true;
@@ -225,7 +225,7 @@ AYU_DESCRIBE(control::Input,
 static tap::TestSet tests ("base/control/input", []{
     using namespace tap;
 
-    auto test2 = [](Str s, Input expect, Str s2){
+    auto test2 = [](OldStr s, Input expect, OldStr s2){
         Input got;
         ayu::item_from_string(&got, s);
         is(got.type, expect.type, ayu::old_cat(s, " - type is correct"));
@@ -235,7 +235,7 @@ static tap::TestSet tests ("base/control/input", []{
         is(got.code, expect.code, ayu::old_cat(s, " - code is correct"));
         is(ayu::item_to_string(&expect), s2, ayu::old_cat(s, " - item_to_string"));
     };
-    auto test = [&](Str s, Input expect){
+    auto test = [&](OldStr s, Input expect){
         test2(s, expect, s);
     };
     test("[]", {NONE, 0, 0, 0, 0});

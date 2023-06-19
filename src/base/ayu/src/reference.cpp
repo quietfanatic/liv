@@ -32,7 +32,7 @@ Reference Reference::chain (const Accessor* o_acr) const {
     }
 }
 
-Reference Reference::chain_attr_func (Reference(* f )(Mu&, Str), Str k) const {
+Reference Reference::chain_attr_func (Reference(* f )(Mu&, OldStr), OldStr k) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;

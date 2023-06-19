@@ -49,7 +49,7 @@ struct ResourceScheme {
     virtual std::string get_file (const IRI&) const { return ""s; }
      // TODO: Non-file resource schemes
 
-    explicit ResourceScheme (Str scheme_name, bool auto_activate = true) :
+    explicit ResourceScheme (OldStr scheme_name, bool auto_activate = true) :
         scheme_name(scheme_name)
     {
         if (auto_activate) activate();

@@ -30,7 +30,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFBOOL: return Tree(*(const bool*)name());
                 case VFINT64: return Tree(*(const int64*)name());
                 case VFDOUBLE: return Tree(*(const double*)name());
-                case VFSTR: return Tree(*(const Str*)name());
+                case VFSTR: return Tree(*(const OldStr*)name());
                 default: never();
             }
         }
@@ -63,7 +63,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                     default: return false;
                 }
             case VFSTR: {
-                Str n = *(const Str*)name();
+                OldStr n = *(const OldStr*)name();
                 if (n.size() <= 8) {
                     if (tree->rep != REP_SHORTSTRING) return false;
                     for (usize i = 0; i < n.size(); i++) {
@@ -73,7 +73,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 }
                 else {
                     return tree->rep == REP_LONGSTRING
-                        && tree_longStr(tree) == *(const Str*)name();
+                        && tree_longStr(tree) == *(const OldStr*)name();
                 }
             }
             default: never();
@@ -101,7 +101,7 @@ struct AttrDcrPrivate : AttrDcr<Mu> {
          //
          // The Accessor should be right after the attr base in memory, without
          // any padding.  This should be the case if vtable pointers have the
-         // same alignment as Str and there's nothing else funny going on.
+         // same alignment as OldStr and there's nothing else funny going on.
          //
          // TODO: We may be able to simplify this now that we're using our own
          // vtables.

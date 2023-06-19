@@ -29,7 +29,7 @@ namespace in {
         }
         auto a = TreeArraySlice(tree);
         if (a.size() == 2) {
-            Type type = Type(Str(a[0]));
+            Type type = Type(OldStr(a[0]));
             if (!scheme->accepts_type(type)) {
                 throw X<UnacceptableResourceType>{
                     std::string(res.name().spec()), type
@@ -40,7 +40,7 @@ namespace in {
 
 } using namespace in;
 
-Str show_ResourceState (ResourceState state) {
+OldStr show_ResourceState (ResourceState state) {
     switch (state) {
         case UNLOADED: return "UNLOADED"sv;
         case LOADED: return "LOADED"sv;
@@ -82,7 +82,7 @@ Resource::Resource (const IRI& name) {
     else {
         auto ptr = std::make_unique<ResourceData>(name);
         data = &*ptr;
-         // Be careful about storing the right Str (std::string_view)
+         // Be careful about storing the right OldStr (std::string_view)
         resources.emplace(data->name.spec(), std::move(ptr));
     }
 }
@@ -105,11 +105,11 @@ Resource::Resource (IRI&& name) {
     else {
         auto ptr = std::make_unique<ResourceData>(name);
         data = &*ptr;
-         // Be careful about storing the right Str (std::string_view)
+         // Be careful about storing the right OldStr (std::string_view)
         resources.emplace(data->name.spec(), std::move(ptr));
     }
 }
-Resource::Resource (Str ref) {
+Resource::Resource (OldStr ref) {
     if (auto res = current_resource()) {
         if (ref == "#"sv) new (this) Resource(res.data->name);
         else new (this) Resource (IRI(ref, res.data->name));

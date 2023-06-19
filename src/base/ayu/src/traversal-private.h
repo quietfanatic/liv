@@ -49,7 +49,7 @@ struct Traversal {
          // DELEGATE, ATTR, ELEM
         const Accessor* acr;
          // ATTR_FUNC
-        Reference(* attr_func )(Mu&, Str);
+        Reference(* attr_func )(Mu&, OldStr);
          // ELEM_FUNC
         Reference(* elem_func )(Mu&, usize);
     };
@@ -57,8 +57,8 @@ struct Traversal {
          // START
         LocationRef location;
          // ATTR, ATTR_FUNC
-         // Can't include Str directly because it has non-trivial constructor
-        const Str* key;
+         // Can't include OldStr directly because it has non-trivial constructor
+        const OldStr* key;
          // ELEM, ELEM_FUNC
         usize index;
     };
@@ -166,7 +166,7 @@ static inline void trav_delegate (
 }
 
 static inline void trav_attr (
-    const Traversal& parent, const Accessor* acr, const Str& key,
+    const Traversal& parent, const Accessor* acr, const OldStr& key,
     AccessMode mode, TravCallback cb
 ) {
     expect(&parent == current_traversal);
@@ -178,7 +178,7 @@ static inline void trav_attr (
 
 static inline void trav_attr_func (
     const Traversal& parent, const Reference& ref,
-    Reference(* func )(Mu&, Str), const Str& key, AccessMode mode, TravCallback cb
+    Reference(* func )(Mu&, OldStr), const OldStr& key, AccessMode mode, TravCallback cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;

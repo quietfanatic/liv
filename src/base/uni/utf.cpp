@@ -9,7 +9,7 @@ namespace uni {
 
  // Yes, I did write my own UTF conversion routines instead of taking a
  // dependency on something else.
-static usize to_utf16_buffer (char16_t* buffer, Str s) {
+static usize to_utf16_buffer (char16_t* buffer, OldStr s) {
     char16_t* p = buffer;
     for (usize i = 0; i < s.size(); i++) {
         uint8 b0 = s[i];
@@ -65,7 +65,7 @@ static usize to_utf16_buffer (char16_t* buffer, Str s) {
     return p - buffer;
 }
 
-std::u16string to_utf16 (Str s) {
+std::u16string to_utf16 (OldStr s) {
      // Buffer is not null-terminated
      // Worst-case inflation is 1 code unit (2 bytes) per byte
     usize buffer_size = s.size();
@@ -87,7 +87,7 @@ std::u16string to_utf16 (Str s) {
     }
 }
 
-static usize from_utf16_buffer (char* buffer, Str16 s) {
+static usize from_utf16_buffer (char* buffer, OldStr16 s) {
     char* p = buffer;
     for (usize i = 0; i < s.size(); i++) {
         uint32 c;
@@ -127,7 +127,7 @@ static usize from_utf16_buffer (char* buffer, Str16 s) {
     return p - buffer;
 }
 
-std::string from_utf16 (Str16 s) {
+std::string from_utf16 (OldStr16 s) {
      // Buffer is not null-terminated
      // Worst-case inflation is 3 bytes per code unit (1.5x)
     usize buffer_size = s.size() * 3;
@@ -161,21 +161,21 @@ std::FILE* fopen_utf8 (const char* filename, const char* mode) {
 #endif
 }
 
-void fprint_utf8 (FILE* f, Str s) {
+void fprint_utf8 (FILE* f, OldStr s) {
 #ifdef _WIN32
     fputws(reinterpret_cast<const wchar_t*>(to_utf16(s).c_str()), f);
 #else
     fputs(s.data(), f);
 #endif
 }
-void print_utf8 (Str s) {
+void print_utf8 (OldStr s) {
 #ifdef _WIN32
     [[maybe_unused]] static auto set = _setmode(_fileno(stdout), _O_WTEXT);
 #endif
     fprint_utf8(stdout, s);
     std::fflush(stdout);
 }
-void warn_utf8 (Str s) {
+void warn_utf8 (OldStr s) {
 #ifdef _WIN32
     [[maybe_unused]] static auto set = _setmode(_fileno(stderr), _O_WTEXT);
 #endif

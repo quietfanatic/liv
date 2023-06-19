@@ -32,7 +32,7 @@ struct Document {
 
      // This may be linear over the number of items in the document.
     template <class T, class... Args>
-    T* new_named (Str name, Args&&... args) {
+    T* new_named (OldStr name, Args&&... args) {
         void* p = allocate_named(Type::CppType<T>(), name);
         try {
             return new (p) T (std::forward<Args...>(args...));
@@ -52,9 +52,9 @@ struct Document {
     }
 
     void* allocate (Type);
-    void* allocate_named (Type, Str);
+    void* allocate_named (Type, OldStr);
     void delete_ (Type, Mu*);
-    void delete_named (Str);
+    void delete_named (OldStr);
 
     void deallocate (void* p);
 };

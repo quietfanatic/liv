@@ -16,7 +16,7 @@ const char* ExceptionBase::what () const noexcept {
     return mess_cache.c_str();
 }
 
-void in::unrecoverable_exception (std::exception& e, Str when) {
+void in::unrecoverable_exception (std::exception& e, OldStr when) {
     std::cerr << "ERROR: Unrecoverable exception "sv << when
               << ": "sv << e.what() << std::endl;
     std::abort();

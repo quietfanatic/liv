@@ -245,9 +245,9 @@ struct Reference {
      // If this reference is got through value_funcs or somesuch, then calling
      // these a bunch of times may be slow.
     AnyArray<TreeString> get_keys () const;
-    void set_keys (Slice<Str> ks) const;
-    Reference maybe_attr (Str key) const;
-    Reference attr (Str key) const;
+    void set_keys (Slice<OldStr> ks) const;
+    Reference maybe_attr (OldStr key) const;
+    Reference attr (OldStr key) const;
     usize get_length () const;
     void set_length (usize l) const;
     Reference maybe_elem (usize index) const;
@@ -256,7 +256,7 @@ struct Reference {
      // These are used by serialize.  They will be most efficient if this
      // Reference has an address().
     Reference chain (const in::Accessor*) const;
-    Reference chain_attr_func (Reference(*)(Mu&, Str), Str) const;
+    Reference chain_attr_func (Reference(*)(Mu&, OldStr), OldStr) const;
     Reference chain_elem_func (Reference(*)(Mu&, usize), usize) const;
      // Kinda internal, TODO move to internal namespace
     void access (in::AccessMode mode, Callback<void(Mu&)> cb) const {
@@ -270,7 +270,7 @@ struct Reference {
     }
 
      // Syntax sugar.
-    Reference operator [] (Str key) const { return attr(key); }
+    Reference operator [] (OldStr key) const { return attr(key); }
     Reference operator [] (usize index) const { return elem(index); }
 
     template <class T>
@@ -338,9 +338,9 @@ namespace ayu {
 inline Tree Reference::to_tree () const { return item_to_tree(*this); }
 inline void Reference::from_tree (Tree t) const { item_from_tree(*this, t); }
 inline AnyArray<TreeString> Reference::get_keys () const { return item_get_keys(*this); }
-inline void Reference::set_keys (Slice<Str> ks) const { item_set_keys(*this, ks); }
-inline Reference Reference::maybe_attr (Str key) const { return item_maybe_attr(*this, key); }
-inline Reference Reference::attr (Str key) const { return item_attr(*this, key); }
+inline void Reference::set_keys (Slice<OldStr> ks) const { item_set_keys(*this, ks); }
+inline Reference Reference::maybe_attr (OldStr key) const { return item_maybe_attr(*this, key); }
+inline Reference Reference::attr (OldStr key) const { return item_attr(*this, key); }
 inline usize Reference::get_length () const { return item_get_length(*this); }
 inline void Reference::set_length (usize l) const { item_set_length(*this, l); }
 inline Reference Reference::maybe_elem (usize index) const { return item_maybe_elem(*this, index); }

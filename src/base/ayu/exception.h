@@ -45,7 +45,7 @@ namespace in {
  // Called when an exception is thrown in a place where the library can't
  // properly clean up after itself, such as when a resource value throws
  // from its destructor.
-[[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
+[[noreturn]] void unrecoverable_exception (std::exception& e, OldStr when);
 
 } // namespace in
 

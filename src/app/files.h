@@ -16,6 +16,6 @@ struct FilesToOpen {
 FilesToOpen expand_files (const Settings*, std::vector<std::string>&& filenames);
  // Note: This will set the working directory to the folder containing
  // list_filename.
-std::vector<std::string> read_list (Str list_filename);
+std::vector<std::string> read_list (OldStr list_filename);
 
 } // namespace files

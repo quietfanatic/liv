@@ -242,7 +242,7 @@ static tap::TestSet tests ("base/ayu/accessors", []{
     });
     is(thing2.b, 88, "BaseAcr::write");
 
-    auto test_addressable = [&](Str type, auto acr){
+    auto test_addressable = [&](OldStr type, auto acr){
         Thing t {1, 2};
         is(
             acr.address(reinterpret_cast<Mu&>(t)),
@@ -261,7 +261,7 @@ static tap::TestSet tests ("base/ayu/accessors", []{
         });
         is(t.b, 9, old_cat(type, "::modify"sv).c_str());
     };
-    auto test_unaddressable = [&](Str type, auto acr){
+    auto test_unaddressable = [&](OldStr type, auto acr){
         Thing t {1, 2};
         is(
             acr.address(reinterpret_cast<Mu&>(t)),

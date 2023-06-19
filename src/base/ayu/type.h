@@ -46,7 +46,7 @@ struct Type {
         );
     }
      // Can throw TypeNotFound
-    Type (Str name, bool readonly = false) :
+    Type (OldStr name, bool readonly = false) :
         Type(in::need_description_for_name(name), readonly)
     { }
 
@@ -64,7 +64,7 @@ struct Type {
 
      // Get human-readable type name (whatever name was registered with
      // AYU_DESCRIBE).  This ignores the readonly bit.
-    Str name () const;
+    OldStr name () const;
      // Get the std::type_info& for this type.  NOTE: CONSTNESS INFO IS
      // CURRENTLY NYI
     const std::type_info& cpp_type () const;

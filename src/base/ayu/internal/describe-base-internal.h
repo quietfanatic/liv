@@ -4,7 +4,7 @@
 namespace ayu {
 
 template <class T>
-constexpr auto _AYU_DescribeBase<T>::name (Str(* f )()) {
+constexpr auto _AYU_DescribeBase<T>::name (OldStr(* f )()) {
     return in::NameDcr<T>{{}, f};
 }
 
@@ -66,8 +66,8 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
         return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, std::move(v));
     }
     else {
-         // Assume something convertible to Str (std::string_view)
-        return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, std::move(v));
+         // Assume something convertible to OldStr (std::string_view)
+        return in::ValueDcrWith<T, OldStr, false>(in::VFSTR, n, std::move(v));
     }
 }
 template <class T>
@@ -87,8 +87,8 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
         return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
     }
     else {
-         // Assume something convertible to Str (std::string_view)
-        return in::ValueDcrWith<T, Str, false>(in::VFSTR, n, v);
+         // Assume something convertible to OldStr (std::string_view)
+        return in::ValueDcrWith<T, OldStr, false>(in::VFSTR, n, v);
     }
 }
 template <class T>
@@ -107,8 +107,8 @@ constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* v) {
         return in::ValueDcrWith<T, double, true>(in::VFDOUBLE, n, v);
     }
     else {
-         // Assume something convertible to Str (std::string_view)
-        return in::ValueDcrWith<T, Str, true>(in::VFSTR, n, v);
+         // Assume something convertible to OldStr (std::string_view)
+        return in::ValueDcrWith<T, OldStr, true>(in::VFSTR, n, v);
     }
 }
 
@@ -120,7 +120,7 @@ constexpr auto _AYU_DescribeBase<T>::attrs (const Attrs&... as) {
 template <class T>
 template <class Acr>
 constexpr auto _AYU_DescribeBase<T>::attr (
-    Str key,
+    OldStr key,
     const Acr& acr,
     in::AttrFlags flags
 ) {
@@ -168,7 +168,7 @@ constexpr auto _AYU_DescribeBase<T>::keys (const Acr& acr) {
     return in::KeysDcrWith<T, Acr>(acr);
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T>::attr_func (Reference(* f )(T&, Str)) {
+constexpr auto _AYU_DescribeBase<T>::attr_func (Reference(* f )(T&, OldStr)) {
     return in::AttrFuncDcr<T>{{}, f};
 }
 template <class T>
@@ -315,7 +315,7 @@ constexpr auto _AYU_DescribeBase<T>::reference_func (
 template <class T>
 template <class... Dcrs>
 constexpr auto _AYU_DescribeBase<T>::_ayu_describe (
-    ayu::Str name, const Dcrs&... dcrs
+    ayu::OldStr name, const Dcrs&... dcrs
 ) {
     return in::make_description<T, Dcrs...>(name, dcrs...);
 }
@@ -376,7 +376,7 @@ template params \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
     using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = desc::_ayu_describe(ayu::Str(),
+    static constexpr auto _ayu_full_description = desc::_ayu_describe(ayu::OldStr(),
 
 #define AYU_DESCRIBE_TEMPLATE_END(params, T) \
     ); \

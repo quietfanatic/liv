@@ -252,7 +252,7 @@ AYU_DESCRIBE_TEMPLATE(
             static std::string r = "geo::GRange<" + std::string(
                 ayu::Type::CppType<T>().name()
             ) + ">";
-            return Str(r);
+            return OldStr(r);
         }
     }),
     desc::elems(

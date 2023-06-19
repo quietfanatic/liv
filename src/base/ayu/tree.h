@@ -116,7 +116,7 @@ struct Tree {
     explicit Tree (double v);
     explicit Tree (GenericStr<char> v);
     explicit Tree (SharedArray<char> v);
-    explicit Tree (Str16 v); // Converts to UTF8
+    explicit Tree (OldStr16 v); // Converts to UTF8
     explicit Tree (TreeArray v);
     explicit Tree (TreeObject v);
     explicit Tree (std::exception_ptr p);
@@ -136,12 +136,12 @@ struct Tree {
     explicit operator uint64 () const;
     explicit operator float () const { return double(*this); }
     explicit operator double () const;
-     // Warning 1: The returned Str() is not NUL-terminated.
-     // Warning 2: If you get a Str() from a Tree or a TreeRef, that Str() will
+     // Warning 1: The returned OldStr() is not NUL-terminated.
+     // Warning 2: If you get a OldStr() from a Tree or a TreeRef, that OldStr() will
      // only be valid while that Tree or TreeRef exists (even if the original
      // Tree exists).  If you need to access the string later, copy the whole
      // Tree (it's cheap).
-    explicit operator Str () const;
+    explicit operator OldStr () const;
     explicit operator std::string () const;  // Does a copy.
     explicit operator std::u16string () const;
     explicit operator TreeArraySlice () const;
@@ -151,13 +151,13 @@ struct Tree {
 
      // Returns null if the invocant is not an OBJECT or does not have an
      // attribute with the given key.
-    const Tree* attr (Str key) const;
+    const Tree* attr (OldStr key) const;
      // Returns null if the invocant is not an ARRAY or does not have an
      // element at the given index.
     const Tree* elem (usize index) const;
 
      // Throws if the tree is not an object or doesn't have that attribute.
-    const Tree& operator[] (Str key) const;
+    const Tree& operator[] (OldStr key) const;
      // Throws if the tree is not an array or the index is out of bounds.
     const Tree& operator[] (usize index) const;
 };
@@ -175,7 +175,7 @@ bool operator == (TreeRef a, TreeRef b);
  // Theoretically we could add < and friends, but it's a pain to program.
 
  // If we're gonna start using Trees as strings, we'll want this
-bool operator == (TreeRef a, Str b);
+bool operator == (TreeRef a, OldStr b);
 
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.

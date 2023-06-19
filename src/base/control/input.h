@@ -37,8 +37,8 @@ int input_to_integer (const Input& i);
 
  // Symbolic name in all lowercase (Ignores modifier keys).
  // May not work on obscure keys.
-Input input_from_string (Str c);
-Str input_to_string (const Input& i);
+Input input_from_string (OldStr c);
+OldStr input_to_string (const Input& i);
 
 namespace X {
     struct InvalidInputName : ayu::Error {

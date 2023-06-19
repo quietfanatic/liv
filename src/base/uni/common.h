@@ -42,11 +42,11 @@ constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 #endif
 constexpr float inf = std::numeric_limits<float>::infinity();
 
-using Str = std::string_view;
-using Str8 = std::u8string_view;
-using Str16 = std::u16string_view;
-using Str32 = std::u32string_view;
-using WStr = std::wstring_view;
+using OldStr = std::string_view;
+using OldStr8 = std::u8string_view;
+using OldStr16 = std::u16string_view;
+using OldStr32 = std::u32string_view;
+using OldWStr = std::wstring_view;
 
 using std::move;
 

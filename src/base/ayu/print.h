@@ -22,9 +22,9 @@ enum : PrintOptions {
 
 std::string tree_to_string (TreeRef, PrintOptions opts = 0);
 
-void string_to_file (Str, Str filename);
+void string_to_file (OldStr, OldStr filename);
 
-void tree_to_file (TreeRef, Str filename, PrintOptions opts = 0);
+void tree_to_file (TreeRef, OldStr filename, PrintOptions opts = 0);
 
  // Conflicting combination of print options was provided, or it had bits
  // outside of VALID_PRINT_OPTION_BITS.

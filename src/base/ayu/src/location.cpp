@@ -88,14 +88,14 @@ Location::Location (LocationRef p, usize i) :
 Location::Location (const IRI& iri) {
     if (!iri) return;
     Location self = Location(new RootLocation(iri.iri_without_fragment()));
-    Str fragment = iri.fragment();
+    OldStr fragment = iri.fragment();
     if (!fragment.empty()) {
         usize segment_start = 0;
         bool segment_is_string = false;
         for (usize i = 0; i < fragment.size()+1; i++) {
             switch (i == fragment.size() ? '/' : fragment[i]) {
                 case '/': {
-                    Str segment = fragment.substr(
+                    OldStr segment = fragment.substr(
                         segment_start, i - segment_start
                     );
                     if (segment_is_string) {
@@ -151,7 +151,7 @@ IRI Location::as_iri () const {
                 else return IRI(old_cat('#', fragment), base);
             }
             case KEY: {
-                Str key = static_cast<KeyLocation*>(
+                OldStr key = static_cast<KeyLocation*>(
                     l->data.p
                 )->key;
                 std::string segment;

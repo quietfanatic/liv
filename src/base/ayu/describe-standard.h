@@ -31,7 +31,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::optional<T>),
     desc::name([]{
         static std::string r = uni::old_cat(ayu::Type::CppType<T>().name(), '?');
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::values(
         desc::value(ayu::null, std::optional<T>())
@@ -54,7 +54,7 @@ AYU_DESCRIBE_TEMPLATE(
         static std::string r = uni::old_cat(
             "std::vector<"sv, ayu::Type::CppType<T>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::length(desc::template value_methods<
         uni::usize, &std::vector<T>::size, &std::vector<T>::resize
@@ -75,7 +75,7 @@ AYU_DESCRIBE_TEMPLATE(
             "std::unordered_map<std::string, "sv,
             ayu::Type::CppType<T>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
         [](const std::unordered_map<std::string, T>& v){
@@ -94,7 +94,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
     )),
-    desc::attr_func([](std::unordered_map<std::string, T>& v, uni::Str k){
+    desc::attr_func([](std::unordered_map<std::string, T>& v, uni::OldStr k){
         auto iter = v.find(k);
         return iter != v.end()
             ? ayu::Reference(&iter->second)
@@ -112,7 +112,7 @@ AYU_DESCRIBE_TEMPLATE(
         static std::string r = uni::old_cat(
             "std::map<std::string, "sv, ayu::Type::CppType<T>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
         [](const std::map<std::string, T>& v){
@@ -131,7 +131,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
     )),
-    desc::attr_func([](std::map<std::string, T>& v, uni::Str k){
+    desc::attr_func([](std::map<std::string, T>& v, uni::OldStr k){
         auto iter = v.find(k);
         return iter != v.end()
             ? ayu::Reference(&iter->second)
@@ -149,7 +149,7 @@ AYU_DESCRIBE_TEMPLATE(
             "std::unordered_set<"sv,
             ayu::Type::CppType<T>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
      // Although sets serialize to arrays, accessing elements in a set by index
      // doesn't make sense, so use to_tree and from_tree instead of length and
@@ -202,7 +202,7 @@ AYU_DESCRIBE_TEMPLATE(
         static std::string r = uni::old_cat(
             "std::set<"sv, ayu::Type::CppType<T>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::to_tree([](const std::set<T>& v){
         ayu::TreeArray a;
@@ -243,7 +243,7 @@ AYU_DESCRIBE_TEMPLATE(
     desc::name([]{
         using namespace std::literals;
         static std::string r = uni::old_cat(ayu::Type::CppType<T>().name(), '*');
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
      // This will probably be faster if we skip the delegate chain, but let's
      // save that until we know we need it.
@@ -268,7 +268,7 @@ AYU_DESCRIBE_TEMPLATE(
             ayu::Type::CppType<T>().name(),
             '[', n, ']'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::length(desc::template constant<uni::usize>(n)),
     desc::elem_func([](T(& v )[n], uni::usize i){
@@ -286,16 +286,16 @@ AYU_DESCRIBE_TEMPLATE(
     desc::name([]{
         using namespace std::literals;
         static std::string r = uni::old_cat("char["sv, n, ']');
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
      // Serialize as a string
     desc::to_tree([](const char(& v )[n]){
-        return ayu::Tree(Str(v, n));
+        return ayu::Tree(OldStr(v, n));
     }),
      // Deserialize as either a string or an array
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
         if (tree.form == ayu::STRING) {
-            auto s = uni::Str(tree);
+            auto s = uni::OldStr(tree);
             if (s.size() != n) {
                 throw ayu::X<ayu::WrongLength>(&v, n, n, s.size());
             }
@@ -332,7 +332,7 @@ AYU_DESCRIBE_TEMPLATE(
             "std::array<"sv + ayu::Type::CppType<T>().name(),
             ", "sv, n, '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::length(desc::template constant<uni::usize>(n)),
     desc::elem_func([](std::array<T, n>& v, uni::usize i){
@@ -351,7 +351,7 @@ AYU_DESCRIBE_TEMPLATE(
             "std::pair<"sv, ayu::Type::CppType<A>().name(),
             ", "sv, ayu::Type::CppType<B>().name(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     desc::elems(
         desc::elem(&std::pair<A, B>::first),
@@ -426,7 +426,7 @@ AYU_DESCRIBE_TEMPLATE(
         static std::string r = uni::old_cat(
             "std::tuple<"sv, ayu::in::TupleNames<Ts...>::make(), '>'
         );
-        return uni::Str(r);
+        return uni::OldStr(r);
     }),
     ayu::in::TupleElems<Ts...>::make(
         std::index_sequence_for<Ts...>{}
