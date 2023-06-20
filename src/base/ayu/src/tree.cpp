@@ -92,22 +92,6 @@ Tree::Tree (GenericStr<char> v) :
     }
 }
 Tree::Tree (OldStr16 v) : Tree(from_utf16(v)) { }
-Tree::Tree (SharedArray<char> v) :
-    form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
-    flags(0), length(v.size()), data{}
-{
-    require(v.size() <= uint32(-1));
-    if (v.size() <= 8) {
-        const_cast<int64&>(data.as_int64) = 0;
-        for (usize i = 0; i < v.size(); i++) {
-            const_cast<char&>(data.as_chars[i]) = v[i];
-        }
-    }
-    else {
-        const_cast<const char*&>(data.as_char_ptr) = v.data();
-        v.dematerialize();
-    }
-}
 Tree::Tree (TreeArray v) :
     form(ARRAY), rep(REP_ARRAY), flags(0),
     length(v.size()), data{.as_array_ptr = v.data()}
@@ -309,6 +293,7 @@ bool operator == (TreeRef a, OldStr b) {
     }
     else {
         if (a->rep != REP_LONGSTRING) return false;
+        if (a->data.as_char_ptr == b.data()) return true;
         return Slice<char>(tree_longStr(a)) == Slice<char>(b);
     }
 }

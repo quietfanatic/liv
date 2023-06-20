@@ -32,7 +32,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
         switch (trav.desc->preference()) {
             case Description::PREFER_OBJECT: {
                 TreeObject o;
-                UniqueArray<TreeString> ks;
+                UniqueArray<AnyString> ks;
                 ser_collect_keys(trav, ks);
                 for (auto& k : ks) {
                     ser_attr(
@@ -287,14 +287,14 @@ void item_from_tree (
 }
 
 ///// ATTR OPERATIONS
-void in::ser_collect_key (UniqueArray<TreeString>& ks, Tree k) {
+void in::ser_collect_key (UniqueArray<AnyString>& ks, Tree k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
     ks.emplace_back(std::move(k));
 }
 
-void in::ser_collect_keys (const Traversal& trav, UniqueArray<TreeString>& ks) {
+void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
     if (auto acr = trav.desc->keys_acr()) {
         Type keys_type = acr->type(trav.address);
          // Compare Type not std::type_info, since std::type_info can require a
@@ -363,10 +363,10 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<TreeString>& ks) {
     else throw X<NoAttrs>(trav_location(trav));
 }
 
-AnyArray<TreeString> item_get_keys (
+AnyArray<AnyString> item_get_keys (
     const Reference& item, LocationRef loc
 ) {
-    UniqueArray<TreeString> ks;
+    UniqueArray<AnyString> ks;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_collect_keys(trav, ks);
     });
@@ -428,7 +428,7 @@ void in::ser_claim_keys (
         else {
              // For readonly keys, get the keys and compare them.
              // TODO: This can probably be optimized more
-            UniqueArray<TreeString> got_ks;
+            UniqueArray<AnyString> got_ks;
             ser_collect_keys(trav, got_ks);
             for (auto& k : got_ks) {
                 if (ser_claim_key(ks, OldStr(k))) {

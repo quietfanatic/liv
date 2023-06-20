@@ -29,8 +29,11 @@ AYU_DESCRIBE_SCALAR(uint64)
 AYU_DESCRIBE_SCALAR(float)
 AYU_DESCRIBE_SCALAR(double)
 AYU_DESCRIBE_SCALAR(std::string)
-AYU_DESCRIBE_SCALAR(std::u16string)
 #undef AYU_DESCRIBE_SCALAR
+AYU_DESCRIBE(std::u16string,
+    to_tree([](const std::u16string& v){ return Tree(OldStr16(v)); }),
+    from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
+)
 
  // OldStr AKA string_view is a reference-like type so it can't be deserialized
  // because the data structure containing it would most likely outlive the tree

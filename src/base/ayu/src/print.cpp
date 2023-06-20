@@ -283,7 +283,7 @@ struct Printer {
                             p = pchar(p, opts & JSON ? ',' : ' ');
                         }
                     }
-                    p = print_subtree(p, attr.first, ind + expand);
+                    p = print_subtree(p, Tree(attr.first), ind + expand);
                     p = pchar(p, ':');
                     if (expand) p = pchar(p, ' ');
                     p = print_subtree(p, attr.second, ind + expand);

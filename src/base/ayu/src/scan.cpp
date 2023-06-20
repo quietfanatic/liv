@@ -19,7 +19,7 @@ bool scan_trav (
     if (cb(trav, loc)) return true;
     switch (trav.desc->preference()) {
         case Description::PREFER_OBJECT: {
-            UniqueArray<TreeString> ks;
+            UniqueArray<AnyString> ks;
             ser_collect_keys(trav, ks);
             for (auto& k : ks) {
                  // Initialize to false because in only_addressable mode, the

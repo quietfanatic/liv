@@ -38,13 +38,9 @@ struct Tree;
 using TreeRef = CRef<Tree, 16>;
 struct Type;
 
- // Using a Tree as a string-like type.
- // TODO: use uni::AnyString (TODO: implement uni::AnyString)
-using TreeString = Tree;
-
 using TreeArray = SharedArray<Tree>;
 using TreeArraySlice = Slice<Tree>;
-using TreePair = std::pair<TreeString, Tree>;
+using TreePair = std::pair<AnyString, Tree>;
 using TreeObject = SharedArray<TreePair>;
 using TreeObjectSlice = Slice<TreePair>;
 

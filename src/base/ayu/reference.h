@@ -244,7 +244,7 @@ struct Reference {
     void from_tree (Tree t) const;
      // If this reference is got through value_funcs or somesuch, then calling
      // these a bunch of times may be slow.
-    AnyArray<TreeString> get_keys () const;
+    AnyArray<AnyString> get_keys () const;
     void set_keys (Slice<OldStr> ks) const;
     Reference maybe_attr (OldStr key) const;
     Reference attr (OldStr key) const;
@@ -337,7 +337,7 @@ namespace ayu {
 
 inline Tree Reference::to_tree () const { return item_to_tree(*this); }
 inline void Reference::from_tree (Tree t) const { item_from_tree(*this, t); }
-inline AnyArray<TreeString> Reference::get_keys () const { return item_get_keys(*this); }
+inline AnyArray<AnyString> Reference::get_keys () const { return item_get_keys(*this); }
 inline void Reference::set_keys (Slice<OldStr> ks) const { item_set_keys(*this, ks); }
 inline Reference Reference::maybe_attr (OldStr key) const { return item_maybe_attr(*this, key); }
 inline Reference Reference::attr (OldStr key) const { return item_attr(*this, key); }

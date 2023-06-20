@@ -115,10 +115,10 @@ struct Parser {
 
     Tree got_string () {
         p++;  // for the "
-        UniqueArray<char> r;
+        UniqueString r;
         for (;;) switch (look()) {
             case EOF: error("std::string not terminated by end of input"sv);
-            case '"': p++; return Tree(SharedArray<char>(std::move(r)));
+            case '"': p++; return Tree(AnyString(std::move(r)));
             case '\\': {
                 p++;
                 switch (look()) {
@@ -274,7 +274,7 @@ struct Parser {
                 case '}': p++; return o;
                 default: break;
             }
-            TreeString key = parse_term();
+            Tree key = parse_term();
             if (key.form != STRING) {
                 error("Can't use non-string "sv, tree_to_string(key), " as key in object"sv);
             }
@@ -292,7 +292,7 @@ struct Parser {
                 case ',':
                 case '}': error("Missing value after : in object"sv);
                 default: {
-                    o.emplace_back(std::move(key), parse_term());
+                    o.emplace_back(AnyString(key), parse_term());
                     break;
                 }
             }
@@ -300,13 +300,10 @@ struct Parser {
         return o;
     }
 
-    void set_shortcut (TreeString name, Tree value) {
+    void set_shortcut (AnyString&& name, Tree value) {
         for (auto& p : shortcuts) {
             if (p.first == name) {
-                error(
-                    "Duplicate declaration of shortcut &"sv,
-                    tree_to_string(name)
-                );
+                error("Duplicate declaration of shortcut &"sv, name);
             }
         }
         shortcuts.emplace_back(std::move(name), std::move(value));
@@ -338,13 +335,13 @@ struct Parser {
             case ':': {
                 p++;
                 skip_ws();
-                set_shortcut(std::move(name), parse_term());
+                set_shortcut(AnyString(std::move(name)), parse_term());
                 skip_commas();
                 return parse_term();
             }
             default: {
                 Tree value = parse_term();
-                set_shortcut(std::move(name), value);
+                set_shortcut(AnyString(std::move(name)), value);
                 return value;
             }
         }

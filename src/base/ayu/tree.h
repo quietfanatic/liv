@@ -114,8 +114,9 @@ struct Tree {
     explicit Tree (uint64 v) : Tree(int64(v)) { }
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
-    explicit Tree (GenericStr<char> v);
-    explicit Tree (SharedArray<char> v);
+    explicit Tree (Str v);
+    template <class T> requires (requires (T v) { Str(v); })
+    explicit Tree (T v) : Tree(Str(v)) { } // TEMP
     explicit Tree (OldStr16 v); // Converts to UTF8
     explicit Tree (TreeArray v);
     explicit Tree (TreeObject v);
@@ -142,6 +143,7 @@ struct Tree {
      // Tree exists).  If you need to access the string later, copy the whole
      // Tree (it's cheap).
     explicit operator OldStr () const;
+    explicit operator AnyString () const { return AnyString(OldStr(*this)); } // TEMP
     explicit operator std::string () const;  // Does a copy.
     explicit operator std::u16string () const;
     explicit operator TreeArraySlice () const;
@@ -163,9 +165,6 @@ struct Tree {
 };
  // Make sure earlier CRef<Tree, 16> alias is correct
 static_assert(sizeof(Tree) == 16);
-
- // Tree used as a std::string.
-using StringTree = Tree;
 
  // Test for equality.  Trees of different forms are considered unequal.
  // Objects are equal if all their attributes are the same; the attributes
