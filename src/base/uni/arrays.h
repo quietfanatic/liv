@@ -1651,30 +1651,76 @@ struct ArrayInterface {
 
 ///// OPERATORS
 
-template <ArrayClass ac1, ArrayClass ac2, class T1, class T2>
+ // Make this template as generic as possible but nail one side down to
+ // ArrayInterface.
+template <ArrayClass ac, class T, class B>
 bool operator== (
-    const ArrayInterface<ac1, T1>& a, const ArrayInterface<ac2, T2>& b
+    const ArrayInterface<ac, T>& a, const B& b
+) requires (
+    requires { usize(b.size()); a.data()[0] == b.data()[0]; }
 ) {
-    if (a.size() != b.size()) return false;
+    usize as = a.size();
+    usize bs = b.size();
+    const T* ad = a.data();
+    const auto& bd = b.data();
+    if (as != bs) return false;
      // Unlike most STL types, this WILL short-circuit if the arrays have the
      // same data pointer.
-    if (a.data() == b.data()) return true;
-    for (usize i = 0; i < a.size(); ++i) {
-        if (!(a[i] == b[i])) {
+    if constexpr (requires { ad == bd; }) {
+        if (ad == bd) return true;
+    }
+    for (usize i = 0; i < as; ++i) {
+        if (!(ad[i] == bd[i])) {
             return false;
         }
     }
     return true;
 }
+ // Allow comparing to NUL-terminated pointer for string types only.
+template <ArrayClass ac, class T>
+bool operator== (
+    const ArrayInterface<ac, T>& a, const T* b
+) requires (ArrayInterface<ac, T>::is_String) {
+    usize as = a.size();
+    const T* ad = a.data();
+    for (usize i = 0; i < as && b[i]; ++i) {
+        if (!(ad[i] == b[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
  // I can't be bothered to learn what <=> is supposed to return.  They should
  // have just made it int.
-template <ArrayClass ac1, ArrayClass ac2, class T1, class T2>
+template <ArrayClass ac, class T, class B>
 auto operator<=> (
-    const ArrayInterface<ac1, T1>& a, const ArrayInterface<ac2, T2>& b
+    const ArrayInterface<ac, T>& a, const B& b
+) requires (
+    requires { usize(b.size()); a.data()[0] <=> b.data()[0]; }
 ) {
-    if (a.data() == b.data()) return 0 <=> 0;
-    for (usize i = 0; i < a.size(); ++i) {
-        auto res = a[i] <=> b[i];
+    const T* ad = a.data();
+    const auto& bd = b.data();
+    if constexpr (requires { ad == bd; }) {
+        if (ad == bd) return 0 <=> 0;
+    }
+    usize as = a.size();
+    usize bs = b.size();
+    for (usize i = 0; i < as && i < bs; ++i) {
+        auto res = ad[i] <=> bd[i];
+        if (res != (0 <=> 0)) return res;
+    }
+    return 0 <=> 0;
+}
+template <ArrayClass ac, class T>
+auto operator<=> (
+    const ArrayInterface<ac, T>& a, const T* b
+) requires (ArrayInterface<ac, T>::is_String) {
+    const T* ad = a.data();
+    if (ad == b) return 0 <=> 0;
+    usize as = a.size();
+    for (usize i = 0; i < as && b[i]; ++i) {
+        auto res = ad[i] <=> b[i];
         if (res != (0 <=> 0)) return res;
     }
     return 0 <=> 0;

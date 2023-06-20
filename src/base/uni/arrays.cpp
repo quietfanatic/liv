@@ -249,6 +249,7 @@ static tap::TestSet tests ("base/uni/arrays", []{
     is(c[1], 5);
     is(d[0][1], 0, "other arrays sharing buffer are not changed");
     is(cat("foo"_s, 6, "bar"_s), "foo6bar"_s, "cat()");
+    is(cat("foo", 6, "bar"), "foo6bar", "cat() (raw)");
 
     done_testing();
 });
