@@ -28,6 +28,9 @@ AYU_DESCRIBE_SCALAR(int64)
 AYU_DESCRIBE_SCALAR(uint64)
 AYU_DESCRIBE_SCALAR(float)
 AYU_DESCRIBE_SCALAR(double)
+AYU_DESCRIBE_SCALAR(uni::UniqueString)
+AYU_DESCRIBE_SCALAR(uni::SharedString)
+AYU_DESCRIBE_SCALAR(uni::AnyString)
 AYU_DESCRIBE_SCALAR(std::string)
 #undef AYU_DESCRIBE_SCALAR
 AYU_DESCRIBE(std::u16string,
@@ -42,6 +45,11 @@ AYU_DESCRIBE(std::u16string,
  // type for keys().
 AYU_DESCRIBE(std::string_view,
     to_tree([](const OldStr& v){
+        return Tree(v);
+    })
+)
+AYU_DESCRIBE(uni::Str,
+    to_tree([](const Str& v){
         return Tree(v);
     })
 )
@@ -107,6 +115,12 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
         got_s = item_to_string(&expected_data);
     }, "item_to_string on tuple");
     is(got_s, s, "gives correct result");
+     // Test uni arrays
+    uni::AnyArray<uni::AnyString> strings {
+        "asdf", "fdsa", "foo", "bar"
+    };
+    StaticString strings_s = "[asdf fdsa foo bar]";
+    is(item_to_string(&strings), strings_s, "uni arrays and strings");
     done_testing();
 });
 

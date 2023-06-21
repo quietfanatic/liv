@@ -16,6 +16,7 @@
 #include "../uni/copy-ref.h"
 #include "../uni/requirements.h"
 #include "../uni/string.h"
+#include "../uni/strings.h"
 
 namespace iri { struct IRI; }
 

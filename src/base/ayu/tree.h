@@ -143,6 +143,8 @@ struct Tree {
      // Tree exists).  If you need to access the string later, copy the whole
      // Tree (it's cheap).
     explicit operator OldStr () const;
+    explicit operator UniqueString () const { return UniqueString(OldStr(*this)); } // TEMP
+    explicit operator SharedString () const { return SharedString(OldStr(*this)); } // TEMP
     explicit operator AnyString () const { return AnyString(OldStr(*this)); } // TEMP
     explicit operator std::string () const;  // Does a copy.
     explicit operator std::u16string () const;
