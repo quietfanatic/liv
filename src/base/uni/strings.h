@@ -6,12 +6,35 @@
 namespace uni {
 inline namespace strings {
 
+ // The string types are almost exactly the same as the equivalent array types.
+ // The only differences are that they can be constructed from a const T*, which
+ // is taken to be a C-style NUL-terminated string, and when constructing from a
+ // C array they will stop at a NUL terminator (the first element that boolifies
+ // to false).  Note that by default these strings are not NUL-terminated.  To
+ // get a NUL-terminated string out, either explicitly NUL-terminate them or use
+ // c_str().
+template <class T>
+using AnyGenericString = ArrayInterface<ArrayClass::AnyS, T>;
+template <class T>
+using SharedGenericString = ArrayInterface<ArrayClass::SharedS, T>;
+template <class T>
+using UniqueGenericString = ArrayInterface<ArrayClass::UniqueS, T>;
+template <class T>
+using StaticGenericString = ArrayInterface<ArrayClass::StaticS, T>;
+template <class T>
+using GenericStr = ArrayInterface<ArrayClass::SliceS, T>;
+
+using AnyString = AnyGenericString<char>;
+using SharedString = SharedGenericString<char>;
+using UniqueString = UniqueGenericString<char>;
+using StaticString = StaticGenericString<char>;
+using Str = GenericStr<char>;
+
  // Literal suffix for StaticString.  This is probably not necessary, since
  // I finally figured out how to optimize passing string literals to cat().
 consteval StaticString operator""_s (const char* p, usize s) {
     return StaticString::Static(p, s);
 }
-
 
 template <class T>
 struct StringConversion;
@@ -181,6 +204,7 @@ namespace in {
 
  // If we don't add this expect(), the compiler emits extra branches for when
  // the total size overflows to 0, but those branches just crash anyway.
+constexpr
 void cat_add_no_overflow (usize& a, usize b) {
     expect(a + b <= UniqueString::max_size_);
     a += b;
@@ -241,3 +265,15 @@ UniqueString cat (Head&& h, Tail&&... t) {
 
 } // strings
 } // uni
+
+#ifndef TAP_DISABLE_TESTS
+#include "../tap/tap.h"
+namespace tap {
+template <uni::ArrayClass ac>
+struct Show<uni::ArrayInterface<ac, char>> {
+    std::string show (const uni::ArrayInterface<ac, char>& v) {
+        return std::string(uni::cat("\"", v, "\""));
+    }
+};
+}
+#endif

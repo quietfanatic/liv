@@ -64,30 +64,6 @@ using StaticArray = ArrayInterface<ArrayClass::StaticA, T>;
 template <class T>
 using Slice = ArrayInterface<ArrayClass::SliceA, T>;
 
- // The string types are almost exactly the same as the equivalent array types.
- // The only differences are that they can be constructed from a const T*, which
- // is taken to be a C-style NUL-terminated string, and when constructing from a
- // C array they will stop at a NUL terminator (the first element that boolifies
- // to false).  Note that by default these strings are not NUL-terminated.  To
- // get a NUL-terminated string out, either explicitly NUL-terminate them or use
- // c_str().
-template <class T>
-using AnyGenericString = ArrayInterface<ArrayClass::AnyS, T>;
-template <class T>
-using SharedGenericString = ArrayInterface<ArrayClass::SharedS, T>;
-template <class T>
-using UniqueGenericString = ArrayInterface<ArrayClass::UniqueS, T>;
-template <class T>
-using StaticGenericString = ArrayInterface<ArrayClass::StaticS, T>;
-template <class T>
-using GenericStr = ArrayInterface<ArrayClass::SliceS, T>;
-
-using AnyString = AnyGenericString<char>;
-using SharedString = SharedGenericString<char>;
-using UniqueString = UniqueGenericString<char>;
-using StaticString = StaticGenericString<char>;
-using Str = GenericStr<char>;
-
 ///// ARRAYLIKE CONCEPTS
  // A general concept for array-like types.
 template <class A>
@@ -201,7 +177,9 @@ struct ArrayInterface {
     using mut_reverse_iterator =
         std::conditional_t<supports_copy, std::reverse_iterator<T*>, void>;
 
-    using SelfSlice = std::conditional_t<is_String, GenericStr<T>, Slice<T>>;
+    using SelfSlice = std::conditional_t<
+        is_String, ArrayInterface<ArrayClass::SliceS, T>, Slice<T>
+    >;
 
     ///// CONSTRUCTION
      // Default construct, makes an empty array.
@@ -1728,4 +1706,3 @@ auto operator<=> (
 
 } // arrays
 } // uni
-
