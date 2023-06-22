@@ -66,7 +66,7 @@ struct _AYU_DescribeBase {
      // of just a plain string, because you might need to read the names of
      // other types to generate the name, and those other names might not be
      // available at compile time.  For usage examples, see describe-standard.h.
-    static constexpr auto name (OldStr(* f )());
+    static constexpr auto name (StaticString(* f )());
      // Provides a function to transform an item of this type to an ayu::Tree
      // for serialization.  For most types this should not be needed; for
      // aggregate types you usually want attrs() or elems(), and for scalar
@@ -650,7 +650,7 @@ struct _AYU_DescribeBase {
     static constexpr in::AccessorFlags unaddressable = in::ACR_UNADDRESSABLE;
     template <class... Dcrs>
     static constexpr auto _ayu_describe (
-        ayu::OldStr name, const Dcrs&... dcrs
+        StaticString name, const Dcrs&... dcrs
     );
 };
 

@@ -219,7 +219,7 @@ OldStr get_description_name (const Description* desc) {
     return desc->name_offset
         ? ((NameDcr<Mu>*)((char*)desc + desc->name_offset))->f()
         : !desc->name.empty() ? desc->name
-        : desc->cpp_type->name();
+        : StaticString::Static(desc->cpp_type->name());
 }
 bool is_valid_type (const Description* desc) {
     for (auto& p : registry().by_cpp_type) {

@@ -443,37 +443,38 @@ constexpr auto cross (const GVec<A, 3>& a, const GVec<B, 3>& b) {
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T, uni::usize n),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GVec<T, n>),
-    desc::name([]{
-        using namespace std::literals;
-        using namespace uni;
+    desc::name([]()->uni::StaticString {
         if constexpr (std::is_same_v<T, float>) {
-            if constexpr (n == 2) { return "geo::Vec"sv; }
-            else if constexpr (n == 3) { return "geo::Vec3"sv; }
-            else if constexpr (n == 4) { return "geo::Vec4"sv; }
+            if constexpr (n == 2) { return "geo::Vec"; }
+            else if constexpr (n == 3) { return "geo::Vec3"; }
+            else if constexpr (n == 4) { return "geo::Vec4"; }
         }
         else if constexpr (std::is_same_v<T, double>) {
-            if constexpr (n == 2) { return "geo::DVec"sv; }
-            else if constexpr (n == 3) { return "geo::DVec3"sv; }
-            else if constexpr (n == 4) { return "geo::DVec4"sv; }
+            if constexpr (n == 2) { return "geo::DVec"; }
+            else if constexpr (n == 3) { return "geo::DVec3"; }
+            else if constexpr (n == 4) { return "geo::DVec4"; }
         }
-        else if constexpr (std::is_same_v<T, int32>) {
-            if constexpr (n == 2) { return "geo::IVec"sv; }
-            else if constexpr (n == 3) { return "geo::IVec3"sv; }
-            else if constexpr (n == 4) { return "geo::IVec4"sv; }
+        else if constexpr (std::is_same_v<T, uni::int32>) {
+            if constexpr (n == 2) { return "geo::IVec"; }
+            else if constexpr (n == 3) { return "geo::IVec3"; }
+            else if constexpr (n == 4) { return "geo::IVec4"; }
         }
-        else if constexpr (std::is_same_v<T, int64>) {
-            if constexpr (n == 2) { return "geo::LVec"sv; }
-            else if constexpr (n == 3) { return "geo::LVec3"sv; }
-            else if constexpr (n == 4) { return "geo::LVec4"sv; }
+        else if constexpr (std::is_same_v<T, uni::int64>) {
+            if constexpr (n == 2) { return "geo::LVec"; }
+            else if constexpr (n == 3) { return "geo::LVec3"; }
+            else if constexpr (n == 4) { return "geo::LVec4"; }
         }
         else if constexpr (std::is_same_v<T, bool>) {
-            if constexpr (n == 2) { return "geo::BVec"sv; }
-            else if constexpr (n == 3) { return "geo::BVec3"sv; }
-            else if constexpr (n == 4) { return "geo::BVec4"sv; }
+            if constexpr (n == 2) { return "geo::BVec"; }
+            else if constexpr (n == 3) { return "geo::BVec3"; }
+            else if constexpr (n == 4) { return "geo::BVec4"; }
         }
-        static std::string r = "geo::GVec<" + std::string(ayu::Type::CppType<T>().name())
-                        + ", " + std::to_string(n) + ">";
-        return OldStr(r);
+        else {
+            static uni::UniqueString r = uni::cat(
+                "geo::GVec<", ayu::Type::CppType<T>().name(), ", ", n, '>'
+            );
+            return uni::StaticString::Static(r);
+        }
     }),
     desc::length(desc::template constant<uni::usize>(n)),
     desc::elem_func([](geo::GVec<T, n>& v, uni::usize i){

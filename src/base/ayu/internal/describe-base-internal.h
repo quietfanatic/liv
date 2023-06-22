@@ -4,7 +4,7 @@
 namespace ayu {
 
 template <class T>
-constexpr auto _AYU_DescribeBase<T>::name (OldStr(* f )()) {
+constexpr auto _AYU_DescribeBase<T>::name (StaticString(* f )()) {
     return in::NameDcr<T>{{}, f};
 }
 
@@ -315,7 +315,7 @@ constexpr auto _AYU_DescribeBase<T>::reference_func (
 template <class T>
 template <class... Dcrs>
 constexpr auto _AYU_DescribeBase<T>::_ayu_describe (
-    ayu::OldStr name, const Dcrs&... dcrs
+    StaticString name, const Dcrs&... dcrs
 ) {
     return in::make_description<T, Dcrs...>(name, dcrs...);
 }

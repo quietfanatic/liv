@@ -326,19 +326,17 @@ constexpr GVec<T, 2> clamp (const GVec<T, 2>& p, const GRect<T>& a) {
 AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_PARAMS(class T),
     AYU_DESCRIBE_TEMPLATE_TYPE(geo::GRect<T>),
-    desc::name([]{
-        using namespace std::literals;
-        using namespace uni;
-        if constexpr (std::is_same_v<T, float>) return "geo::Rect"sv;
-        else if constexpr (std::is_same_v<T, double>) return "geo::DRect"sv;
-        else if constexpr (std::is_same_v<T, int32>) return "geo::IRect"sv;
-        else if constexpr (std::is_same_v<T, int64>) return "geo::LRect"sv;
-        else if constexpr (std::is_same_v<T, bool>) return "geo::BRect"sv;
+    desc::name([]()->uni::StaticString{
+        if constexpr (std::is_same_v<T, float>) return "geo::Rect";
+        else if constexpr (std::is_same_v<T, double>) return "geo::DRect";
+        else if constexpr (std::is_same_v<T, uni::int32>) return "geo::IRect";
+        else if constexpr (std::is_same_v<T, uni::int64>) return "geo::LRect";
+        else if constexpr (std::is_same_v<T, bool>) return "geo::BRect";
         else {
-            static std::string r = "geo::GRect<" + std::string(
-                ayu::Type::CppType<T>().name()
-            ) + ">";
-            return OldStr(r);
+            static uni::UniqueString r = uni::cat(
+                "geo::GRect<", ayu::Type::CppType<T>().name(), '>'
+            );
+            return uni::StaticString::Static(r);
         }
     }),
     desc::elems(
