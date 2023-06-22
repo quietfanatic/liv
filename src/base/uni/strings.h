@@ -221,7 +221,7 @@ void cat_append (
         (cat_add_no_overflow(total_size, StringConversion<
             std::remove_cvref_t<Tail>
         >::min_capacity(t)), ...);
-        s.reserve_plenty(total_size);
+        s.reserve(total_size);
          // write
         ((h.size += StringConversion<
             std::remove_cvref_t<Tail>

@@ -547,14 +547,6 @@ struct ArrayInterface {
      // all AnyArrays and StaticArrays that may be constructed from it.
     static constexpr
     Self Static (SelfSlice o) requires (supports_static) {
-        static_assert(ArrayIteratorFor<decltype(ArrayLike_data(o)), T>,
-            "Cannot construct static array from array-like type with non-exact "
-            "element type."
-        );
-        static_assert(ArrayContiguousIterator<decltype(ArrayLike_data(o))>,
-            "Cannot construct static array from array-like type if its data() "
-            "returns a non-contiguous iterator."
-        );
         StaticArray<T> r;
         r.set_as_unowned(o.data(), o.size());
         return r;
@@ -635,8 +627,12 @@ struct ArrayInterface {
 
      // Okay okay
     ALWAYS_INLINE constexpr
-    operator std::string_view () const requires (is_String) {
+    operator std::basic_string_view<T> () const requires (is_String) {
         return std::string_view(data(), size());
+    }
+    ALWAYS_INLINE constexpr
+    operator std::basic_string<T> () const requires (is_String) {
+        return std::string(data(), size());
     }
 
     ///// DESTRUCTOR
