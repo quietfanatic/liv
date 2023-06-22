@@ -29,7 +29,6 @@ constexpr bool finite (T a) {
     auto mask = TypeTraits<T>::EXPONENT_MASK;
     return (rep & mask) != mask;
 }
- // TODO: Move these to separate testing file
 
  // AKA sqr
 template <Floating T>
@@ -63,7 +62,7 @@ constexpr float root2 (float v) {
 #endif
 }
 
-constexpr double sqrt (double v) {
+constexpr double root2 (double v) {
 #if HAS_BUILTIN(__builtin_sqrt)
     return __builtin_sqrt(v);
 #else
@@ -162,9 +161,9 @@ constexpr T prev_quantum (T v) {
 }
 
  // AKA sign for scalars
- // (Can't use (v > 0) - (v < 0) because it converts NAN to 0)
 template <Floating T>
 constexpr T normalize (T v) {
+     // (Can't use (v > 0) - (v < 0) because it converts NAN to 0)
     return v > 0 ? 1 : v < 0 ? -1 : v;
 }
 
@@ -175,19 +174,18 @@ template <Floating A, Floating B>
 constexpr A mod (A a, B b) {
     A ratio = a / b;
     if (ratio >= SameSizeInt<A>(-GINF) && ratio <= SameSizeInt<A>(GINF)) {
-        return a - trunc(ratio) * b;
+        return a - floor(ratio) * b;
     }
-    else return GNAN;
+    else [[unlikely]] return GNAN;
 }
-
- // Like mod but sign is always sign of b
+ // Like mod but can return negative
 template <Floating A, Floating B>
 constexpr A rem (A a, B b) {
     A ratio = a / b;
     if (ratio >= SameSizeInt<A>(-GINF) && ratio <= SameSizeInt<A>(GINF)) {
-        return a - floor(ratio) * b;
+        return a - trunc(ratio) * b;
     }
-    else return GNAN;
+    else [[unlikely]] return GNAN;
 }
 
  // AKA copysign

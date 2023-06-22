@@ -46,22 +46,21 @@ constexpr P prev_quantum (P v) { return v-1; }
 
 ///// COMBINERS
 
- // Ordinary modulus returns a result with the sign of the left side, resulting
+ // mod is like rem, but always has the sign of the right side, making a more
+ // even graph.  This might be more intuitive in many cases.
+template <Integral A, Integral B>
+constexpr auto mod (A a, B b) {
+    if (a >= 0) return a % b;
+    else return -a % -b;
+}
+ // The % operator returns a result with the sign of the left side, resulting
  // in a graph that looks like this around (0,0) for positive b.
  //            /| /| /
  //           / |/ |/
  //    /| /| /
  //   / |/ |/
 template <Integral A, Integral B>
-constexpr auto mod (A a, B b) { return a % b; }
-
- // rem is like mod, but always has the sign of the right side, making a more
- // even graph.  This might be more intuitive in many cases.
-template <Integral A, Integral B>
-constexpr auto rem (A a, B b) {
-    if (a >= 0) return a % b;
-    else return -a % -b;
-}
+constexpr auto rem (A a, B b) { return a % b; }
 
  // AKA copysign
 template <SignedIntegral A, SignedIntegral B>

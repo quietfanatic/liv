@@ -164,7 +164,7 @@ template <Floating T>
 using SameSizeInt = TypeTraits<T>::SameSizeInt;
 
  // Types that can store numbers inbetween 0 and 1, not necessarily floating
- // point (though currently this library doesn't provide any fraction
+ // point (though currently this library doesn't provide any fractional
  // non-floating types).  It is expected that fractional numbers can be cast
  // from integers, passed by value, and have basic arithmetic operations as well
  // as trunc, round, etc.
