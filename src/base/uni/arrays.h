@@ -218,7 +218,7 @@ struct ArrayInterface {
     ArrayInterface (ArrayInterface<ac2, T>&& o) requires (
         is_Slice && !o.trivially_copyable
     ) {
-        set_as_unowned(o.data(), o.size());
+        set_as_unowned(o.impl.data, o.size());
     }
 
      // Copy construct.  Always copies the buffer for UniqueArray, never copies
@@ -226,14 +226,14 @@ struct ArrayInterface {
     constexpr
     ArrayInterface (const ArrayInterface& o) requires (!trivially_copyable) {
         if constexpr (is_Unique) {
-            set_as_copy(o.data(), o.size());
+            set_as_copy(o.impl.data, o.size());
         }
         else if constexpr (supports_share) {
             impl = o.impl;
             add_ref();
         }
         else {
-            set_as_unowned(o.data(), o.size());
+            set_as_unowned(o.impl.data, o.size());
         }
     }
      // Copy constructor is defaulted for StaticArray and Slice so that they can
@@ -258,17 +258,17 @@ struct ArrayInterface {
         if constexpr (o.is_Slice) {
              // Always copy from Slice because we don't know where it came from
              // or where it's going.
-            set_as_copy(o.data(), o.size());
+            set_as_copy(o.impl.data, o.size());
         }
         else if constexpr (is_Slice) {
-            set_as_unowned(o.data(), o.size());
+            set_as_unowned(o.impl.data, o.size());
         }
         else if constexpr (is_Unique || o.is_Unique) {
-            set_as_copy(o.data(), o.size());
+            set_as_copy(o.impl.data, o.size());
         }
         else if (o.owned()) {
             if constexpr (supports_share && o.supports_share) {
-                set_as_owned(o.data(), o.size());
+                set_as_owned(o.impl.data, o.size());
                 add_ref();
             }
             else {
@@ -278,10 +278,10 @@ struct ArrayInterface {
             }
         }
         else if constexpr (supports_static) {
-            set_as_unowned(o.data(), o.size());
+            set_as_unowned(o.impl.data, o.size());
         }
         else {
-            set_as_copy(o.data(), o.size());
+            set_as_copy(o.impl.data, o.size());
         }
     }
 
@@ -292,7 +292,7 @@ struct ArrayInterface {
     ArrayInterface (const ArrayInterface<ac2, T>& o) requires (
         is_Static && o.is_Slice
     ) {
-        set_as_unowned(o.data(), o.size());
+        set_as_unowned(o.impl.data, o.size());
     }
 
      // Copy construction from other array-like types.  Explicit except for
@@ -548,7 +548,7 @@ struct ArrayInterface {
     static constexpr
     Self Static (SelfSlice o) requires (supports_static) {
         StaticArray<T> r;
-        r.set_as_unowned(o.data(), o.size());
+        r.set_as_unowned(o.impl.data, o.size());
         return r;
     }
     template <ArrayIterator Ptr> static constexpr
@@ -628,11 +628,11 @@ struct ArrayInterface {
      // Okay okay
     ALWAYS_INLINE constexpr
     operator std::basic_string_view<T> () const requires (is_String) {
-        return std::string_view(data(), size());
+        return std::string_view(impl.data, size());
     }
     ALWAYS_INLINE constexpr
     operator std::basic_string<T> () const requires (is_String) {
-        return std::string(data(), size());
+        return std::string(impl.data, size());
     }
 
     ///// DESTRUCTOR
@@ -1638,8 +1638,8 @@ bool operator== (
     const T* ad = a.data();
     const auto& bd = b.data();
     if (as != bs) return false;
-     // Unlike most STL types, this WILL short-circuit if the arrays have the
-     // same data pointer.
+     // Unlike most STL containers, this WILL short-circuit if the arrays have
+     // the same data pointer and size.
     if constexpr (requires { ad == bd; }) {
         if (ad == bd) return true;
     }
@@ -1657,12 +1657,14 @@ bool operator== (
 ) requires (ArrayInterface<ac, T>::is_String) {
     usize as = a.size();
     const T* ad = a.data();
-    for (usize i = 0; i < as && b[i]; ++i) {
-        if (!(ad[i] == b[i])) {
+     // Can't short-circuit if ad == b because b might be NUL-terminated early.
+    usize i;
+    for (i = 0; i < as; ++i) {
+        if (!b[i] || !(ad[i] == b[i])) {
             return false;
         }
     }
-    return true;
+    return !b[i];
 }
 
  // I can't be bothered to learn what <=> is supposed to return.  They should
