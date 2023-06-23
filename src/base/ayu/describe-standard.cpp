@@ -67,18 +67,17 @@ AYU_DESCRIBE(uni::Str,
  // cause a duplicate definition error from the linker.
 
 AYU_DESCRIBE(uni::IRI,
-    delegate(mixed_funcs<std::string>(
+    delegate(mixed_funcs<AnyString>(
         [](const IRI& v) {
              // current_location().as_iri() would be more intentful, but also
              // slower since it does a bunch of string concatenation to build
              // the IRI fragment, which we don't need.
             if (auto res = current_location().root_resource()) {
-                return v.spec_relative_to(res->name());
+                return AnyString(v.spec_relative_to(res->name()));
             }
             else return v.spec();
         },
-        [](IRI& v, const std::string& s){
-            using namespace std::string_literals;
+        [](IRI& v, const AnyString& s){
             if (s.empty()) {
                 v = iri::IRI();
             }

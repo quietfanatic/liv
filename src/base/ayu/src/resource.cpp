@@ -702,7 +702,7 @@ static tap::TestSet tests ("base/ayu/resource", []{
     doesnt_throw([&]{ remove_source(output); }, "Can call remove_source twice");
     Location loc;
     doesnt_throw([&]{
-        item_from_string(&loc, input.name().spec() + "#bar/1");
+        item_from_string(&loc, cat(input.name().spec(), "#bar/1"));
     }, "Can read location from tree");
     Reference ref;
     doesnt_throw([&]{

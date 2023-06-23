@@ -729,6 +729,9 @@ struct ArrayInterface {
      // do bounds checks (except on debug builds).  Only the mut_* versions can
      // trigger copy-on-write; the non-mut_* version are always const except for
      // UniqueArray.
+     //
+     // Note: Using &array[array.size()] to get a pointer off the end of the
+     // array is NOT allowed.  Use array.end() instead.
     constexpr
     const T& at (usize i) const {
         require(i < size());
@@ -773,8 +776,8 @@ struct ArrayInterface {
     ALWAYS_INLINE constexpr
     const T& front () const { return (*this)[0]; }
     ALWAYS_INLINE constexpr
-    T& front () const requires (is_Unique) { return (*this)[0]; }
-    T& mut_front () const requires (supports_copy) {
+    T& front () requires (is_Unique) { return (*this)[0]; }
+    T& mut_front () requires (supports_copy) {
         make_unique();
         return (*this)[0];
     }
@@ -782,8 +785,8 @@ struct ArrayInterface {
     ALWAYS_INLINE constexpr
     const T& back () const { return (*this)[size() - 1]; }
     ALWAYS_INLINE constexpr
-    T& back () const requires (is_Unique) { return (*this)[size() - 1]; }
-    T& mut_back () const requires (supports_copy) {
+    T& back () requires (is_Unique) { return (*this)[size() - 1]; }
+    T& mut_back () requires (supports_copy) {
         make_unique();
         return (*this)[size() - 1];
     }
@@ -791,7 +794,7 @@ struct ArrayInterface {
      // Like substr. but doesn't do bounds checking.
     constexpr
     SelfSlice slice (usize offset, usize length) const {
-        expect(offset < size() && offset + length < size());
+        expect(offset <= size() && offset + length <= size());
         return SelfSlice(data() + offset, length);
     }
      // Like slice, but capped at the end of the contents.

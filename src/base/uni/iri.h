@@ -2,9 +2,9 @@
 // Basically URIs but unicode.
 // Under heavy development!  Don't use for anything important.
 //
-// Requires C++17 or later.  In C++20, everything is constexpr.
+// Requires C++17 or later.
 //
-///// IRI HANDLING, POSSIBLE DEVIATIONS FROM SPEC
+///// IRI HANDLING, POSSIBLE DEVIATIONS FROM SPECIFICATIONS
 //
 // This library is scheme-agnostic.  Parsing is the same for all schemes, so if
 // there's a scheme that uses non-standard syntax it may not work properly.
@@ -39,8 +39,7 @@
 //
 ///// Interface
 //
-// Most string-like accessors return a std::string_view.  Typically these will
-// not be NUL-terminated.
+// None of the strings returned by any methods will be NUL-terminated.
 //
 // Will not throw when given an invalid IRI spec.  Instead will mark the IRI as
 // invalid, and all accessors will return false or empty.  You can see what went
@@ -50,32 +49,24 @@
 // characters have to be % encoding can be application-specific.  Call decode()
 // yourself on the results when you want to decode them.
 //
-// This IRI class is pretty lightweight, (currently) consisting of a std::string
-// and four uint16s.  That said, std::string likely has an expensive copy
-// operation so don't copy them willy-nilly.
+// This IRI class is pretty lightweight, with one reference-counted string and
+// four uint16s.  16 bytes on 32-bit and 24 bytes on 64-bit.
 
 #pragma once
 
-#include <cinttypes>
-#include <string>
-#include <string_view>
+#include "common.h"
+#include "strings.h"
 
 namespace uni {
 inline namespace iri {
 
- // Alias some types for tersity
-using OldStr = std::string_view;
-using uint32 = std::uint32_t;
-using uint16 = std::uint16_t;
-using uint8 = std::uint8_t;
-
 constexpr uint32 maximum_length = uint16(-1);
 
  // Replace reserved characters with % sequences
-std::string encode (OldStr);
+UniqueString encode (Str);
  // Replace % sequences with their characters.  If there's an invalid escape
  // sequence, leaves it as is.
-std::string decode (OldStr);
+UniqueString decode (Str);
 
  // The first component that the given IRI reference has
 enum IRIRelativity : uint8 {
@@ -91,7 +82,7 @@ enum IRIRelativity : uint8 {
  // Return what kind of relative reference this is.  This only does basic
  // detection, and when given an invalid reference, may return anything.  To be
  // sure that the reference is valid, resolve it into a full IRI.
-IRIRelativity classify_reference (OldStr);
+IRIRelativity classify_reference (Str);
 
 struct IRI {
      // Construct the empty IRI.  This is not a valid IRI.
@@ -100,11 +91,11 @@ struct IRI {
      // base is provided, resolved ref as a IRI reference (AKA a relative IRI)
      // with base as its base. If base is not provided, ref must be an absolute
      // IRI with scheme included.
-    explicit IRI (OldStr ref, const IRI& base = IRI());
+    explicit IRI (Str ref, const IRI& base = IRI());
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
     IRI (
-        std::string&& spec,
+        AnyString&& spec,
         uint16 colon_position, uint16 path_position,
         uint16 question_position, uint16 hash_position
     );
@@ -125,21 +116,21 @@ struct IRI {
     explicit operator bool () const;
 
      // Gets the full text of the IRI only if this IRI is valid.
-    const std::string& spec () const;
+    const AnyString& spec () const;
      // Get full text of IRI even it is not valid.  This is only for diagnosing
      // what is wrong with the IRI.  Don't use it for anything important.
-    const std::string& possibly_invalid_spec () const;
+    const AnyString& possibly_invalid_spec () const;
 
      // Steal the spec string, leaving this IRI empty.
-    std::string move_spec ();
+    AnyString move_spec ();
      // Steal the spec string even if it's invalid.
-    std::string move_possibly_invalid_spec ();
+    AnyString move_possibly_invalid_spec ();
 
      // Returns an IRI reference that's relative to base, or just spec() if
      // this IRI has nothing in common with base.  Returning relative paths is
      // not yet implemented, so if this IRI and base differ in their paths, an
      // absolute path starting with / will be returned.
-    std::string spec_relative_to (const IRI& base) const;
+    UniqueString spec_relative_to (const IRI& base) const;
 
      // Check for existence of components.
     bool has_scheme () const;
@@ -153,12 +144,12 @@ struct IRI {
 
      // Get the scheme of the IRI.  Doesn't include the :.
      // This will always return something for a valid IRI.
-    OldStr scheme () const;
+    Str scheme () const;
      // Get the authority (host and port).  Doesn't include the //.  Will
      // return empty if has_authority is false.  May still return empty if
      // has_authority is true, but the IRI has an empty authority (e.g.
      // file:///foo/bar)
-    OldStr authority () const;
+    Str authority () const;
      // Get the path component of the IRI.
      //   scheme://host/path => /path
      //   scheme://host/ => /
@@ -167,11 +158,11 @@ struct IRI {
      //   scheme:/path => /path
      //   scheme:path => path
      // If has_path is true, will always return non-empty.
-    OldStr path () const;
+    Str path () const;
      // Get the query.  Will not include the ?.  May be existent but empty.
-    OldStr query () const;
+    Str query () const;
      // Get the fragment.  Will not include the #.  May be existent but empty.
-    OldStr fragment () const;
+    Str fragment () const;
 
      // Returns a new IRI with just the scheme (and the colon).
     IRI iri_with_scheme () const;
@@ -186,16 +177,16 @@ struct IRI {
      // Get everything but the fragment
     IRI iri_without_fragment () const;
 
-     // The following are the same as above, but return a raw OldStr instead of a
+     // The following are the same as above, but return a raw Str instead of a
      // new IRI.  This saves a string copy, but can cost an extra parse if you
-     // turn the OldStr back into an IRI.
-    OldStr spec_with_scheme () const;
-    OldStr spec_with_origin () const;
-    OldStr spec_without_filename () const;
-    OldStr spec_without_query () const;
-    OldStr spec_without_fragment () const;
+     // turn the Str back into an IRI.
+    Str spec_with_scheme () const;
+    Str spec_with_origin () const;
+    Str spec_without_filename () const;
+    Str spec_without_query () const;
+    Str spec_without_fragment () const;
 
-    OldStr path_without_filename () const;
+    Str path_without_filename () const;
 
      // Destruct this object
     ~IRI ();
@@ -219,7 +210,7 @@ struct IRI {
 
   private:
      // Full text of the IRI
-    std::string spec_;
+    AnyString spec_;
      // All the following markers are 0 for an invalid IRI.
      // Offset of the : after the scheme.
     uint16 colon_ = 0;

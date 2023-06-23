@@ -99,7 +99,7 @@ Location::Location (const IRI& iri) {
                         segment_start, i - segment_start
                     );
                     if (segment_is_string) {
-                        self = Location(self, iri::decode(segment));
+                        self = Location(self, std::string(iri::decode(segment)));
                     }
                     else if (segment.size() == 0) {
                          // Ignore

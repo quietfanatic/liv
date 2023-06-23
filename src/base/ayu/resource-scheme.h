@@ -79,7 +79,7 @@ struct FileResourceScheme : ResourceScheme {
     }
 
     std::string get_file (const IRI& iri) const override {
-        return folder + decode(iri.path());
+        return folder + std::string(decode(iri.path()));
     }
 
     FileResourceScheme (std::string scheme, std::string folder, bool auto_activate = true)
