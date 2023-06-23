@@ -1,7 +1,7 @@
 // Provides ayu descriptions for builtin scalar types.  For template types like
 // std::vector, include the .h file.
 
-#include "../iri/iri.h"
+#include "../uni/iri.h"
 #include "describe-standard.h"
 #include "resource.h"
 
@@ -66,9 +66,9 @@ AYU_DESCRIBE(uni::Str,
  // a problem, but if the templates are in different compilation units, it'll
  // cause a duplicate definition error from the linker.
 
-AYU_DESCRIBE(iri::IRI,
+AYU_DESCRIBE(uni::IRI,
     delegate(mixed_funcs<std::string>(
-        [](const iri::IRI& v) {
+        [](const IRI& v) {
              // current_location().as_iri() would be more intentful, but also
              // slower since it does a bunch of string concatenation to build
              // the IRI fragment, which we don't need.
@@ -77,7 +77,7 @@ AYU_DESCRIBE(iri::IRI,
             }
             else return v.spec();
         },
-        [](iri::IRI& v, const std::string& s){
+        [](IRI& v, const std::string& s){
             using namespace std::string_literals;
             if (s.empty()) {
                 v = iri::IRI();

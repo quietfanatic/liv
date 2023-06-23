@@ -60,7 +60,8 @@
 #include <string>
 #include <string_view>
 
-namespace iri {
+namespace uni {
+inline namespace iri {
 
  // Alias some types for tersity
 using OldStr = std::string_view;
@@ -232,7 +233,8 @@ struct IRI {
     uint16 hash_ = 0;
 };
 
-} // namespace iri
+} // inline namespace iri
+} // namespace uni
 
 // I was going to specialize std::hash, but using IRIs as keys in an
 // unordered_map would likely be a mistake, since you can just use Strings or

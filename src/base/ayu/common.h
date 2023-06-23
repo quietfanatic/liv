@@ -18,12 +18,11 @@
 #include "../uni/string.h"
 #include "../uni/strings.h"
 
-namespace iri { struct IRI; }
+namespace uni { inline namespace iri { struct IRI; } }
 
 namespace ayu {
 using namespace std::literals;
 using namespace uni;
-using iri::IRI;
 
 ///// BASIC TYPES AND STUFF
 

@@ -5,13 +5,12 @@
 
 #pragma once
 
-#include "../iri/iri.h"
+#include "../uni/iri.h"
 #include "../uni/utf.h"
 #include "common.h"
 #include "type.h"
 
 namespace ayu {
-using iri::IRI;
 
  // Registers a resource scheme at startup.  The path parameter passed to all
  // the virtual methods is just the path part of the name, and is always
@@ -80,7 +79,7 @@ struct FileResourceScheme : ResourceScheme {
     }
 
     std::string get_file (const IRI& iri) const override {
-        return folder + iri::decode(iri.path());
+        return folder + decode(iri.path());
     }
 
     FileResourceScheme (std::string scheme, std::string folder, bool auto_activate = true)

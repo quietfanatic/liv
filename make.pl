@@ -102,8 +102,8 @@ my @sources = (qw(
     base/glow/program.cpp
     base/glow/test-environment.cpp
     base/glow/texture-program.cpp
-    base/iri/iri.cpp
     base/uni/arrays.cpp
+    base/uni/iri.cpp
     base/uni/requirements.cpp
     base/uni/text.cpp
     base/uni/utf.cpp

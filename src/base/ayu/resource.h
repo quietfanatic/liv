@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "../iri/iri.h"
+#include "../uni/iri.h"
 #include "internal/common-internal.h"
 #include "location.h"
 #include "reference.h"

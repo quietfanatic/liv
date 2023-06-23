@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-namespace iri {
+namespace uni {
+inline namespace iri {
 
 #define IRI_UPPERCASE \
          'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': \
@@ -678,12 +679,13 @@ OldStr IRI::path_without_filename () const {
 
 IRI::~IRI () { }
 
-} using namespace iri;
+} // inline namespace iri;
+} using namespace uni;
 
 #ifndef TAP_DISABLE_TESTS
 #include "../tap/tap.h"
 
-namespace iri::test {
+namespace uni::iri::test {
 
 struct TestCase {
     OldStr i = "";
@@ -733,11 +735,11 @@ constexpr TestCase cases [] = {
 };
 constexpr auto n_cases = sizeof(cases) / sizeof(cases[0]);
 
-} // namespace iri::test
+} // namespace uni::iri::test
 
 static tap::TestSet tests ("base/iri/iri", []{
     using namespace tap;
-    using namespace iri::test;
+    using namespace uni::iri::test;
     IRI empty;
     ok(!empty.is_valid(), "!empty.is_valid()");
     ok(empty.is_empty(), "empty.is_empty()");
