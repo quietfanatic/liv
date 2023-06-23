@@ -62,7 +62,7 @@ AYU_DESCRIBE(Statement,
          // TODO: allow constructing readonly Reference from const Dynamic
         auto args_tree = ayu::item_to_tree(const_cast<ayu::Dynamic&>(s.args).ptr());
         auto a = ayu::TreeArray(args_tree);
-        a.emplace(a.begin(), s.command->name);
+        a.emplace(a.begin(), Str(s.command->name));
         return ayu::Tree(a);
     }),
     from_tree([](Statement& s, const ayu::Tree& t){
@@ -72,7 +72,7 @@ AYU_DESCRIBE(Statement,
         if (a.size() == 0) {
             s = {}; return;
         }
-        s.command = require_command(OldStr(a[0]));
+        s.command = require_command(Str(a[0]));
         ayu::TreeArray args_a;
         for (usize i = 1; i < a.size(); i++) {
             args_a.push_back(a[i]);

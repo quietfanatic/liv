@@ -54,7 +54,7 @@ void ser_from_tree (const Traversal&, TreeRef);
 
 ///// ATTR OPERATIONS
  // Implement get_keys by adding keys to a vector of AnyStrings
-void ser_collect_key (UniqueArray<AnyString>&, Tree);
+void ser_collect_key (UniqueArray<AnyString>&, AnyString&&);
 void ser_collect_keys (const Traversal&, UniqueArray<AnyString>&);
 
  // Implement set_keys by removing keys from a std::vector<OldStr>

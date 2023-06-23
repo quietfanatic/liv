@@ -66,8 +66,10 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
         return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, std::move(v));
     }
     else {
-         // Assume something convertible to OldStr (std::string_view)
-        return in::ValueDcrWith<T, OldStr, false>(in::VFSTR, n, std::move(v));
+         // Assume something that can be made into a StaticString
+        return in::ValueDcrWith<T, StaticString, false>(
+            in::VFSTRING, StaticString::Static(n), std::move(v)
+        );
     }
 }
 template <class T>
@@ -87,8 +89,9 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
         return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
     }
     else {
-         // Assume something convertible to OldStr (std::string_view)
-        return in::ValueDcrWith<T, OldStr, false>(in::VFSTR, n, v);
+        return in::ValueDcrWith<T, StaticString, false>(
+            in::VFSTRING, StaticString::Static(n), v
+        );
     }
 }
 template <class T>
@@ -107,8 +110,9 @@ constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* v) {
         return in::ValueDcrWith<T, double, true>(in::VFDOUBLE, n, v);
     }
     else {
-         // Assume something convertible to OldStr (std::string_view)
-        return in::ValueDcrWith<T, OldStr, true>(in::VFSTR, n, v);
+        return in::ValueDcrWith<T, StaticString, true>(
+            in::VFSTRING, StaticString::Static(n), v
+        );
     }
 }
 
@@ -330,6 +334,7 @@ constexpr auto _AYU_DescribeBase<T>::_ayu_describe (
 #else
 
  // Stringify name as early as possible to avoid macro expansion
+ // TODO make description constinit so names can be generated at runtime
 #define AYU_DESCRIBE_BEGIN(T) AYU_DESCRIBE_BEGIN_NAME(T, #T)
 #define AYU_DESCRIBE_BEGIN_NAME(T, name) \
 template <> \

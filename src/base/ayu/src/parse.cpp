@@ -27,7 +27,7 @@ struct Parser {
      // or so).
     UniqueArray<TreePair> shortcuts;
 
-    Parser (OldStr s, OldStr filename = ""sv) :
+    Parser (OldStr s, OldStr filename = "") :
         filename(filename),
         begin(s.data()),
         p(s.data()),
@@ -117,12 +117,12 @@ struct Parser {
         p++;  // for the "
         UniqueString r;
         for (;;) switch (look()) {
-            case EOF: error("std::string not terminated by end of input"sv);
+            case EOF: error("std::string not terminated by end of input");
             case '"': p++; return Tree(AnyString(std::move(r)));
             case '\\': {
                 p++;
                 switch (look()) {
-                    case EOF: error("std::string not terminated by end of input"sv);
+                    case EOF: error("std::string not terminated by end of input");
                     case '"': r.push_back('"'); break;
                     case '\\': r.push_back('\\'); break;
                      // Dunno why this is in json
@@ -132,7 +132,7 @@ struct Parser {
                     case 'n': r.push_back('\n'); break;
                     case 'r': r.push_back('\r'); break;
                     case 't': r.push_back('\t'); break;
-                    default: error("Unrecognized escape sequence \\"sv, show_char(look()));
+                    default: error("Unrecognized escape sequence \\", show_char(look()));
                 }
                 p++;
                 break;
@@ -141,7 +141,7 @@ struct Parser {
         }
     }
 
-    OldStr got_word () {
+    Str got_word () {
         const char* start = p;
         p++;  // For the first character
         for (;;) switch (look()) {
@@ -153,15 +153,15 @@ struct Parser {
                     p += 2;
                     break;
                 }
-                else return OldStr(start, p - start);
+                else return Str(start, p - start);
             }
             case '"': {
-                error("\" cannot occur inside a word (are you missing the first \"?)"sv);
+                error("\" cannot occur inside a word (are you missing the first \"?)");
             }
             case ANY_RESERVED_SYMBOL: {
-                error(*p, " is a reserved symbol and can't be used outside of strings."sv);
+                error(*p, " is a reserved symbol and can't be used outside of strings.");
             }
-            default: return OldStr(start, p - start);
+            default: return Str(start, p - start);
         }
     }
 
@@ -188,7 +188,7 @@ struct Parser {
             case '+':
                 word = OldStr(word.data()+1, word.size()-1);
                 if (word.empty() || !std::isdigit(word[0])) {
-                    error("Malformed number"sv);
+                    error("Malformed number");
                 }
                 break;
         }
@@ -208,7 +208,7 @@ struct Parser {
             );
             if (ptr == word.begin()) {
                  // If the integer parse failed, the float parse will also fail.
-                error("Malformed number"sv);
+                error("Malformed number");
             }
             else if (ptr == word.end()) {
                 Tree r = minus && integer == 0
@@ -222,7 +222,7 @@ struct Parser {
                 if (ptr == word.end() + 1 ||
                     (hex ? !std::isxdigit(ptr[1]) : !std::isdigit(ptr[1]))
                 ) {
-                    error("Number cannot end with a ."sv);
+                    error("Number cannot end with a .");
                 }
             }
         }
@@ -236,7 +236,7 @@ struct Parser {
             );
             if (ptr == word.begin()) {
                  // Shouldn't happen?
-                error("Malformed number"sv);
+                error("Malformed number");
             }
             else if (ptr == word.end()) {
                 Tree r (minus ? -floating : floating);
@@ -244,7 +244,7 @@ struct Parser {
                 return r;
             }
             else {
-                error("Junk at end of number"sv);
+                error("Junk at end of number");
             }
         }
     }
@@ -255,8 +255,8 @@ struct Parser {
         for (;;) {
             skip_commas();
             switch (look()) {
-                case EOF: error("Array not terminated"sv);
-                case ':': error("Cannot have : in an array"sv);
+                case EOF: error("Array not terminated");
+                case ':': error("Cannot have : in an array");
                 case ']': p++; return a;
                 default: a.push_back(parse_term()); break;
             }
@@ -269,28 +269,28 @@ struct Parser {
         for (;;) {
             skip_commas();
             switch (look()) {
-                case EOF: error("Object not terminated"sv);
-                case ':': error("Missing key before : in object"sv);
+                case EOF: error("Object not terminated");
+                case ':': error("Missing key before : in object");
                 case '}': p++; return o;
                 default: break;
             }
             Tree key = parse_term();
             if (key.form != STRING) {
-                error("Can't use non-string "sv, tree_to_string(key), " as key in object"sv);
+                error("Can't use non-string ", tree_to_string(key), " as key in object");
             }
             skip_ws();
             switch (look()) {
-                case EOF: error("Object not terminated"sv);
+                case EOF: error("Object not terminated");
                 case ':': p++; break;
                 case ANY_RESERVED_SYMBOL: {
-                    error(*p, " is a reserved symbol and can't be used outside of strings."sv);
+                    error(*p, " is a reserved symbol and can't be used outside of strings.");
                 }
-                default: error("Missing : after name in object"sv);
+                default: error("Missing : after name in object");
             }
             skip_ws();
             switch (look()) {
                 case ',':
-                case '}': error("Missing value after : in object"sv);
+                case '}': error("Missing value after : in object");
                 default: {
                     o.emplace_back(AnyString(key), parse_term());
                     break;
@@ -303,19 +303,16 @@ struct Parser {
     void set_shortcut (AnyString&& name, Tree value) {
         for (auto& p : shortcuts) {
             if (p.first == name) {
-                error("Duplicate declaration of shortcut &"sv, name);
+                error("Duplicate declaration of shortcut &", name);
             }
         }
         shortcuts.emplace_back(std::move(name), std::move(value));
     }
-    TreeRef get_shortcut (TreeRef name) {
+    TreeRef get_shortcut (Str name) {
         for (auto& p : shortcuts) {
             if (p.first == name) return p.second;
         }
-        error(
-            "Unknown shortcut *"sv,
-            tree_to_string(name)
-        );
+        error("Unknown shortcut *", name);
     }
 
     Tree got_decl () {
@@ -324,11 +321,11 @@ struct Parser {
             case ANY_LETTER:
             case '_':
             case '"': break;
-            default: error("Expected ref name after &"sv);
+            default: error("Expected ref name after &");
         }
         Tree name = parse_term();
         if (name.form != STRING) {
-            error("Can't use non-string "sv, tree_to_string(name), " as ref name"sv);
+            error("Can't use non-string ", tree_to_string(name), " as ref name");
         }
         skip_ws();
         switch (look()) {
@@ -353,20 +350,20 @@ struct Parser {
             case ANY_LETTER:
             case '_':
             case '"': break;
-            default: error("Expected ref name after *"sv);
+            default: error("Expected ref name after *");
         }
         Tree name = parse_term();
         if (name.form != STRING) {
-            error("Can't use non-string "sv, tree_to_string(name), " as ref name"sv);
+            error("Can't use non-string ", tree_to_string(name), " as ref name");
         }
-        return get_shortcut(name);
+        return get_shortcut(Str(name));
     }
 
     Tree parse_term () {
         switch (look()) {
-            case EOF: error("Expected term but ran into end of document"sv);
+            case EOF: error("Expected term but ran into end of document");
             case ANY_WORD_STARTER: {
-                OldStr word = got_word();
+                Str word = got_word();
                 if (word.size() == 4) {
                     if (word[0] == 'n' && word[1] == 'u' &&
                         word[2] == 'l' && word[3] == 'l'
@@ -396,10 +393,10 @@ struct Parser {
             case ':':
             case ',':
             case ']':
-            case '}': error("Unexpected "sv, *p);
+            case '}': error("Unexpected ", *p);
             case ANY_RESERVED_SYMBOL:
-                error(*p, " is a reserved symbol and can't be used outside of strings."sv);
-            default: error("Unrecognized character "sv, *p);
+                error(*p, " is a reserved symbol and can't be used outside of strings.");
+            default: error("Unrecognized character ", *p);
         }
     }
 
@@ -412,7 +409,7 @@ struct Parser {
         skip_ws();
         Tree r = parse_term();
         skip_ws();
-        if (p != end) error("Extra stuff at end of document"sv);
+        if (p != end) error("Extra stuff at end of document");
         return r;
     }
 };

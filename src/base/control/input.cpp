@@ -154,69 +154,73 @@ OldStr input_to_string (const Input& input) {
     }
 }
 
-} using namespace control;
-
-AYU_DESCRIBE(control::Input,
-    to_tree([](const Input& input){
-        ayu::TreeArray a;
-        if (input.type == NONE) return ayu::Tree(a);
-        if (input.ctrl) a.emplace_back("ctrl"s);
-        if (input.alt) a.emplace_back("alt"s);
-        if (input.shift) a.emplace_back("shift"s);
-        switch (input.type) {
-            case KEY: {
-                switch (input.code) {
-                    case SDLK_0: case SDLK_1: case SDLK_2: case SDLK_3: case SDLK_4:
-                    case SDLK_5: case SDLK_6: case SDLK_7: case SDLK_8: case SDLK_9:
-                        a.emplace_back(input.code - SDLK_0);
-                        break;
-                    default: {
-                        OldStr name = input_to_string(input);
-                        if (!name.empty()) a.emplace_back(name);
-                        else a.emplace_back(input_to_integer(input));
-                        break;
-                    }
+ // These are for the AYU_DESCRIBE.  We're separating them for easier debugging.
+static ayu::Tree input_to_tree (const Input& input) {
+    ayu::TreeArray a;
+    if (input.type == NONE) return ayu::Tree(a);
+    if (input.ctrl) a.emplace_back("ctrl");
+    if (input.alt) a.emplace_back("alt");
+    if (input.shift) a.emplace_back("shift");
+    switch (input.type) {
+        case KEY: {
+            switch (input.code) {
+                case SDLK_0: case SDLK_1: case SDLK_2: case SDLK_3: case SDLK_4:
+                case SDLK_5: case SDLK_6: case SDLK_7: case SDLK_8: case SDLK_9:
+                    a.emplace_back(input.code - SDLK_0);
+                    break;
+                default: {
+                    Str name = input_to_string(input);
+                    if (!name.empty()) a.emplace_back(name);
+                    else a.emplace_back(input_to_integer(input));
+                    break;
                 }
-                break;
             }
-            case BUTTON: {
-                OldStr name = input_to_string(input);
-                require(!name.empty());
-                a.emplace_back(name);
-                break;
-            }
-            default: require(false);
+            break;
         }
-        return ayu::Tree(a);
-    }),
-    from_tree([](Input& input, const ayu::Tree& tree) {
-        auto a = ayu::TreeArraySlice(tree);
-        input = {};
-        for (auto& e : a) {
-            if (e.form == ayu::NUMBER) {
+        case BUTTON: {
+            Str name = input_to_string(input);
+            require(!name.empty());
+            a.emplace_back(name);
+            break;
+        }
+        default: require(false);
+    }
+    return ayu::Tree(a);
+}
+static void input_from_tree (Input& input, const ayu::Tree& tree) {
+    auto a = ayu::TreeArraySlice(tree);
+    input = {};
+    for (auto& e : a) {
+        if (e.form == ayu::NUMBER) {
+            if (input.type != NONE) {
+                throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
+            }
+            Input tmp = input_from_integer(int(e));
+            input.type = tmp.type;
+            input.code = tmp.code;
+        }
+        else {
+            auto name = Str(e);
+            if (name == "ctrl") input.ctrl = true;
+            else if (name == "alt") input.alt = true;
+            else if (name == "shift") input.shift = true;
+            else {
                 if (input.type != NONE) {
                     throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
                 }
-                Input tmp = input_from_integer(int(e));
+                Input tmp = input_from_string(name);
                 input.type = tmp.type;
                 input.code = tmp.code;
             }
-            else {
-                auto name = OldStr(e);
-                if (name == "ctrl") input.ctrl = true;
-                else if (name == "alt") input.alt = true;
-                else if (name == "shift") input.shift = true;
-                else {
-                    if (input.type != NONE) {
-                        throw ayu::X<ayu::GenericError>("Too many descriptors for Input");
-                    }
-                    Input tmp = input_from_string(name);
-                    input.type = tmp.type;
-                    input.code = tmp.code;
-                }
-            }
         }
-    })
+    }
+}
+
+} using namespace control;
+
+AYU_DESCRIBE(control::Input,
+    to_tree(&input_to_tree),
+    from_tree(&input_from_tree)
 )
 
 #ifndef TAP_DISABLE_TESTS

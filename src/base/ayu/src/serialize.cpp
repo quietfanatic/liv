@@ -287,7 +287,7 @@ void item_from_tree (
 }
 
 ///// ATTR OPERATIONS
-void in::ser_collect_key (UniqueArray<AnyString>& ks, Tree k) {
+void in::ser_collect_key (UniqueArray<AnyString>& ks, AnyString&& k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
@@ -307,7 +307,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                 for (auto& k : ksv) {
                      // We're copying the string here, but we can avoid a copy
                      // later.
-                    ser_collect_key(ks, Tree(k));
+                    ser_collect_key(ks, AnyString(k));
                 }
             });
         }
@@ -316,7 +316,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
             acr->read(*trav.address, [&](Mu& v){
                 auto& ksv = reinterpret_cast<const std::vector<std::string>&>(v);
                 for (auto& k : ksv) {
-                    ser_collect_key(ks, Tree(k));
+                    ser_collect_key(ks, AnyString(k));
                 }
             });
         }
@@ -333,7 +333,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                     if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
-                    ser_collect_key(ks, e);
+                    ser_collect_key(ks, AnyString(e));
                 }
             });
         }
@@ -352,7 +352,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                     ser_collect_keys(child, ks);
                 });
             }
-            else ser_collect_key(ks, Tree(attr->key));
+            else ser_collect_key(ks, AnyString(attr->key));
         }
     }
     else if (auto acr = trav.desc->delegate_acr()) {
@@ -415,7 +415,7 @@ void in::ser_claim_keys (
                  // be slow.
                 UniqueArray<Tree> a (ks.size());
                 for (usize i = 0; i < ks.size(); i++) {
-                    a[i] = Tree(ks[i]);
+                    a[i] = Tree(Str(ks[i]));
                 }
                 acr->write(*trav.address, [&](Mu& ksv){
                     item_from_tree(

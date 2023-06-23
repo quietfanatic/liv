@@ -214,6 +214,7 @@ struct _AYU_DescribeBase {
      // ACCESSORS), and its child type can be anything that serializes to an
      // array of strings, but serialization will be fastest if its type is
      // std::vector<OldStr> (AKA std::vector<std::string_view>).
+     // TODO: Change this to AnyArray<AnyString>
      //
      // During serialization, the list of keys will be determined with
      // `accessor`'s read operation, and for each key, the attribute's value

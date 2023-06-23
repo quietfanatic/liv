@@ -55,11 +55,10 @@ struct Tree {
         bool as_bool;
         int64 as_int64;
         double as_double;
-        char as_chars [8];
         const char* as_char_ptr;
         const Tree* as_array_ptr;
         const TreePair* as_object_ptr;
-        std::exception_ptr* as_error_ptr;
+        const std::exception_ptr* as_error_ptr;
     } data;
 
     bool has_value () const { return form != UNDEFINED; }
@@ -99,11 +98,11 @@ struct Tree {
      // Disable implicit coercion of the argument to bool
     struct ExplicitBool { bool v; };
     explicit Tree (ExplicitBool);
-    template <class T> requires (std::is_same_v<std::decay_t<T>, bool>)
+    template <class T> requires (std::is_same_v<std::remove_cvref_t<T>, bool>)
     explicit Tree (T v) : Tree(ExplicitBool{v}) { }
 
-     // plain (not signed or unsigned) chars are represented as strings
-    explicit Tree (char v) : Tree(std::string(1,v)) { }
+     // TODO: Reduce these overloads with a template (for shorter error
+     // messages)
     explicit Tree (int8 v) : Tree(int64(v)) { }
     explicit Tree (uint8 v) : Tree(int64(v)) { }
     explicit Tree (int16 v) : Tree(int64(v)) { }
@@ -114,16 +113,19 @@ struct Tree {
     explicit Tree (uint64 v) : Tree(int64(v)) { }
     explicit Tree (float v) : Tree(double(v)) { }
     explicit Tree (double v);
-    explicit Tree (Str v);
-    template <class T> requires (requires (T v) { Str(v); })
-    explicit Tree (T v) : Tree(Str(v)) { } // TEMP
+
+     // plain (not signed or unsigned) chars are represented as strings
+    explicit Tree (char v) : Tree(SharedString(1,v)) { }
+    explicit Tree (AnyString v);
     explicit Tree (OldStr16 v); // Converts to UTF8
+
     explicit Tree (TreeArray v);
     explicit Tree (TreeObject v);
     explicit Tree (std::exception_ptr p);
 
      // These throw if the tree is not the right form or if
-     // the requested type cannot store the value.
+     // the requested type cannot store the value, e.g. try to convert to a
+     // uint8 a Tree containing the number 257.
     explicit operator Null () const;
     explicit operator bool () const;
     explicit operator char () const;
@@ -137,16 +139,10 @@ struct Tree {
     explicit operator uint64 () const;
     explicit operator float () const { return double(*this); }
     explicit operator double () const;
-     // Warning 1: The returned OldStr() is not NUL-terminated.
-     // Warning 2: If you get a OldStr() from a Tree or a TreeRef, that OldStr() will
-     // only be valid while that Tree or TreeRef exists (even if the original
-     // Tree exists).  If you need to access the string later, copy the whole
-     // Tree (it's cheap).
-    explicit operator OldStr () const;
-    explicit operator UniqueString () const { return UniqueString(OldStr(*this)); } // TEMP
-    explicit operator SharedString () const { return SharedString(OldStr(*this)); } // TEMP
-    explicit operator AnyString () const { return AnyString(OldStr(*this)); } // TEMP
-    explicit operator std::string () const;  // Does a copy.
+     // Warning 1: The returned Str is not NUL-terminated.
+     // Warning 2: The Str will be invalidated when this Tree is destructed.
+    explicit operator Str () const;
+    explicit operator AnyString () const;
     explicit operator std::u16string () const;
     explicit operator TreeArraySlice () const;
     explicit operator TreeArray () const;
@@ -169,14 +165,10 @@ struct Tree {
 static_assert(sizeof(Tree) == 16);
 
  // Test for equality.  Trees of different forms are considered unequal.
- // Objects are equal if all their attributes are the same; the attributes
- // don't have to be in the same order.  Unlike with normal floating point
- // comparisons, Tree(NAN) == Tree(NAN).  -0.0 and +0.0 are considered equal.
+ // Objects are equal if they have all the same attributes, but the attributes
+ // don't have to be in the same order.  Unlike float and double, Tree(NAN)
+ // == Tree(NAN).  Like float and double, -0.0 == +0.0.
 bool operator == (TreeRef a, TreeRef b);
- // Theoretically we could add < and friends, but it's a pain to program.
-
- // If we're gonna start using Trees as strings, we'll want this
-bool operator == (TreeRef a, OldStr b);
 
 struct TreeError : Error { };
  // Tried to treat a tree as though it's a form which it's not.

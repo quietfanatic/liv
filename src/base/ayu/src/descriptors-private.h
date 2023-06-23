@@ -30,7 +30,7 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                 case VFBOOL: return Tree(*(const bool*)name());
                 case VFINT64: return Tree(*(const int64*)name());
                 case VFDOUBLE: return Tree(*(const double*)name());
-                case VFSTR: return Tree(*(const OldStr*)name());
+                case VFSTRING: return Tree(*(const StaticString*)name());
                 default: never();
             }
         }
@@ -62,18 +62,16 @@ struct ValueDcrPrivate : ValueDcr<Mu> {
                     }
                     default: return false;
                 }
-            case VFSTR: {
-                OldStr n = *(const OldStr*)name();
-                if (n.size() <= 8) {
-                    if (tree->rep != REP_SHORTSTRING) return false;
-                    for (usize i = 0; i < n.size(); i++) {
-                        if (tree->data.as_chars[i] != n[i]) return false;
+            case VFSTRING: {
+                StaticString n = *(const StaticString*)name();
+                switch (tree->rep) {
+                    case REP_STATICSTRING:
+                    case REP_SHAREDSTRING: {
+                        if (tree->length != n.size()) return false;
+                        if (tree->data.as_char_ptr == n.data()) return true;
+                        return Str(tree->data.as_char_ptr, tree->length) == n;
                     }
-                    return true;
-                }
-                else {
-                    return tree->rep == REP_LONGSTRING
-                        && tree_longStr(tree) == *(const OldStr*)name();
+                    default: return false;
                 }
             }
             default: never();

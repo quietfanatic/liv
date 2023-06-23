@@ -206,16 +206,13 @@ struct Printer {
                     return print_double(p, v, hex);
                 }
             }
-            case REP_SHORTSTRING: {
+            case REP_STATICSTRING:
+            case REP_SHAREDSTRING: {
                 return print_string(
-                    p, tree_shortStr(t), t->flags & PREFER_EXPANDED
+                    p, Str(t->data.as_char_ptr, t->length),
+                    t->flags & PREFER_EXPANDED
                 );
             }
-            case REP_LONGSTRING:
-                 // TODO: Pass all flags and expand based on length
-                return print_string(
-                    p, tree_longStr(t), t->flags & PREFER_EXPANDED
-                );
             case REP_ARRAY: {
                 TreeArraySlice a = tree_Array(t);
                 if (a.empty()) {

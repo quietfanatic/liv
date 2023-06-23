@@ -19,9 +19,11 @@ Tree::Tree (const Tree& o) :
 [[gnu::noinline]]
 void delete_data (TreeRef t) {
      // Delete by manifesting an array and letting its destructor run.
+     // We're using Unique* instead of Shared* because we've already run down
+     // the reference count.
     switch (t->rep) {
-        case REP_LONGSTRING: {
-            UniqueArray<char>::Materialize(
+        case REP_SHAREDSTRING: {
+            UniqueString::Materialize(
                 (char*)t->data.as_char_ptr, t->length
             );
             break;
@@ -51,19 +53,15 @@ void delete_data (TreeRef t) {
 Tree::~Tree () {
     if (rep < 0 && data.as_char_ptr) {
         auto header = ArrayOwnedHeader::get(data.as_char_ptr);
-        if (header->ref_count) {
-            --header->ref_count;
-        }
-        else {
-            delete_data(*this);
-        }
+        if (header->ref_count) --header->ref_count;
+        else delete_data(*this);
     }
 }
 
 Tree::Tree (Null) :
     form(NULLFORM), rep(REP_NULL), flags(0), length(0), data{.as_int64 = 0}
 { }
- // use .as_int64 to write all of data
+ // Use .as_int64 to write all of data
 Tree::Tree (ExplicitBool v) :
     form(BOOL), rep(REP_BOOL), flags(0), length(0), data{.as_int64 = v.v}
 { }
@@ -73,25 +71,15 @@ Tree::Tree (int64 v) :
 Tree::Tree (double v) :
     form(NUMBER), rep(REP_DOUBLE), flags(0), length(0), data{.as_double = v}
 { }
-Tree::Tree (GenericStr<char> v) :
-    form(STRING), rep(v.size() <= 8 ? REP_SHORTSTRING : REP_LONGSTRING),
-    flags(0), length(v.size()), data{}
+Tree::Tree (AnyString v) :
+    form(STRING), rep(v.owned() ? REP_SHAREDSTRING : REP_STATICSTRING),
+    flags(0), length(v.size()), data{.as_char_ptr = v.data()}
 {
     require(v.size() <= uint32(-1));
-    if (v.size() <= 8) {
-         // zero unused char slots
-        const_cast<int64&>(data.as_int64) = 0;
-        for (usize i = 0; i < v.size(); i++) {
-            const_cast<char&>(data.as_chars[i]) = v[i];
-        }
-    }
-    else {
-        auto s = UniqueString::Copy(v);
-        const_cast<char*&>(data.as_char_ptr) = s.data();
-        s.dematerialize();
-    }
+    v.dematerialize();
 }
-Tree::Tree (OldStr16 v) : Tree(from_utf16(v)) { }
+ // TODO: Change from_utf16 to return UniqueString
+Tree::Tree (OldStr16 v) : Tree(UniqueString(from_utf16(v))) { }
 Tree::Tree (TreeArray v) :
     form(ARRAY), rep(REP_ARRAY), flags(0),
     length(v.size()), data{.as_array_ptr = v.data()}
@@ -109,7 +97,7 @@ Tree::Tree (TreeObject v) :
 Tree::Tree (std::exception_ptr v) :
     form(ERROR), rep(REP_ERROR), flags(0), length(1), data{}
 {
-    auto e = UniqueArray<std::exception_ptr>(1, v);
+    auto e = SharedArray<std::exception_ptr>(1, std::move(v));
     const_cast<const std::exception_ptr*&>(data.as_error_ptr) = e.data();
     e.dematerialize();
 }
@@ -130,12 +118,12 @@ Tree::operator bool () const {
     return data.as_bool;
 }
 Tree::operator char () const {
-    if (rep == REP_SHORTSTRING) {
-        return data.as_chars[0];
-    }
-    else [[unlikely]] {
-        if (rep == REP_LONGSTRING) throw X<CantRepresent>("char", *this);
-        else bad_form(*this, STRING);
+    switch (rep) { \
+        case REP_STATICSTRING:
+        case REP_SHAREDSTRING:
+            if (length != 1) throw X<CantRepresent>("char", *this);
+            return data.as_char_ptr[0];
+        default: bad_form(*this, STRING);
     }
 }
 #define INTEGRAL_CONVERSION(T) \
@@ -172,18 +160,25 @@ Tree::operator double () const {
         default: bad_form(*this, NUMBER);
     }
 }
-Tree::operator OldStr () const {
+Tree::operator Str () const {
     switch (rep) {
-        case REP_SHORTSTRING: return tree_shortStr(*this);
-        case REP_LONGSTRING: return tree_longStr(*this);
+        case REP_STATICSTRING:
+        case REP_SHAREDSTRING:
+            return Str(data.as_char_ptr, length);
         default: bad_form(*this, STRING);
     }
 }
-Tree::operator std::string () const {
-    return std::string(OldStr(*this));
+Tree::operator AnyString () const {
+    switch (rep) {
+        case REP_STATICSTRING:
+            return tree_StaticString(*this);
+        case REP_SHAREDSTRING:
+            return tree_SharedString(*this);
+        default: bad_form(*this, STRING);
+    }
 }
 Tree::operator std::u16string () const {
-    return to_utf16(OldStr(*this));
+    return to_utf16(Str(*this));
 }
 Tree::operator TreeArraySlice () const {
     if (rep != REP_ARRAY) bad_form(*this, ARRAY);
@@ -236,6 +231,15 @@ bool operator == (TreeRef a, TreeRef b) {
         else if (a->rep == REP_DOUBLE && b->rep == REP_INT64) {
             return a->data.as_double == b->data.as_int64;
         }
+         // Comparsion between different-lifetime strings
+        else if ((a->rep == REP_STATICSTRING && b->rep == REP_SHAREDSTRING)
+              || (a->rep == REP_SHAREDSTRING && b->rep == REP_STATICSTRING)
+        ) {
+            if (a->length != b->length) return false;
+            if (a->data.as_char_ptr == b->data.as_char_ptr) return true;
+            return Str(a->data.as_char_ptr, a->length)
+                == Str(b->data.as_char_ptr, b->length);
+        }
          // Otherwise different reps = different values.  We don't need to
          // compare REP_SHORTSTRING to REP_LONGSTRING because we guarantee that
          // REP_LONGSTRING has at least 9 characters.
@@ -250,19 +254,21 @@ bool operator == (TreeRef a, TreeRef b) {
             double bv = b->data.as_double;
             return av == bv || (av != av && bv != bv);
         }
-        case REP_SHORTSTRING: {
+        case REP_STATICSTRING:
+        case REP_SHAREDSTRING: {
             if (a->length != b->length) return false;
-             // Unused char slots are zeroed out so we can compare them all at
-             // once.
-            return a->data.as_int64 == b->data.as_int64;
-        }
-        case REP_LONGSTRING: {
-            return tree_longStr(a) == tree_longStr(b);
+            if (a->data.as_char_ptr == b->data.as_char_ptr) return true;
+            return Str(a->data.as_char_ptr, a->length)
+                == Str(b->data.as_char_ptr, b->length);
         }
         case REP_ARRAY: {
-            return tree_Array(a) == tree_Array(b);
+            if (a->length != b->length) return false;
+            if (a->data.as_array_ptr == b->data.as_array_ptr) return true;
+            return TreeArraySlice(a->data.as_array_ptr, a->length)
+                == TreeArraySlice(b->data.as_array_ptr, b->length);
         }
         case REP_OBJECT: {
+             // Allow attributes to be in different orders
             TreeObjectSlice ao = tree_Object(a);
             TreeObjectSlice bo = tree_Object(b);
             if (ao.size() != bo.size()) return false;
@@ -278,23 +284,6 @@ bool operator == (TreeRef a, TreeRef b) {
         }
         case REP_ERROR: return false;
         default: never();
-    }
-}
-
-bool operator == (TreeRef a, OldStr b) {
-    if (a->length != b.size()) return false;
-    if (b.size() <= 8) {
-        if (a->rep != REP_SHORTSTRING) return false;
-        if (a->data.as_chars == b.data()) return true;
-        for (uint32 i = 0; i < b.size(); i++) {
-            if (a->data.as_chars[i] != b[i]) return false;
-        }
-        return true;
-    }
-    else {
-        if (a->rep != REP_LONGSTRING) return false;
-        if (a->data.as_char_ptr == b.data()) return true;
-        return Slice<char>(tree_longStr(a)) == Slice<char>(b);
     }
 }
 
@@ -348,8 +337,8 @@ static tap::TestSet tests ("base/ayu/tree", []{
     is(Tree(3), Tree(3.0), "Compare integers with floats");
     isnt(Tree(3), Tree(3.1), "Compare integers with floats (!=)");
     is(Tree(0.0/0.0), Tree(0.0/0.0), "Tree of NAN equals Tree of NAN");
-    is(OldStr(Tree("asdfg"sv)), "asdfg"sv, "Round-trip strings");
-    is(OldStr(Tree("qwertyuiop"sv)), "qwertyuiop"sv, "Round-trip long strings");
+    is(Str(Tree("asdfg")), "asdfg", "Round-trip strings");
+    is(Str(Tree("qwertyuiop")), "qwertyuiop", "Round-trip long strings");
     throws<WrongForm>([]{ int(Tree("0")); }, "Can't convert string to integer");
     try_is<int>([]{ return int(Tree(3.0)); }, 3, "Convert floating to integer");
     try_is<double>([]{ return double(Tree(3)); }, 3.0, "Convert integer to floating");

@@ -6,7 +6,6 @@
 #include "resource.h"
 
 using namespace ayu;
-using namespace std::literals;
 
 #define AYU_DESCRIBE_SCALAR(type) \
 AYU_DESCRIBE(type, \
@@ -28,11 +27,20 @@ AYU_DESCRIBE_SCALAR(int64)
 AYU_DESCRIBE_SCALAR(uint64)
 AYU_DESCRIBE_SCALAR(float)
 AYU_DESCRIBE_SCALAR(double)
-AYU_DESCRIBE_SCALAR(uni::UniqueString)
-AYU_DESCRIBE_SCALAR(uni::SharedString)
 AYU_DESCRIBE_SCALAR(uni::AnyString)
-AYU_DESCRIBE_SCALAR(std::string)
 #undef AYU_DESCRIBE_SCALAR
+AYU_DESCRIBE(uni::UniqueString,
+    to_tree([](const UniqueString& v){ return Tree(AnyString(v)); }),
+    from_tree([](UniqueString& v, const Tree& t){ v = AnyString(t); })
+)
+AYU_DESCRIBE(uni::SharedString,
+    to_tree([](const SharedString& v){ return Tree(AnyString(v)); }),
+    from_tree([](SharedString& v, const Tree& t){ v = AnyString(t); })
+)
+AYU_DESCRIBE(std::string,
+    to_tree([](const std::string& v){ return Tree(Str(v)); }),
+    from_tree([](std::string& v, const Tree& t){ v = std::string(Str(t)); })
+)
 AYU_DESCRIBE(std::u16string,
     to_tree([](const std::u16string& v){ return Tree(OldStr16(v)); }),
     from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
@@ -44,8 +52,8 @@ AYU_DESCRIBE(std::u16string,
  // giving this a description means that std::vector<OldStr> can be used as the
  // type for keys().
 AYU_DESCRIBE(std::string_view,
-    to_tree([](const OldStr& v){
-        return Tree(v);
+    to_tree([](const std::string_view& v){
+        return Tree(Str(v));
     })
 )
 AYU_DESCRIBE(uni::Str,
@@ -81,7 +89,7 @@ AYU_DESCRIBE(iri::IRI,
                 else {
                     v = iri::IRI(s);
                 }
-                if (!v) throw ayu::X<GenericError>(old_cat("Invalid IRI "sv, s));
+                if (!v) throw ayu::X<GenericError>(old_cat("Invalid IRI ", s));
             }
         }
     ))
@@ -105,7 +113,7 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
     std::tuple<int32, std::string, std::vector<int32>> data;
     std::tuple<int32, std::string, std::vector<int32>> expected_data
         = {45, "asdf"s, {3, 4, 5}};
-    OldStr s = "[45 asdf [3 4 5]]"sv;
+    OldStr s = "[45 asdf [3 4 5]]";
     doesnt_throw([&]{
         return item_from_string(&data, s);
     }, "item_from_string on tuple");
