@@ -513,7 +513,7 @@ void item_set_keys (
 }
 
 bool in::ser_maybe_attr (
-    const Traversal& trav, OldStr key, AccessMode mode, TravCallback cb
+    const Traversal& trav, OldStr key, AccessMode mode, TravCallbackRef cb
 ) {
     if (auto attrs = trav.desc->attrs()) {
          // Note: This will likely be called once for each attr, making it
@@ -571,7 +571,7 @@ bool in::ser_maybe_attr (
     else throw X<NoAttrs>(trav_location(trav));
 }
 void in::ser_attr (
-    const Traversal& trav, OldStr key, AccessMode mode, TravCallback cb
+    const Traversal& trav, OldStr key, AccessMode mode, TravCallbackRef cb
 ) {
     if (!ser_maybe_attr(trav, key, mode, cb)) {
         throw X<AttrNotFound>(trav_location(trav), std::string(key));
@@ -678,7 +678,7 @@ void item_set_length (const Reference& item, usize len, LocationRef loc) {
 }
 
 bool in::ser_maybe_elem (
-    const Traversal& trav, usize index, AccessMode mode, TravCallback cb
+    const Traversal& trav, usize index, AccessMode mode, TravCallbackRef cb
 ) {
     if (auto elems = trav.desc->elems()) {
         if (index < elems->n_elems) {
@@ -706,7 +706,7 @@ bool in::ser_maybe_elem (
     else throw X<NoElems>(trav_location(trav));
 }
 void in::ser_elem (
-    const Traversal& trav, usize index, AccessMode mode, TravCallback cb
+    const Traversal& trav, usize index, AccessMode mode, TravCallbackRef cb
 ) {
     if (!ser_maybe_elem(trav, index, mode, cb)) {
         throw X<ElemNotFound>(trav_location(trav), index);

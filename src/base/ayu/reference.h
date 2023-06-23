@@ -140,24 +140,24 @@ struct Reference {
     }
 
      // Read with callback
-    void read (Callback<void(Mu&)> cb) const {
+    void read (CallbackRef<void(Mu&)> cb) const {
         access(in::ACR_READ, cb);
     }
      // Cast and read with callback
-    void read_as (Type t, Callback<void(Mu&)> cb) const {
+    void read_as (Type t, CallbackRef<void(Mu&)> cb) const {
         read([&](Mu& v){
             Mu& tv = *type().cast_to(t, &v);
             cb(tv);
         });
     }
     template <class T>
-    void read_as (Callback<void(T&)> cb) const {
+    void read_as (CallbackRef<void(T&)> cb) const {
         read_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
      // Write with callback
-    void write (Callback<void(Mu&)> cb) const { access(in::ACR_WRITE, cb); }
+    void write (CallbackRef<void(Mu&)> cb) const { access(in::ACR_WRITE, cb); }
      // Cast and write with callback
-    void write_as (Type t, Callback<void(Mu&)> cb) const {
+    void write_as (Type t, CallbackRef<void(Mu&)> cb) const {
         write([&](Mu& v){
             Mu& tv = *type().cast_to(t, &v);
             cb(tv);
@@ -165,13 +165,13 @@ struct Reference {
     }
     template <class T>
         requires (!std::is_const_v<T>)
-    void write_as (Callback<void(T&)> cb) const {
+    void write_as (CallbackRef<void(T&)> cb) const {
         write_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
      // Modify in-place with callback
-    void modify (Callback<void(Mu&)> cb) const { access(in::ACR_MODIFY, cb); }
+    void modify (CallbackRef<void(Mu&)> cb) const { access(in::ACR_MODIFY, cb); }
      // Cast and modify in-place with callback
-    void modify_as (Type t, Callback<void(Mu&)> cb) const {
+    void modify_as (Type t, CallbackRef<void(Mu&)> cb) const {
         write([&](Mu& v){
             Mu& tv = *type().cast_to(t, &v);
             cb(tv);
@@ -179,7 +179,7 @@ struct Reference {
     }
     template <class T>
         requires (!std::is_const_v<T>)
-    void modify_as (Callback<void(T&)> cb) const {
+    void modify_as (CallbackRef<void(T&)> cb) const {
         modify_as(Type::CppType<T>(), cb.template reinterpret<void(Mu&)>());
     }
 
@@ -259,7 +259,7 @@ struct Reference {
     Reference chain_attr_func (Reference(*)(Mu&, OldStr), OldStr) const;
     Reference chain_elem_func (Reference(*)(Mu&, usize), usize) const;
      // Kinda internal, TODO move to internal namespace
-    void access (in::AccessMode mode, Callback<void(Mu&)> cb) const {
+    void access (in::AccessMode mode, CallbackRef<void(Mu&)> cb) const {
         if (mode != in::ACR_READ) require_writeable();
         if (acr) {
             acr->access(mode, *host.address, cb);

@@ -57,7 +57,7 @@
 
 #include <iostream>
 
-#include "callback.h"
+#include "callback-ref.h"
 
 namespace tap {
 using namespace std;
@@ -99,7 +99,7 @@ void done_testing ();
 bool ok (bool succeeded, const std::string& name = "");
  // The try_* versions of testing functions fail if the code throws an exception.
  //  Otherwise, they behave like the non-try versions with the returned result.
-bool try_ok (Callback<bool()> code, const std::string& name = "");
+bool try_ok (CallbackRef<bool()> code, const std::string& name = "");
 
  // Run a test that succeeds if got == expected (with overloaded operator ==).
  //  If the test failed, it will try to tell you what it got vs. what it expected.
@@ -111,45 +111,45 @@ bool try_ok (Callback<bool()> code, const std::string& name = "");
 template <class A, class B>
 bool is (const A& got, const B& expected, const std::string& name = "");
 template <class A, class B>
-bool try_is (Callback<A()> code, const B& expected, const std::string& name = "");
+bool try_is (CallbackRef<A()> code, const B& expected, const std::string& name = "");
  // You can call the special case directly if you want.
 bool is_strcmp(const char* got, const char* expected, const std::string& name = "");
-bool try_is_strcmp(Callback<const char*()> code, const char* expected, const std::string& name = "");
+bool try_is_strcmp(CallbackRef<const char*()> code, const char* expected, const std::string& name = "");
 
  // Unlike is, isnt isn't that useful, but at least it catches exceptions in the != operator.
 template <class A, class B>
 bool isnt (const A& got, const B& unexpected, const std::string& name = "");
 template <class A, class B>
-bool try_isnt (Callback<A()> code, const B& unexpected, const std::string& name = "");
+bool try_isnt (CallbackRef<A()> code, const B& unexpected, const std::string& name = "");
 bool isnt_strcmp(const char* got, const char* unexpected, const std::string& name = "");
-bool try_isnt_strcmp(Callback<const char*()> code, const char* unexpected, const std::string& name = "");
+bool try_isnt_strcmp(CallbackRef<const char*()> code, const char* unexpected, const std::string& name = "");
 
  // Tests that got is within +/- range of expected.
 bool within (double got, double range, double expected, const std::string& name = "");
-bool try_within (Callback<double()> code, double range, double expected, const std::string& name = "");
+bool try_within (CallbackRef<double()> code, double range, double expected, const std::string& name = "");
  // Tests that got is within a factor of .001 of expected.
 static inline bool about (double got, double expected, const std::string& name = "") {
     return within(got, expected*0.001, expected, name);
 }
-static inline bool try_about (Callback<double()> code, double expected, const std::string& name = "") {
+static inline bool try_about (CallbackRef<double()> code, double expected, const std::string& name = "") {
     return try_within(code, expected*0.001, expected, name);
 }
 
  // Tests that code throws an exception of class Except.  If a different kind of
  //  exception is thrown, the test fails.
 template <class E = std::exception>
-bool throws (Callback<void()> code, const std::string& name = "");
+bool throws (CallbackRef<void()> code, const std::string& name = "");
 
  // Like above, but fails if the thrown exception does not == expected.
 template <class E = std::exception>
-bool throws_is (Callback<void()> code, const E& expected, const std::string& name = "");
+bool throws_is (CallbackRef<void()> code, const E& expected, const std::string& name = "");
 
  // Like above, but fails if the thrown exception does not satisfy check.
 template <class E = std::exception>
-bool throws_check (Callback<void()> code, Callback<bool(const E&)> check, const std::string& name = "");
+bool throws_check (CallbackRef<void()> code, CallbackRef<bool(const E&)> check, const std::string& name = "");
 
  // Succeeds if no exception is thrown.
-bool doesnt_throw (Callback<void()> code, const std::string& name = "");
+bool doesnt_throw (CallbackRef<void()> code, const std::string& name = "");
 
  // Automatically pass a test with this name.  Only resort to this if you can't
  //  make your test work with the other testing functions.
@@ -158,7 +158,7 @@ bool pass (const std::string& name = "");
 bool fail (const std::string& name = "");
 
  // Alias for doesnt_throw
-static inline bool try_pass (Callback<void()> code, const std::string& name = "") {
+static inline bool try_pass (CallbackRef<void()> code, const std::string& name = "") {
     return doesnt_throw(code, name);
 }
 
@@ -170,8 +170,8 @@ static inline void todo (const std::string& excuse = "") {
     todo(1, excuse);
 }
  // The block form marks as todo every test that runs inside it.  It can be safely
-void todo (const std::string& excuse, Callback<void()> code);
-static inline void todo (Callback<void()> code, const std::string& excuse = "") {
+void todo (const std::string& excuse, CallbackRef<void()> code);
+static inline void todo (CallbackRef<void()> code, const std::string& excuse = "") {
     todo(excuse, code);
 }
 
@@ -229,7 +229,7 @@ extern char** argv;
 namespace internal {
     std::string type_name (const std::type_info& type);
 
-    bool fail_on_throw (Callback<bool()>, const std::string& name);
+    bool fail_on_throw (CallbackRef<bool()>, const std::string& name);
 
     template <class A, class B>
     void diag_unexpected (const A& got, const B& expected);
@@ -259,7 +259,7 @@ bool is (const A& got, const B& expected, const std::string& name) {
     }, name);
 }
 template <class A, class B>
-bool try_is (Callback<A()> code, const B& expected, const std::string& name) {
+bool try_is (CallbackRef<A()> code, const B& expected, const std::string& name) {
     return internal::fail_on_throw([&]{
         const A& got = code();
         if (got == expected) {
@@ -275,7 +275,7 @@ bool try_is (Callback<A()> code, const B& expected, const std::string& name) {
 static inline bool is (const char* got, const char* expected, const std::string& name) {
     return is_strcmp(got, expected, name);
 }
-static inline bool try_is (Callback<const char*()> code, const char* expected, const std::string& name) {
+static inline bool try_is (CallbackRef<const char*()> code, const char* expected, const std::string& name) {
     return try_is_strcmp(code, expected, name);
 }
 
@@ -286,7 +286,7 @@ bool isnt (const A& got, const B& unexpected, const std::string& name) {
     }, name);
 }
 template <class A, class B>
-bool try_isnt (Callback<A()> code, const B& unexpected, const std::string& name) {
+bool try_isnt (CallbackRef<A()> code, const B& unexpected, const std::string& name) {
     return internal::fail_on_throw([&]{
         return try_ok(code() != unexpected, name);
     }, name);
@@ -294,12 +294,12 @@ bool try_isnt (Callback<A()> code, const B& unexpected, const std::string& name)
 static inline bool isnt (const char* got, const char* unexpected, const std::string& name) {
     return isnt_strcmp(got, unexpected, name);
 }
-static inline bool try_isnt (Callback<const char*()> code, const char* unexpected, const std::string& name) {
+static inline bool try_isnt (CallbackRef<const char*()> code, const char* unexpected, const std::string& name) {
     return try_isnt_strcmp(code, unexpected, name);
 }
 
 template <class E>
-bool throws (Callback<void()> code, const std::string& name) {
+bool throws (CallbackRef<void()> code, const std::string& name) {
     try {
         code();
         fail(name);
@@ -323,7 +323,7 @@ bool throws (Callback<void()> code, const std::string& name) {
 }
 
 template <class E>
-bool throws_is (Callback<void()> code, const E& expected, const std::string& name) {
+bool throws_is (CallbackRef<void()> code, const E& expected, const std::string& name) {
     try {
         code();
         fail(name);
@@ -354,7 +354,7 @@ bool throws_is (Callback<void()> code, const E& expected, const std::string& nam
 }
 
 template <class E>
-bool throws_check (Callback<void()> code, Callback<bool(const E&)> check, const std::string& name) {
+bool throws_check (CallbackRef<void()> code, CallbackRef<bool(const E&)> check, const std::string& name) {
     try {
         code();
         fail(name);

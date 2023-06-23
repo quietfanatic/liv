@@ -71,13 +71,13 @@ struct Traversal {
     }
 };
 
-using TravCallback = Callback<void(const Traversal&)>;
+using TravCallbackRef = CallbackRef<void(const Traversal&)>;
 
  // If only_addressable is true, will skip over any items that aren't
  // addressable and don't have pass_through_addressable.
 static inline void trav_start (
     const Reference& ref, LocationRef loc, bool only_addressable,
-    AccessMode mode, TravCallback cb
+    AccessMode mode, TravCallbackRef cb
 ) {
     Traversal trav;
     trav.address = ref.address();
@@ -103,7 +103,7 @@ static inline void trav_start (
 
 static inline void trav_acr (
     Traversal& trav, const Traversal& parent, const Accessor* acr,
-    AccessMode mode, TravCallback cb
+    AccessMode mode, TravCallbackRef cb
 ) {
     trav.address = acr->address(*parent.address);
     trav.desc = DescriptionPrivate::get(acr->type(parent.address));
@@ -131,7 +131,7 @@ static inline void trav_acr (
 
 static inline void trav_ref (
     Traversal& trav, const Traversal& parent, const Reference& ref,
-    AccessMode mode, TravCallback cb
+    AccessMode mode, TravCallbackRef cb
 ) {
     trav.address = ref.address();
     trav.desc = DescriptionPrivate::get(ref.type());
@@ -157,7 +157,7 @@ static inline void trav_ref (
 }
 
 static inline void trav_delegate (
-    const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallback cb
+    const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -167,7 +167,7 @@ static inline void trav_delegate (
 
 static inline void trav_attr (
     const Traversal& parent, const Accessor* acr, const OldStr& key,
-    AccessMode mode, TravCallback cb
+    AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -178,7 +178,7 @@ static inline void trav_attr (
 
 static inline void trav_attr_func (
     const Traversal& parent, const Reference& ref,
-    Reference(* func )(Mu&, OldStr), const OldStr& key, AccessMode mode, TravCallback cb
+    Reference(* func )(Mu&, OldStr), const OldStr& key, AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -190,7 +190,7 @@ static inline void trav_attr_func (
 
 static inline void trav_elem (
     const Traversal& parent, const Accessor* acr, usize index,
-    AccessMode mode, TravCallback cb
+    AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -201,7 +201,7 @@ static inline void trav_elem (
 
 static inline void trav_elem_func (
     const Traversal& parent, const Reference& ref,
-    Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallback cb
+    Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;

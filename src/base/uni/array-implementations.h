@@ -43,6 +43,8 @@ struct ArrayImplementation;
 template <class T>
 struct ArrayImplementation<ArrayClass::AnyA, T> {
      // The first bit is owned, the rest is size (shifted left by 1).
+     // owned = sizex2_with_owned & 1
+     // size = sizex2_with_owned >> 1
      // We are not using bitfields because they are not optimized very well.
     usize sizex2_with_owned;
     T* data;

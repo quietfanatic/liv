@@ -10,7 +10,7 @@ Type MemberAcr0::_type (const Accessor* acr, Mu*) {
     return *self->desc;
 }
 void MemberAcr0::_access (
-    const Accessor* acr, AccessMode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const MemberAcr2<Mu, Mu>*>(acr);
     cb(from.*(self->mp));
@@ -34,7 +34,7 @@ Type RefFuncAcr0::_type (const Accessor* acr, Mu*) {
     return *self->desc;
 }
 void RefFuncAcr0::_access (
-    const Accessor* acr, AccessMode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const RefFuncAcr2<Mu, Mu>*>(acr);
     cb((self->f)(from));
@@ -52,7 +52,7 @@ Type ConstRefFuncAcr0::_type (const Accessor* acr, Mu*) {
 }
 void ConstRefFuncAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,
-    Mu& from, Callback<void(Mu&)> cb
+    Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     expect(mode == ACR_READ);
     auto self = static_cast<const ConstRefFuncAcr2<Mu, Mu>*>(acr);
@@ -69,7 +69,7 @@ Type ConstantPointerAcr0::_type (const Accessor* acr, Mu*) {
 }
 void ConstantPointerAcr0::_access (
     const Accessor* acr, [[maybe_unused]] AccessMode mode,
-    Mu&, Callback<void(Mu&)> cb
+    Mu&, CallbackRef<void(Mu&)> cb
 ) {
     expect(mode == ACR_READ);
     auto self = static_cast<const ConstantPointerAcr2<Mu, Mu>*>(acr);
@@ -82,7 +82,7 @@ Type ReferenceFuncAcr1::_type (const Accessor* acr, Mu* from) {
     return self->f(*from).type();
 }
 void ReferenceFuncAcr1::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const ReferenceFuncAcr2<Mu>*>(acr);
      // This will null deref if f returns an empty Reference
@@ -109,7 +109,7 @@ Type ChainAcr::_type (const Accessor* acr, Mu* v) {
     return r;
 }
 void ChainAcr::_access (
-    const Accessor* acr, AccessMode mode, Mu& v, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& v, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const ChainAcr*>(acr);
     switch (mode) {
@@ -171,7 +171,7 @@ Type AttrFuncAcr::_type (const Accessor* acr, Mu* v) {
     return self->fp(*v, self->key).type();
 }
 void AttrFuncAcr::_access (
-    const Accessor* acr, AccessMode mode, Mu& v, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& v, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const AttrFuncAcr*>(acr);
     self->fp(v, self->key).access(mode, cb);
@@ -190,7 +190,7 @@ Type ElemFuncAcr::_type (const Accessor* acr, Mu* v) {
     auto self = static_cast<const ElemFuncAcr*>(acr);
     return self->fp(*v, self->index).type();
 }
-void ElemFuncAcr::_access (const Accessor* acr, AccessMode mode, Mu& v, Callback<void(Mu&)> cb) {
+void ElemFuncAcr::_access (const Accessor* acr, AccessMode mode, Mu& v, CallbackRef<void(Mu&)> cb) {
     auto self = static_cast<const ElemFuncAcr*>(acr);
     self->fp(v, self->index).access(mode, cb);
 }

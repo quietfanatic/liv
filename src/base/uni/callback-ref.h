@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-namespace tap {
+namespace uni {
 
 template <class F, class Ret, class... Args>
 concept HasExactCallOperator = std::is_convertible_v<
@@ -12,9 +12,9 @@ concept HasExactCallOperator = std::is_convertible_v<
 
  // A super lightweight callback class with reference semantics (std::function
  // has value semantics and can be copied and moved, so it's way bigger.)
-template <class> struct CallbackV;
+template <class> struct CallbackRefV;
 template <class Ret, class... Args>
-struct CallbackV<Ret(Args...)> {
+struct CallbackRefV<Ret(Args...)> {
     const void* f;
     Ret(* wrapper )(const void*, Args...);
 #ifdef __GNUC__
@@ -28,7 +28,7 @@ struct CallbackV<Ret(Args...)> {
         HasExactCallOperator<F, Ret, Args...>
     )
     [[gnu::always_inline]]
-    constexpr CallbackV (const F& f) :
+    constexpr CallbackRefV (const F& f) :
         f(&f),
         wrapper((decltype(wrapper))(&F::operator()))
     { }
@@ -37,7 +37,7 @@ struct CallbackV<Ret(Args...)> {
         std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
     )
     [[gnu::always_inline]]
-    constexpr CallbackV (const F& f) :
+    constexpr CallbackRefV (const F& f) :
         f(&f),
         wrapper([](const void* f, Args... args)->Ret{
             return (*reinterpret_cast<const F*>(f))(std::forward<Args>(args)...);
@@ -49,7 +49,7 @@ struct CallbackV<Ret(Args...)> {
         std::is_convertible_v<std::invoke_result_t<F, Args...>, Ret>
     )
     [[gnu::always_inline]]
-    constexpr CallbackV (const F& f) :
+    constexpr CallbackRefV (const F& f) :
         f(&f),
         wrapper([](const void* f, Args... args)->Ret{
             return (*reinterpret_cast<const F*>(f))(std::forward<Args>(args)...);
@@ -64,13 +64,13 @@ struct CallbackV<Ret(Args...)> {
     }
 
     template <class Sig>
-    const CallbackV<Sig>& reinterpret () const {
-        return *(const CallbackV<Sig>*)this;
+    const CallbackRefV<Sig>& reinterpret () const {
+        return *(const CallbackRefV<Sig>*)this;
     }
 };
- // Since CallbackV is two pointers long and trivially copyable, pass by value
+ // Since CallbackRefV is two pointers long and trivially copyable, pass by value
  // instead of reference.
 template <class Sig>
-using Callback = const CallbackV<Sig>;
+using CallbackRef = const CallbackRefV<Sig>;
 
-} // namespace tap
+} // namespace uni

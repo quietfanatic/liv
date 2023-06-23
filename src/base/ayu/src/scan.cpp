@@ -14,7 +14,7 @@ namespace in {
 
 bool scan_trav (
     const Traversal& trav, LocationRef loc,
-    Callback<bool(const Traversal&, LocationRef)> cb
+    CallbackRef<bool(const Traversal&, LocationRef)> cb
 ) {
     if (cb(trav, loc)) return true;
     switch (trav.desc->preference()) {
@@ -90,7 +90,7 @@ KeepLocationCache::~KeepLocationCache () {
 
 bool scan_pointers (
     Pointer base_item, LocationRef base_loc,
-    Callback<bool(Pointer, LocationRef)> cb
+    CallbackRef<bool(Pointer, LocationRef)> cb
 ) {
     bool r = false;
     trav_start(base_item, base_loc, true, ACR_READ, [&](const Traversal& trav){
@@ -108,7 +108,7 @@ bool scan_pointers (
 
 bool scan_references (
     const Reference& base_item, LocationRef base_loc,
-    Callback<bool(const Reference&, LocationRef)> cb
+    CallbackRef<bool(const Reference&, LocationRef)> cb
 ) {
     bool r = false;
     trav_start(base_item, base_loc, false, ACR_READ, [&](const Traversal& trav){
@@ -122,20 +122,20 @@ bool scan_references (
 }
 
 bool scan_resource_pointers (
-    const Resource& res, Callback<bool(Pointer, LocationRef)> cb
+    const Resource& res, CallbackRef<bool(Pointer, LocationRef)> cb
 ) {
     if (res.state() == UNLOADED) return false;
     return scan_pointers(res.get_value().ptr(), Location(res), cb);
 }
 bool scan_resource_references (
-    const Resource& res, Callback<bool(const Reference&, LocationRef)> cb
+    const Resource& res, CallbackRef<bool(const Reference&, LocationRef)> cb
 ) {
     if (res.state() == UNLOADED) return false;
     return scan_references(res.get_value().ptr(), Location(res), cb);
 }
 
 bool scan_universe_pointers (
-    Callback<bool(Pointer, LocationRef)> cb
+    CallbackRef<bool(Pointer, LocationRef)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
         if (scan_resource_pointers(&*resdat, cb)) return true;
@@ -144,7 +144,7 @@ bool scan_universe_pointers (
 }
 
 bool scan_universe_references (
-    Callback<bool(const Reference&, LocationRef)> cb
+    CallbackRef<bool(const Reference&, LocationRef)> cb
 ) {
     for (auto& [_, resdat] : universe().resources) {
         if (scan_resource_references(&*resdat, cb)) return true;

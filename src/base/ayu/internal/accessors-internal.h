@@ -89,7 +89,7 @@ struct AccessorVT {
         return Type::CppType<T>();
     }
     Type(* type )(const Accessor*, Mu*) = null;
-    void(* access )(const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>)
+    void(* access )(const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>)
         = null;
     Mu*(* address )(const Accessor*, Mu&) = &default_address;
     Mu*(* inverse_address )(const Accessor*, Mu&) = null;
@@ -124,18 +124,18 @@ struct Accessor {
     }
 
     Type type (Mu* from) const { return vt->type(this, from); }
-    void access (AccessMode mode, Mu& from, Callback<void(Mu&)> cb) const {
+    void access (AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb) const {
         expect(mode == ACR_READ || mode == ACR_WRITE || mode == ACR_MODIFY);
         require(mode == ACR_READ || ~(accessor_flags & ACR_READONLY));
         vt->access(this, mode, from, cb);
     }
-    void read (Mu& from, Callback<void(Mu&)> cb) const {
+    void read (Mu& from, CallbackRef<void(Mu&)> cb) const {
         access(ACR_READ, from, cb);
     }
-    void write (Mu& from, Callback<void(Mu&)> cb) const {
+    void write (Mu& from, CallbackRef<void(Mu&)> cb) const {
         access(ACR_WRITE, from, cb);
     }
-    void modify (Mu& from, Callback<void(Mu&)> cb) const {
+    void modify (Mu& from, CallbackRef<void(Mu&)> cb) const {
         access(ACR_MODIFY, from, cb);
     }
     Mu* address (Mu& from) const {
@@ -180,7 +180,7 @@ struct BaseAcr2 : Accessor {
     using AccessorFromType = From;
     using AccessorToType = To;
     static void _access (
-        const Accessor*, AccessMode, Mu& from, Callback<void(Mu&)> cb
+        const Accessor*, AccessMode, Mu& from, CallbackRef<void(Mu&)> cb
     ) {
         To& to = reinterpret_cast<From&>(from);
         cb(reinterpret_cast<Mu&>(to));
@@ -203,7 +203,7 @@ struct BaseAcr2 : Accessor {
 
 struct MemberAcr0 : Accessor {
     static Type _type (const Accessor*, Mu*);
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static Mu* _inverse_address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {
@@ -239,7 +239,7 @@ struct RefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
     static Type _type (const Accessor*, Mu*);
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
     using Accessor::Accessor;
@@ -261,7 +261,7 @@ struct ConstRefFuncAcr0 : Accessor {
      // It's the programmer's responsibility to know whether they're
      // allowed to address this reference or not.
     static Type _type (const Accessor*, Mu*);
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
     using Accessor::Accessor;
@@ -283,7 +283,7 @@ struct ConstRefFuncAcr2 : ConstRefFuncAcr0 {
 
 template <class To>
 struct RefFuncsAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static constexpr AccessorVT _vt = {&AccessorVT::const_type<To>, &_access};
     using Accessor::Accessor;
 };
@@ -303,7 +303,7 @@ struct RefFuncsAcr2 : RefFuncsAcr1<To> {
 };
 template <class To>
 void RefFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const RefFuncsAcr2<Mu, To>*>(acr);
     switch (mode) {
@@ -327,7 +327,7 @@ void RefFuncsAcr1<To>::_access (
 
 template <class To>
 struct ValueFuncAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static constexpr AccessorVT _vt = {&AccessorVT::const_type<To>, &_access};
     using Accessor::Accessor;
 };
@@ -342,7 +342,7 @@ struct ValueFuncAcr2 : ValueFuncAcr1<To> {
 };
 template <class To>
 void ValueFuncAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     expect(mode == ACR_READ);
     auto self = static_cast<const ValueFuncAcr2<Mu, To>*>(acr);
@@ -353,7 +353,7 @@ void ValueFuncAcr1<To>::_access (
 
 template <class To>
 struct ValueFuncsAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static constexpr AccessorVT _vt = {&AccessorVT::const_type<To>, &_access};
     using Accessor::Accessor;
 };
@@ -374,7 +374,7 @@ struct ValueFuncsAcr2 : ValueFuncsAcr1<To> {
 };
 template <class To>
 void ValueFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const ValueFuncsAcr2<Mu, To>*>(acr);
     switch (mode) {
@@ -398,7 +398,7 @@ void ValueFuncsAcr1<To>::_access (
 
 template <class To>
 struct MixedFuncsAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static constexpr AccessorVT _vt = {&AccessorVT::const_type<To>, &_access};
     using Accessor::Accessor;
 };
@@ -419,7 +419,7 @@ struct MixedFuncsAcr2 : MixedFuncsAcr1<To> {
 };
 template <class To>
 void MixedFuncsAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu& from, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu& from, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const MixedFuncsAcr2<Mu, To>*>(acr);
     switch (mode) {
@@ -446,7 +446,7 @@ struct AssignableAcr2 : Accessor {
     using AccessorFromType = From;
     using AccessorToType = To;
     static void _access (
-        const Accessor*, AccessMode mode, Mu& from_mu, Callback<void(Mu&)> cb_mu
+        const Accessor*, AccessMode mode, Mu& from_mu, CallbackRef<void(Mu&)> cb_mu
     ) {
         From& from = reinterpret_cast<From&>(from_mu);
         auto cb = cb_mu.reinterpret<void(To&)>();
@@ -481,7 +481,7 @@ struct AssignableAcr2 : Accessor {
 
 template <class To>
 struct VariableAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
      // This ACR cannot be addressable, because then Reference::chain and co.
      //  may take the address of value but then release this ACR object,
      //  invalidating value.
@@ -504,7 +504,7 @@ struct VariableAcr2 : VariableAcr1<To> {
 };
 template <class To>
 void VariableAcr1<To>::_access (
-    const Accessor* acr, AccessMode, Mu&, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode, Mu&, CallbackRef<void(Mu&)> cb
 ) {
     auto self = static_cast<const VariableAcr2<Mu, To>*>(acr);
     cb(reinterpret_cast<Mu&>(self->value));
@@ -519,7 +519,7 @@ void VariableAcr1<To>::_destroy_this (Accessor* acr) {
 
 template <class To>
 struct ConstantAcr1 : Accessor {
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static void _destroy_this (Accessor*);
     static constexpr AccessorVT _vt = {
         &AccessorVT::const_type<To>, &_access, &AccessorVT::default_address,
@@ -538,7 +538,7 @@ struct ConstantAcr2 : ConstantAcr1<To> {
 };
 template <class To>
 void ConstantAcr1<To>::_access (
-    const Accessor* acr, AccessMode mode, Mu&, Callback<void(Mu&)> cb
+    const Accessor* acr, AccessMode mode, Mu&, CallbackRef<void(Mu&)> cb
 ) {
     expect(mode == ACR_READ);
     auto self = static_cast<const ConstantAcr2<Mu, To>*>(acr);
@@ -554,7 +554,7 @@ void ConstantAcr1<To>::_destroy_this (Accessor* acr) {
 
 struct ConstantPointerAcr0 : Accessor {
     static Type _type (const Accessor*, Mu*);
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
      // Should be okay addressing this.
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
@@ -581,7 +581,7 @@ struct ConstantPointerAcr2 : ConstantPointerAcr0 {
 struct ReferenceFuncAcr1 : Accessor {
     using Accessor::Accessor;
     static Type _type (const Accessor*, Mu*);
-    static void _access (const Accessor*, AccessMode, Mu&, Callback<void(Mu&)>);
+    static void _access (const Accessor*, AccessMode, Mu&, CallbackRef<void(Mu&)>);
     static Mu* _address (const Accessor*, Mu&);
     static constexpr AccessorVT _vt = {&_type, &_access, &_address};
 };
