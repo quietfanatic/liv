@@ -100,28 +100,28 @@ int input_to_integer (const Input& input) {
 }
 
 Input input_from_string (OldStr name) {
-    switch (x31_hash(name)) {
-#define KEY(name, sdlk) case x31_hash(name): return {.type = KEY, .code = sdlk};
+    switch (fast_hash(name)) {
+#define KEY(name, sdlk) case fast_hash(name): return {.type = KEY, .code = sdlk};
 #define ALT(name, sdlk) KEY(name, sdlk)
 #include "keys-table-internal.h"
 #undef ALT
 #undef KEY
-        case x31_hash("button1"):
-        case x31_hash("btn1"):
-        case x31_hash("leftbutton"):
-        case x31_hash("leftbtn"): return {.type = BUTTON, .code = SDL_BUTTON_LEFT};
-        case x31_hash("button2"):
-        case x31_hash("btn2"):
-        case x31_hash("middlebutton"):
-        case x31_hash("middlebtn"): return {.type = BUTTON, .code = SDL_BUTTON_MIDDLE};
-        case x31_hash("button3"):
-        case x31_hash("btn3"):
-        case x31_hash("rightbutton"):
-        case x31_hash("rightbtn"): return {.type = BUTTON, .code = SDL_BUTTON_RIGHT};
-        case x31_hash("button4"):
-        case x31_hash("btn4"): return {.type = BUTTON, .code = SDL_BUTTON_X1};
-        case x31_hash("button5"):
-        case x31_hash("btn5"): return {.type = BUTTON, .code = SDL_BUTTON_X2};
+        case fast_hash("button1"):
+        case fast_hash("btn1"):
+        case fast_hash("leftbutton"):
+        case fast_hash("leftbtn"): return {.type = BUTTON, .code = SDL_BUTTON_LEFT};
+        case fast_hash("button2"):
+        case fast_hash("btn2"):
+        case fast_hash("middlebutton"):
+        case fast_hash("middlebtn"): return {.type = BUTTON, .code = SDL_BUTTON_MIDDLE};
+        case fast_hash("button3"):
+        case fast_hash("btn3"):
+        case fast_hash("rightbutton"):
+        case fast_hash("rightbtn"): return {.type = BUTTON, .code = SDL_BUTTON_RIGHT};
+        case fast_hash("button4"):
+        case fast_hash("btn4"): return {.type = BUTTON, .code = SDL_BUTTON_X1};
+        case fast_hash("button5"):
+        case fast_hash("btn5"): return {.type = BUTTON, .code = SDL_BUTTON_X2};
         default: return {};
     }
 }
