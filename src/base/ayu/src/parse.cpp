@@ -424,7 +424,7 @@ Tree tree_from_string (OldStr s, OldStr filename) {
 std::string string_from_file (OldStr filename) {
     FILE* f = fopen_utf8(std::string(filename).c_str(), "rb");
     if (!f) {
-        throw X<OpenFailed>(std::string(filename), errno);
+        throw X<OpenFailed>(Str(filename), errno);
     }
 
     fseek(f, 0, SEEK_END);
@@ -434,11 +434,11 @@ std::string string_from_file (OldStr filename) {
     std::string r (size, 0);
     usize did_read = fread(const_cast<char*>(r.data()), 1, size, f);
     if (did_read != size) {
-        throw X<ReadFailed>(std::string(filename), errno);
+        throw X<ReadFailed>(Str(filename), errno);
     }
 
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(std::string(filename), errno);
+        throw X<CloseFailed>(Str(filename), errno);
     }
     return r;
 }

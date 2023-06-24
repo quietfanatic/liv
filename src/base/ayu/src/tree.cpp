@@ -211,14 +211,14 @@ const Tree* Tree::elem (usize index) const {
 }
 const Tree& Tree::operator[] (OldStr key) const {
     if (const Tree* r = attr(key)) return *r;
-    else throw X<GenericError>(old_cat(
-        "This tree has no attr with key \""sv, key, '"'
+    else throw X<GenericError>(cat(
+        "This tree has no attr with key \"", key, '"'
     ));
 }
 const Tree& Tree::operator[] (usize index) const {
     if (const Tree* r = elem(index)) return *r;
-    else throw X<GenericError>(old_cat(
-        "This tree has no elem with index \""sv, index, '"'
+    else throw X<GenericError>(cat(
+        "This tree has no elem with index \"", index, '"'
     ));
 }
 

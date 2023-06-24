@@ -35,7 +35,7 @@ int main (int argc, char** argv) {
             else if (argv[i] == "--list"sv) {
                 list = true;
             }
-            else throw ayu::X<ayu::GenericError>("Unrecognized option " + std::string(argv[i]));
+            else throw ayu::X<ayu::GenericError>(cat("Unrecognized option ", argv[i]));
         }
         else args.emplace_back(argv[i]);
     }

@@ -118,7 +118,7 @@ void* Document::allocate_named (Type t, AnyString name) {
         return header+1;
     }
     else { // Actually a numbered item
-        if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id"s);
+        if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id");
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
         auto header = new (p) DocumentItemHeader(&data->items, t, id, std::move(name));

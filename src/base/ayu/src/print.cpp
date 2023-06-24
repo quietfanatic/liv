@@ -337,11 +337,11 @@ std::string tree_to_string (TreeRef t, PrintOptions opts) {
 void string_to_file (OldStr content, OldStr filename) {
     FILE* f = fopen_utf8(std::string(filename).c_str(), "wb");
     if (!f) {
-        throw X<OpenFailed>(std::string(filename), errno);
+        throw X<OpenFailed>(Str(filename), errno);
     }
     fwrite(content.data(), 1, content.size(), f);
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(std::string(filename), errno);
+        throw X<CloseFailed>(Str(filename), errno);
     }
 }
 
