@@ -21,9 +21,12 @@
  // will occur (hopefully after a debug-only assertion).
 #pragma once
 
+#include <filesystem> // for conversion to path
+#include <functional> // std::hash
 #include <iterator>
 #include "array-implementations.h"
 #include "common.h"
+#include "hash.h"
 #include "requirements.h"
 
 namespace uni {
@@ -623,6 +626,14 @@ struct ArrayInterface {
     operator std::basic_string<T> () const requires (is_String) {
         return std::string(impl.data, size());
     }
+     // Sigh
+    ALWAYS_INLINE constexpr
+    operator std::filesystem::path () const requires (is_String) {
+        return std::filesystem::path(
+            reinterpret_cast<const char8_t*>(begin()),
+            reinterpret_cast<const char8_t*>(end())
+        );
+    }
 
     ///// DESTRUCTOR
     constexpr
@@ -789,6 +800,7 @@ struct ArrayInterface {
         expect(start <= size() && end <= size());
         return SelfSlice(data() + start, end - start);
     }
+
      // Substr takes an offset and a length, and caps both to the length of the
      // string.
     constexpr
@@ -1700,3 +1712,21 @@ auto operator<=> (
 
 } // arrays
 } // uni
+
+namespace std {
+template <uni::ArrayClass ac, class T>
+struct hash<uni::ArrayInterface<ac, T>> {
+    uni::usize operator() (const uni::ArrayInterface<ac, T>& a) const {
+         // Just do an x33 hash (djb2) on whatever std::hash returns for the
+         // contents.  At least for libstdc++, hash is a no-op on basic integer
+         // types, so for char strings this just does an x33 hash on the string.
+         //
+         // This is fast but vulnerable to hash denial attacks.
+        uni::usize r = 5381;
+        for (auto& e : a) {
+            r = (r << 5) + r + std::hash<T>{}(e);
+        }
+        return r;
+    }
+};
+}
