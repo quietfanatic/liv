@@ -69,12 +69,12 @@ inline void item_to_file (
 inline void item_from_string (
     const Reference& item, OldStr src, LocationRef loc = Location()
 ) {
-    return item_from_tree(item, tree_from_string(src), loc);
+    return item_from_tree(item, tree_from_string(Str(src)), loc);
 }
 inline void item_from_file (
     const Reference& item, OldStr filename, LocationRef loc = Location()
 ) {
-    return item_from_tree(item, tree_from_file(filename), loc);
+    return item_from_tree(item, tree_from_file(Str(filename)), loc);
 }
 
 ///// ACCESS OPERATIONS

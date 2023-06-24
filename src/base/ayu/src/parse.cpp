@@ -16,7 +16,7 @@ namespace in {
 
  // Parsing is simple enough that we don't need a separate lexer step.
 struct Parser {
-    std::string filename;
+    AnyString filename;
     const char* begin;
     const char* p;
     const char* end;
@@ -27,15 +27,15 @@ struct Parser {
      // or so).
     UniqueArray<TreePair> shortcuts;
 
-    Parser (OldStr s, OldStr filename = "") :
-        filename(filename),
-        begin(s.data()),
-        p(s.data()),
-        end(s.data()+s.size())
+    Parser (Str s, AnyString filename) :
+        filename(std::move(filename)),
+        begin(s.begin()),
+        p(s.begin()),
+        end(s.end())
     { }
 
      // Utility
-    [[gnu::always_inline]]
+    ALWAYS_INLINE
     int look (int i = 0) { return p+i >= end ? EOF : uint8(p[i]); }
 
      // Error reporting
@@ -43,16 +43,16 @@ struct Parser {
         if (d > 9) return 'A' + d;
         else return '0' + d;
     }
-    std::string show_char (int c) {
+    AnyString show_char (int c) {
         switch (c) {
-            case EOF: return "<EOF>"s;
-            case ' ': return "<space>"s;
+            case EOF: return "<EOF>"_s;
+            case ' ': return "<space>"_s;
             default: {
                 if (c > 0x20 && c < 0x7e) {
-                    return std::string(1, c);
+                    return AnyString(1, c);
                 }
                 else {
-                    return old_cat(
+                    return cat(
                         '<', show_hex_digit((c >> 4) & 0x0f),
                         show_hex_digit(c & 0xf), '>'
                     );
@@ -75,7 +75,7 @@ struct Parser {
             }
         }
         uint col = p - nl;
-        throw X<ParseError>(old_cat(std::forward<Args>(args)...), std::string(filename), line, col);
+        throw X<ParseError>(cat(std::forward<Args>(args)...), filename, line, col);
     }
 
     void skip_comment () {
@@ -117,12 +117,12 @@ struct Parser {
         p++;  // for the "
         UniqueString r;
         for (;;) switch (look()) {
-            case EOF: error("std::string not terminated by end of input");
-            case '"': p++; return Tree(AnyString(std::move(r)));
+            case EOF: error("string not terminated by end of input");
+            case '"': p++; return Tree(std::move(r));
             case '\\': {
                 p++;
                 switch (look()) {
-                    case EOF: error("std::string not terminated by end of input");
+                    case EOF: error("string not terminated by end of input");
                     case '"': r.push_back('"'); break;
                     case '\\': r.push_back('\\'); break;
                      // Dunno why this is in json
@@ -153,7 +153,7 @@ struct Parser {
                     p += 2;
                     break;
                 }
-                else return Str(start, p - start);
+                else return Str(start, p);
             }
             case '"': {
                 error("\" cannot occur inside a word (are you missing the first \"?)");
@@ -161,12 +161,12 @@ struct Parser {
             case ANY_RESERVED_SYMBOL: {
                 error(*p, " is a reserved symbol and can't be used outside of strings.");
             }
-            default: return Str(start, p - start);
+            default: return Str(start, p);
         }
     }
 
     Tree got_number () {
-        OldStr word = got_word();
+        Str word = got_word();
          // Detect special numbers
         if (word.size() == 4) {
             if (word[0] == '+' && word[1] == 'n' && word[2] == 'a' && word[3] == 'n') {
@@ -186,7 +186,7 @@ struct Parser {
                 minus = true;
                 [[fallthrough]];
             case '+':
-                word = OldStr(word.data()+1, word.size()-1);
+                word = word.substr(1);
                 if (word.empty() || !std::isdigit(word[0])) {
                     error("Malformed number");
                 }
@@ -198,7 +198,7 @@ struct Parser {
          && (word[1] == 'x' || word[1] == 'X')
         ) {
             hex = true;
-            word = OldStr(word.data()+2, word.size()-2);
+            word = word.substr(2);
         }
          // Try integer
         {
@@ -219,7 +219,7 @@ struct Parser {
             }
              // Forbid . without a digit after
             else if (ptr < word.end() && ptr[0] == '.') {
-                if (ptr == word.end() + 1 ||
+                if (ptr == word.end() - 1 ||
                     (hex ? !std::isxdigit(ptr[1]) : !std::isdigit(ptr[1]))
                 ) {
                     error("Number cannot end with a .");
@@ -292,7 +292,7 @@ struct Parser {
                 case ',':
                 case '}': error("Missing value after : in object");
                 default: {
-                    o.emplace_back(AnyString(key), parse_term());
+                    o.emplace_back(AnyString(std::move(key)), parse_term());
                     break;
                 }
             }
@@ -417,34 +417,35 @@ struct Parser {
 } using namespace in;
 
  // Finally:
-Tree tree_from_string (OldStr s, OldStr filename) {
-    return Parser(s, filename).parse();
+Tree tree_from_string (Str s, AnyString filename) {
+    return Parser(s, std::move(filename)).parse();
 }
 
-std::string string_from_file (OldStr filename) {
-    FILE* f = fopen_utf8(std::string(filename).c_str(), "rb");
+UniqueString string_from_file (AnyString filename) {
+    FILE* f = fopen_utf8(filename.c_str(), "rb");
     if (!f) {
-        throw X<OpenFailed>(Str(filename), errno);
+        throw X<OpenFailed>(std::move(filename), errno);
     }
 
     fseek(f, 0, SEEK_END);
     usize size = ftell(f);
     rewind(f);
 
-    std::string r (size, 0);
-    usize did_read = fread(const_cast<char*>(r.data()), 1, size, f);
+    UniqueString r = UniqueString::Uninitialized(size);
+    usize did_read = fread(r.data(), 1, size, f);
     if (did_read != size) {
-        throw X<ReadFailed>(Str(filename), errno);
+        throw X<ReadFailed>(std::move(filename), errno);
     }
 
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(Str(filename), errno);
+        throw X<CloseFailed>(std::move(filename), errno);
     }
     return r;
 }
 
-Tree tree_from_file (OldStr filename) {
-    return tree_from_string(string_from_file(filename), filename);
+Tree tree_from_file (AnyString filename) {
+    UniqueString s = string_from_file(filename);
+    return tree_from_string(std::move(s), std::move(filename));
 }
 
 } using namespace ayu;
@@ -464,12 +465,12 @@ AYU_DESCRIBE(ayu::ParseError,
 static tap::TestSet tests ("base/ayu/parse", []{
     using namespace tap;
     auto y = [](const char* s, const Tree& t){
-        try_is<Tree>([&]{return tree_from_string(s);}, t, old_cat("yes: "s, s).c_str());
+        try_is<Tree>([&]{return tree_from_string(s);}, t, cat("yes: ", s));
     };
     auto n = [](const char* s){
         throws<ParseError>([&]{
             tree_from_string(s);
-        }, "no: "s + s);
+        }, cat("no: ", s));
     };
     y("null", Tree(null));
     y("0", Tree(0));
@@ -483,8 +484,8 @@ static tap::TestSet tests ("base/ayu/parse", []{
     y("-0x40", Tree(-0x40));
     y("000099", Tree(99));
     y("000", Tree(0));
-    n("0.");
-    n(".0");
+    n("4.");
+    n(".4");
     n("0.e4");
     y("0xdead.beefP30", Tree(0xdead.beefP30));
     y("+0xdead.beefP30", Tree(0xdead.beefP30));

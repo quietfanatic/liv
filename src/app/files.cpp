@@ -100,7 +100,7 @@ std::vector<std::string> read_list (OldStr list_filename) {
         }
     }
     else {
-        for (char c : ayu::string_from_file(list_filename)) {
+        for (char c : ayu::string_from_file(Str(list_filename))) {
             if (c == '\n') {
                 if (lines.back() != "") {
                     lines.emplace_back();

@@ -612,6 +612,7 @@ struct ArrayInterface {
 
      // Create an array with a given size but uninitialized data.  This is only
      // allowed for element types that are allowed to be uninitialized.
+    static
     Self Uninitialized (usize s) requires (is_Unique) {
         static_assert(std::is_trivially_default_constructible_v<T>,
             "Cannot create Uninitialized array with type that isn't trivially "

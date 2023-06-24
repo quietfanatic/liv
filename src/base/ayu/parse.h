@@ -9,15 +9,15 @@ namespace ayu {
  // The filename parameter is used for error reporting.
  // If the parse fails, an X<ParseError> exception will be thrown.  TODO: Make a
  // non-throwing function.
-Tree tree_from_string (OldStr, OldStr filename = ""sv);
+Tree tree_from_string (Str, AnyString filename = "");
 
-std::string string_from_file (OldStr filename);
+UniqueString string_from_file (AnyString filename);
 
-Tree tree_from_file (OldStr filename);
+Tree tree_from_file (AnyString filename);
 
 struct ParseError : Error {
-    std::string mess;
-    std::string filename;
+    AnyString mess;
+    AnyString filename;
     uint line;
     uint col;
 };

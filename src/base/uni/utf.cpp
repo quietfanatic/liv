@@ -72,8 +72,8 @@ UniqueString16 to_utf16 (Str s) {
      // Worst-case inflation is 1 code unit (2 bytes) per byte
     usize buffer_size = s.size();
      // We'll say 10k is okay to allocate on the stack
-    if (buffer_size < 10000 / sizeof(char16_t)) {
-        char16_t buffer [buffer_size];
+    if (buffer_size < 10000 / sizeof(char16)) {
+        char16 buffer [buffer_size];
         usize len = to_utf16_buffer(buffer, s);
         return UniqueString16(buffer, len);
     }
@@ -81,7 +81,7 @@ UniqueString16 to_utf16 (Str s) {
          // Modern virtual memory systems mean that for big enough allocations,
          // even if we vastly overallocate we won't actually use much more
          // physical RAM than we write to.
-        auto buffer = (char16_t*)malloc(sizeof(char16_t) * buffer_size);
+        auto buffer = (char16*)malloc(sizeof(char16) * buffer_size);
         usize len = to_utf16_buffer(buffer, s);
         auto r = UniqueString16(buffer, len);
         free(buffer);
@@ -153,7 +153,7 @@ UniqueString from_utf16 (Str16 s) {
 
 std::FILE* fopen_utf8 (const char* filename, const char* mode) {
 #ifdef _WIN32
-    static_assert(sizeof(wchar_t) == sizeof(char16_t));
+    static_assert(sizeof(wchar_t) == sizeof(char16));
     return _wfopen(
         reinterpret_cast<const wchar_t*>(to_utf16(filename).c_str()),
         reinterpret_cast<const wchar_t*>(to_utf16(mode).c_str())
