@@ -21,7 +21,10 @@ struct Texture {
         const_cast<uint&>(o.id) = 0;
     }
     ~Texture ();
-    ASSIGN_BY_MOVE(Texture)
+    Texture& operator= (Texture&& o) {
+        this->~Texture();
+        return *new (this) Texture(move(o));
+    }
 
     const uint id = 0;
     operator uint () const { return id; }

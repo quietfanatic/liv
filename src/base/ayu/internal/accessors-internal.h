@@ -384,12 +384,12 @@ void ValueFuncsAcr1<To>::_access (
         case ACR_WRITE: {
             To tmp;
             cb.reinterpret<void(To&)>()(tmp);
-            return self->setter(from, std::move(tmp));
+            return self->setter(from, move(tmp));
         }
         case ACR_MODIFY: {
             To tmp = self->getter(from);
             cb.reinterpret<void(To&)>()(tmp);
-            return self->setter(from, std::move(tmp));
+            return self->setter(from, move(tmp));
         }
     }
 }
@@ -429,12 +429,12 @@ void MixedFuncsAcr1<To>::_access (
         case ACR_WRITE: {
             To tmp;
             cb.reinterpret<void(To&)>()(tmp);
-            return self->setter(from, std::move(tmp));
+            return self->setter(from, move(tmp));
         }
         case ACR_MODIFY: {
             To tmp = (self->getter)(from);
             cb.reinterpret<void(To&)>()(tmp);
-            return self->setter(from, std::move(tmp));
+            return self->setter(from, move(tmp));
         }
     }
 }
@@ -499,7 +499,7 @@ struct VariableAcr2 : VariableAcr1<To> {
     mutable To value;
      // This ACR cannot be constexpr.
     explicit VariableAcr2 (To&& v, uint8 flags = 0) :
-        VariableAcr1<To>(&VariableAcr1<To>::_vt, flags), value(std::move(v))
+        VariableAcr1<To>(&VariableAcr1<To>::_vt, flags), value(move(v))
     { }
 };
 template <class To>

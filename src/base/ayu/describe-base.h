@@ -160,7 +160,7 @@ struct _AYU_DescribeBase {
      // Specify a named value for use in values(...).  The value must be
      // constexpr copy or move constructible.
     template <class N>
-        requires (requires (T v) { T(std::move(v)); })
+        requires (requires (T v) { T(move(v)); })
     static constexpr auto value (const N& name, T&& value);
     template <class N>
         requires (requires (const T& v) { T(v); })
@@ -459,7 +459,7 @@ struct _AYU_DescribeBase {
      // This makes a readonly accessor from a function that returns a child item
      // by value.  It is not addressable.
     template <class M>
-        requires (requires (M m) { M(std::move(m)); })
+        requires (requires (M m) { M(move(m)); })
     static constexpr auto value_func (
         M(* f )(const T&),
         in::AccessorFlags flags = in::AccessorFlags(0)
@@ -467,7 +467,7 @@ struct _AYU_DescribeBase {
      // This makes a read-write accessor from two functions that read and write
      // a child item by value.  It is not addressable.
     template <class M>
-        requires (requires (M m) { M(std::move(m)); })
+        requires (requires (M m) { M(move(m)); })
     static constexpr auto value_funcs (
         M(* g )(const T&),
         void(* s )(T&, M),
@@ -479,7 +479,7 @@ struct _AYU_DescribeBase {
      // if the child item is something like a std::vector that's generated on
      // the fly, and is useful for the keys() descriptor.
     template <class M>
-        requires (requires (M m) { M(std::move(m)); })
+        requires (requires (M m) { M(move(m)); })
     static constexpr auto mixed_funcs (
         M(* g )(const T&),
         void(* s )(T&, const M&),
@@ -501,7 +501,7 @@ struct _AYU_DescribeBase {
      // accessor is not addressable, though theoretically it could be made to
      // be.
     template <class M>
-        requires (requires (M m) { M(std::move(m)); })
+        requires (requires (M m) { M(move(m)); })
     static constexpr auto constant (
         M&& v,
         in::AccessorFlags flags = in::AccessorFlags(0)
@@ -516,7 +516,7 @@ struct _AYU_DescribeBase {
         in::AccessorFlags flags = in::AccessorFlags(0)
     );
      // Like constant(), but provides read-write access to a variable which is
-     // embedded in the accessor with std::move().  This accessor is not
+     // embedded in the accessor with move().  This accessor is not
      // constexpr, so it cannot be used directly in an AYU_DESCRIBE block, and
      // can only be used inside an attr_func or elem_func.  It is not
      // addressable.  There is no corresponding variable_pointer accessor
@@ -526,7 +526,7 @@ struct _AYU_DescribeBase {
      // This is intended to be used for proxy types along with
      // pass_through_addressable.
     template <class M>
-        requires (requires (M m) { M(std::move(m)); m.~M(); })
+        requires (requires (M m) { M(move(m)); m.~M(); })
     static auto variable (
         M&& v,
         in::AccessorFlags flags = in::AccessorFlags(0)

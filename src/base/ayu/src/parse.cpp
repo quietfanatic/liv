@@ -28,7 +28,7 @@ struct Parser {
     UniqueArray<TreePair> shortcuts;
 
     Parser (Str s, AnyString filename) :
-        filename(std::move(filename)),
+        filename(move(filename)),
         begin(s.begin()),
         p(s.begin()),
         end(s.end())
@@ -118,7 +118,7 @@ struct Parser {
         UniqueString r;
         for (;;) switch (look()) {
             case EOF: error("string not terminated by end of input");
-            case '"': p++; return Tree(std::move(r));
+            case '"': p++; return Tree(move(r));
             case '\\': {
                 p++;
                 switch (look()) {
@@ -292,7 +292,7 @@ struct Parser {
                 case ',':
                 case '}': error("Missing value after : in object");
                 default: {
-                    o.emplace_back(AnyString(std::move(key)), parse_term());
+                    o.emplace_back(AnyString(move(key)), parse_term());
                     break;
                 }
             }
@@ -306,7 +306,7 @@ struct Parser {
                 error("Duplicate declaration of shortcut &", name);
             }
         }
-        shortcuts.emplace_back(std::move(name), std::move(value));
+        shortcuts.emplace_back(move(name), move(value));
     }
     TreeRef get_shortcut (Str name) {
         for (auto& p : shortcuts) {
@@ -332,13 +332,13 @@ struct Parser {
             case ':': {
                 p++;
                 skip_ws();
-                set_shortcut(AnyString(std::move(name)), parse_term());
+                set_shortcut(AnyString(move(name)), parse_term());
                 skip_commas();
                 return parse_term();
             }
             default: {
                 Tree value = parse_term();
-                set_shortcut(AnyString(std::move(name)), value);
+                set_shortcut(AnyString(move(name)), value);
                 return value;
             }
         }
@@ -418,13 +418,13 @@ struct Parser {
 
  // Finally:
 Tree tree_from_string (Str s, AnyString filename) {
-    return Parser(s, std::move(filename)).parse();
+    return Parser(s, move(filename)).parse();
 }
 
 UniqueString string_from_file (AnyString filename) {
     FILE* f = fopen_utf8(filename.c_str(), "rb");
     if (!f) {
-        throw X<OpenFailed>(std::move(filename), errno);
+        throw X<OpenFailed>(move(filename), errno);
     }
 
     fseek(f, 0, SEEK_END);
@@ -434,18 +434,18 @@ UniqueString string_from_file (AnyString filename) {
     UniqueString r = UniqueString::Uninitialized(size);
     usize did_read = fread(r.data(), 1, size, f);
     if (did_read != size) {
-        throw X<ReadFailed>(std::move(filename), errno);
+        throw X<ReadFailed>(move(filename), errno);
     }
 
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(std::move(filename), errno);
+        throw X<CloseFailed>(move(filename), errno);
     }
     return r;
 }
 
 Tree tree_from_file (AnyString filename) {
     UniqueString s = string_from_file(filename);
-    return tree_from_string(std::move(s), std::move(filename));
+    return tree_from_string(move(s), move(filename));
 }
 
 } using namespace ayu;

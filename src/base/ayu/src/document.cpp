@@ -50,7 +50,7 @@ struct DocumentItemHeader : DocumentLinks {
     DocumentItemHeader (DocumentLinks* links, Type t, usize id, AnyString name) :
         DocumentLinks(links),
         id(id),
-        name_(std::move(name)),
+        name_(move(name)),
         type(t)
     { }
     Str name () {
@@ -103,25 +103,25 @@ void* Document::allocate (Type t) {
 }
 
 void* Document::allocate_named (Type t, AnyString name) {
-    if (name.empty()) throw X<DocumentInvalidName>(std::move(name));
+    if (name.empty()) throw X<DocumentInvalidName>(move(name));
 
     usize id = parse_numbered_name(name);
     if (id == usize(-1) && name[0] == '_') {
-        throw X<DocumentInvalidName>(std::move(name));
+        throw X<DocumentInvalidName>(move(name));
     }
     auto ref = DocumentItemRef(data, name);
-    if (ref.header) throw X<DocumentDuplicateName>(std::move(name));
+    if (ref.header) throw X<DocumentDuplicateName>(move(name));
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::move(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, move(name));
         return header+1;
     }
     else { // Actually a numbered item
         if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id");
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::move(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, move(name));
         return header+1;
     }
 }
@@ -191,7 +191,7 @@ AYU_DESCRIBE(ayu::Document,
             auto ref = DocumentItemRef(v.data, AnyString(k));
             if (ref.header) {
                 return Reference(
-                    v, variable(std::move(ref), pass_through_addressable)
+                    v, variable(move(ref), pass_through_addressable)
                 );
             }
             else return Reference();

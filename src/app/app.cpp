@@ -131,7 +131,7 @@ App::App () {
 App::~App () { }
 
 static void add_book (App& self, std::unique_ptr<Book>&& b) {
-    auto& book = self.books.emplace_back(std::move(b));
+    auto& book = self.books.emplace_back(move(b));
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->window)),
         &*book
@@ -140,7 +140,7 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
 
 void App::open_files (std::vector<std::string>&& files) {
     add_book(*this, std::make_unique<Book>(
-        *this, expand_files(settings, std::move(files))
+        *this, expand_files(settings, move(files))
     ));
 }
 

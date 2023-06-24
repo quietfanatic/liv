@@ -16,7 +16,7 @@ PageParams::PageParams (const Settings* settings) :
 { }
 
 Page::Page (std::string&& filename) :
-    filename(std::move(filename))
+    filename(move(filename))
 { }
 Page::~Page () { }
 

@@ -33,7 +33,7 @@ struct Document {
      // This may be linear over the number of items in the document.
     template <class T, class... Args>
     T* new_named (AnyString name, Args&&... args) {
-        void* p = allocate_named(Type::CppType<T>(), std::move(name));
+        void* p = allocate_named(Type::CppType<T>(), move(name));
         try {
             return new (p) T (std::forward<Args...>(args...));
         }

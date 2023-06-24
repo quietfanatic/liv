@@ -51,24 +51,24 @@ constexpr auto _AYU_DescribeBase<T>::values_custom (
 }
 template <class T>
 template <class N>
-    requires (requires (T v) { T(std::move(v)); })
+    requires (requires (T v) { T(move(v)); })
 constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
     if constexpr (std::is_null_pointer_v<N>) {
-        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, std::move(v));
+        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, move(v));
     }
     else if constexpr (std::is_same_v<N, bool>) {
-        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, std::move(v));
+        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, move(v));
     }
     else if constexpr (std::is_integral_v<N>) {
-        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, std::move(v));
+        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, move(v));
     }
     else if constexpr (std::is_floating_point_v<N>) {
-        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, std::move(v));
+        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, move(v));
     }
     else {
          // Assume something that can be made into a StaticString
         return in::ValueDcrWith<T, StaticString, false>(
-            in::VFSTRING, StaticString::Static(n), std::move(v)
+            in::VFSTRING, StaticString::Static(n), move(v)
         );
     }
 }
@@ -241,7 +241,7 @@ constexpr auto _AYU_DescribeBase<T>::const_ref_funcs (
 }
 template <class T>
 template <class M>
-    requires (requires (M m) { M(std::move(m)); })
+    requires (requires (M m) { M(move(m)); })
 constexpr auto _AYU_DescribeBase<T>::value_func (
     M(* f )(const T&),
     in::AccessorFlags flags
@@ -250,7 +250,7 @@ constexpr auto _AYU_DescribeBase<T>::value_func (
 }
 template <class T>
 template <class M>
-    requires (requires (M m) { M(std::move(m)); })
+    requires (requires (M m) { M(move(m)); })
 constexpr auto _AYU_DescribeBase<T>::value_funcs (
     M(* g )(const T&),
     void(* s )(T&, M),
@@ -260,7 +260,7 @@ constexpr auto _AYU_DescribeBase<T>::value_funcs (
 }
 template <class T>
 template <class M>
-    requires (requires (M m) { M(std::move(m)); })
+    requires (requires (M m) { M(move(m)); })
 constexpr auto _AYU_DescribeBase<T>::mixed_funcs (
     M(* g )(const T&),
     void(* s )(T&, const M&),
@@ -280,12 +280,12 @@ constexpr auto _AYU_DescribeBase<T>::assignable (
 
 template <class T>
 template <class M>
-    requires (requires (M m) { M(std::move(m)); })
+    requires (requires (M m) { M(move(m)); })
 constexpr auto _AYU_DescribeBase<T>::constant (
     M&& v,
     in::AccessorFlags flags
 ) {
-    return in::ConstantAcr2<T, M>(std::move(v), flags);
+    return in::ConstantAcr2<T, M>(move(v), flags);
 }
 template <class T>
 template <class M>
@@ -300,12 +300,12 @@ constexpr auto _AYU_DescribeBase<T>::constant_pointer (
  // or reference_func.
 template <class T>
 template <class M>
-    requires (requires (M m) { M(std::move(m)); m.~M(); })
+    requires (requires (M m) { M(move(m)); m.~M(); })
 auto _AYU_DescribeBase<T>::variable (
     M&& v,
     in::AccessorFlags flags
 ) {
-    return in::VariableAcr2<T, M>(std::move(v), flags);
+    return in::VariableAcr2<T, M>(move(v), flags);
 }
 
 template <class T>

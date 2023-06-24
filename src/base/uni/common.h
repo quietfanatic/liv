@@ -89,16 +89,3 @@ using std::move;
     #endif
 #endif
 
- // Automatically define assignment operators based on constructors.
- // WARNING: If the constructor throws an exception, the lvalue will be left
- // uninitialized.
-#define ASSIGN_BY_MOVE(T) \
-    T& operator= (T&& o) { \
-        this->~T(); \
-        return *new (this) T(std::move(o)); \
-    }
-#define ASSIGN_BY_COPY(T) \
-    T& operator= (const T& o) { \
-        this->~T(); \
-        return *new (this) T(o); \
-    }

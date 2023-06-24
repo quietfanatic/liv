@@ -204,7 +204,7 @@ AYU_DESCRIBE_TEMPLATE(
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(e));
         }
-        return ayu::Tree(std::move(a));
+        return ayu::Tree(move(a));
     }),
     desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
@@ -225,7 +225,7 @@ AYU_DESCRIBE_TEMPLATE(
              // the elements can change, but it's needed if there are References
              // inside the elements.
             item_from_tree(&node.value(), e, ayu::Location(loc, i++));
-            auto res = v.insert(std::move(node));
+            auto res = v.insert(move(node));
              // Check for duplicates.
             if (!res.inserted) {
                 throw ayu::X<ayu::GenericError>{uni::cat(
@@ -253,7 +253,7 @@ AYU_DESCRIBE_TEMPLATE(
         for (auto& e : v) {
             a.emplace_back(ayu::item_to_tree(&e));
         }
-        return ayu::Tree(std::move(a));
+        return ayu::Tree(move(a));
     }),
     desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
@@ -267,7 +267,7 @@ AYU_DESCRIBE_TEMPLATE(
             auto iter = source.emplace().first;
             auto node = source.extract(iter);
             item_from_tree(&node.value(), e, ayu::Location(loc, i++));
-            auto res = v.insert(std::move(node));
+            auto res = v.insert(move(node));
              // Check for duplicates.
             if (!res.inserted) {
                 throw ayu::X<ayu::GenericError>{uni::cat(

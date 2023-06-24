@@ -95,7 +95,7 @@ struct Reference {
     }
     Reference& operator = (Reference&& o) {
         this->~Reference();
-        new (this) Reference(std::move(o));
+        new (this) Reference(move(o));
         return *this;
     }
 
@@ -208,11 +208,11 @@ struct Reference {
             require_writeable();
             *reinterpret_cast<T*>(
                 type().cast_to(Type::CppType<T>(), a)
-            ) = std::move(new_v);
+            ) = move(new_v);
         }
         else {
             write_as<T>([&](T& v){
-                v = std::move(new_v);
+                v = move(new_v);
             });
         }
     }

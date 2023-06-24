@@ -21,7 +21,7 @@ FilesToOpen expand_files (
         auto folder_p = fs::path(specified[0]).remove_filename();
         FilesToOpen r;
          // std::u8string was a terrible idea
-        r.folder = reinterpret_cast<std::string&&>(std::move(folder_p.u8string()));
+        r.folder = reinterpret_cast<std::string&&>(move(folder_p.u8string()));
         for (auto& entry : fs::directory_iterator(folder_p)) {
             std::u8string u8name = entry.path().u8string();
             std::string& name = reinterpret_cast<std::string&>(u8name);
@@ -31,7 +31,7 @@ FilesToOpen expand_files (
                 extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
             }
             if (!extensions.count(std::string(extension))) continue;
-            r.files.emplace_back(std::move(name));
+            r.files.emplace_back(move(name));
         }
         std::sort(
             r.files.begin(), r.files.end(), &uni::natural_lessthan
@@ -66,7 +66,7 @@ FilesToOpen expand_files (
                         extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
                     }
                     if (!extensions.count(std::string(extension))) continue;
-                    r.files.emplace_back(std::move(name));
+                    r.files.emplace_back(move(name));
                 }
                 std::sort(
                     r.files.begin() + subfiles_begin,
@@ -77,7 +77,7 @@ FilesToOpen expand_files (
             else {
                  // Don't check the file extension for explicitly specified
                  // files.
-                r.files.emplace_back(std::move(file));
+                r.files.emplace_back(move(file));
             }
         }
         return r;

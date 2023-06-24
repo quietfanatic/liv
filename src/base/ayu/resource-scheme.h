@@ -49,7 +49,7 @@ struct ResourceScheme {
      // TODO: Non-file resource schemes
 
     explicit ResourceScheme (AnyString scheme_name, bool auto_activate = true) :
-        scheme_name(std::move(scheme_name))
+        scheme_name(move(scheme_name))
     {
         if (auto_activate) activate();
     }
@@ -85,8 +85,8 @@ struct FileResourceScheme : ResourceScheme {
     FileResourceScheme (
         AnyString scheme, AnyString folder, bool auto_activate = true
     ) :
-        ResourceScheme(std::move(scheme), auto_activate),
-        folder(std::move(folder))
+        ResourceScheme(move(scheme), auto_activate),
+        folder(move(folder))
     { }
 };
 

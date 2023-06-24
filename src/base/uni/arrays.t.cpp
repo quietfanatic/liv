@@ -165,18 +165,18 @@ const char* t26 (AnyArray<char>& a) {
 }
 
 std::string c29 (std::string&& s) {
-    return std::move(s) + "foo" + "bar";
+    return move(s) + "foo" + "bar";
 }
 
 UniqueString t29 (UniqueString&& s) {
-    return cat(std::move(s), "foo", "bar");
+    return cat(move(s), "foo", "bar");
 }
 UniqueString b29 (const UniqueString& s) {
     return cat(s, "foo", "bar");
 }
 
 UniqueString t28 (UniqueString&& s) {
-    return cat(std::move(s), "foo"_s, "bar"_s);
+    return cat(move(s), "foo"_s, "bar"_s);
 }
 
 UniqueString t27 (const char* a, const char* b) {
@@ -201,10 +201,10 @@ void t33a (AnyString&& a) {
 }
 NOINLINE
 void t33b (AnyString a) {
-    t33a(std::move(a));
+    t33a(move(a));
 }
 void t33c (AnyString&& a) {
-    t33b(std::move(a));
+    t33b(move(a));
 }
 NOINLINE
 void c33a (std::string&& a) {
@@ -212,10 +212,10 @@ void c33a (std::string&& a) {
 }
 NOINLINE
 void c33b (std::string a) {
-    c33a(std::move(a));
+    c33a(move(a));
 }
 void c33c (std::string&& a) {
-    c33b(std::move(a));
+    c33b(move(a));
 }
 
 static tap::TestSet tests ("base/uni/arrays", []{
@@ -223,7 +223,7 @@ static tap::TestSet tests ("base/uni/arrays", []{
     AnyArray<int> a;
     is(a.size(), usize(0), "empty array has size 0");
     is(a.data(), null, "empty-constructed array has null data");
-    AnyArray<int> b = std::move(a);
+    AnyArray<int> b = move(a);
     is(b.size(), usize(0), "move empty array");
     is(b.data(), null);
     AnyArray<int> c = b;

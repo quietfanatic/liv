@@ -97,7 +97,7 @@ Tree::Tree (TreeObject v) :
 Tree::Tree (std::exception_ptr v) :
     form(ERROR), rep(REP_ERROR), flags(0), length(1), data{}
 {
-    auto e = SharedArray<std::exception_ptr>(1, std::move(v));
+    auto e = SharedArray<std::exception_ptr>(1, move(v));
     const_cast<const std::exception_ptr*&>(data.as_error_ptr) = e.data();
     e.dematerialize();
 }

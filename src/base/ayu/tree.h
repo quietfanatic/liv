@@ -90,7 +90,7 @@ struct Tree {
     }
     Tree& operator = (Tree&& o) {
         this->~Tree();
-        return *new (this) Tree(std::move(o));
+        return *new (this) Tree(move(o));
     }
 
     explicit Tree (Null);

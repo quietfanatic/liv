@@ -50,7 +50,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                              // stack has a OldStr referencing it, because this is
                              // the last thing that happens before ser_attr
                              // returns.
-                            o.emplace_back(std::move(k), std::move(t));
+                            o.emplace_back(move(k), move(t));
                         }
                     });
                 }
@@ -58,7 +58,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                  // manually zero it out to prevent its destructor from
                  // iterating over it again
                 //memset((void*)&ks, 0, sizeof(ks));
-                return Tree(std::move(o));
+                return Tree(move(o));
             }
             case Description::PREFER_ARRAY: {
                 TreeArray a;
@@ -75,10 +75,10 @@ Tree in::ser_to_tree (const Traversal& trav) {
                         if (child.op == ATTR) {
                             t.flags |= child.acr->tree_flags();
                         }
-                        a.emplace_back(std::move(t));
+                        a.emplace_back(move(t));
                     });
                 }
-                return Tree(std::move(a));
+                return Tree(move(a));
             }
             default: {
                 if (auto acr = trav.desc->delegate_acr()) {
@@ -129,7 +129,7 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
                 for (auto& p : o) {
                     ks.emplace_back(p.first);
                 }
-                ser_set_keys(trav, std::move(ks));
+                ser_set_keys(trav, move(ks));
                 for (auto& p : o) {
                     ser_attr(
                         trav, OldStr(p.first), ACR_WRITE, [&](const Traversal& child)
@@ -231,7 +231,7 @@ void in::IFTContext::do_swizzles () {
      // will be load()ed in op.f.
     while (!swizzle_ops.empty()) {
          // Explicitly assign to clear swizzle_ops
-        auto swizzles = std::move(swizzle_ops);
+        auto swizzles = move(swizzle_ops);
         for (auto& op : swizzles) {
             trav_start(
                 op.item, op.loc, false, ACR_MODIFY, [&](const Traversal& trav)
@@ -245,7 +245,7 @@ void in::IFTContext::do_inits () {
      // Initting might add some more init ops.  It'd be weird, but it's allowed
      // for an init() to load another resource.
     while (!init_ops.empty()) {
-        auto inits = std::move(init_ops);
+        auto inits = move(init_ops);
         for (auto& op : inits) {
             trav_start(
                 op.item, op.loc, false, ACR_MODIFY, [&](const Traversal& trav)
@@ -291,7 +291,7 @@ void in::ser_collect_key (UniqueArray<AnyString>& ks, AnyString&& k) {
      // This'll end up being N^2.  TODO: Test whether including an unordered_set
      // would speed this up (probably not).
     for (auto ksk : ks) if (k == ksk) return;
-    ks.emplace_back(std::move(k));
+    ks.emplace_back(move(k));
 }
 
 void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
@@ -329,7 +329,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                 if (tree.form != ARRAY) {
                     throw X<InvalidKeysType>(trav_location(trav), keys_type);
                 }
-                for (const Tree& e : tree_Array(std::move(tree))) {
+                for (const Tree& e : tree_Array(move(tree))) {
                     if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
@@ -419,7 +419,7 @@ void in::ser_claim_keys (
                 }
                 acr->write(*trav.address, [&](Mu& ksv){
                     item_from_tree(
-                        Pointer(&ksv, keys_type), Tree(std::move(a))
+                        Pointer(&ksv, keys_type), Tree(move(a))
                     );
                 });
             }
@@ -555,7 +555,7 @@ bool in::ser_maybe_attr (
     }
     else if (auto attr_func = trav.desc->attr_func()) {
         if (Reference ref = attr_func->f(*trav.address, key)) {
-            trav_attr_func(trav, std::move(ref), attr_func->f, key, mode, cb);
+            trav_attr_func(trav, move(ref), attr_func->f, key, mode, cb);
             return true;
         }
         return false;
@@ -690,7 +690,7 @@ bool in::ser_maybe_elem (
     }
     else if (auto elem_func = trav.desc->elem_func()) {
         if (Reference ref = elem_func->f(*trav.address, index)) {
-            trav_elem_func(trav, std::move(ref), elem_func->f, index, mode, cb);
+            trav_elem_func(trav, move(ref), elem_func->f, index, mode, cb);
             return true;
         }
         return false;

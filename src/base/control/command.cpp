@@ -29,7 +29,7 @@ const Command* require_command (OldStr name) {
     else throw ayu::X<CommandNotFound>(std::string(name));
 }
 
-Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(std::move(a)) {
+Statement::Statement (Command* c, ayu::Dynamic&& a) : command(c), args(move(a)) {
     if (args.type != command->args_type()) {
         throw ayu::X<StatementWrongArgsType>(args.type, command->args_type());
     }

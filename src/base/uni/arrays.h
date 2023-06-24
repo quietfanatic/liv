@@ -431,10 +431,10 @@ struct ArrayInterface {
             static_assert(ArrayContiguousIterator<Ptr>,
                 "Cannot borrow Slice from non-contiguous iterator."
             );
-            set_as_unowned(std::to_address(std::move(p)), s);
+            set_as_unowned(std::to_address(move(p)), s);
         }
         else {
-            set_as_copy(std::move(p), s);
+            set_as_copy(move(p), s);
         }
     }
     template <ArrayIterator Ptr> consteval
@@ -446,7 +446,7 @@ struct ArrayInterface {
         static_assert(ArrayContiguousIterator<Ptr>,
             "Cannot construct static array from non-contiguous iterator."
         );
-        set_as_unowned(std::to_address(std::move(p)), s);
+        set_as_unowned(std::to_address(move(p)), s);
     }
 
      // Construct from a pair of iterators.
@@ -463,10 +463,10 @@ struct ArrayInterface {
                 "Cannot borrow Slice from iterator pair that doesn't support "
                 "subtraction to get size."
             );
-            set_as_unowned(std::to_address(std::move(b)), usize(e - b));
+            set_as_unowned(std::to_address(move(b)), usize(e - b));
         }
         else {
-            set_as_copy(std::move(b), std::move(e));
+            set_as_copy(move(b), move(e));
         }
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> consteval
@@ -562,11 +562,11 @@ struct ArrayInterface {
     }
     template <ArrayIterator Ptr> static
     Self Copy (Ptr p, usize s) requires (supports_copy) {
-        return UniqueArray<T>(std::move(p), s);
+        return UniqueArray<T>(move(p), s);
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> static
     Self Copy (Begin b, End e) requires (supports_copy) {
-        return UniqueArray<T>(std::move(b), std::move(e));
+        return UniqueArray<T>(move(b), move(e));
     }
 
      // Explicitly reference static data.  Unlike the consteval constructors,
@@ -589,7 +589,7 @@ struct ArrayInterface {
             "Cannot construct static array from non-contiguous iterator."
         );
         StaticArray<T> r;
-        r.set_as_unowned(std::to_address(std::move(p)), s);
+        r.set_as_unowned(std::to_address(move(p)), s);
         return r;
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> static constexpr
@@ -1062,7 +1062,7 @@ struct ArrayInterface {
         else {
             UniqueArray<T> temp;
             temp.set_as_copy(impl.data, new_size);
-            *this = std::move(temp);
+            *this = move(temp);
         }
     }
 
@@ -1091,7 +1091,7 @@ struct ArrayInterface {
      // Move-construct onto the end of the array, increasing its size by 1.
     ALWAYS_INLINE
     void push_back (T&& v) requires (supports_copy) {
-        emplace_back(std::move(v));
+        emplace_back(move(v));
     }
     ALWAYS_INLINE
     void push_back_expect_capacity (const T& v) requires (supports_copy) {
@@ -1099,7 +1099,7 @@ struct ArrayInterface {
     }
     ALWAYS_INLINE
     void push_back_expect_capacity (T&& v) requires (supports_copy) {
-        emplace_back_expect_capacity(std::move(v));
+        emplace_back_expect_capacity(move(v));
     }
 
     ALWAYS_INLINE
@@ -1112,7 +1112,7 @@ struct ArrayInterface {
     template <ArrayIterator Ptr>
     void append (Ptr p, usize s) requires (supports_copy) {
         reserve_plenty(size() + s);
-        copy_fill(impl.data + size(), std::move(p), s);
+        copy_fill(impl.data + size(), move(p), s);
         add_size(s);
     }
     void append (SelfSlice o) requires (supports_copy) {
@@ -1121,15 +1121,15 @@ struct ArrayInterface {
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
     void append (Begin b, End e) requires (supports_copy) {
         if constexpr (requires { usize(e - b); }) {
-            return append(std::move(b), usize(e - b));
+            return append(move(b), usize(e - b));
         }
         else if constexpr (ArrayForwardIterator<Begin>) {
             usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
-            return append(std::move(b), s);
+            return append(move(b), s);
         }
         else {
-            for (auto p = std::move(b); p != e; ++p) {
+            for (auto p = move(b); p != e; ++p) {
                 push_back(*b);
             }
         }
@@ -1140,7 +1140,7 @@ struct ArrayInterface {
     void append_expect_capacity (Ptr p, usize s) requires (supports_copy) {
         expect(size() + s <= max_size_);
         expect(unique() && capacity() >= size() + s);
-        copy_fill(impl.data + size(), std::move(p), s);
+        copy_fill(impl.data + size(), move(p), s);
         add_size(s);
     }
     void append_expect_capacity (SelfSlice o) requires (supports_copy) {
@@ -1149,15 +1149,15 @@ struct ArrayInterface {
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
     void append_expect_capacity (Begin b, End e) requires (supports_copy) {
         if constexpr (requires { usize(e - b); }) {
-            return append_expect_capacity(std::move(b), usize(e - b));
+            return append_expect_capacity(move(b), usize(e - b));
         }
         else if constexpr (ArrayForwardIterator<Begin>) {
             usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
-            return append_expect_capacity(std::move(b), s);
+            return append_expect_capacity(move(b), s);
         }
         else {
-            for (auto p = std::move(b); p != e; ++p) {
+            for (auto p = move(b); p != e; ++p) {
                 push_back_expect_capacity(*b);
             }
         }
@@ -1179,7 +1179,7 @@ struct ArrayInterface {
             T v {std::forward<Args>(args)...};
             T* dat = do_split(impl, offset, 1);
             try {
-                new (&dat[offset]) T(std::move(v));
+                new (&dat[offset]) T(move(v));
             }
             catch (...) { never(); }
             set_as_unique(dat, size() + 1);
@@ -1197,10 +1197,10 @@ struct ArrayInterface {
         emplace(pos - impl.data, v);
     }
     void insert (usize offset, T&& v) requires (supports_copy) {
-        emplace(offset, std::move(v));
+        emplace(offset, move(v));
     }
     void insert (const T* pos, T&& v) requires (supports_copy) {
-        emplace(pos - impl.data, std::move(v));
+        emplace(pos - impl.data, move(v));
     }
 
      // Multiple-element insert.  If any of the iterator operators or the copy
@@ -1215,7 +1215,7 @@ struct ArrayInterface {
         else {
             T* dat = do_split(impl, offset, s);
             try {
-                copy_fill(dat + offset, std::move(p), s);
+                copy_fill(dat + offset, move(p), s);
             }
             catch (...) { require(false); }
             set_as_unique(dat, size() + s);
@@ -1223,7 +1223,7 @@ struct ArrayInterface {
     }
     template <ArrayIterator Ptr>
     void insert (const T* pos, Ptr p, usize s) requires (supports_copy) {
-        insert(pos - impl.data, std::move(p), s);
+        insert(pos - impl.data, move(p), s);
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
     void insert (usize offset, Begin b, End e) requires (supports_copy) {
@@ -1237,11 +1237,11 @@ struct ArrayInterface {
             );
             s = 0; for (auto p = b; p != e; ++p) ++s;
         }
-        insert(offset, std::move(b), s);
+        insert(offset, move(b), s);
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
     void insert (const T* pos, Begin b, End e) requires (supports_copy) {
-        insert(pos - impl.data, std::move(b), std::move(e));
+        insert(pos - impl.data, move(b), move(e));
     }
 
      // Removes element(s) from the array.  If there are elements after the
@@ -1318,13 +1318,13 @@ struct ArrayInterface {
         }
         T* dat;
         if constexpr (ArrayContiguousIteratorFor<Ptr, T>) {
-            dat = allocate_copy(std::to_address(std::move(ptr)), s);
+            dat = allocate_copy(std::to_address(move(ptr)), s);
         }
         else {
              // don't noinline if we can't depolymorph ptr
             dat = allocate_owned(s);
             try {
-                copy_fill(dat, std::move(ptr), s);
+                copy_fill(dat, move(ptr), s);
             }
             catch (...) {
                 deallocate_owned(dat);
@@ -1337,14 +1337,14 @@ struct ArrayInterface {
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
     void set_as_copy (Begin b, End e) {
         if constexpr (requires { usize(e - b); }) {
-            set_as_copy(std::move(b), usize(e - b));
+            set_as_copy(move(b), usize(e - b));
         }
         else if constexpr (requires { b = b; }) {
              // If the iterator is copy-assignable that means it probably allows
              // determining its length in a separate pass.
             usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
-            set_as_copy(std::move(b), s);
+            set_as_copy(move(b), s);
         }
         else {
              // You gave us an iterator pair that can't be subtracted and can't
@@ -1352,7 +1352,7 @@ struct ArrayInterface {
              // until it's big enough.
             impl = {};
             try {
-                for (auto p = std::move(b); p != e; ++p) {
+                for (auto p = move(b); p != e; ++p) {
                     emplace_back(*p);
                 }
             }
@@ -1454,7 +1454,7 @@ struct ArrayInterface {
     T* copy_fill (T* dat, Ptr ptr, usize s) {
         usize i = 0;
         try {
-            for (auto p = std::move(ptr); i < s; ++i, ++p) {
+            for (auto p = move(ptr); i < s; ++i, ++p) {
                 new (&dat[i]) T(*p);
             }
         }
@@ -1472,12 +1472,12 @@ struct ArrayInterface {
     T* copy_fill (T* dat, Begin b, End e) {
         static_assert(ArrayForwardIterator<Begin>);
         if constexpr (requires { usize(e - b); }) {
-            return copy_fill(dat, std::move(b), usize(e - b));
+            return copy_fill(dat, move(b), usize(e - b));
         }
         else {
             usize s = 0;
             for (auto p = b; p != e; ++p) ++s;
-            return copy_fill(dat, std::move(b), s);
+            return copy_fill(dat, move(b), s);
         }
     }
 
@@ -1515,7 +1515,7 @@ struct ArrayInterface {
              // even if they aren't marked noexcept.
             try {
                 for (usize i = 0; i < self.size(); ++i) {
-                    new (&dat[i]) T(std::move(self.impl.data[i]));
+                    new (&dat[i]) T(move(self.impl.data[i]));
                     self.impl.data[i].~T();
                 }
             }
@@ -1555,7 +1555,7 @@ struct ArrayInterface {
                  // Move elements forward, starting at the back
                 for (usize i = self.size(); i > split; --i) {
                     new (&self.impl.data[i-1 + shift]) T(
-                        std::move(self.impl.data[i-1])
+                        move(self.impl.data[i-1])
                     );
                     self.impl.data[i-1].~T();
                 }
@@ -1575,12 +1575,12 @@ struct ArrayInterface {
              // if they aren't marked noexcept.
             try {
                 for (usize i = 0; i < split; ++i) {
-                    new (&dat[i]) T(std::move(self.impl.data[i]));
+                    new (&dat[i]) T(move(self.impl.data[i]));
                     self.impl.data[i].~T();
                 }
                 for (usize i = 0; i < self.size() - split; ++i) {
                     new (&dat[split + shift + i]) T(
-                        std::move(self.impl.data[split + i])
+                        move(self.impl.data[split + i])
                     );
                     self.impl.data[split + i].~T();
                 }
@@ -1630,7 +1630,7 @@ struct ArrayInterface {
                  // Move some elements over.  The destination will always
                  // still exist so use operator=
                 for (usize i = offset; count + i < old_size; ++i) {
-                    self.impl.data[i] = std::move(
+                    self.impl.data[i] = move(
                         self.impl.data[count + i]
                     );
                 }

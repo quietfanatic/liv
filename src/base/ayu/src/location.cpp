@@ -34,7 +34,7 @@ struct KeyLocation : LocationData {
     Location parent;
     AnyString key;
     KeyLocation (Location p, AnyString&& k) :
-        LocationData(KEY), parent(p), key(std::move(k))
+        LocationData(KEY), parent(p), key(move(k))
     { }
 };
 struct IndexLocation : LocationData {
@@ -47,11 +47,11 @@ struct IndexLocation : LocationData {
 struct ErrorLocation : LocationData {
     std::exception_ptr error;
     ErrorLocation (std::exception_ptr&& e) :
-        LocationData(ERROR_LOC), error(std::move(e)) { }
+        LocationData(ERROR_LOC), error(move(e)) { }
 };
 
 Location make_error_location (std::exception_ptr&& e) {
-    return Location(new ErrorLocation(std::move(e)));
+    return Location(new ErrorLocation(move(e)));
 }
 
 [[noreturn]]
@@ -76,10 +76,10 @@ void delete_LocationData (LocationData* p) {
 } using namespace in;
 
 Location::Location (Resource res) :
-    data(new RootLocation(std::move(res)))
+    data(new RootLocation(move(res)))
 { }
 Location::Location (LocationRef p, AnyString k) :
-    data(new KeyLocation(p, std::move(k)))
+    data(new KeyLocation(p, move(k)))
 { }
 Location::Location (LocationRef p, usize i) :
     data(new IndexLocation(p, i))
@@ -130,7 +130,7 @@ Location::Location (const IRI& iri) {
             }
         }
     }
-    *this = std::move(self);
+    *this = move(self);
 }
 
 IRI Location::as_iri () const {

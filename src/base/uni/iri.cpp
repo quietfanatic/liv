@@ -478,7 +478,7 @@ IRI::IRI (Str input, const IRI& base) :
         expect(path <= question);
         expect(question <= hash);
         expect(hash <= spec.size());
-        spec_ = std::move(spec);
+        spec_ = move(spec);
         colon_ = colon;
         path_ = path;
         question_ = question;
@@ -487,18 +487,18 @@ IRI::IRI (Str input, const IRI& base) :
     }
     fail: {
         spec.append(input.substr(i));
-        spec_ = std::move(spec);
+        spec_ = move(spec);
         return;
     }
 }
 
 IRI::IRI (AnyString&& spec, uint16 c, uint16 p, uint16 q, uint16 h) :
-    spec_(std::move(spec)), colon_(c), path_(p), question_(q), hash_(h)
+    spec_(move(spec)), colon_(c), path_(p), question_(q), hash_(h)
 { }
 
 IRI::IRI (const IRI& o) = default;
 IRI::IRI (IRI&& o) :
-    spec_(std::move(o.spec_)),
+    spec_(move(o.spec_)),
     colon_(o.colon_),
     path_(o.path_),
     question_(o.question_),
@@ -513,7 +513,7 @@ IRI& IRI::operator = (const IRI& o) {
 IRI& IRI::operator = (IRI&& o) {
     if (this == &o) return *this;
     this->~IRI();
-    new (this) IRI(std::move(o));
+    new (this) IRI(move(o));
     return *this;
 }
 
@@ -533,12 +533,12 @@ const AnyString& IRI::possibly_invalid_spec () const {
 
 AnyString IRI::move_spec () {
     if (!colon_) return empty;
-    AnyString r = std::move(spec_);
+    AnyString r = move(spec_);
     *this = IRI();
     return r;
 }
 AnyString IRI::move_possibly_invalid_spec () {
-    AnyString r = std::move(spec_);
+    AnyString r = move(spec_);
     *this = IRI();
     return r;
 }

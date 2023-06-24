@@ -48,7 +48,7 @@ struct Dynamic {
     )
     Dynamic (T&& v) : type(Type::CppType<T>()), data(reinterpret_cast<Mu*>(type.allocate())) {
         try {
-            new (data) T (std::move(v));
+            new (data) T (move(v));
         }
         catch (...) {
             type.deallocate(data);
@@ -72,7 +72,7 @@ struct Dynamic {
      // Move assignment
     Dynamic& operator = (Dynamic&& o) {
         this->~Dynamic();
-        new (this) Dynamic (std::move(o));
+        new (this) Dynamic (move(o));
         return *this;
     }
      // Destroy

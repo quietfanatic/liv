@@ -25,7 +25,7 @@ void Shader::compile () {
         auto info_log = std::string(loglen, 0);
         glGetShaderInfoLog(id, loglen, nullptr, info_log.data());
         throw ayu::X<ShaderCompileFailed>(
-            ayu::reference_to_location(this), std::move(info_log)
+            ayu::reference_to_location(this), move(info_log)
         );
     }
 }
@@ -67,7 +67,7 @@ void Program::link () {
         auto info_log = std::string(loglen, 0);
         glGetProgramInfoLog(id, loglen, nullptr, info_log.data());
         throw ayu::X<ProgramLinkFailed>(
-            ayu::reference_to_location(this), std::move(info_log)
+            ayu::reference_to_location(this), move(info_log)
         );
     }
      // Extra

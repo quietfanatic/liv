@@ -81,7 +81,7 @@ Resource::Resource (const IRI& name) {
         auto ptr = std::make_unique<ResourceData>(name);
         data = &*ptr;
          // Be careful about storing the right Str
-        resources.emplace(data->name.spec(), std::move(ptr));
+        resources.emplace(data->name.spec(), move(ptr));
     }
 }
 Resource::Resource (Str ref) {
@@ -98,7 +98,7 @@ Resource::Resource (const IRI& name, Dynamic&& value) :
     if (!value.has_value()) {
         throw X<EmptyResourceValue>(name.spec());
     }
-    if (data->state == UNLOADED) set_value(std::move(value));
+    if (data->state == UNLOADED) set_value(move(value));
     else throw X<InvalidResourceState>("construct"_s, *this, data->state);
 }
 
@@ -133,7 +133,7 @@ void Resource::set_value (Dynamic&& value) const {
             break;
         default: throw X<InvalidResourceState>("set_value"_s, data, data->state);
     }
-    data->value = std::move(value);
+    data->value = move(value);
 }
 
 Reference Resource::ref () const {
@@ -202,7 +202,7 @@ void rename (Resource old_res, Resource new_res) {
     if (new_res.data->state != UNLOADED) {
         throw X<InvalidResourceState>("rename to"_s, new_res, old_res.data->state);
     }
-    new_res.data->value = std::move(old_res.data->value);
+    new_res.data->value = move(old_res.data->value);
     new_res.data->state = LOADED;
     old_res.data->state = UNLOADED;
 }
@@ -242,8 +242,8 @@ void save (const std::vector<Resource>& reses) {
                     item_to_tree(&res.data->value, Location(res))
                 );
                 committers[i] = [
-                    contents{std::move(contents)},
-                    filename{std::move(filename)}
+                    contents{move(contents)},
+                    filename{move(filename)}
                 ]{
                     string_to_file(contents, filename);
                 };
@@ -385,7 +385,7 @@ void reload (const std::vector<Resource>& reses) {
      // Preparation (this won't throw)
     for (auto res : reses) {
         res.data->state = RELOAD_CONSTRUCTING;
-        res.data->old_value = std::move(res.data->value);
+        res.data->old_value = move(res.data->value);
     }
     std::unordered_map<Reference, Reference> updates;
     try {
@@ -461,7 +461,7 @@ void reload (const std::vector<Resource>& reses) {
             catch (std::exception& e) {
                 unrecoverable_exception(e, "while rolling back reload");
             }
-            res.data->value = std::move(res.data->old_value);
+            res.data->value = move(res.data->old_value);
         }
         for (auto res : reses) {
             res.data->state = LOADED;
