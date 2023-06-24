@@ -11,7 +11,7 @@
 // representation of a Reference, explaining how to reach the referend from the
 // root Resource by a chain of item_attr() and item_elem() calls. In ADT syntax,
 //     data Location = RootLocation Resource
-//                   | KeyLocation Location std::string
+//                   | KeyLocation Location AnyString
 //                   | IndexLocation Location usize
 //
 // TODO: Provide functions to translate References directly to and from IRIs

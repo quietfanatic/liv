@@ -26,7 +26,7 @@ namespace ayu {
  // manipulate any Types until main() starts.
 struct ResourceScheme {
      // Must be a valid scheme name matching [a-z][a-z0-9+.-]*
-    const std::string scheme_name;
+    const AnyString scheme_name;
 
      // If you want to do some of your own validation besides the standard IRI
      // validation.  If this returns false, UnacceptableResourceName will
@@ -45,11 +45,11 @@ struct ResourceScheme {
      // Turn an IRI into a filename.  If "" is returned, it means there is no
      // valid filename for this IRI.  It is okay to return non-existent
      // filenames.
-    virtual std::string get_file (const IRI&) const { return ""s; }
+    virtual AnyString get_file (const IRI&) const { return ""; }
      // TODO: Non-file resource schemes
 
-    explicit ResourceScheme (OldStr scheme_name, bool auto_activate = true) :
-        scheme_name(scheme_name)
+    explicit ResourceScheme (AnyString scheme_name, bool auto_activate = true) :
+        scheme_name(std::move(scheme_name))
     {
         if (auto_activate) activate();
     }
@@ -60,7 +60,7 @@ struct ResourceScheme {
     ResourceScheme& operator = (ResourceScheme&&) = delete;
 
     virtual ~ResourceScheme () {
-        if (!scheme_name.empty()) deactivate();
+        if (scheme_name) deactivate();
     }
 
      // These are called in the constructor (by default) and destructor, so you
@@ -71,48 +71,51 @@ struct ResourceScheme {
 
  // Maps resource names to the contents of a folder.
 struct FileResourceScheme : ResourceScheme {
-    std::string folder;
+    AnyString folder;
 
     bool accepts_iri (const IRI& iri) const override {
         return iri && !iri.has_authority() && !iri.has_query()
             && iri.is_hierarchical();
     }
 
-    std::string get_file (const IRI& iri) const override {
-        return folder + std::string(decode(iri.path()));
+    AnyString get_file (const IRI& iri) const override {
+        return cat(folder, decode(iri.path()));
     }
 
-    FileResourceScheme (std::string scheme, std::string folder, bool auto_activate = true)
-        : ResourceScheme(scheme, auto_activate), folder(folder)
+    FileResourceScheme (
+        AnyString scheme, AnyString folder, bool auto_activate = true
+    ) :
+        ResourceScheme(std::move(scheme), auto_activate),
+        folder(std::move(folder))
     { }
 };
 
 struct ResourceNameError : Error { };
  // An invalid IRI was given as a resource name.
 struct InvalidResourceName : ResourceNameError {
-    std::string name;
+    AnyString name;
 };
  // Tried to use an IRI as a resource name but its scheme was not registered
 struct UnknownResourceScheme : ResourceNameError {
-    std::string name;
+    AnyString name;
 };
  // A valid IRI was given but its ResourceScheme didn't like it.
 struct UnacceptableResourceName : ResourceNameError {
-    std::string name;
+    AnyString name;
 };
  // Tried to load or set_value a resource with a type that the
  // ResourceScheme didn't accept.
 struct UnacceptableResourceType : ResourceNameError {
-    std::string name;
+    AnyString name;
     Type type;
 };
  // Tried to register a ResourceScheme with an invalid name.
 struct InvalidResourceScheme : ResourceNameError {
-    std::string scheme;
+    AnyString scheme;
 };
  // Tried to register multiple ResourceSchemes with the same name.
 struct DuplicateResourceScheme : ResourceNameError {
-    std::string scheme;
+    AnyString scheme;
 };
 
 } // namespace ayu

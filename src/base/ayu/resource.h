@@ -77,7 +77,7 @@ enum ResourceState {
     RELOAD_COMMITTING,
 };
  // Get the string name of a resource state.
-OldStr show_ResourceState (ResourceState);
+StaticString show_ResourceState (ResourceState);
 
  // The Resource class refers to a resource with reference semantics.
  // This class itself is cheap to copy.
@@ -89,15 +89,15 @@ struct Resource {
     constexpr Resource (in::ResourceData* d = null) : data(d) { }
      // Refers to the resource with this name, but does not load it yet.
     Resource (const IRI& name);
-    Resource (IRI&& name);
      // Takes an IRI reference relative to the current resource if there is one.
-    Resource (OldStr name);
-     // Doesn't autoconvert for some reason
-    Resource (const char* name) : Resource(OldStr(name)) { }
+    Resource (Str name);
+     // Too long of a conversion chain for C++ lol
+    template <usize n>
+    Resource (const char (& name)[n]) : Resource(Str(name)) { }
      // Creates the resource already loaded with the given data, without reading
      // from disk.  Will throw InvalidResourceState if a resource with this
      // name is already loaded or EmptyResourceValue if value is empty.
-    Resource (IRI name, Dynamic&& value);
+    Resource (const IRI& name, Dynamic&& value);
      // Creates an anonymous resource with the given value
      // TODO: I forgot to implement this
     Resource (Null, Dynamic&& value);
@@ -130,7 +130,7 @@ struct Resource {
 
      // Syntax sugar
     explicit operator bool () { return data; }
-    Reference operator [] (OldStr key) {
+    Reference operator [] (Str key) {
         return ref()[key];
     }
     Reference operator [] (usize index) {
@@ -216,7 +216,7 @@ void remove_source (Resource);
 bool source_exists (Resource);
 
  // Get the filename of the file backing this resource, if it has one.
-std::string resource_filename (Resource);
+AnyString resource_filename (Resource);
 
  // Returns the resource currently being processed, if any.
 Resource current_resource ();
@@ -230,13 +230,13 @@ struct ResourceError : Error { };
  // Tried an an operation on a resource when its state wasn't appropriate
  // for that operation.
 struct InvalidResourceState : ResourceError {
-    OldStr tried;
+    StaticString tried;
     Resource res;
     ResourceState state;
 };
  // Tried to create a resource with an empty value.
 struct EmptyResourceValue : ResourceError {
-    std::string name;
+    AnyString name;
 };
  // Tried to unload a resource, but there's still a reference somewhere
  // referencing an item inside it.

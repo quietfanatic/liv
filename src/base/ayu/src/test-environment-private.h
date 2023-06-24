@@ -21,7 +21,7 @@ namespace ayu::test {
              // reproduce.
             char* base = SDL_GetBasePath();
             trs = std::make_unique<test::TestResourceScheme>(
-                "ayu-test", old_cat(base, "res/base/ayu/src/test")
+                "ayu-test", cat(base, "res/base/ayu/src/test")
             );
             SDL_free(base);
         }

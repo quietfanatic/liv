@@ -9,28 +9,30 @@
 #include "../resource-scheme.h"
 
 namespace ayu::in {
-    struct ResourceData {
-        IRI name;
-        Dynamic value {};
-        Dynamic old_value {};  // Used when reloading
-        ResourceState state = UNLOADED;
-    };
 
-    struct Universe {
-        std::unordered_map<OldStr, std::unique_ptr<ResourceData>> resources;
-        std::unordered_map<std::string, const ResourceScheme*> schemes;
-        const ResourceScheme* require_scheme (const IRI& name) {
-            OldStr scheme = name.scheme();
-            auto iter = schemes.find(std::string(scheme));
-            if (iter != schemes.end()) return iter->second;
-            else throw X<UnknownResourceScheme>(std::string(scheme));
-        }
-    };
+struct ResourceData {
+    IRI name;
+    Dynamic value {};
+    Dynamic old_value {};  // Used when reloading
+    ResourceState state = UNLOADED;
+};
 
-    inline Universe& universe () {
-        static Universe r;
-        return r;
+struct Universe {
+     // The Str here must refer to the resource's name.spec().
+    std::unordered_map<Str, std::unique_ptr<ResourceData>> resources;
+    std::unordered_map<AnyString, const ResourceScheme*> schemes;
+    const ResourceScheme* require_scheme (const IRI& name) {
+        Str scheme = name.scheme();
+        auto iter = schemes.find(scheme);
+        if (iter != schemes.end()) return iter->second;
+        else throw X<UnknownResourceScheme>(scheme);
     }
+};
 
+inline Universe& universe () {
+    static Universe r;
+    return r;
 }
+
+} // namespace ayu::in
 

@@ -13,7 +13,7 @@ TestEnvironment::TestEnvironment (geo::IVec size) :
         "test",
         []{
             char* base = require_sdl(SDL_GetBasePath());
-            std::string folder = std::string(base) + "res/base/glow/test";
+            auto folder = cat(base, "res/base/glow/test");
             SDL_free(base);
             return folder;
         }()

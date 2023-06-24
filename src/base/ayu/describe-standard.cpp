@@ -46,11 +46,9 @@ AYU_DESCRIBE(std::u16string,
     from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
 )
 
- // OldStr AKA string_view is a reference-like type so it can't be deserialized
- // because the data structure containing it would most likely outlive the tree
- // it came from.  However, allowing it to be serialized could be useful.  Plus
- // giving this a description means that std::vector<OldStr> can be used as the
- // type for keys().
+ // string_view is a reference-like type so it can't be deserialized because the
+ // data structure containing it would most likely outlive the tree it came
+ // from.  However, allowing it to be serialized is useful for error messages.
 AYU_DESCRIBE(std::string_view,
     to_tree([](const std::string_view& v){
         return Tree(Str(v));
@@ -58,6 +56,11 @@ AYU_DESCRIBE(std::string_view,
 )
 AYU_DESCRIBE(uni::Str,
     to_tree([](const Str& v){
+        return Tree(v);
+    })
+)
+AYU_DESCRIBE(uni::StaticString,
+    to_tree([](const StaticString& v){
         return Tree(v);
     })
 )
