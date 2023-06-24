@@ -151,13 +151,13 @@ struct Tree {
 
      // Returns null if the invocant is not an OBJECT or does not have an
      // attribute with the given key.
-    const Tree* attr (OldStr key) const;
+    const Tree* attr (Str key) const;
      // Returns null if the invocant is not an ARRAY or does not have an
      // element at the given index.
     const Tree* elem (usize index) const;
 
      // Throws if the tree is not an object or doesn't have that attribute.
-    const Tree& operator[] (OldStr key) const;
+    const Tree& operator[] (Str key) const;
      // Throws if the tree is not an array or the index is out of bounds.
     const Tree& operator[] (usize index) const;
 };

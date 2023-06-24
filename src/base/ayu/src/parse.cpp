@@ -121,19 +121,21 @@ struct Parser {
             case '"': p++; return Tree(move(r));
             case '\\': {
                 p++;
+                char c;
                 switch (look()) {
                     case EOF: error("string not terminated by end of input");
-                    case '"': r.push_back('"'); break;
-                    case '\\': r.push_back('\\'); break;
+                    case '"': c = '"'; break;
+                    case '\\': c = '\\'; break;
                      // Dunno why this is in json
-                    case '/': r.push_back('/'); break;
-                    case 'b': r.push_back('\b'); break;
-                    case 'f': r.push_back('\f'); break;
-                    case 'n': r.push_back('\n'); break;
-                    case 'r': r.push_back('\r'); break;
-                    case 't': r.push_back('\t'); break;
+                    case '/': c = '/'; break;
+                    case 'b': c = '\b'; break;
+                    case 'f': c = '\f'; break;
+                    case 'n': c = '\n'; break;
+                    case 'r': c = '\r'; break;
+                    case 't': c = '\t'; break;
                     default: error("Unrecognized escape sequence \\", show_char(look()));
                 }
+                r.push_back(c);
                 p++;
                 break;
             }

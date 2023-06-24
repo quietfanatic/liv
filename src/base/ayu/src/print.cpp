@@ -55,7 +55,7 @@ struct Printer {
         return p+1;
     }
     [[nodiscard]]
-    char* pstr (char* p, OldStr s) {
+    char* pstr (char* p, Str s) {
         if (p + s.size() > end) [[unlikely]] p = extend(p, s.size());
         std::memcpy(p, s.data(), s.size());
         return p + s.size();
@@ -83,7 +83,7 @@ struct Printer {
             p = pchar(p, '-');
         }
         if (hex) {
-            p = pstr(p, "0x"sv);
+            p = pstr(p, "0x");
         }
         return print_uint64(p, v < 0 ? -v : v, hex);
     }
@@ -95,7 +95,7 @@ struct Printer {
                 p = pchar(p, '-');
                 v = -v;
             }
-            p = pstr(p, "0x"sv);
+            p = pstr(p, "0x");
         }
         if (end - p < 24) [[unlikely]] p = extend(p, 24);
         auto [ptr, ec] = std::to_chars(
@@ -112,18 +112,18 @@ struct Printer {
         p = pchar(p, '"');
         for (auto c : s)
         switch (c) {
-            case '"': p = pstr(p, "\\\""sv); break;
-            case '\\': p = pstr(p, "\\\\"sv); break;
-            case '\b': p = pstr(p, "\\b"sv); break;
-            case '\f': p = pstr(p, "\\f"sv); break;
+            case '"': p = pstr(p, "\\\""); break;
+            case '\\': p = pstr(p, "\\\\"); break;
+            case '\b': p = pstr(p, "\\b"); break;
+            case '\f': p = pstr(p, "\\f"); break;
             case '\n':
                 if (expand) p = pchar(p, c);
-                else p = pstr(p, "\\n"sv);
+                else p = pstr(p, "\\n");
                 break;
-            case '\r': p = pstr(p, "\\r"sv); break;
+            case '\r': p = pstr(p, "\\r"); break;
             case '\t':
                 if (expand) p = pchar(p, c);
-                else p = pstr(p, "\\t"sv);
+                else p = pstr(p, "\\t");
                 break;
             default: p = pchar(p, c); break;
         }
@@ -131,14 +131,14 @@ struct Printer {
     }
 
     [[nodiscard]]
-    char* print_string (char* p, OldStr s, bool expand) {
+    char* print_string (char* p, Str s, bool expand) {
         if (opts & JSON) {
             return print_quoted(p, s, false);
         }
-        if (s == ""sv) return pstr(p, "\"\""sv);
-        if (s == "null"sv) return pstr(p, "\"null\""sv);
-        if (s == "true"sv) return pstr(p, "\"true\""sv);
-        if (s == "false"sv) return pstr(p, "\"false\""sv);
+        if (s == "") return pstr(p, "\"\"");
+        if (s == "null") return pstr(p, "\"null\"");
+        if (s == "true") return pstr(p, "\"true\"");
+        if (s == "false") return pstr(p, "\"false\"");
 
         switch (s[0]) {
             case ANY_LETTER:
@@ -149,9 +149,7 @@ struct Printer {
         for (auto sp = s.begin(); sp != s.end(); sp++)
         switch (sp[0]) {
             case ':': {
-                 // Don't need to check bounds because s should always be
-                 // NUL-terminated
-                if (sp[1] == ':' || sp[1] == '/') {
+                if (sp + 1 != s.end() && (sp[1] == ':' || sp[1] == '/')) {
                     sp++;
                     continue;
                 }
@@ -168,16 +166,16 @@ struct Printer {
     [[nodiscard]]
     char* print_newline (char* p, uint n) {
         p = pchar(p, '\n');
-        for (; n; n--) p = pstr(p, "    "sv);
+        for (; n; n--) p = pstr(p, "    ");
         return p;
     }
 
     [[nodiscard]]
     char* print_subtree (char* p, TreeRef t, uint ind) {
         switch (t->rep) {
-            case REP_NULL: return pstr(p, "null"sv);
+            case REP_NULL: return pstr(p, "null");
             case REP_BOOL: {
-                OldStr s = t->data.as_bool ? "true"sv : "false"sv;
+                Str s = t->data.as_bool ? "true" : "false";
                 return pstr(p, s);
             }
             case REP_INT64: {
@@ -187,13 +185,13 @@ struct Printer {
             case REP_DOUBLE: {
                 double v = t->data.as_double;
                 if (v != v) {
-                    return pstr(p, opts & JSON ? "null"sv : "+nan"sv);
+                    return pstr(p, opts & JSON ? "null" : "+nan");
                 }
                 else if (v == +inf) {
-                    return pstr(p, opts & JSON ? "1e999"sv : "+inf"sv);
+                    return pstr(p, opts & JSON ? "1e999" : "+inf");
                 }
                 else if (v == -inf) {
-                    return pstr(p, opts & JSON ? "-1e999"sv : "-inf"sv);
+                    return pstr(p, opts & JSON ? "-1e999" : "-inf");
                 }
                 else if (v == 0) {
                     if (1.0/v == -inf) {
@@ -216,7 +214,7 @@ struct Printer {
             case REP_ARRAY: {
                 TreeArraySlice a = tree_Array(t);
                 if (a.empty()) {
-                    return pstr(p, "[]"sv);
+                    return pstr(p, "[]");
                 }
 
                  // Print "small" arrays compactly.
@@ -245,7 +243,7 @@ struct Printer {
                     }
                     p = print_subtree(p, elem, ind + expand);
                     if (show_indices) {
-                        p = pstr(p, "  // "sv);
+                        p = pstr(p, "  // ");
                         p = print_uint64(p, &elem - &a.front(), false);
                     }
                 }
@@ -255,7 +253,7 @@ struct Printer {
             case REP_OBJECT: {
                 TreeObjectSlice o = tree_Object(t);
                 if (o.empty()) {
-                    return pstr(p, "{}"sv);
+                    return pstr(p, "{}");
                 }
 
                  // TODO: Decide what to do if both PREFER flags are set
@@ -280,7 +278,7 @@ struct Printer {
                             p = pchar(p, opts & JSON ? ',' : ' ');
                         }
                     }
-                    p = print_subtree(p, Tree(attr.first), ind + expand);
+                    p = print_string(p, attr.first, ind + expand);
                     p = pchar(p, ':');
                     if (expand) p = pchar(p, ' ');
                     p = print_subtree(p, attr.second, ind + expand);
@@ -293,14 +291,14 @@ struct Printer {
                     std::rethrow_exception(tree_Error(t));
                 }
                 catch (const std::exception& e) {
-                    OldStr name;
+                    Str name;
                     try {
                         name = Type(typeid(e)).name();
                     }
                     catch (const UnknownType&) {
                         name = typeid(e).name();
                     }
-                    return pchar(pstr(pstr(p, "?("sv), name), ')');
+                    return pchar(pstr(pstr(p, "?("), name), ')');
                 }
             }
             default: never();
@@ -325,32 +323,32 @@ static void validate_print_options (PrintOptions opts) {
 
 } using namespace in;
 
-std::string tree_to_string (TreeRef t, PrintOptions opts) {
+UniqueString tree_to_string (TreeRef t, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & PRETTY)) opts |= COMPACT;
     Printer printer (opts);
     char* p = printer.print_tree(printer.start, t);
-    return std::string(printer.start, p - printer.start);
+    return UniqueString(printer.start, p);
 }
 
  // Forget C++ IO and its crummy diagnostics
-void string_to_file (OldStr content, OldStr filename) {
-    FILE* f = fopen_utf8(std::string(filename).c_str(), "wb");
+void string_to_file (Str content, AnyString filename) {
+    FILE* f = fopen_utf8(filename.c_str(), "wb");
     if (!f) {
-        throw X<OpenFailed>(Str(filename), errno);
+        throw X<OpenFailed>(move(filename), errno);
     }
     fwrite(content.data(), 1, content.size(), f);
     if (fclose(f) != 0) {
-        throw X<CloseFailed>(Str(filename), errno);
+        throw X<CloseFailed>(move(filename), errno);
     }
 }
 
-void tree_to_file (TreeRef t, OldStr filename, PrintOptions opts) {
+void tree_to_file (TreeRef t, AnyString filename, PrintOptions opts) {
     validate_print_options(opts);
     if (!(opts & COMPACT)) opts |= PRETTY;
     Printer printer (opts);
     char* p = printer.print_tree(printer.start, t);
-    string_to_file(OldStr(printer.start, p - printer.start), filename);
+    string_to_file(Str(printer.start, p), move(filename));
 }
 
 } using namespace ayu;
@@ -373,29 +371,29 @@ static tap::TestSet tests ("base/ayu/print", []{
 
     test::TestEnvironment env;
 
-    std::string pretty = string_from_file(resource_filename("ayu-test:/print-pretty.ayu"));
-    std::string compact = string_from_file(resource_filename("ayu-test:/print-compact.ayu"));
-    std::string pretty_json = string_from_file(resource_filename("ayu-test:/print-pretty.json"));
-    std::string compact_json = string_from_file(resource_filename("ayu-test:/print-compact.json"));
+    SharedString pretty = string_from_file(resource_filename("ayu-test:/print-pretty.ayu"));
+    SharedString compact = string_from_file(resource_filename("ayu-test:/print-compact.ayu"));
+    SharedString pretty_json = string_from_file(resource_filename("ayu-test:/print-pretty.json"));
+    SharedString compact_json = string_from_file(resource_filename("ayu-test:/print-compact.json"));
      // Remove final LF
     compact.pop_back();
     compact_json.pop_back();
 
     Tree t = tree_from_string(pretty);
 
-    auto test = [](OldStr got, OldStr expected, std::string name){
+    auto test = [](Str got, Str expected, std::string name){
         if (!is(got, expected, name)) {
             usize i = 0;
             for (; i < got.size() && i < expected.size(); i++) {
                 if (got[i] != expected[i]) {
-                    diag(old_cat("First difference at ",
+                    diag(cat("First difference at ",
                         i, " |", got[i], '|', expected[i], '|'
                     ));
                     return;
                 }
             }
             if (got.size() != expected.size()) {
-                diag(old_cat("Size difference got ",
+                diag(cat("Size difference got ",
                     got.size(), " expected ", expected.size()
                 ));
             }

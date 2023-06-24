@@ -166,7 +166,7 @@ void load (const std::vector<Resource>& reses) {
         for (auto res : rs) {
             auto scheme = universe().require_scheme(res.data->name);
             auto filename = scheme->get_file(res.data->name);
-            Tree tree = tree_from_file(filename);
+            Tree tree = tree_from_file(move(filename));
             verify_tree_for_scheme(res, scheme, tree);
             item_from_tree(
                 &res.data->value, tree, Location(res), DELAY_SWIZZLE
@@ -245,7 +245,7 @@ void save (const std::vector<Resource>& reses) {
                     contents{move(contents)},
                     filename{move(filename)}
                 ]{
-                    string_to_file(contents, filename);
+                    string_to_file(contents, move(filename));
                 };
             }
         }
@@ -393,7 +393,7 @@ void reload (const std::vector<Resource>& reses) {
         for (auto res : reses) {
             auto scheme = universe().require_scheme(res.data->name);
             auto filename = scheme->get_file(res.data->name);
-            Tree tree = tree_from_file(filename);
+            Tree tree = tree_from_file(move(filename));
             verify_tree_for_scheme(res, scheme, tree);
              // Do not DELAY_SWIZZLE for reload.  TODO: Forbid reload while a
              // serialization operation is ongoing.

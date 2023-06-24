@@ -20,11 +20,11 @@ enum : PrintOptions {
     VALID_PRINT_OPTION_BITS = COMPACT | PRETTY | JSON
 };
 
-std::string tree_to_string (TreeRef, PrintOptions opts = 0);
+UniqueString tree_to_string (TreeRef, PrintOptions opts = 0);
 
-void string_to_file (OldStr, OldStr filename);
+void string_to_file (Str, AnyString filename);
 
-void tree_to_file (TreeRef, OldStr filename, PrintOptions opts = 0);
+void tree_to_file (TreeRef, AnyString filename, PrintOptions opts = 0);
 
  // Conflicting combination of print options was provided, or it had bits
  // outside of VALID_PRINT_OPTION_BITS.

@@ -197,7 +197,7 @@ Tree::operator TreeObject () const {
     return TreeObject(tree_Object(*this));
 }
 
-const Tree* Tree::attr (OldStr key) const {
+const Tree* Tree::attr (Str key) const {
     if (rep != REP_OBJECT) bad_form(*this, OBJECT);
     for (auto& p : tree_Object(*this)) {
         if (p.first == key) return &p.second;
@@ -209,7 +209,7 @@ const Tree* Tree::elem (usize index) const {
     if (index >= tree_Array(*this).size()) return null;
     return &tree_Array(*this)[index];
 }
-const Tree& Tree::operator[] (OldStr key) const {
+const Tree& Tree::operator[] (Str key) const {
     if (const Tree* r = attr(key)) return *r;
     else throw X<GenericError>(cat(
         "This tree has no attr with key \"", key, '"'
@@ -240,9 +240,7 @@ bool operator == (TreeRef a, TreeRef b) {
             return Str(a->data.as_char_ptr, a->length)
                 == Str(b->data.as_char_ptr, b->length);
         }
-         // Otherwise different reps = different values.  We don't need to
-         // compare REP_SHORTSTRING to REP_LONGSTRING because we guarantee that
-         // REP_LONGSTRING has at least 9 characters.
+         // Otherwise different reps = different values.
         return false;
     }
     else switch (a->rep) {

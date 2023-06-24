@@ -63,7 +63,7 @@ inline void item_to_file (
     const Reference& item, OldStr filename,
     PrintOptions opts = 0, LocationRef loc = Location()
 ) {
-    return tree_to_file(item_to_tree(item, loc), filename, opts);
+    return tree_to_file(item_to_tree(item, loc), Str(filename), opts);
 }
  // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (
