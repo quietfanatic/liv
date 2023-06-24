@@ -1,26 +1,20 @@
 #include "requirements.h"
 
+#include "strings.h"
+#include "utf.h"
+
 #include <iostream>
 
 namespace uni {
 inline namespace requirements {
 
 [[gnu::cold]]
-void throw_requirement_failed (std::source_location loc) {
-    throw RequirementFailed(loc);
-}
-[[gnu::cold]]
 void abort_requirement_failed (std::source_location loc) {
-    std::cerr << RequirementFailed(loc).what() << std::endl;
+    warn_utf8(cat(
+        "ERROR: require() failed at ", loc.file_name(), ':',
+        loc.line(), " in ", loc.function_name()
+    ));
     std::abort();
-}
-
-[[gnu::cold]]
-const char* RequirementFailed::what () const noexcept {
-    mess_cache = "ERROR: require() failed at "s + loc.file_name()
-               + ':' + std::to_string(loc.line())
-               + "\n       in " + loc.function_name();
-    return mess_cache.c_str();
 }
 
 } // requirements
