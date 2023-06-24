@@ -586,19 +586,19 @@ Str IRI::scheme () const {
 }
 Str IRI::authority () const {
     if (!has_authority()) return "";
-    return spec_.slice(colon_ + 3, path_ - (colon_ + 3));
+    return spec_.slice(colon_ + 3, path_);
 }
 Str IRI::path () const {
     if (!has_path()) return "";
-    return spec_.slice(path_, question_ - path_);
+    return spec_.slice(path_, question_);
 }
 Str IRI::query () const {
     if (!has_query()) return "";
-    return spec_.slice(question_ + 1, hash_ - (question_ + 1));
+    return spec_.slice(question_ + 1, hash_);
 }
 Str IRI::fragment () const {
     if (!has_fragment()) return "";
-    return spec_.slice(hash_ + 1, spec_.size() - (hash_ + 1));
+    return spec_.slice(hash_ + 1, spec_.size());
 }
 
 IRI IRI::iri_with_scheme () const {

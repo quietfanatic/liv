@@ -781,13 +781,16 @@ struct ArrayInterface {
         return (*this)[size() - 1];
     }
 
-     // Like substr. but doesn't do bounds checking.
+     // Slice takes two offsets and does not do bounds checking (except in debug
+     // builds).  Unlike operator[], the offsets are allowed to be one off the
+     // end.
     constexpr
-    SelfSlice slice (usize offset, usize length) const {
-        expect(offset <= size() && offset + length <= size());
-        return SelfSlice(data() + offset, length);
+    SelfSlice slice (usize start, usize end) const {
+        expect(start <= size() && end <= size());
+        return SelfSlice(data() + start, end - start);
     }
-     // Like slice, but capped at the end of the contents.
+     // Substr takes an offset and a length, and caps both to the length of the
+     // string.
     constexpr
     SelfSlice substr (usize offset, usize length = usize(-1)) const {
         if (offset >= size()) offset = size();
