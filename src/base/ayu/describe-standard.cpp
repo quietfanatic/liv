@@ -42,8 +42,10 @@ AYU_DESCRIBE(std::string,
     from_tree([](std::string& v, const Tree& t){ v = std::string(Str(t)); })
 )
 AYU_DESCRIBE(std::u16string,
-    to_tree([](const std::u16string& v){ return Tree(OldStr16(v)); }),
-    from_tree([](std::u16string& v, const Tree& t){ v = std::u16string(t); })
+    to_tree([](const std::u16string& v){ return Tree(Str16(v)); }),
+     // Inefficient but I don't really care about std::u16string, I'm just using
+     // it for testing
+    from_tree([](std::u16string& v, const Tree& t){ v = UniqueString16(t); })
 )
 
  // string_view is a reference-like type so it can't be deserialized because the

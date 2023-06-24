@@ -7,7 +7,7 @@
 #include <cstdio>
 
 #include "common.h"
-#include "string.h"
+#include "strings.h"
 
 namespace uni {
 
@@ -19,10 +19,10 @@ namespace uni {
  // UTF-16 surrogtes are encoded as-is into UTF-8.   UTF-16 is native-endian.
 
  // Convert a UTF-8 string into a native-endian UTF-16 string.
-std::u16string to_utf16 (OldStr);
+UniqueString16 to_utf16 (Str);
 
  // Convert a native-endian UTF-16 string into a UTF=8 string.
-std::string from_utf16 (OldStr16);
+UniqueString from_utf16 (Str16);
 
 ///// UTF-8 IO FUNCTIONS
 
@@ -34,9 +34,9 @@ std::FILE* fopen_utf8 (const char* filename, const char* mode = "rb");
  // TODO: These will stop at NUL bytes, fix that.
 void fprint_utf8 (std::FILE* f, OldStr s);
  // Prints to stdout and flushes.
-void print_utf8 (OldStr s);
+void print_utf8 (Str s);
  // Prints to stderr and flushes.
-void warn_utf8 (OldStr s);
+void warn_utf8 (Str s);
 
  // Delete a file
 int remove_utf8 (const char* filename);

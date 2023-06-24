@@ -6,32 +6,9 @@
 namespace uni {
 inline namespace strings {
 
- // The string types are almost exactly the same as the equivalent array types.
- // The only differences are that they can be constructed from a const T*, which
- // is taken to be a C-style NUL-terminated string, and when constructing from a
- // C array they will stop at a NUL terminator (the first element that boolifies
- // to false).  Note that by default these strings are not NUL-terminated.  To
- // get a NUL-terminated string out, either explicitly NUL-terminate them or use
- // c_str().
-template <class T>
-using AnyGenericString = ArrayInterface<ArrayClass::AnyS, T>;
-template <class T>
-using SharedGenericString = ArrayInterface<ArrayClass::SharedS, T>;
-template <class T>
-using UniqueGenericString = ArrayInterface<ArrayClass::UniqueS, T>;
-template <class T>
-using StaticGenericString = ArrayInterface<ArrayClass::StaticS, T>;
-template <class T>
-using GenericStr = ArrayInterface<ArrayClass::SliceS, T>;
-
-using AnyString = AnyGenericString<char>;
-using SharedString = SharedGenericString<char>;
-using UniqueString = UniqueGenericString<char>;
-using StaticString = StaticGenericString<char>;
-using Str = GenericStr<char>;
-
- // Literal suffix for StaticString.  This is probably not necessary, since
- // I finally figured out how to optimize passing string literals to cat().
+ // Literal suffix for StaticString.  This is usually unnecessary, but if you're
+ // passing a string literal to a templated function and get an error message
+ // like "args#0 is not a constant expression", this may help.
 consteval StaticString operator""_s (const char* p, usize s) {
     return StaticString::Static(p, s);
 }

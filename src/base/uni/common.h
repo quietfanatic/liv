@@ -42,6 +42,11 @@ constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 #endif
 constexpr float inf = std::numeric_limits<float>::infinity();
 
+ // Anyone using this header is expected to treat char as UTF-8.
+ // These are not in std:: for some reason
+using char16 = char16_t;
+using char32 = char32_t;
+
 using OldStr = std::string_view;
 using OldStr8 = std::u8string_view;
 using OldStr16 = std::u16string_view;

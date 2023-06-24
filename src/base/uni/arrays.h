@@ -67,6 +67,42 @@ using StaticArray = ArrayInterface<ArrayClass::StaticA, T>;
 template <class T>
 using Slice = ArrayInterface<ArrayClass::SliceA, T>;
 
+ // The string types are almost exactly the same as the equivalent array types.
+ // The only differences are that they can be constructed from a const T*, which
+ // is taken to be a C-style NUL-terminated string, and when constructing from a
+ // C array they will stop at a NUL terminator (the first element that boolifies
+ // to false).  Note that by default these strings are not NUL-terminated.  To
+ // get a NUL-terminated string out, either explicitly NUL-terminate them or use
+ // c_str().
+template <class T>
+using GenericAnyString = ArrayInterface<ArrayClass::AnyS, T>;
+template <class T>
+using GenericSharedString = ArrayInterface<ArrayClass::SharedS, T>;
+template <class T>
+using GenericUniqueString = ArrayInterface<ArrayClass::UniqueS, T>;
+template <class T>
+using GenericStaticString = ArrayInterface<ArrayClass::StaticS, T>;
+template <class T>
+using GenericStr = ArrayInterface<ArrayClass::SliceS, T>;
+
+using AnyString = GenericAnyString<char>;
+using SharedString = GenericSharedString<char>;
+using UniqueString = GenericUniqueString<char>;
+using StaticString = GenericStaticString<char>;
+using Str = GenericStr<char>;
+
+using AnyString16 = GenericAnyString<char16>;
+using SharedString16 = GenericSharedString<char16>;
+using UniqueString16 = GenericUniqueString<char16>;
+using StaticString16 = GenericStaticString<char16>;
+using Str16 = GenericStr<char16>;
+
+using AnyString32 = GenericAnyString<char32>;
+using SharedString32 = GenericSharedString<char32>;
+using UniqueString32 = GenericUniqueString<char32>;
+using StaticString32 = GenericStaticString<char32>;
+using Str32 = GenericStr<char32>;
+
 ///// ARRAYLIKE CONCEPTS
  // A general concept for array-like types.
 template <class A>
@@ -620,7 +656,7 @@ struct ArrayInterface {
      // Okay okay
     ALWAYS_INLINE constexpr
     operator std::basic_string_view<T> () const requires (is_String) {
-        return std::string_view(impl.data, size());
+        return std::basic_string_view<T>(impl.data, size());
     }
     ALWAYS_INLINE constexpr
     operator std::basic_string<T> () const requires (is_String) {
@@ -628,7 +664,9 @@ struct ArrayInterface {
     }
      // Sigh
     ALWAYS_INLINE constexpr
-    operator std::filesystem::path () const requires (is_String) {
+    operator std::filesystem::path () const requires (
+        is_String && sizeof(T) == sizeof(char) && requires (char c, T v) { c = v; }
+    ) {
         return std::filesystem::path(
             reinterpret_cast<const char8_t*>(begin()),
             reinterpret_cast<const char8_t*>(end())

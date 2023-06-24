@@ -117,7 +117,7 @@ struct Tree {
      // plain (not signed or unsigned) chars are represented as strings
     explicit Tree (char v) : Tree(SharedString(1,v)) { }
     explicit Tree (AnyString v);
-    explicit Tree (OldStr16 v); // Converts to UTF8
+    explicit Tree (Str16 v); // Converts to UTF8
 
     explicit Tree (TreeArray v);
     explicit Tree (TreeObject v);
@@ -143,7 +143,7 @@ struct Tree {
      // Warning 2: The Str will be invalidated when this Tree is destructed.
     explicit operator Str () const;
     explicit operator AnyString () const;
-    explicit operator std::u16string () const;
+    explicit operator UniqueString16 () const;
     explicit operator TreeArraySlice () const;
     explicit operator TreeArray () const;
     explicit operator TreeObjectSlice () const;

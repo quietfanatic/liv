@@ -13,7 +13,7 @@
 // this library.  It might let through some invalid authority components.
 //
 // Unlike most URI parsing libraries, this will leave non-ascii UTF-8 as-is,
-// without %-encoding it, which is what makes them IRIs.  This library does not
+// without %-encoding it, which is what makes an IRI.  This library does not
 // validate UTF-8 sequences.  If invalid UTF-8 is given, it will be passed
 // through.
 //
@@ -49,7 +49,7 @@
 // characters have to be % encoding can be application-specific.  Call decode()
 // yourself on the results when you want to decode them.
 //
-// This IRI class is pretty lightweight, with one reference-counted string and
+// The IRI class is pretty lightweight, with one reference-counted string and
 // four uint16s.  16 bytes on 32-bit and 24 bytes on 64-bit.
 
 #pragma once

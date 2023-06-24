@@ -79,7 +79,7 @@ Tree::Tree (AnyString v) :
     v.dematerialize();
 }
  // TODO: Change from_utf16 to return UniqueString
-Tree::Tree (OldStr16 v) : Tree(UniqueString(from_utf16(v))) { }
+Tree::Tree (Str16 v) : Tree(from_utf16(v)) { }
 Tree::Tree (TreeArray v) :
     form(ARRAY), rep(REP_ARRAY), flags(0),
     length(v.size()), data{.as_array_ptr = v.data()}
@@ -177,7 +177,7 @@ Tree::operator AnyString () const {
         default: bad_form(*this, STRING);
     }
 }
-Tree::operator std::u16string () const {
+Tree::operator UniqueString16 () const {
     return to_utf16(Str(*this));
 }
 Tree::operator TreeArraySlice () const {
