@@ -9,7 +9,7 @@
 namespace ayu {
 namespace in {
 
-static usize parse_numbered_name (OldStr name) {
+static usize parse_numbered_name (Str name) {
     if (name.empty() || name[0] != '_') return -1;
     for (usize i = 1; i < name.size(); i++) {
         if (!isdigit(name[i])) return usize(-1);
@@ -17,9 +17,6 @@ static usize parse_numbered_name (OldStr name) {
      // Assuming name is nul-terminated
      // TODO: use std::from_chars
     return atoll(name.data() + 1);
-}
-static std::string print_numbered_name (usize id) {
-    return old_cat('_', id);
 }
 
 struct DocumentLinks {
@@ -42,28 +39,24 @@ struct DocumentLinks {
  // TODO: make sure item is aligned properly
 struct DocumentItemHeader : DocumentLinks {
     usize id = 0;
-    std::string* name_p;
+    AnyString name_;
     Type type;
     DocumentItemHeader (DocumentLinks* links, Type t, usize id) :
         DocumentLinks(links),
         id(id),
-        name_p(null),
+        name_(""),
         type(t)
     { }
-    DocumentItemHeader (DocumentLinks* links, Type t, usize id, std::string&& name) :
+    DocumentItemHeader (DocumentLinks* links, Type t, usize id, AnyString name) :
         DocumentLinks(links),
         id(id),
-        name_p(new std::string(std::move(name))),
+        name_(std::move(name)),
         type(t)
     { }
-    ~DocumentItemHeader () {
-        delete name_p;
-    }
-    OldStr name () {
-        if (!name_p) {
-            name_p = new std::string(print_numbered_name(id));
-        }
-        return *name_p;
+    Str name () {
+         // TODO: Do we really want to cache this?
+        if (!name_) name_ = cat('_', id);
+        return name_;
     }
     Mu* data () {
         return (Mu*)(this + 1);
@@ -85,7 +78,7 @@ struct DocumentData {
 
 struct DocumentItemRef {
     DocumentItemHeader* header;
-    DocumentItemRef (DocumentData* doc, OldStr name) {
+    DocumentItemRef (DocumentData* doc, Str name) {
         for (auto link = doc->items.next; link != &doc->items; link = link->next) {
             auto h = static_cast<DocumentItemHeader*>(link);
             if (h->name() == name) {
@@ -109,26 +102,26 @@ void* Document::allocate (Type t) {
     return header+1;
 }
 
-void* Document::allocate_named (Type t, OldStr name) {
-    usize id = parse_numbered_name(name);
+void* Document::allocate_named (Type t, AnyString name) {
+    if (name.empty()) throw X<DocumentInvalidName>(std::move(name));
 
-    if (name.empty()) throw X<DocumentInvalidName>(std::string(name));
+    usize id = parse_numbered_name(name);
     if (id == usize(-1) && name[0] == '_') {
-        throw X<DocumentInvalidName>(std::string(name));
+        throw X<DocumentInvalidName>(std::move(name));
     }
-    auto ref = DocumentItemRef(data, std::string(name));
-    if (ref.header) throw X<DocumentDuplicateName>(std::string(name));
+    auto ref = DocumentItemRef(data, name);
+    if (ref.header) throw X<DocumentDuplicateName>(std::move(name));
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::string(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::move(name));
         return header+1;
     }
     else { // Actually a numbered item
         if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id"s);
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::string(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id, std::move(name));
         return header+1;
     }
 }
@@ -150,8 +143,8 @@ void Document::delete_ (Type t, Mu* p) {
     free(header);
 }
 
-void Document::delete_named (OldStr name) {
-    auto ref = DocumentItemRef(data, std::string(name));
+void Document::delete_named (Str name) {
+    auto ref = DocumentItemRef(data, name);
     if (ref.header) {
         if (ref.header->type) {
             ref.header->type.destroy(ref.header->data());
@@ -160,7 +153,7 @@ void Document::delete_named (OldStr name) {
         free(ref.header);
         return;
     }
-    else throw X<DocumentDeleteMissing>(std::string(name));
+    else throw X<DocumentDeleteMissing>(name);
 }
 
 void Document::deallocate (void* p) {
@@ -186,7 +179,7 @@ AYU_DESCRIBE(ayu::Document,
             new (v.data) DocumentData;
             for (auto& k : ks) {
                 if (k == "_next_id"sv) continue;
-                v.allocate_named(Type(), k);
+                v.allocate_named(Type(), AnyString(k));
             }
         }
     )),
@@ -195,7 +188,7 @@ AYU_DESCRIBE(ayu::Document,
             return Reference(&v.data->next_id);
         }
         else {
-            auto ref = DocumentItemRef(v.data, std::string(k));
+            auto ref = DocumentItemRef(v.data, AnyString(k));
             if (ref.header) {
                 return Reference(
                     v, variable(std::move(ref), pass_through_addressable)

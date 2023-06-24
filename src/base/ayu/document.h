@@ -32,8 +32,8 @@ struct Document {
 
      // This may be linear over the number of items in the document.
     template <class T, class... Args>
-    T* new_named (OldStr name, Args&&... args) {
-        void* p = allocate_named(Type::CppType<T>(), name);
+    T* new_named (AnyString name, Args&&... args) {
+        void* p = allocate_named(Type::CppType<T>(), std::move(name));
         try {
             return new (p) T (std::forward<Args...>(args...));
         }
@@ -52,9 +52,9 @@ struct Document {
     }
 
     void* allocate (Type);
-    void* allocate_named (Type, OldStr);
+    void* allocate_named (Type, AnyString);
     void delete_ (Type, Mu*);
-    void delete_named (OldStr);
+    void delete_named (Str);
 
     void deallocate (void* p);
 };
@@ -64,12 +64,12 @@ struct Document {
 struct DocumentError : Error { };
  // Tried to create a document item with an illegal name.
 struct DocumentInvalidName : DocumentError {
-    std::string name;
+    AnyString name;
 };
  // Tried to create a document item with a name that's already in use in
  // this document.
 struct DocumentDuplicateName : DocumentError {
-    std::string name;
+    AnyString name;
 };
  // Tried to delete a document item, but the wrong type was given during
  // deletion.
@@ -80,7 +80,7 @@ struct DocumentDeleteWrongType : DocumentError {
  // Tried to delete a document item by name, but the given name isn't in
  // this document.
 struct DocumentDeleteMissing : DocumentError {
-    std::string name;
+    AnyString name;
 };
 
 } // namespace ayu
