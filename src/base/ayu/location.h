@@ -34,9 +34,8 @@ struct Location {
      // Constructs a root location from a Resource.
     explicit Location (Resource);
      // Constructs a location based on another one with an added attribute key
-     // or element index.  TODO: Take a Tree
-    Location (LocationRef parent, std::string&& key);
-    Location (LocationRef parent, OldStr key) : Location(parent, std::string(key)) { }
+     // or element index.
+    Location (LocationRef parent, AnyString key);
     Location (LocationRef parent, usize index);
      // Parses an IRI into a location.  All of the IRI up to the fragment will
      // be used as the resource name for the root, and the fragment will be
@@ -54,7 +53,7 @@ struct Location {
      // Returns null if this is a root.
     const Location* parent () const;
      // Returns null if this location is a root or has an index.
-    const std::string* key () const;
+    const AnyString* key () const;
      // Returns null if this location is a root or has a key.
     const usize* index () const;
      // Returns 1 for root, plus 1 for every key or index in the list.

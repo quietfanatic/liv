@@ -244,7 +244,7 @@ static Location trav_location (const Traversal& trav) {
         switch (trav.op) {
             case DELEGATE: return parent;
             case ATTR: case ATTR_FUNC:
-                return Location(parent, *trav.key);
+                return Location(parent, AnyString(*trav.key));
             case ELEM: case ELEM_FUNC:
                 return Location(parent, trav.index);
             default: never();

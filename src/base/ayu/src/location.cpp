@@ -32,9 +32,9 @@ struct RootLocation : LocationData {
 
 struct KeyLocation : LocationData {
     Location parent;
-    std::string key;
-    KeyLocation (Location p, std::string&& k) :
-        LocationData(KEY), parent(p), key(k)
+    AnyString key;
+    KeyLocation (Location p, AnyString&& k) :
+        LocationData(KEY), parent(p), key(std::move(k))
     { }
 };
 struct IndexLocation : LocationData {
@@ -78,7 +78,7 @@ void delete_LocationData (LocationData* p) {
 Location::Location (Resource res) :
     data(new RootLocation(std::move(res)))
 { }
-Location::Location (LocationRef p, std::string&& k) :
+Location::Location (LocationRef p, AnyString k) :
     data(new KeyLocation(p, std::move(k)))
 { }
 Location::Location (LocationRef p, usize i) :
@@ -88,18 +88,18 @@ Location::Location (LocationRef p, usize i) :
 Location::Location (const IRI& iri) {
     if (!iri) return;
     Location self = Location(new RootLocation(iri.iri_without_fragment()));
-    OldStr fragment = iri.fragment();
+    Str fragment = iri.fragment();
     if (!fragment.empty()) {
         usize segment_start = 0;
         bool segment_is_string = false;
         for (usize i = 0; i < fragment.size()+1; i++) {
             switch (i == fragment.size() ? '/' : fragment[i]) {
                 case '/': {
-                    OldStr segment = fragment.substr(
+                    Str segment = fragment.substr(
                         segment_start, i - segment_start
                     );
                     if (segment_is_string) {
-                        self = Location(self, std::string(iri::decode(segment)));
+                        self = Location(self, iri::decode(segment));
                     }
                     else if (segment.size() == 0) {
                          // Ignore
@@ -110,7 +110,7 @@ Location::Location (const IRI& iri) {
                             segment.begin(), segment.end(), index
                         );
                         if (ptr == 0) {
-                            throw X<GenericError>("Index segment too big?"s);
+                            throw X<GenericError>("Index segment too big?");
                         }
                         self = Location(self, index);
                     }
@@ -135,12 +135,12 @@ Location::Location (const IRI& iri) {
 
 IRI Location::as_iri () const {
     if (!*this) return IRI();
-    std::string fragment;
+    UniqueString fragment;
     for (const Location* l = this;; l = l->parent()) {
         expect(l);
         if (!l->data) {
-            if (fragment.empty()) return IRI("anonymous-item:"sv);
-            else return IRI(old_cat("anonymous-item:"sv, "#", fragment));
+            if (fragment.empty()) return IRI("anonymous-item:");
+            else return IRI(cat("anonymous-item:", "#", fragment));
         }
         else switch (l->data->form) {
             case ROOT: {
@@ -148,27 +148,27 @@ IRI Location::as_iri () const {
                     l->data.p
                 )->resource.name();
                 if (fragment.empty()) return base;
-                else return IRI(old_cat('#', fragment), base);
+                else return IRI(cat('#', fragment), base);
             }
             case KEY: {
-                OldStr key = static_cast<KeyLocation*>(
+                Str key = static_cast<KeyLocation*>(
                     l->data.p
                 )->key;
-                std::string segment;
+                UniqueString segment;
                 if (key.empty() || key[0] == '\'' || std::isdigit(key[0])) {
-                    segment = old_cat('\'', iri::encode(key));
+                    segment = cat('\'', iri::encode(key));
                 }
                 else segment = iri::encode(key);
                 if (fragment.empty()) fragment = segment;
-                else fragment = old_cat(segment, '/', fragment);
+                else fragment = cat(segment, '/', fragment);
                 break;
             }
             case INDEX: {
                 usize index = static_cast<IndexLocation*>(
                     l->data.p
                 )->index;
-                if (fragment.empty()) fragment = old_cat(index);
-                else fragment = old_cat(index, '/', fragment);
+                if (fragment.empty()) fragment = cat(index);
+                else fragment = cat(index, '/', fragment);
                 break;
             }
             case ERROR_LOC: rethrow(*l);
@@ -194,7 +194,7 @@ const Location* Location::parent () const {
         default: never();
     }
 }
-const std::string* Location::key () const {
+const AnyString* Location::key () const {
     if (!data) return null;
     switch (data->form) {
         case KEY: return &static_cast<KeyLocation*>(data.p)->key;

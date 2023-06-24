@@ -27,7 +27,7 @@ bool scan_trav (
                 bool r = false;
                  // TODO: Avoid string copy
                 ser_attr(trav, OldStr(k), ACR_READ, [&](const Traversal& child){
-                    r = scan_trav(child, Location(loc, OldStr(k)), cb);
+                    r = scan_trav(child, Location(loc, k), cb);
                 });
                 if (r) return true;
             }
