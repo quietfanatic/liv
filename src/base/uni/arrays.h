@@ -209,17 +209,6 @@ struct ArrayInterface {
             set_as_copy(o.impl.data, o.size());
         }
     }
-     // Warn about moving from possibly-owned array to Slice, since that's
-     // likely a mistake.
-    template <ArrayClass ac2> [[deprecated(
-        "Warning: Moving from possibly-owned array to Slice could cause the "
-        "Slice to reference stale data."
-    )]] constexpr
-    ArrayInterface (ArrayInterface<ac2, T>&& o) requires (
-        is_Slice && !o.trivially_copyable
-    ) {
-        set_as_unowned(o.impl.data, o.size());
-    }
 
      // Copy construct.  Always copies the buffer for UniqueArray, never copies
      // the buffer for other array classes.
@@ -731,7 +720,8 @@ struct ArrayInterface {
      // UniqueArray.
      //
      // Note: Using &array[array.size()] to get a pointer off the end of the
-     // array is NOT allowed.  Use array.end() instead.
+     // array is NOT allowed.  Use array.end() instead, or array.data() +
+     // array.size().
     constexpr
     const T& at (usize i) const {
         require(i < size());
