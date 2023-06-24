@@ -15,9 +15,10 @@
 
 namespace ayu {
 
-OldStr Type::name () const {
+Str Type::name () const {
+     // TODO: if (!*this) return "";
     auto desc = in::DescriptionPrivate::get(*this);
-    if (!desc) return OldStr();
+    if (!desc) return "";
     return in::get_description_name(desc);
 }
 
@@ -160,7 +161,7 @@ namespace in {
 
 struct Registry {
     std::unordered_map<std::type_index, const Description*> by_cpp_type;
-    std::unordered_map<OldStr, const Description*> by_name;
+    std::unordered_map<Str, const Description*> by_name;
     bool initted = false;
 };
 
@@ -199,17 +200,17 @@ const Description* need_description_for_type_info (const std::type_info& t) {
     else throw X<UnknownType>(t);
 }
 
-const Description* get_description_for_name (OldStr name) {
+const Description* get_description_for_name (Str name) {
     init_names();
     auto& ds = registry().by_name;
     auto iter = ds.find(name);
     if (iter != ds.end()) return iter->second;
     else return null;
 }
-const Description* need_description_for_name (OldStr name) {
+const Description* need_description_for_name (Str name) {
     auto desc = get_description_for_name(name);
     if (desc) return desc;
-    else throw X<TypeNotFound>(std::string(name));
+    else throw X<TypeNotFound>(name);
 }
 void throw_UnknownType (const std::type_info& t) {
     throw X<UnknownType>(t);
@@ -228,17 +229,17 @@ bool is_valid_type (const Description* desc) {
     return false;
 }
 
-std::string get_demangled_name (const std::type_info& t) {
+UniqueString get_demangled_name (const std::type_info& t) {
 #if __has_include(<cxxabi.h>)
     int status;
     char* demangled = abi::__cxa_demangle(t.name(), nullptr, nullptr, &status);
-    if (status != 0) return old_cat("?(Failed to demangle "sv, t.name(), ')');
-    std::string r = const_cast<const char*>(demangled);
+    if (status != 0) return cat("?(Failed to demangle ", t.name(), ')');
+    UniqueString r = demangled;
     free(demangled);
     return r;
 #else
      // Probably MSVC, which automatically demangles.
-    return std::string(t.name());
+    return UniqueString(t.name());
 #endif
 }
 
@@ -249,16 +250,16 @@ AYU_DESCRIBE(ayu::Type,
     values(
         value(null, Type())
     ),
-    delegate(mixed_funcs<std::string>(
+    delegate(mixed_funcs<AnyString>(
         [](const Type& v){
             if (v.readonly()) {
-                return old_cat("(readonly)", v.name());
+                return AnyString(cat("(readonly)", v.name()));
             }
-            else return std::string(v.name());
+            else return AnyString(v.name());
         },
-        [](Type& v, const std::string& m){
-            if (m.starts_with("(readonly)")) {
-                v = Type(OldStr(m).substr(10), true);
+        [](Type& v, const AnyString& m){
+            if (m.substr(0,10) == "(readonly)") {
+                v = Type(m.substr(10), true);
             }
             else v = Type(m);
         }
@@ -272,7 +273,7 @@ AYU_DESCRIBE(ayu::TypeError,
 AYU_DESCRIBE(ayu::UnknownType,
     elems(
         elem(base<TypeError>(), inherit),
-        elem(value_func<std::string>(
+        elem(value_func<UniqueString>(
             [](const ayu::UnknownType& v){ return get_demangled_name(v.cpp_type); }
         ))
     )

@@ -29,8 +29,8 @@ namespace ayu::in {
     const Description* register_description (const Description*);
     const Description* get_description_for_type_info (const std::type_info&);
     const Description* need_description_for_type_info (const std::type_info&);
-    const Description* get_description_for_name (OldStr);
-    const Description* need_description_for_name (OldStr);
+    const Description* get_description_for_name (Str);
+    const Description* need_description_for_name (Str);
     [[noreturn]] void throw_UnknownType (const std::type_info&);
 
     OldStr get_description_name (const Description*);
