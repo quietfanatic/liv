@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "../uni/string.h"
 #include "common.h"
 #include "exception.h"
 #include "describe-base.h"

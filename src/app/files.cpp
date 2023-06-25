@@ -84,7 +84,7 @@ FilesToOpen expand_files (
     }
 }
 
-std::vector<std::string> read_list (OldStr list_filename) {
+std::vector<std::string> read_list (Str list_filename) {
     std::vector<std::string> lines {""};
     if (list_filename == "-") {
          // TODO: Make ayu support stdin for string_from_file.

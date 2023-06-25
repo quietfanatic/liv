@@ -11,14 +11,13 @@ using namespace in;
 const char* ExceptionBase::what () const noexcept {
     if (mess_cache.empty()) {
         Pointer p = ptr();
-        mess_cache = old_cat('[', p.type.name(), ' ', item_to_string(p), ']');
+        mess_cache = cat('[', p.type.name(), ' ', item_to_string(p), "]\0");
     }
-    return mess_cache.c_str();
+    return mess_cache.data();
 }
 
-void in::unrecoverable_exception (std::exception& e, OldStr when) {
-    std::cerr << "ERROR: Unrecoverable exception "sv << when
-              << ": "sv << e.what() << std::endl;
+void in::unrecoverable_exception (std::exception& e, Str when) {
+    warn_utf8(cat("ERROR: Unrecoverable exception ", when, ": ", e.what(), '\n'));
     std::abort();
 }
 

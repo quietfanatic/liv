@@ -13,7 +13,7 @@ namespace ayu {
 struct ExceptionBase : std::exception {
      // Gotta cache the generated error message or the exception handling
      // system will reference stack garbage.
-    mutable std::string mess_cache;
+    mutable UniqueString mess_cache;
      // Calls item_to_string on whatever the error type is.
     const char* what () const noexcept final;
     virtual Pointer ptr () const noexcept = 0;
@@ -45,7 +45,7 @@ namespace in {
  // Called when an exception is thrown in a place where the library can't
  // properly clean up after itself, such as when a resource value throws
  // from its destructor.
-[[noreturn]] void unrecoverable_exception (std::exception& e, OldStr when);
+[[noreturn]] void unrecoverable_exception (std::exception& e, Str when);
 
 } // namespace in
 

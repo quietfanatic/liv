@@ -144,7 +144,7 @@ void App::open_files (std::vector<std::string>&& files) {
     ));
 }
 
-void App::open_list (OldStr list_filename) {
+void App::open_list (Str list_filename) {
     return open_files(read_list(list_filename));
 }
 
@@ -185,7 +185,7 @@ static tap::TestSet tests ("app/app", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());
-    std::string exe_folder = base;
+    UniqueString exe_folder = base;
     SDL_free(base);
 
     App app;
@@ -193,8 +193,8 @@ static tap::TestSet tests ("app/app", []{
     //app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            ayu::old_cat(exe_folder, "/res/base/glow/test/image.png"sv),
-            ayu::old_cat(exe_folder, "/res/base/glow/test/image2.png"sv)
+            ayu::cat(exe_folder, "/res/base/glow/test/image.png"),
+            ayu::cat(exe_folder, "/res/base/glow/test/image2.png")
         });
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));

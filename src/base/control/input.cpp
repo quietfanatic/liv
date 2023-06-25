@@ -229,17 +229,17 @@ AYU_DESCRIBE(control::Input,
 static tap::TestSet tests ("base/control/input", []{
     using namespace tap;
 
-    auto test2 = [](OldStr s, Input expect, OldStr s2){
+    auto test2 = [](Str s, Input expect, Str s2){
         Input got;
         ayu::item_from_string(&got, s);
-        is(got.type, expect.type, ayu::old_cat(s, " - type is correct"));
-        is(got.ctrl, expect.ctrl, ayu::old_cat(s, " - ctrl is correct"));
-        is(got.alt, expect.alt, ayu::old_cat(s, " - alt is correct"));
-        is(got.shift, expect.shift, ayu::old_cat(s, " - shift is correct"));
-        is(got.code, expect.code, ayu::old_cat(s, " - code is correct"));
-        is(ayu::item_to_string(&expect), s2, ayu::old_cat(s, " - item_to_string"));
+        is(got.type, expect.type, uni::cat(s, " - type is correct"));
+        is(got.ctrl, expect.ctrl, uni::cat(s, " - ctrl is correct"));
+        is(got.alt, expect.alt, uni::cat(s, " - alt is correct"));
+        is(got.shift, expect.shift, uni::cat(s, " - shift is correct"));
+        is(got.code, expect.code, uni::cat(s, " - code is correct"));
+        is(ayu::item_to_string(&expect), s2, uni::cat(s, " - item_to_string"));
     };
-    auto test = [&](OldStr s, Input expect){
+    auto test = [&](Str s, Input expect){
         test2(s, expect, s);
     };
     test("[]", {NONE, 0, 0, 0, 0});

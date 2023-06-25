@@ -1,6 +1,5 @@
 #ifndef tap_disable_tests
 #include "../tap/tap.h"
-#include "../uni/string.h"
 #include "floating.h"
 
 using namespace geo;

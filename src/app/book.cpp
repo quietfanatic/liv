@@ -211,22 +211,22 @@ bool Book::draw_if_needed () {
     else {
         if (block.count() > 1) {
             if (size(visible) == 1) {
-                title = ayu::old_cat('[', visible.l+1);
+                title = uni::cat('[', visible.l+1);
             }
             else if (size(visible) == 2) {
-                title = ayu::old_cat('[', visible.l+1, ',', visible.r+1 - 1);
+                title = uni::cat('[', visible.l+1, ',', visible.r+1 - 1);
             }
             else {
-                title = ayu::old_cat('[', visible.l+1, '-', visible.r+1 - 1);
+                title = uni::cat('[', visible.l+1, '-', visible.r+1 - 1);
             }
-            title = ayu::old_cat(title, '/', block.count(), "] ");
+            title = uni::cat(title, '/', block.count(), "] ");
         }
          // TODO: Merge filenames
         title += block.get(visible.l)->filename;
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our floats to half-integers, so this is fine.
         if (layout.zoom != 1) {
-            title = ayu::old_cat(title, " (", geo::round(layout.zoom * 100), "%)");
+            title = uni::cat(title, " (", geo::round(layout.zoom * 100), "%)");
         }
     }
     SDL_SetWindowTitle(window, title.c_str());
@@ -274,8 +274,8 @@ static tap::TestSet tests ("app/book", []{
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, FilesToOpen{{
-        ayu::old_cat(exe_folder, "/res/base/glow/test/image.png"sv),
-        ayu::old_cat(exe_folder, "/res/base/glow/test/image2.png"sv)
+        uni::cat(exe_folder, "/res/base/glow/test/image.png"sv),
+        uni::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
     }});
 
     book.draw_if_needed();
