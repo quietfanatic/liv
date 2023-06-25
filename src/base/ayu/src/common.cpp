@@ -10,18 +10,19 @@
 namespace ayu {
 using namespace in;
 
-void dump_refs (const std::vector<Reference>& rs) {
+void dump_refs (Slice<Reference> rs) {
     switch (rs.size()) {
-        case 0: warn_utf8("[]\n"sv); break;
+        case 0: warn_utf8("[]\n"); break;
         case 1: warn_utf8(item_to_string(rs[0])); break;
         default: {
-            std::string r = "["s;
-            r += item_to_string(rs[0]);
+            UniqueString r = "[";
+            r.append(item_to_string(rs[0]));
             for (usize i = 1; i < rs.size(); i++) {
-                r += ' ';
-                r += item_to_string(rs[i]);
+                r.push_back(' ');
+                r.append(item_to_string(rs[i]));
             }
-            warn_utf8(r += "]\n"sv);
+            r.append("]\n");
+            warn_utf8(r);
             break;
         }
     }

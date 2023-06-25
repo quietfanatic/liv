@@ -9,7 +9,6 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <vector>
 #include "../uni/arrays.h"
 #include "../uni/callback-ref.h"
 #include "../uni/common.h"
@@ -55,7 +54,7 @@ struct Mu;
 
 ///// UTILITY
 
-void dump_refs (const std::vector<Reference>&);
+void dump_refs (Slice<Reference>);
  // Primarily for debugging.  Prints item_to_string(Reference(&v)) to stderr
 template <class... Args>
 void dump (const Args&... v) {
