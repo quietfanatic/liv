@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <vector>
 #include "../base/geo/vec.h"
 #include "../base/uni/strings.h"
 #include "../base/wind/passive_loop.h"

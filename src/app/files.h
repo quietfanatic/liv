@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include "../base/uni/common.h"
 #include "../base/uni/strings.h"
 #include "common.h"

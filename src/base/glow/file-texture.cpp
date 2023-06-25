@@ -163,7 +163,7 @@ static tap::TestSet tests ("base/glow/file-texture", []{
     auto size = tex.size();
     is(size, IVec{7, 5}, "Created texture has correct size");
 
-    std::vector<RGBA8> got_pixels (area(size));
+    UniqueArray<RGBA8> got_pixels (area(size));
     glGetTexImage(tex.target, 0, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
     is(got_pixels[10], RGBA8(0x2674dbff), "Created texture has correct content");
 

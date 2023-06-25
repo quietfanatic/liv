@@ -134,7 +134,9 @@ void main () {
              // really complicated and expensive.  So we're clamping the output
              // instead.  It doesn't always preserve the first derivative, but
              // when it doesn't, it's when the image had a sharp edge anyway, so
-             // it looks fine.
+             // it looks fine.  This is also not guaranteed to preserve the
+             // overall color distribution, but from my observations there's no
+             // visible difference.
             if (u_interpolation_mode == SMART_CUBIC) {
                 color = clamp(color,
                     min(min(s11, s12), min(s21, s22)),

@@ -210,7 +210,7 @@ static tap::TestSet tests ("base/glow/program", []{
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }, "glDrawArrays");
 
-    std::vector<RGBA8> expected_pixels (area(env.size));
+    UniqueArray<RGBA8> expected_pixels (area(env.size));
     for (int y = 0; y < env.size.y; y++)
     for (int x = 0; x < env.size.x; x++) {
         if (y >= env.size.y / 4 && y < env.size.y * 3 / 4
@@ -222,7 +222,7 @@ static tap::TestSet tests ("base/glow/program", []{
         }
     }
 
-    std::vector<RGBA8> got_pixels (area(env.size));
+    UniqueArray<RGBA8> got_pixels (area(env.size));
     glFinish();
     glReadPixels(0, 0, env.size.x, env.size.y, GL_RGBA, GL_UNSIGNED_BYTE, got_pixels.data());
 

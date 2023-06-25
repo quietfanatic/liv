@@ -19,7 +19,7 @@ struct Shader {
 };
 
 struct Program {
-    std::vector<Shader*> shaders;
+    UniqueArray<Shader*> shaders;
 
     virtual void Program_before_link () { }
     virtual void Program_after_link () { }

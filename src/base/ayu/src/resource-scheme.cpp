@@ -1,7 +1,6 @@
 #include "../resource-scheme.h"
 
 #include <cassert>
-#include <vector>
 #include "../describe.h"
 #include "char-cases-private.h"
 #include "universe-private.h"

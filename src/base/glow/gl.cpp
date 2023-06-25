@@ -10,7 +10,7 @@ using namespace std::literals;
 namespace glow {
 
 struct GLFunctionRegistry {
-    std::vector<std::pair<void*, const char*>> to_init;
+    UniqueArray<std::pair<void*, const char*>> to_init;
     bool initted = false;
 };
 static GLFunctionRegistry& registry () {
