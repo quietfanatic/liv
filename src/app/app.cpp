@@ -138,14 +138,14 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
     );
 }
 
-void App::open_files (std::vector<std::string>&& files) {
+void App::open_files (AnyArray<AnyString> files) {
     add_book(*this, std::make_unique<Book>(
         *this, expand_files(settings, move(files))
     ));
 }
 
-void App::open_list (Str list_filename) {
-    return open_files(read_list(list_filename));
+void App::open_list (AnyString list_filename) {
+    return open_files(read_list(move(list_filename)));
 }
 
 void App::close_book (Book* book) {

@@ -28,11 +28,11 @@ struct LayoutParams {
 // page coordinates, without zoom or offset applied.
 struct SpreadPage {
     Page* page;
-    Vec offset;
+    Vec offset = GNAN;
 };
 
 struct Spread {
-    std::vector<SpreadPage> pages;
+    UniqueArray<SpreadPage> pages;
     Vec size;
      // Uses small_align and large_align.  PageBlock is not const because it'll
      // be sent load_page messages.

@@ -15,7 +15,7 @@ PageParams::PageParams (const Settings* settings) :
     interpolation_mode(settings->get(&PageSettings::interpolation_mode))
 { }
 
-Page::Page (std::string&& filename) :
+Page::Page (AnyString filename) :
     filename(move(filename))
 { }
 Page::~Page () { }
@@ -30,9 +30,10 @@ void Page::load () {
         estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     }
     catch (std::exception& e) {
-        ayu::warn_utf8(
-            "Uncaught exception while loading " + filename
-            + ": " + e.what() + "\n");
+        ayu::warn_utf8(cat(
+            "Uncaught exception while loading ", filename,
+            ": ", e.what(), "\n"
+        ));
         load_failed = true;
     }
 }
@@ -107,7 +108,7 @@ static tap::TestSet tests ("app/page", []{
     using namespace tap;
 
     char* base = require_sdl(SDL_GetBasePath());
-    std::string exe_folder = base;
+    UniqueString exe_folder = base;
     SDL_free(base);
 
     IVec test_size = {120, 120};
@@ -122,7 +123,7 @@ static tap::TestSet tests ("app/page", []{
     SDL_MinimizeWindow(window);
     glow::init();
 
-    Page page (exe_folder + "/res/base/glow/test/image.png");
+    Page page (cat(exe_folder, "/res/base/glow/test/image.png"));
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");

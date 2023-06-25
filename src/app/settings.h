@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
+#include <optional>
 #include "../base/control/command.h"
 #include "../base/control/input.h"
 #include "../base/geo/vec.h"
 #include "../base/glow/colors.h"
 #include "../base/uni/common.h"
+#include "../base/uni/strings.h"
 #include "common.h"
 
 namespace app {
@@ -65,7 +66,7 @@ struct ControlSettings {
     std::optional<float> drag_speed;
 };
 struct FilesSettings {
-    std::optional<std::set<std::string>> supported_extensions;
+    std::optional<std::set<AnyString>> supported_extensions;
 };
 struct MemorySettings {
     std::optional<uint32> preload_ahead;
@@ -79,7 +80,7 @@ struct Settings :
     WindowSettings, LayoutSettings, PageSettings,
     ControlSettings, FilesSettings, MemorySettings
 {
-    std::vector<Mapping> mappings;
+    UniqueArray<Mapping> mappings;
     template <class T, class Category>
     const T& get (std::optional<T> Category::*) const;
 };

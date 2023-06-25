@@ -21,23 +21,21 @@ int main (int argc, char** argv) {
 
     tap::allow_testing(argc, argv);
 
-    std::vector<std::string> args;
+    UniqueArray<AnyString> args;
     bool list = false;
     bool done_flags = false;
     for (int i = 1; i < argc; i++) {
-        if (!done_flags && argv[i][0] == '-') {
-            if (argv[i] == "--"sv) {
+        auto arg = StaticString::Static(argv[i]);
+        if (!done_flags && arg && arg[0] == '-' && arg != "-") {
+            if (arg == "--") {
                 done_flags = true;
             }
-            else if (argv[i] == "-"sv) {
-                args.emplace_back(argv[i]);
-            }
-            else if (argv[i] == "--list"sv) {
+            else if (arg == "--list") {
                 list = true;
             }
-            else throw ayu::X<ayu::GenericError>(cat("Unrecognized option ", argv[i]));
+            else throw ayu::X<ayu::GenericError>(cat("Unrecognized option ", arg));
         }
-        else args.emplace_back(argv[i]);
+        else args.emplace_back(arg);
     }
 
     App app;

@@ -8,11 +8,11 @@
 namespace app {
 
 FilesToOpen expand_files (
-    const Settings* settings, std::vector<std::string>&& specified
+    const Settings* settings, UniqueArray<AnyString>&& specified
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
 
-    if (size(specified) == 1 &&
+    if (specified.size() == 1 &&
         fs::exists(specified[0]) &&
         !fs::is_directory(specified[0])
     ) {
@@ -20,17 +20,15 @@ FilesToOpen expand_files (
          // everything else in the same folder as the file (but not recursively)
         auto folder_p = fs::path(specified[0]).remove_filename();
         FilesToOpen r;
-         // std::u8string was a terrible idea
-        r.folder = reinterpret_cast<std::string&&>(move(folder_p.u8string()));
+        r.folder = AnyString(folder_p.u8string());
         for (auto& entry : fs::directory_iterator(folder_p)) {
-            std::u8string u8name = entry.path().u8string();
-            std::string& name = reinterpret_cast<std::string&>(u8name);
-            Str extension;
-            usize dotpos = name.rfind('.');
-            if (dotpos != std::string::npos) {
-                extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
+            auto name = AnyString(entry.path().u8string());
+            usize i;
+            for (i = name.size(); i > 0; --i) {
+                if (name[i-1] == '.') break;
             }
-            if (!extensions.count(std::string(extension))) continue;
+            Str ext = i ? name.substr(i) : "";
+            if (!extensions.count(StaticString::Static(ext))) continue;
             r.files.emplace_back(move(name));
         }
         std::sort(
@@ -38,9 +36,9 @@ FilesToOpen expand_files (
         );
          // Start the book open to the actual file specified.
         r.start_index = usize(-1);
-        for (usize i = 0; i < size(r.files); i++) {
-            if (r.files[i] == specified[0]) {
-                r.start_index = i;
+        for (auto& file : r.files) {
+            if (file == specified[0]) {
+                r.start_index = &file - r.files.begin();
                 break;
             }
         }
@@ -56,16 +54,15 @@ FilesToOpen expand_files (
         FilesToOpen r;
         for (auto& file : specified) {
             if (fs::is_directory(file)) {
-                usize subfiles_begin = size(r.files);
+                usize subfiles_begin = r.files.size();
                 for (auto& entry : fs::recursive_directory_iterator(file)) {
-                    std::u8string u8name = entry.path().u8string();
-                    std::string& name = reinterpret_cast<std::string&>(u8name);
-                    Str extension;
-                    usize dotpos = name.rfind('.');
-                    if (dotpos != std::string::npos) {
-                        extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
+                    auto name = AnyString(entry.path().u8string());
+                    usize i;
+                    for (i = name.size(); i > 0; --i) {
+                        if (name[i-1] == '.') break;
                     }
-                    if (!extensions.count(std::string(extension))) continue;
+                    Str ext = i ? name.substr(i) : "";
+                    if (!extensions.count(StaticString::Static(ext))) continue;
                     r.files.emplace_back(move(name));
                 }
                 std::sort(
@@ -84,8 +81,8 @@ FilesToOpen expand_files (
     }
 }
 
-std::vector<std::string> read_list (Str list_filename) {
-    std::vector<std::string> lines {""};
+UniqueArray<AnyString> read_list (AnyString list_filename) {
+    UniqueArray<AnyString> lines {""};
     if (list_filename == "-") {
          // TODO: Make ayu support stdin for string_from_file.
         for (;;) {
@@ -96,11 +93,11 @@ std::vector<std::string> read_list (Str list_filename) {
                     lines.emplace_back();
                 }
             }
-            else lines.back() += char(c);
+            else lines.back().push_back(c);
         }
     }
     else {
-        for (char c : ayu::string_from_file(Str(list_filename))) {
+        for (char c : ayu::string_from_file(list_filename)) {
             if (c == '\n') {
                 if (lines.back() != "") {
                     lines.emplace_back();

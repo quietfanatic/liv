@@ -20,14 +20,14 @@ struct PageParams {
 };
 
 struct Page {
-    std::string filename;
+    AnyString filename;
     std::unique_ptr<glow::FileTexture> texture;
     IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;
     bool load_failed = false;
 
-    explicit Page (std::string&& filename);
+    explicit Page (AnyString filename);
     ~Page ();
 
     void load ();

@@ -16,8 +16,8 @@ struct App {
     App();
     ~App();
 
-    void open_files (std::vector<std::string>&& files);
-    void open_list (Str filename);
+    void open_files (AnyArray<AnyString> files);
+    void open_list (AnyString filename);
 
     void close_book (Book*);
 
@@ -27,7 +27,7 @@ struct App {
      // Loaded from an ayu::Resource
     Settings* settings;
 
-    std::vector<std::unique_ptr<Book>> books;
+    UniqueArray<std::unique_ptr<Book>> books;
     std::unordered_map<uint32, Book*> books_by_window_id;
 
      // The main loop.  Need to store this here to call stop() on it.

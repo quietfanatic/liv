@@ -17,7 +17,7 @@ namespace app {
 
 Book::Book (App& app, FilesToOpen&& to_open) :
     settings(app.settings),
-    block(to_open),
+    block(move(to_open)),
     viewing_pages(
         to_open.start_index,
         to_open.start_index + settings->get(&LayoutSettings::spread_count)
@@ -200,33 +200,33 @@ bool Book::draw_if_needed () {
         spread_page.page->draw(page_params, layout.zoom, screen_rect);
     }
      // Generate title
-    std::string title;
+    AnyString title;
     IRange visible = visible_pages();
     if (block.count() == 0) {
-        title = "Little Image Viewer (nothing loaded)"s;
+        title = "Little Image Viewer (nothing loaded)"_s;
     }
     else if (empty(visible)) {
-        title = "Little Image Viewer (no pages visible)"s;
+        title = "Little Image Viewer (no pages visible)"_s;
     }
     else {
         if (block.count() > 1) {
             if (size(visible) == 1) {
-                title = uni::cat('[', visible.l+1);
+                title = cat('[', visible.l+1);
             }
             else if (size(visible) == 2) {
-                title = uni::cat('[', visible.l+1, ',', visible.r+1 - 1);
+                title = cat('[', visible.l+1, ',', visible.r+1 - 1);
             }
             else {
-                title = uni::cat('[', visible.l+1, '-', visible.r+1 - 1);
+                title = cat('[', visible.l+1, '-', visible.r+1 - 1);
             }
-            title = uni::cat(title, '/', block.count(), "] ");
+            title = cat(move(title), '/', block.count(), "] ");
         }
          // TODO: Merge filenames
-        title += block.get(visible.l)->filename;
+        title = cat(move(title), block.get(visible.l)->filename);
          // In general, direct comparisons of floats are not good, but we do
-         // slight snapping of our floats to half-integers, so this is fine.
+         // slight snapping of our zoom to half-integers, so this is fine.
         if (layout.zoom != 1) {
-            title = uni::cat(title, " (", geo::round(layout.zoom * 100), "%)");
+            title = cat(move(title), " (", geo::round(layout.zoom * 100), "%)");
         }
     }
     SDL_SetWindowTitle(window, title.c_str());
@@ -265,7 +265,7 @@ static tap::TestSet tests ("app/book", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());
-    std::string exe_folder = base;
+    UniqueString exe_folder = base;
     SDL_free(base);
 
     IVec size = {120, 120};
@@ -274,8 +274,8 @@ static tap::TestSet tests ("app/book", []{
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, FilesToOpen{{
-        uni::cat(exe_folder, "/res/base/glow/test/image.png"sv),
-        uni::cat(exe_folder, "/res/base/glow/test/image2.png"sv)
+        cat(exe_folder, "/res/base/glow/test/image.png"sv),
+        cat(exe_folder, "/res/base/glow/test/image2.png"sv)
     }});
 
     book.draw_if_needed();
