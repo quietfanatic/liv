@@ -1360,7 +1360,7 @@ struct ArrayInterface {
         }
     }
     template <ArrayIterator Ptr>
-    void set_as_copy (Ptr ptr, usize s) {
+    void set_as_copy (Ptr ptr, usize s) requires (std::is_copy_constructible_v<T>) {
         if (s == 0) {
             impl = {}; return;
         }
@@ -1383,7 +1383,7 @@ struct ArrayInterface {
         expect(!header().ref_count);
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
-    void set_as_copy (Begin b, End e) {
+    void set_as_copy (Begin b, End e) requires (std::is_copy_constructible_v<T>) {
         if constexpr (requires { usize(e - b); }) {
             set_as_copy(move(b), usize(e - b));
         }
@@ -1501,7 +1501,7 @@ struct ArrayInterface {
     }
 
     template <ArrayIterator Ptr> static
-    T* copy_fill (T* dat, Ptr ptr, usize s) {
+    T* copy_fill (T* dat, Ptr ptr, usize s) requires (std::is_copy_constructible_v<T>) {
         usize i = 0;
         try {
             for (auto p = move(ptr); i < s; ++i, ++p) {
@@ -1519,7 +1519,7 @@ struct ArrayInterface {
         return dat;
     }
     template <ArrayIterator Begin, ArraySentinelFor<Begin> End> static
-    T* copy_fill (T* dat, Begin b, End e) {
+    T* copy_fill (T* dat, Begin b, End e) requires (std::is_copy_constructible_v<T>) {
         static_assert(ArrayForwardIterator<Begin>);
         if constexpr (requires { usize(e - b); }) {
             return copy_fill(dat, move(b), usize(e - b));
@@ -1535,7 +1535,7 @@ struct ArrayInterface {
      // noinlining it.
     [[gnu::malloc, gnu::returns_nonnull]] NOINLINE static
     T* allocate_copy (const T* d, usize s)
-        noexcept(std::is_nothrow_copy_constructible_v<T>)
+        noexcept(std::is_nothrow_copy_constructible_v<T>) requires (std::is_copy_constructible_v<T>)
     {
         expect(s > 0);
         T* dat = allocate_owned(s);

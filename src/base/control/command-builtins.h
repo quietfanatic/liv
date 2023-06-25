@@ -4,10 +4,14 @@
 
 namespace control::command {
 
- // (std::string) Print string to stdout
+ // (AnyString) Print string to stdout
 extern Command echo;
 
- // (std::vector<Statement>) Run multiple commands in a row
+ // (UniqueArray<Statement>) Run multiple commands in a row
 extern Command seq;
+
+ // (std::optional<Anystring>) Get help about all commands or a specific
+ // command.  NYI
+extern Command help;
 
 } // namespace control::command

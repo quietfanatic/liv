@@ -21,16 +21,17 @@ using Function = F;
 struct Command {
     Function<void(void*, void*)>* wrapper;
     void* function;
-    std::string name;
-    std::string description;
+    StaticString name;
+    StaticString description;
     usize required_arg_count;
     Function<ayu::Type()>* args_type;
-    Function<std::vector<ayu::Type>()>* arg_types;
+     // TODO: Use this for help messages
+    Function<StaticArray<ayu::Type>()>* arg_types;
 
     template <class... Args>
     constexpr Command (
         Function<void(Args...)> f,
-        Str name, Str desc, usize req = sizeof...(Args)
+        StaticString name, StaticString desc, usize req = sizeof...(Args)
     ) :
         wrapper(
             CommandWrapper<Args...>::get_unwrap(std::index_sequence_for<Args...>{})
@@ -41,7 +42,7 @@ struct Command {
             return ayu::Type::CppType<StatementStorage<Args...>>();
         }),
         arg_types([]{
-            static std::vector<ayu::Type> r = {ayu::Type::CppType<Args>()...};
+            static auto r = StaticArray<ayu::Type>::Static({ayu::Type::CppType<Args>()...});
             return r;
         })
     {
@@ -83,12 +84,12 @@ struct Statement {
 
  // TODO: CommandError
 struct ConflictingCommandName : ayu::Error {
-    std::string name;
-    std::string desc_a;
-    std::string desc_b;
+    AnyString name;
+    AnyString desc_a;
+    AnyString desc_b;
 };
 struct CommandNotFound : ayu::Error {
-    std::string name;
+    AnyString name;
 };
 struct StatementWrongArgsType : ayu::Error {
     ayu::Type expected;
