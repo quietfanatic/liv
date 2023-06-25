@@ -229,7 +229,7 @@ UniqueString cat (Head&& h, Tail&&... t) {
     ) {
         if (h.unique()) {
             ArrayImplementation<ArrayClass::UniqueS, char> impl;
-            impl.size = h.size(); impl.data = h.data();
+            impl.size = h.size(); impl.data = h.mut_data();
             h.dematerialize();
             in::cat_append(impl, in::cat_convert(t)...);
             return UniqueString::Materialize(impl.data, impl.size);
