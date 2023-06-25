@@ -49,7 +49,7 @@ struct Traversal {
          // DELEGATE, ATTR, ELEM
         const Accessor* acr;
          // ATTR_FUNC
-        Reference(* attr_func )(Mu&, OldStr);
+        Reference(* attr_func )(Mu&, AnyString);
          // ELEM_FUNC
         Reference(* elem_func )(Mu&, usize);
     };
@@ -57,8 +57,8 @@ struct Traversal {
          // START
         LocationRef location;
          // ATTR, ATTR_FUNC
-         // Can't include OldStr directly because it has non-trivial constructor
-        const OldStr* key;
+         // Can't include AnyString directly because it's too non-trivial.
+        const AnyString* key;
          // ELEM, ELEM_FUNC
         usize index;
     };
@@ -72,6 +72,10 @@ struct Traversal {
 };
 
 using TravCallbackRef = CallbackRef<void(const Traversal&)>;
+
+ // The traversal functions really want to be inlined because they have so many
+ // parameters.  If they're not inlined, the code to wrangle all the parameters
+ // takes up nearly as much space as the functions themselves.
 
  // If only_addressable is true, will skip over any items that aren't
  // addressable and don't have pass_through_addressable.
@@ -157,7 +161,8 @@ static inline void trav_ref (
 }
 
 static inline void trav_delegate (
-    const Traversal& parent, const Accessor* acr, AccessMode mode, TravCallbackRef cb
+    const Traversal& parent, const Accessor* acr,
+    AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -165,8 +170,11 @@ static inline void trav_delegate (
     trav_acr(trav, parent, acr, mode, cb);
 }
 
+ // key is a reference instead of a pointer so that a temporary can be passed
+ // in.  The pointer will be released when this function returns, so no worry
+ // about a dangling pointer to a temporary.
 static inline void trav_attr (
-    const Traversal& parent, const Accessor* acr, const OldStr& key,
+    const Traversal& parent, const Accessor* acr, const AnyString& key,
     AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
@@ -178,7 +186,8 @@ static inline void trav_attr (
 
 static inline void trav_attr_func (
     const Traversal& parent, const Reference& ref,
-    Reference(* func )(Mu&, OldStr), const OldStr& key, AccessMode mode, TravCallbackRef cb
+    Reference(* func )(Mu&, AnyString), const AnyString& key,
+    AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -201,7 +210,8 @@ static inline void trav_elem (
 
 static inline void trav_elem_func (
     const Traversal& parent, const Reference& ref,
-    Reference(* func )(Mu&, usize), usize index, AccessMode mode, TravCallbackRef cb
+    Reference(* func )(Mu&, usize), usize index,
+    AccessMode mode, TravCallbackRef cb
 ) {
     expect(&parent == current_traversal);
     Traversal trav;
@@ -244,7 +254,7 @@ static Location trav_location (const Traversal& trav) {
         switch (trav.op) {
             case DELEGATE: return parent;
             case ATTR: case ATTR_FUNC:
-                return Location(parent, AnyString(*trav.key));
+                return Location(parent, *trav.key);
             case ELEM: case ELEM_FUNC:
                 return Location(parent, trav.index);
             default: never();

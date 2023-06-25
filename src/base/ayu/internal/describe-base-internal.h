@@ -124,7 +124,7 @@ constexpr auto _AYU_DescribeBase<T>::attrs (const Attrs&... as) {
 template <class T>
 template <class Acr>
 constexpr auto _AYU_DescribeBase<T>::attr (
-    OldStr key,
+    StaticString key,
     const Acr& acr,
     in::AttrFlags flags
 ) {
@@ -172,7 +172,7 @@ constexpr auto _AYU_DescribeBase<T>::keys (const Acr& acr) {
     return in::KeysDcrWith<T, Acr>(acr);
 }
 template <class T>
-constexpr auto _AYU_DescribeBase<T>::attr_func (Reference(* f )(T&, OldStr)) {
+constexpr auto _AYU_DescribeBase<T>::attr_func (Reference(* f )(T&, AnyString)) {
     return in::AttrFuncDcr<T>{{}, f};
 }
 template <class T>
@@ -381,7 +381,7 @@ template params \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
     using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = desc::_ayu_describe(ayu::OldStr(),
+    static constexpr auto _ayu_full_description = desc::_ayu_describe("",
 
 #define AYU_DESCRIBE_TEMPLATE_END(params, T) \
     ); \

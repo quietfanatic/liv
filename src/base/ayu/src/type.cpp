@@ -216,7 +216,7 @@ void throw_UnknownType (const std::type_info& t) {
     throw X<UnknownType>(t);
 }
 
-OldStr get_description_name (const Description* desc) {
+Str get_description_name (const Description* desc) {
     return desc->name_offset
         ? ((NameDcr<Mu>*)((char*)desc + desc->name_offset))->f()
         : !desc->name.empty() ? desc->name

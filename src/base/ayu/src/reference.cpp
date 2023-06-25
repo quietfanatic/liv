@@ -32,11 +32,11 @@ Reference Reference::chain (const Accessor* o_acr) const {
     }
 }
 
-Reference Reference::chain_attr_func (Reference(* f )(Mu&, OldStr), OldStr k) const {
+Reference Reference::chain_attr_func (Reference(* f )(Mu&, AnyString), AnyString k) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
-        else throw X<AttrNotFound>(reference_to_location(*this), std::string(k));
+        else throw X<AttrNotFound>(reference_to_location(*this), move(k));
     }
     else {
          // Extra read just to check if the func returns null Reference.
@@ -45,10 +45,10 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, OldStr), OldStr k) co
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) {
-                throw X<AttrNotFound>(reference_to_location(*this), std::string(k));
+                throw X<AttrNotFound>(reference_to_location(*this), move(k));
             }
         });
-        return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, k)));
+        return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, move(k))));
     }
 }
 

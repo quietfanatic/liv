@@ -183,12 +183,12 @@ AYU_DESCRIBE(ayu::Document,
             }
         }
     )),
-    attr_func([](ayu::Document& v, OldStr k){
-        if (k == "_next_id"sv) {
+    attr_func([](ayu::Document& v, AnyString k){
+        if (k == "_next_id") {
             return Reference(&v.data->next_id);
         }
         else {
-            auto ref = DocumentItemRef(v.data, AnyString(k));
+            auto ref = DocumentItemRef(v.data, move(k));
             if (ref.header) {
                 return Reference(
                     v, variable(move(ref), pass_through_addressable)

@@ -53,19 +53,19 @@ struct IFTContext {
 void ser_from_tree (const Traversal&, TreeRef);
 
 ///// ATTR OPERATIONS
- // Implement get_keys by adding keys to a vector of AnyStrings
+ // Implement get_keys by adding keys to an array of AnyStrings
 void ser_collect_key (UniqueArray<AnyString>&, AnyString&&);
 void ser_collect_keys (const Traversal&, UniqueArray<AnyString>&);
 
- // Implement set_keys by removing keys from a std::vector<OldStr>
-bool ser_claim_key (UniqueArray<OldStr>&, OldStr);
-void ser_claim_keys (const Traversal&, UniqueArray<OldStr>&, bool optional);
-void ser_set_keys (const Traversal&, UniqueArray<OldStr>&&);
+ // Implement set_keys by removing keys from an array
+bool ser_claim_key (UniqueArray<AnyString>&, Str);
+void ser_claim_keys (const Traversal&, UniqueArray<AnyString>&, bool optional);
+void ser_set_keys (const Traversal&, UniqueArray<AnyString>&&);
 
  // If the attr isn't found, returns false and doesn't call the callback
-bool ser_maybe_attr (const Traversal&, OldStr, AccessMode, TravCallbackRef);
+bool ser_maybe_attr (const Traversal&, const AnyString&, AccessMode, TravCallbackRef);
  // Throws if the attr isn't found
-void ser_attr (const Traversal&, OldStr, AccessMode, TravCallbackRef);
+void ser_attr (const Traversal&, const AnyString&, AccessMode, TravCallbackRef);
 
  ///// Elem operations
 usize ser_get_length (const Traversal&);

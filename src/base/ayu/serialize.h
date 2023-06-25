@@ -53,28 +53,28 @@ void item_from_tree (
 );
 
 ///// MAIN OPERATION SHORTCUTS
-inline std::string item_to_string (
+inline UniqueString item_to_string (
     const Reference& item, PrintOptions opts = 0,
     LocationRef loc = Location()
 ) {
     return tree_to_string(item_to_tree(item, loc), opts);
 }
 inline void item_to_file (
-    const Reference& item, OldStr filename,
+    const Reference& item, AnyString filename,
     PrintOptions opts = 0, LocationRef loc = Location()
 ) {
-    return tree_to_file(item_to_tree(item, loc), Str(filename), opts);
+    return tree_to_file(item_to_tree(item, loc), move(filename), opts);
 }
  // item_from_string and item_from_file do not currently allow passing flags
 inline void item_from_string (
-    const Reference& item, OldStr src, LocationRef loc = Location()
+    const Reference& item, Str src, LocationRef loc = Location()
 ) {
-    return item_from_tree(item, tree_from_string(Str(src)), loc);
+    return item_from_tree(item, tree_from_string(src), loc);
 }
 inline void item_from_file (
-    const Reference& item, OldStr filename, LocationRef loc = Location()
+    const Reference& item, AnyString filename, LocationRef loc = Location()
 ) {
-    return item_from_tree(item, tree_from_file(Str(filename)), loc);
+    return item_from_tree(item, tree_from_file(move(filename)), loc);
 }
 
 ///// ACCESS OPERATIONS
@@ -85,16 +85,16 @@ AnyArray<AnyString> item_get_keys (
  // Set the keys in an object-like item.  This may clear the entire contents
  // of the item.
 void item_set_keys (
-    const Reference&, Slice<OldStr>,
+    const Reference&, AnyArray<AnyString>,
     LocationRef loc = Location()
 );
  // Get an attribute of an object-like item by its key, or empty Reference if
- // the attribute doesn't exist.
+ // the attribute doesn't exist.  TODO: Take an AnyString?
 Reference item_maybe_attr (
-    const Reference&, OldStr, LocationRef loc = Location());
+    const Reference&, AnyString, LocationRef loc = Location());
  // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or
  // null Reference.
-Reference item_attr (const Reference&, OldStr, LocationRef loc = Location());
+Reference item_attr (const Reference&, AnyString, LocationRef loc = Location());
 
  // Get the length of an array-like item.
 usize item_get_length (const Reference&, LocationRef loc = Location());
@@ -156,12 +156,12 @@ struct NoValueForName : SerError {
  // Tried to deserialize an item from an object tree, but the tree is
  // an attribute that the item requires.
 struct MissingAttr : SerError {
-    std::string key;
+    AnyString key;
 };
  // Tried to deserialize an item from an object tree, but the item rejected
  // one of the attributes in the tree.
 struct UnwantedAttr : SerError {
-    std::string key;
+    AnyString key;
 };
  // Tried to deserialize an item from an array tree, but the array has too
  // few or too many elements for the item.
@@ -179,7 +179,7 @@ struct NoElems : SerError { };
  // Tried to get an attribute from an item, but it doesn't have an attribute
  // with the given key.
 struct AttrNotFound : SerError {
-    std::string key;
+    AnyString key;
 };
  // Tried to get an element from an item, but it doesn't have an element
  // with the given index.

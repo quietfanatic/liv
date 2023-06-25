@@ -36,7 +36,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                 ser_collect_keys(trav, ks);
                 for (auto& k : ks) {
                     ser_attr(
-                        trav, OldStr(k), ACR_READ, [&](const Traversal& child)
+                        trav, k, ACR_READ, [&](const Traversal& child)
                     {
                          // Don't serialize readonly attributes, because they
                          // can't be deserialized.
@@ -47,9 +47,8 @@ Tree in::ser_to_tree (const Traversal& trav) {
                                 t.flags |= child.acr->tree_flags();
                             }
                              // It's okay to move k even though the traversal
-                             // stack has a OldStr referencing it, because this is
-                             // the last thing that happens before ser_attr
-                             // returns.
+                             // stack has a pointer to it, because this is the
+                             // last thing that happens before ser_attr returns.
                             o.emplace_back(move(k), move(t));
                         }
                     });
@@ -57,7 +56,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                  // Evil optimization: We know we've cleared out the array, so
                  // manually zero it out to prevent its destructor from
                  // iterating over it again
-                //memset((void*)&ks, 0, sizeof(ks));
+                // ks.materialize_size(0);
                 return Tree(move(o));
             }
             case Description::PREFER_ARRAY: {
@@ -70,7 +69,8 @@ Tree in::ser_to_tree (const Traversal& trav) {
                          // Readonly elems are problematic, because they can't
                          // just be skipped without changing the order of other
                          // elems.  We should probably just forbid them.
-                         // TODO: do that.
+                         // TODO: do that?  Or will that interfere with
+                         // exception printing?
                         Tree t = ser_to_tree(child);
                         if (child.op == ATTR) {
                             t.flags |= child.acr->tree_flags();
@@ -125,14 +125,14 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
         case OBJECT: {
             if (trav.desc->accepts_object()) {
                 TreeObjectSlice o = tree_Object(tree);
-                UniqueArray<OldStr> ks;
+                UniqueArray<AnyString> ks;
                 for (auto& p : o) {
                     ks.emplace_back(p.first);
                 }
                 ser_set_keys(trav, move(ks));
                 for (auto& p : o) {
                     ser_attr(
-                        trav, OldStr(p.first), ACR_WRITE, [&](const Traversal& child)
+                        trav, p.first, ACR_WRITE, [&](const Traversal& child)
                     {
                         ser_from_tree(child, p.second);
                     });
@@ -333,7 +333,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                     if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), keys_type);
                     }
-                    ser_collect_key(ks, AnyString(e));
+                    ser_collect_key(ks, AnyString(move(e)));
                 }
             });
         }
@@ -352,7 +352,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                     ser_collect_keys(child, ks);
                 });
             }
-            else ser_collect_key(ks, AnyString(attr->key));
+            else ser_collect_key(ks, attr->key);
         }
     }
     else if (auto acr = trav.desc->delegate_acr()) {
@@ -373,12 +373,12 @@ AnyArray<AnyString> item_get_keys (
     return ks;
 }
 
-bool in::ser_claim_key (UniqueArray<OldStr>& ks, OldStr k) {
+bool in::ser_claim_key (UniqueArray<AnyString>& ks, Str k) {
      // This algorithm overall is O(N^3), we may be able to speed it up by
      // setting a flag if there are no inherited attrs, or maybe by using an
      // unordered_set?
      // TODO: Just use a bool array for claiming instead of erasing from
-     // the vector.
+     // the vector?
     for (usize i = 0; i < ks.size(); ++i) {
         if (ks[i] == k) {
             ks.erase(i);
@@ -390,7 +390,7 @@ bool in::ser_claim_key (UniqueArray<OldStr>& ks, OldStr k) {
 
 void in::ser_claim_keys (
     const Traversal& trav,
-    UniqueArray<OldStr>& ks,
+    UniqueArray<AnyString>& ks,
     bool optional
 ) {
     if (auto acr = trav.desc->keys_acr()) {
@@ -415,7 +415,7 @@ void in::ser_claim_keys (
                  // be slow.
                 UniqueArray<Tree> a (ks.size());
                 for (usize i = 0; i < ks.size(); i++) {
-                    a[i] = Tree(Str(ks[i]));
+                    a[i] = Tree(ks[i]);
                 }
                 acr->write(*trav.address, [&](Mu& ksv){
                     item_from_tree(
@@ -431,11 +431,13 @@ void in::ser_claim_keys (
             UniqueArray<AnyString> got_ks;
             ser_collect_keys(trav, got_ks);
             for (auto& k : got_ks) {
-                if (ser_claim_key(ks, OldStr(k))) {
+                if (ser_claim_key(ks, k)) {
+                     // If any of the keys are present, it makes this item no
+                     // longer optional.
                     optional = false;
                 }
                 else if (!optional) {
-                    throw X<MissingAttr>(trav_location(trav), std::string(k));
+                    throw X<MissingAttr>(trav_location(trav), k);
                 }
             }
             return;
@@ -444,7 +446,7 @@ void in::ser_claim_keys (
     else if (auto attrs = trav.desc->attrs()) {
          // Prioritize direct attrs
          // I don't think it's possible for n_attrs to be large enough to
-         // overflow the trav...right?  The max description size is 64K and an
+         // overflow the stack...right?  The max description size is 64K and an
          // attr always consumes at least 14 bytes, so the max n_attrs is
          // something like 4500.  TODO: enforce a reasonable max n_attrs in
          // descriptors-internal.h.
@@ -465,7 +467,7 @@ void in::ser_claim_keys (
                  // Allow omitting optional or inherited attrs
             }
             else {
-                throw X<MissingAttr>(trav_location(trav), std::string(attr->key));
+                throw X<MissingAttr>(trav_location(trav), attr->key);
             }
         }
          // Then check inherited attrs
@@ -496,24 +498,25 @@ void in::ser_claim_keys (
     else throw X<NoAttrs>(trav_location(trav));
 }
 
-void in::ser_set_keys (const Traversal& trav, UniqueArray<OldStr>&& ks) {
+void in::ser_set_keys (const Traversal& trav, UniqueArray<AnyString>&& ks) {
     ser_claim_keys(trav, ks, false);
     if (!ks.empty()) {
-        throw X<UnwantedAttr>(trav_location(trav), std::string(ks[0]));
+        throw X<UnwantedAttr>(trav_location(trav), ks[0]);
     }
 }
 
 void item_set_keys (
-    const Reference& item, Slice<OldStr> ks,
+    const Reference& item, AnyArray<AnyString> ks,
     LocationRef loc
 ) {
     trav_start(item, loc, false, ACR_WRITE, [&](const Traversal& trav){
-        ser_set_keys(trav, ks);
+        ser_set_keys(trav, move(ks));
     });
 }
 
 bool in::ser_maybe_attr (
-    const Traversal& trav, OldStr key, AccessMode mode, TravCallbackRef cb
+    const Traversal& trav, const AnyString& key,
+    AccessMode mode, TravCallbackRef cb
 ) {
     if (auto attrs = trav.desc->attrs()) {
          // Note: This will likely be called once for each attr, making it
@@ -571,15 +574,15 @@ bool in::ser_maybe_attr (
     else throw X<NoAttrs>(trav_location(trav));
 }
 void in::ser_attr (
-    const Traversal& trav, OldStr key, AccessMode mode, TravCallbackRef cb
+    const Traversal& trav, const AnyString& key, AccessMode mode, TravCallbackRef cb
 ) {
     if (!ser_maybe_attr(trav, key, mode, cb)) {
-        throw X<AttrNotFound>(trav_location(trav), std::string(key));
+        throw X<AttrNotFound>(trav_location(trav), key);
     }
 }
 
 Reference item_maybe_attr (
-    const Reference& item, OldStr key, LocationRef loc
+    const Reference& item, AnyString key, LocationRef loc
 ) {
     Reference r;
      // Is ACR_READ correct here?  Will we instead have to chain up the
@@ -591,11 +594,11 @@ Reference item_maybe_attr (
     });
     return r;
 }
-Reference item_attr (const Reference& item, OldStr key, LocationRef loc) {
+Reference item_attr (const Reference& item, AnyString key, LocationRef loc) {
     if (Reference r = item_maybe_attr(item, key)) {
         return r;
     }
-    else throw X<AttrNotFound>(loc, std::string(key));
+    else throw X<AttrNotFound>(loc, move(key));
 }
 
 ///// ELEM OPERATIONS
@@ -983,8 +986,8 @@ AYU_DESCRIBE(ayu::test::AttrsTest,
             }
         }
     )),
-    attr_func([](AttrsTest& v, OldStr k){
-        return Reference(&v.xs.at(std::string(k)));
+    attr_func([](AttrsTest& v, AnyString k){
+        return Reference(&v.xs.at(k));
     })
 )
 AYU_DESCRIBE(ayu::test::AttrsTest2,
@@ -1003,8 +1006,8 @@ AYU_DESCRIBE(ayu::test::AttrsTest2,
             }
         }
     )),
-    attr_func([](AttrsTest2& v, OldStr k){
-        return Reference(&v.xs.at(std::string(k)));
+    attr_func([](AttrsTest2& v, AnyString k){
+        return Reference(&v.xs.at(k));
     })
 )
 AYU_DESCRIBE(ayu::test::DelegateTest,
@@ -1059,11 +1062,11 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     using namespace tap;
     ok(get_description_for_type_info(typeid(MemberTest)), "Description was registered");
 
-    auto try_to_tree = [](Reference item, OldStr tree, OldStr name){
+    auto try_to_tree = [](Reference item, Str tree, Str name){
         try_is<Tree, Tree>(
             [&item]{ return item_to_tree(item); },
             tree_from_string(tree),
-            std::string(name)
+            name
         );
     };
 
@@ -1208,8 +1211,8 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     throws<std::out_of_range>([&]{
         item_attr(&ast, "c");
     }, "item_attr can throw on missing key (from user-defined function)");
-    auto ks = std::vector<OldStr>{"c", "d"};
-    item_set_keys(&ast, Slice<OldStr>(ks));
+    auto ks = std::vector<AnyString>{"c", "d"};
+    item_set_keys(&ast, Slice<AnyString>(ks));
     is(ast.xs.find("a"), ast.xs.end(), "item_set_keys removed key");
     is(ast.xs.at("c"), 0, "item_set_keys added key");
     doesnt_throw([&]{
@@ -1236,8 +1239,8 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     throws<std::out_of_range>([&]{
         item_attr(&ast2, "c");
     }, "item_attr can throw on missing key (from user-defined function)");
-    ks = std::vector<OldStr>{"c", "d"};
-    item_set_keys(&ast2, Slice<OldStr>(ks));
+    ks = std::vector<AnyString>{"c", "d"};
+    item_set_keys(&ast2, Slice<AnyString>(ks));
     is(ast2.xs.find("a"), ast2.xs.end(), "item_set_keys removed key");
     is(ast2.xs.at("c"), 0, "item_set_keys added key");
     doesnt_throw([&]{

@@ -119,7 +119,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::unordered_map<std::string, T>),
     desc::name([]{
         static uni::UniqueString r = uni::cat(
-            "std::unordered_map<uni::UniqueString, ",
+            "std::unordered_map<std::string, ",
             ayu::Type::CppType<T>().name(), '>'
         );
         return uni::StaticString::Static(r);
@@ -141,7 +141,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
     )),
-    desc::attr_func([](std::unordered_map<std::string, T>& v, uni::OldStr k){
+    desc::attr_func([](std::unordered_map<std::string, T>& v, uni::AnyString k){
         auto iter = v.find(k);
         return iter != v.end()
             ? ayu::Reference(&iter->second)
@@ -156,7 +156,7 @@ AYU_DESCRIBE_TEMPLATE(
     AYU_DESCRIBE_TEMPLATE_TYPE(std::map<std::string, T>),
     desc::name([]{
         static uni::UniqueString r = uni::cat(
-            "std::map<uni::UniqueString, ", ayu::Type::CppType<T>().name(), '>'
+            "std::map<std::string, ", ayu::Type::CppType<T>().name(), '>'
         );
         return uni::StaticString::Static(r);
     }),
@@ -177,7 +177,7 @@ AYU_DESCRIBE_TEMPLATE(
             }
         }
     )),
-    desc::attr_func([](std::map<std::string, T>& v, uni::OldStr k){
+    desc::attr_func([](std::map<std::string, T>& v, uni::AnyString k){
         auto iter = v.find(k);
         return iter != v.end()
             ? ayu::Reference(&iter->second)

@@ -130,7 +130,7 @@ struct Description : ComparableAddress {
     const std::type_info* cpp_type = null;
     uint32 cpp_size = 0;
     uint32 cpp_align = 0;
-     // TODO: Merge this with the name dcr?
+     // TODO: Store generated names here
     StaticString name;
 
      // Do some property calculations ahead of time
@@ -297,12 +297,12 @@ struct ValuesDcrWith : ValuesDcr<T> {
 
 template <class T>
 struct AttrDcr : ComparableAddress {
-    OldStr key;
+    Str key;
 };
 template <class T, class Acr>
 struct AttrDcrWith : AttrDcr<T> {
     Acr acr;
-    constexpr AttrDcrWith (OldStr k, const Acr& a) :
+    constexpr AttrDcrWith (Str k, const Acr& a) :
         AttrDcr<T>{{}, k},
         acr(constexpr_acr(a))
     { }
@@ -373,7 +373,7 @@ struct KeysDcrWith : KeysDcr<T> {
 
 template <class T>
 struct AttrFuncDcr : AttachedDescriptor<T> {
-    Reference(* f )(T&, OldStr);
+    Reference(* f )(T&, AnyString);
 };
 
 template <class T>

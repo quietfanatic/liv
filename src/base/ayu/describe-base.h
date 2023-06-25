@@ -205,7 +205,7 @@ struct _AYU_DescribeBase {
      //   TODO: rename this to include
     template <class Acr>
     static constexpr auto attr (
-        OldStr key,
+        StaticString key,
         const Acr& accessor,
         in::AttrFlags flags = in::AttrFlags(0)
     );
@@ -262,7 +262,7 @@ struct _AYU_DescribeBase {
      //
      // If attr_func() is present, keys() must also be present, and attrs() must
      // not be present.
-    static constexpr auto attr_func (Reference(* f )(T&, OldStr));
+    static constexpr auto attr_func (Reference(* f )(T&, AnyString));
 
     ///// DESCRIPTORS FOR ARRAY-LIKE TYPES
 
