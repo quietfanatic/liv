@@ -29,7 +29,7 @@ namespace in {
         }
         auto a = TreeArraySlice(tree);
         if (a.size() == 2) {
-            Type type = Type(OldStr(Str(a[0])));
+            Type type = Type(Str(a[0]));
             if (!scheme->accepts_type(type)) {
                 throw X<UnacceptableResourceType>{res.name().spec(), type};
             }

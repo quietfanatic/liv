@@ -165,21 +165,21 @@ void Document::deallocate (void* p) {
 } using namespace ayu;
 
 AYU_DESCRIBE(ayu::Document,
-    keys(mixed_funcs<std::vector<OldStr>>(
+    keys(mixed_funcs<AnyArray<AnyString>>(
         [](const ayu::Document& v){
-            std::vector<OldStr> r;
+            UniqueArray<AnyString> r;
             for (auto link = v.data->items.next; link != &v.data->items; link = link->next) {
                 r.emplace_back(static_cast<DocumentItemHeader*>(link)->name());
             }
-            r.emplace_back("_next_id"sv);
-            return r;
+            r.emplace_back("_next_id"_s);
+            return AnyArray(r);
         },
-        [](ayu::Document& v, const std::vector<OldStr>& ks){
+        [](ayu::Document& v, const AnyArray<AnyString>& ks){
             v.data->~DocumentData();
             new (v.data) DocumentData;
             for (auto& k : ks) {
-                if (k == "_next_id"sv) continue;
-                v.allocate_named(Type(), AnyString(k));
+                if (k == "_next_id") continue;
+                v.allocate_named(Type(), k);
             }
         }
     )),

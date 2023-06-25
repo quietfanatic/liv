@@ -135,6 +135,7 @@ struct DiagnosticSerialization {
  // Generic serialization error
 struct SerError : Error {
     Location location;
+    Type type;
 };
  // Tried to call to_tree on a type that doesn't support to_tree
 struct CannotToTree : SerError { };

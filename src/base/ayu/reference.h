@@ -303,6 +303,7 @@ inline bool operator != (const Reference& a, const Reference& b) {
 
 struct ReferenceError : Error {
     Location location;
+    Type type;
 };
  // Tried to write to a readonly reference.
 struct WriteReadonlyReference : ReferenceError { };

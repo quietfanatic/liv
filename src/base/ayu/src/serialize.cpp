@@ -92,9 +92,9 @@ Tree in::ser_to_tree (const Traversal& trav) {
                     return r;
                 }
                 else if (trav.desc->values()) {
-                    throw X<NoNameForValue>(trav_location(trav));
+                    throw X<NoNameForValue>(trav_location(trav), trav.desc);
                 }
-                else throw X<CannotToTree>(trav_location(trav));
+                else throw X<CannotToTree>(trav_location(trav), trav.desc);
             }
         }
     }
@@ -189,21 +189,21 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
     if (tree->form == OBJECT &&
         (trav.desc->values() || trav.desc->accepts_array())
     ) {
-        throw X<InvalidForm>(trav_location(trav), tree);
+        throw X<InvalidForm>(trav_location(trav), trav.desc, tree);
     }
     else if (tree->form == ARRAY &&
         (trav.desc->values() || trav.desc->accepts_object())
     ) {
-        throw X<InvalidForm>(trav_location(trav), tree);
+        throw X<InvalidForm>(trav_location(trav), trav.desc, tree);
     }
     else if (trav.desc->accepts_array() || trav.desc->accepts_object()) {
-        throw X<InvalidForm>(trav_location(trav), tree);
+        throw X<InvalidForm>(trav_location(trav), trav.desc, tree);
     }
     else if (trav.desc->values()) {
-        throw X<NoValueForName>(trav_location(trav), tree);
+        throw X<NoValueForName>(trav_location(trav), trav.desc, tree);
     }
     else {
-        throw X<CannotFromTree>(trav_location(trav));
+        throw X<CannotFromTree>(trav_location(trav), trav.desc);
     }
 
     done:
@@ -299,22 +299,10 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
         Type keys_type = acr->type(trav.address);
          // Compare Type not std::type_info, since std::type_info can require a
          // string comparison.
-         // TODO: support *Array
-        if (keys_type == Type::CppType<std::vector<OldStr>>()) {
-             // Optimize for std::vector<OldStr>
+        if (keys_type == Type::CppType<AnyArray<AnyString>>()) {
+             // Optimize for AnyArray<AnyString>
             acr->read(*trav.address, [&](Mu& v){
-                auto& ksv = reinterpret_cast<const std::vector<OldStr>&>(v);
-                for (auto& k : ksv) {
-                     // We're copying the string here, but we can avoid a copy
-                     // later.
-                    ser_collect_key(ks, AnyString(k));
-                }
-            });
-        }
-        else if (keys_type == Type::CppType<std::vector<std::string>>()) {
-             // Capitulate to std::vector<std::string> too.
-            acr->read(*trav.address, [&](Mu& v){
-                auto& ksv = reinterpret_cast<const std::vector<std::string>&>(v);
+                auto& ksv = reinterpret_cast<const AnyArray<AnyString>&>(v);
                 for (auto& k : ksv) {
                     ser_collect_key(ks, AnyString(k));
                 }
@@ -327,11 +315,11 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                  // important.
                 auto tree = item_to_tree(Pointer(&ksv, keys_type));
                 if (tree.form != ARRAY) {
-                    throw X<InvalidKeysType>(trav_location(trav), keys_type);
+                    throw X<InvalidKeysType>(trav_location(trav), trav.desc, keys_type);
                 }
                 for (const Tree& e : tree_Array(move(tree))) {
                     if (e.form != STRING) {
-                        throw X<InvalidKeysType>(trav_location(trav), keys_type);
+                        throw X<InvalidKeysType>(trav_location(trav), trav.desc, keys_type);
                     }
                     ser_collect_key(ks, AnyString(move(e)));
                 }
@@ -360,7 +348,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
             ser_collect_keys(child, ks);
         });
     }
-    else throw X<NoAttrs>(trav_location(trav));
+    else throw X<NoAttrs>(trav_location(trav), trav.desc);
 }
 
 AnyArray<AnyString> item_get_keys (
@@ -396,18 +384,10 @@ void in::ser_claim_keys (
     if (auto acr = trav.desc->keys_acr()) {
         Type keys_type = acr->type(trav.address);
         if (!(acr->accessor_flags & ACR_READONLY)) {
-            if (keys_type == Type::CppType<std::vector<OldStr>>()) {
-                 // Optimize for std::vector<OldStr>
+            if (keys_type == Type::CppType<AnyArray<AnyString>>()) {
+                 // Optimize for AnyArray<AnyString>
                 acr->write(*trav.address, [&](Mu& ksv){
-                    reinterpret_cast<std::vector<OldStr>&>(ksv) =
-                        std::vector<OldStr>(ks.begin(), ks.end());
-                });
-            }
-            else if (keys_type == Type::CppType<std::vector<std::string>>()) {
-                 // Compromise for std::vector<std::string> too
-                acr->write(*trav.address, [&](Mu& ksv){
-                    reinterpret_cast<std::vector<std::string>&>(ksv) =
-                        std::vector<std::string>(ks.begin(), ks.end());
+                    reinterpret_cast<AnyArray<AnyString>&>(ksv) = ks;
                 });
             }
             else {
@@ -437,7 +417,7 @@ void in::ser_claim_keys (
                     optional = false;
                 }
                 else if (!optional) {
-                    throw X<MissingAttr>(trav_location(trav), k);
+                    throw X<MissingAttr>(trav_location(trav), trav.desc, k);
                 }
             }
             return;
@@ -467,7 +447,7 @@ void in::ser_claim_keys (
                  // Allow omitting optional or inherited attrs
             }
             else {
-                throw X<MissingAttr>(trav_location(trav), attr->key);
+                throw X<MissingAttr>(trav_location(trav), trav.desc, attr->key);
             }
         }
          // Then check inherited attrs
@@ -495,13 +475,13 @@ void in::ser_claim_keys (
             ser_claim_keys(child, ks, optional);
         });
     }
-    else throw X<NoAttrs>(trav_location(trav));
+    else throw X<NoAttrs>(trav_location(trav), trav.desc);
 }
 
 void in::ser_set_keys (const Traversal& trav, UniqueArray<AnyString>&& ks) {
     ser_claim_keys(trav, ks, false);
     if (!ks.empty()) {
-        throw X<UnwantedAttr>(trav_location(trav), ks[0]);
+        throw X<UnwantedAttr>(trav_location(trav), trav.desc, ks[0]);
     }
 }
 
@@ -571,13 +551,13 @@ bool in::ser_maybe_attr (
         });
         return r;
     }
-    else throw X<NoAttrs>(trav_location(trav));
+    else throw X<NoAttrs>(trav_location(trav), trav.desc);
 }
 void in::ser_attr (
     const Traversal& trav, const AnyString& key, AccessMode mode, TravCallbackRef cb
 ) {
     if (!ser_maybe_attr(trav, key, mode, cb)) {
-        throw X<AttrNotFound>(trav_location(trav), key);
+        throw X<AttrNotFound>(trav_location(trav), trav.desc, key);
     }
 }
 
@@ -598,7 +578,7 @@ Reference item_attr (const Reference& item, AnyString key, LocationRef loc) {
     if (Reference r = item_maybe_attr(item, key)) {
         return r;
     }
-    else throw X<AttrNotFound>(loc, move(key));
+    else throw X<AttrNotFound>(loc, item.type(), move(key));
 }
 
 ///// ELEM OPERATIONS
@@ -622,7 +602,7 @@ usize in::ser_get_length (const Traversal& trav) {
         });
         return len;
     }
-    else throw X<NoElems>(trav_location(trav));
+    else throw X<NoElems>(trav_location(trav), trav.desc);
 }
 
 usize item_get_length (const Reference& item, LocationRef loc) {
@@ -648,7 +628,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
             });
             if (len != expected) {
                 throw X<WrongLength>{
-                    trav_location(trav), expected, expected, len
+                    trav_location(trav), trav.desc, expected, expected, len
                 };
             }
         }
@@ -663,7 +643,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
             else break;
         }
         if (len < min || len > elems->n_elems) {
-            throw X<WrongLength>(trav_location(trav), min, elems->n_elems, len);
+            throw X<WrongLength>(trav_location(trav), trav.desc, min, elems->n_elems, len);
         }
     }
     else if (auto acr = trav.desc->delegate_acr()) {
@@ -671,7 +651,7 @@ void in::ser_set_length (const Traversal& trav, usize len) {
             ser_set_length(child, len);
         });
     }
-    else throw X<NoElems>(trav_location(trav));
+    else throw X<NoElems>(trav_location(trav), trav.desc);
 }
 
 void item_set_length (const Reference& item, usize len, LocationRef loc) {
@@ -706,13 +686,13 @@ bool in::ser_maybe_elem (
         });
         return found;
     }
-    else throw X<NoElems>(trav_location(trav));
+    else throw X<NoElems>(trav_location(trav), trav.desc);
 }
 void in::ser_elem (
     const Traversal& trav, usize index, AccessMode mode, TravCallbackRef cb
 ) {
     if (!ser_maybe_elem(trav, index, mode, cb)) {
-        throw X<ElemNotFound>(trav_location(trav), index);
+        throw X<ElemNotFound>(trav_location(trav), trav.desc, index);
     }
 }
 Reference item_maybe_elem (
@@ -732,7 +712,7 @@ Reference item_elem (const Reference& item, usize index, LocationRef loc) {
     if (Reference r = item_maybe_elem(item, index)) {
         return r;
     }
-    else throw X<ElemNotFound>(loc, index);
+    else throw X<ElemNotFound>(loc, item.type(), index);
 }
 
 ///// MISC
@@ -749,7 +729,8 @@ Location current_location () {
 AYU_DESCRIBE(ayu::SerError,
     elems(
         elem(base<Error>(), inherit),
-        elem(&SerError::location)
+        elem(&SerError::location),
+        elem(&SerError::type)
     )
 )
 
@@ -879,9 +860,9 @@ namespace ayu::test {
     struct AttrsTest {
         std::unordered_map<std::string, int> xs;
     };
-     // Test usage of keys() with type std::vector<OldStr>
+     // Test usage of keys() with type AnyArray<AnyString>
     struct AttrsTest2 {
-        std::unordered_map<std::string, int> xs;
+        std::unordered_map<AnyString, int> xs;
     };
 
     struct DelegateTest {
@@ -991,15 +972,15 @@ AYU_DESCRIBE(ayu::test::AttrsTest,
     })
 )
 AYU_DESCRIBE(ayu::test::AttrsTest2,
-    keys(mixed_funcs<std::vector<OldStr>>(
+    keys(mixed_funcs<AnyArray<AnyString>>(
         [](const AttrsTest2& v){
-            std::vector<OldStr> r;
+            AnyArray<AnyString> r;
             for (auto& p : v.xs) {
                 r.emplace_back(p.first);
             }
             return r;
         },
-        [](AttrsTest2& v, const std::vector<OldStr>& ks){
+        [](AttrsTest2& v, const AnyArray<AnyString>& ks){
             v.xs.clear();
             for (auto& k : ks) {
                 v.xs.emplace(k, 0);

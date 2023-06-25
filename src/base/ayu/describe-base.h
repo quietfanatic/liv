@@ -213,14 +213,11 @@ struct _AYU_DescribeBase {
      // `accessor` must be the output of one of the accessor functions (see
      // ACCESSORS), and its child type can be anything that serializes to an
      // array of strings, but serialization will be fastest if its type is
-     // std::vector<OldStr> (AKA std::vector<std::string_view>).
-     // TODO: Change this to AnyArray<AnyString>
+     // exactly uni::AnyArray<uni::AnyString>.
      //
      // During serialization, the list of keys will be determined with
      // `accessor`'s read operation, and for each key, the attribute's value
-     // will be set using either the attr_func() descriptor.  If the keys type
-     // is std::vector<OldStr>, the strings the Strs point to must live at least as
-     // long as this item itself.
+     // will be set using the attr_func() descriptor.
      //
      // During deserialization, `accessor`'s write operation will be called with
      // the list of keys provided in the Tree, and it should throw
@@ -230,8 +227,7 @@ struct _AYU_DescribeBase {
      // will be called, and the list of provided keys must match exactly or an
      // exception will be thrown.  It is acceptable to ignore the provided list
      // of keys and instead clear the item and later autovivify attributes given
-     // to attr_func().  If the keys are of type OldStr (AKA std::string_view), you
-     // may need to copy them to take ownership.
+     // to attr_func().
      //
      // If keys() is present, attr_func() must also be present, and attrs() must
      // not be present.
@@ -245,19 +241,19 @@ struct _AYU_DescribeBase {
      // attribute with the given key, you should return an empty or null
      // Reference.
      //
-     // You should expect that this may be called with a key that was not in the
-     // output of the `keys` accessor, and return an empty Reference if that
-     // happens (or autovivify if you want).
+     // This may be called with a key that was not in the output of the `keys`
+     // accessor.  If that happens, you should return an empty Reference (or
+     // autovivify if you want).
      //
-     // Be careful not to return a reference to a temporary and then use that
-     // reference past the temporary's lifetime.  For AYU serialization
-     // functions, the reference will only be used while the serialization
-     // function is running, or while a KeepLocationCache object is active.  But
-     // if you keep the reference yourself by doing, say,
-     //     auto ref = ayu::Reference(&object)["foo"]
+     // Be careful not to return a Reference to a temporary and then use that
+     // Reference past the temporary's lifetime.  For AYU serialization
+     // functions, the Reference will only be used while the serialization
+     // function is running, or while a KeepLocationCache object is active.
+     // But if you keep the Reference yourself by doing, say,
+     //     ayu::Reference ref = ayu::Reference(&object)["foo"];
      // then it's as if you had written something like
-     //     Foo& foo = object.get_something_by_ref("foo");
-     // and it's your responsibility not to keep the reference around longer
+     //     Foo& foo = object.get_ref_to_foo();
+     // and it's your responsibility not to keep the Reference around longer
      // than the referred item's lifetime.
      //
      // If attr_func() is present, keys() must also be present, and attrs() must
@@ -323,9 +319,9 @@ struct _AYU_DescribeBase {
      // indexes.  The return value must be an ayu::Reference, which can be
      // created any way you like, including by using an accessor.
      //
-     // You should expect that this might be called with an index larger than
-     // what was returned by the length() accessor, in which case you should
-     // return an empty or null Reference.
+     // This might be called with an index larger than what was returned by the
+     // length() accessor.  If that happens, you should return an empty or null
+     // Reference.
      //
      // Make sure not to return a Reference to a temporary and then keep that
      // Reference beyond the temporary's lifetime.  See also attr_func.

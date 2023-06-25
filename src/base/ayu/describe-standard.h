@@ -124,16 +124,16 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return uni::StaticString::Static(r);
     }),
-    desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
+    desc::keys(desc::template mixed_funcs<uni::AnyArray<uni::AnyString>>(
         [](const std::unordered_map<uni::UniqueString, T>& v){
-            std::vector<std::string_view> r;
+            uni::UniqueArray<uni::AnyString> r;
             for (auto& p : v) {
                 r.emplace_back(p.first);
             }
-            return r;
+            return uni::AnyArray(r);
         },
         [](std::unordered_map<std::string, T>& v,
-           const std::vector<std::string_view>& ks
+           const uni::AnyArray<uni::AnyString>& ks
         ){
             v.clear();
             for (auto& k : ks) {
@@ -160,16 +160,16 @@ AYU_DESCRIBE_TEMPLATE(
         );
         return uni::StaticString::Static(r);
     }),
-    desc::keys(desc::template mixed_funcs<std::vector<std::string_view>>(
+    desc::keys(desc::template mixed_funcs<uni::AnyArray<uni::AnyString>>(
         [](const std::map<std::string, T>& v){
-            std::vector<std::string_view> r;
+            uni::UniqueArray<uni::AnyString> r;
             for (auto& p : v) {
                 r.emplace_back(p.first);
             }
-            return r;
+            return uni::AnyArray(r);
         },
         [](std::map<std::string, T>& v,
-           const std::vector<std::string_view>& ks
+           const uni::AnyArray<uni::AnyString>& ks
         ){
             v.clear();
             for (auto& k : ks) {
@@ -208,7 +208,9 @@ AYU_DESCRIBE_TEMPLATE(
     }),
     desc::from_tree([](std::unordered_set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
-            throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
+            throw ayu::X<ayu::InvalidForm>(
+                ayu::current_location(), ayu::Type::CppType<std::unordered_set<T>>(), tree
+            );
         }
         auto a = ayu::TreeArraySlice(tree);
         v.reserve(a.size());
@@ -257,7 +259,9 @@ AYU_DESCRIBE_TEMPLATE(
     }),
     desc::from_tree([](std::set<T>& v, const ayu::Tree& tree){
         if (tree.form != ayu::ARRAY) {
-            throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
+            throw ayu::X<ayu::InvalidForm>(
+                ayu::current_location(), ayu::Type::CppType<std::set<T>>(), tree
+            );
         }
         auto a = ayu::TreeArraySlice(tree);
         std::set<T> source;
@@ -338,7 +342,9 @@ AYU_DESCRIBE_TEMPLATE(
         if (tree.form == ayu::STRING) {
             auto s = uni::OldStr(tree);
             if (s.size() != n) {
-                throw ayu::X<ayu::WrongLength>(&v, n, n, s.size());
+                throw ayu::X<ayu::WrongLength>(
+                    ayu::current_location(), ayu::Type::CppType<char[n]>(), n, n, s.size()
+                );
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = s[i];
@@ -347,13 +353,17 @@ AYU_DESCRIBE_TEMPLATE(
         else if (tree.form == ayu::ARRAY) {
             auto a = ayu::TreeArraySlice(tree);
             if (a.size() != n) {
-                throw ayu::X<ayu::WrongLength>(&v, n, n, a.size());
+                throw ayu::X<ayu::WrongLength>(
+                    ayu::current_location(), ayu::Type::CppType<char[n]>(), n, n, a.size()
+                );
             }
             for (uint i = 0; i < n; i++) {
                 v[i] = char(a[i]);
             }
         }
-        else throw ayu::X<ayu::InvalidForm>(ayu::current_location(), tree);
+        else throw ayu::X<ayu::InvalidForm>(
+            ayu::current_location(), ayu::Type::CppType<char[n]>(), tree
+        );
     }),
      // Allow accessing individual elements like an array
     desc::length(desc::template constant<uni::usize>(n)),

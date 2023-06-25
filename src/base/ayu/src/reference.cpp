@@ -13,14 +13,14 @@ using namespace in;
 
 void Reference::require_writeable () const {
     if (readonly()) {
-        throw X<WriteReadonlyReference>(reference_to_location(*this));
+        throw X<WriteReadonlyReference>(reference_to_location(*this), type());
     }
 }
 
 Mu* Reference::require_address () const {
     if (!*this) return null;
     if (auto a = address()) return a;
-    else throw X<UnaddressableReference>(reference_to_location(*this));
+    else throw X<UnaddressableReference>(reference_to_location(*this), type());
 }
 
 Reference Reference::chain (const Accessor* o_acr) const {
@@ -36,7 +36,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, AnyString), AnyString
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
-        else throw X<AttrNotFound>(reference_to_location(*this), move(k));
+        else throw X<AttrNotFound>(reference_to_location(*this), type(), move(k));
     }
     else {
          // Extra read just to check if the func returns null Reference.
@@ -45,7 +45,7 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, AnyString), AnyString
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) {
-                throw X<AttrNotFound>(reference_to_location(*this), move(k));
+                throw X<AttrNotFound>(reference_to_location(*this), type(), move(k));
             }
         });
         return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, move(k))));
@@ -56,13 +56,13 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
     if (auto a = address()) {
         auto r = f(*a, i);
         if (r) return r;
-        else throw X<ElemNotFound>(reference_to_location(*this), i);
+        else throw X<ElemNotFound>(reference_to_location(*this), type(), i);
     }
     else {
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), i);
             if (!ref) {
-                throw X<ElemNotFound>(reference_to_location(*this), i);
+                throw X<ElemNotFound>(reference_to_location(*this), type(), i);
             }
         });
         return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
@@ -101,7 +101,8 @@ AYU_DESCRIBE(ayu::Reference,
 AYU_DESCRIBE(ayu::ReferenceError,
     elems(
         elem(base<Error>(), inherit),
-        elem(&ReferenceError::location)
+        elem(&ReferenceError::location),
+        elem(&ReferenceError::type)
     )
 )
 AYU_DESCRIBE(ayu::WriteReadonlyReference,
