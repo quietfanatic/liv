@@ -334,12 +334,12 @@ AYU_DESCRIBE_TEMPLATE(
     }),
      // Serialize as a string
     desc::to_tree([](const char(& v )[n]){
-        return ayu::Tree(OldStr(v, n));
+        return ayu::Tree(Str(v, n));
     }),
      // Deserialize as either a string or an array
     desc::from_tree([](char(& v )[n], const ayu::Tree& tree){
         if (tree.form == ayu::STRING) {
-            auto s = uni::OldStr(tree);
+            auto s = uni::Str(tree);
             if (s.size() != n) {
                 throw ayu::X<ayu::WrongLength>(
                     ayu::current_location(), ayu::Type::CppType<char[n]>(), n, n, s.size()

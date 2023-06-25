@@ -99,7 +99,7 @@ int input_to_integer (const Input& input) {
     }
 }
 
-Input input_from_string (OldStr name) {
+Input input_from_string (Str name) {
     switch (fast_hash(name)) {
 #define KEY(name, sdlk) case fast_hash(name): return {.type = KEY, .code = sdlk};
 #define ALT(name, sdlk) KEY(name, sdlk)
@@ -126,7 +126,7 @@ Input input_from_string (OldStr name) {
     }
 }
 
-OldStr input_to_string (const Input& input) {
+Str input_to_string (const Input& input) {
     switch (input.type) {
         case NONE: return "none";
         case KEY: {

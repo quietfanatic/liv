@@ -30,7 +30,7 @@ struct Command {
     template <class... Args>
     constexpr Command (
         Function<void(Args...)> f,
-        OldStr name, OldStr desc, usize req = sizeof...(Args)
+        Str name, Str desc, usize req = sizeof...(Args)
     ) :
         wrapper(
             CommandWrapper<Args...>::get_unwrap(std::index_sequence_for<Args...>{})
@@ -54,9 +54,9 @@ struct Command {
 };
 
  // Returns nullptr if not found
-const Command* lookup_command (OldStr name);
+const Command* lookup_command (Str name);
  // Throws CommandNotFound if not found
-const Command* require_command (OldStr name);
+const Command* require_command (Str name);
 
  // The structure you create to use a command.  You can create this manually,
  // but it doesn't support optional arguments unless you deserialize from ayu.
@@ -71,7 +71,7 @@ struct Statement {
         Statement(c, ayu::Dynamic(StatementStorage<Args...>(std::forward<Args>(args)...)))
     { }
     template <class... Args>
-    Statement (OldStr name, Args... args) :
+    Statement (Str name, Args... args) :
         Statement(require_command(name), std::forward<Args>(args)...)
     { }
 

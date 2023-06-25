@@ -99,7 +99,8 @@ struct AttrDcrPrivate : AttrDcr<Mu> {
          //
          // The Accessor should be right after the attr base in memory, without
          // any padding.  This should be the case if vtable pointers have the
-         // same alignment as OldStr and there's nothing else funny going on.
+         // same alignment as StaticString and there's nothing else funny going
+         // on.
          //
          // TODO: We may be able to simplify this now that we're using our own
          // vtables.

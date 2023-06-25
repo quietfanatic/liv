@@ -117,7 +117,7 @@ static tap::TestSet tests ("base/ayu/describe-standard", []{
     std::tuple<int32, std::string, std::vector<int32>> data;
     std::tuple<int32, std::string, std::vector<int32>> expected_data
         = {45, "asdf"s, {3, 4, 5}};
-    OldStr s = "[45 asdf [3 4 5]]";
+    Str s = "[45 asdf [3 4 5]]";
     doesnt_throw([&]{
         return item_from_string(&data, s);
     }, "item_from_string on tuple");

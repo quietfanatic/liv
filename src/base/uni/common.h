@@ -47,12 +47,6 @@ constexpr float inf = std::numeric_limits<float>::infinity();
 using char16 = char16_t;
 using char32 = char32_t;
 
-using OldStr = std::string_view;
-using OldStr8 = std::u8string_view;
-using OldStr16 = std::u16string_view;
-using OldStr32 = std::u32string_view;
-using OldWStr = std::wstring_view;
-
 using std::move;
 
 } // common

@@ -107,7 +107,7 @@ struct IRI {
     IRI& operator = (IRI&& o);
 
      // Returns whether this IRI is valid or not.  If the IRI is invalid, all
-     // bool accessors will return false and all OldStr and IRI accessors will
+     // bool accessors will return false and all string and IRI accessors will
      // return empty.
     bool is_valid () const;
      // Returns whether this IRI is empty.  The empty IRI is also invalid.

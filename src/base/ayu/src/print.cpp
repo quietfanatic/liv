@@ -108,7 +108,7 @@ struct Printer {
     }
 
     [[nodiscard]]
-    char* print_quoted (char* p, OldStr s, bool expand) {
+    char* print_quoted (char* p, Str s, bool expand) {
         p = pchar(p, '"');
         for (auto c : s)
         switch (c) {

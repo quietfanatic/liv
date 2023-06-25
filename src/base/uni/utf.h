@@ -32,7 +32,7 @@ std::FILE* fopen_utf8 (const char* filename, const char* mode = "rb");
  // Print UTF-8 formatted text to a file.  Might not fuse starting or trailing
  // umatched UTF-8 bytes between calls.
  // TODO: These will stop at NUL bytes, fix that.
-void fprint_utf8 (std::FILE* f, OldStr s);
+void fprint_utf8 (std::FILE* f, Str s);
  // Prints to stdout and flushes.
 void print_utf8 (Str s);
  // Prints to stderr and flushes.

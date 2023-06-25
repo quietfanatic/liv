@@ -25,10 +25,10 @@ FilesToOpen expand_files (
         for (auto& entry : fs::directory_iterator(folder_p)) {
             std::u8string u8name = entry.path().u8string();
             std::string& name = reinterpret_cast<std::string&>(u8name);
-            OldStr extension;
+            Str extension;
             usize dotpos = name.rfind('.');
             if (dotpos != std::string::npos) {
-                extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
+                extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
             }
             if (!extensions.count(std::string(extension))) continue;
             r.files.emplace_back(move(name));
@@ -60,10 +60,10 @@ FilesToOpen expand_files (
                 for (auto& entry : fs::recursive_directory_iterator(file)) {
                     std::u8string u8name = entry.path().u8string();
                     std::string& name = reinterpret_cast<std::string&>(u8name);
-                    OldStr extension;
+                    Str extension;
                     usize dotpos = name.rfind('.');
                     if (dotpos != std::string::npos) {
-                        extension = OldStr(&name[dotpos+1], size(name) - dotpos - 1);
+                        extension = Str(&name[dotpos+1], size(name) - dotpos - 1);
                     }
                     if (!extensions.count(std::string(extension))) continue;
                     r.files.emplace_back(move(name));

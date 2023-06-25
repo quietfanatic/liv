@@ -13,7 +13,7 @@ namespace glow {
 
     struct GLError : GlowError {
         uint error_code;
-        OldStr gl_function;
+        Str gl_function; // Can't serialize const char*
         std::source_location loc;
     };
 }
