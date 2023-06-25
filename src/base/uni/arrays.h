@@ -551,13 +551,12 @@ struct ArrayInterface {
         set_as_unique(dat, s);
     }
 
-     // Finally, constructing from a std::intiializer_list always copies because
-     // that's the only thing you can do with an initializer list.
-    ArrayInterface (std::initializer_list<T> l) {
-        static_assert(supports_owned,
-            "Can't construct a non-owning array from a std::initializer_list."
-        );
-        set_as_copy(std::data(l), std::size(l));
+     // Finally, std::initializer_list
+    ArrayInterface (std::initializer_list<T> l) requires (supports_owned || is_Slice) {
+        if constexpr (is_Slice) {
+            set_as_unowned(std::data(l), std::size(l));
+        }
+        else set_as_copy(std::data(l), std::size(l));
     }
 
     ///// NAMED CONSTRUCTORS

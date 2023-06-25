@@ -151,7 +151,7 @@ void load (Resource);
  // Loads multiple resources at once.  If an exception is thrown, all the loads
  // will be cancelled and all of the given resources will end up in the UNLOADED
  // state (unless they were already LOADED beforehand).
-void load (const std::vector<Resource>&);
+void load (Slice<Resource>);
 
  // Moves old_res's value to new_res.  Does not change the names of any Resource
  // objects, just the mapping from names to values.  Does not affect any files
@@ -169,7 +169,7 @@ void save (Resource);
  // be saved.  (Exception: there may be some cases where if an error is thrown
  // while writing to disk, the on-disk resources may be left in an inconsistent
  // state.)
-void save (const std::vector<Resource>&);
+void save (Slice<Resource>);
 
  // Clears the value of the resource and sets its state to UNLOADED.  Does
  // nothing if the resource is UNLOADED, and throws if it is LOADING.  Scans all
@@ -182,13 +182,13 @@ void unload (Resource);
  // and if two resources have references to eachother, they have to be unloaded
  // at the same time.  If unloading any of the resources causes an exception,
  // none of the references will be unloaded.
-void unload (const std::vector<Resource>&);
+void unload (Slice<Resource>);
 
  // Immediately unloads the file without scanning for references to it.  This is
  // faster, but if there are any references to data in this resource, they will
  // be left dangling.
 void force_unload (Resource);
-void force_unload (const std::vector<Resource>&);
+void force_unload (Slice<Resource>);
 
  // Reloads a resource that is loaded.  Throws if the resource is not LOADED.
  // Scans all other resources for references to this one and updates them to
@@ -201,7 +201,7 @@ void reload (Resource);
  // reloading them one at a time.  If an exception is thrown for any of the
  // resources, all of them will be restored to their old value before the call
  // to reload.
-void reload (const std::vector<Resource>&);
+void reload (Slice<Resource>);
 
  // Deletes the source of the resource.  If the source is a file, deletes the
  // file without confirmation.  Does not change the resource's state or value.
@@ -221,8 +221,9 @@ AnyString resource_filename (Resource);
  // Returns the resource currently being processed, if any.
 Resource current_resource ();
 
- // Returns a list of all resources with state != UNLOADED.
-std::vector<Resource> loaded_resources ();
+ // Returns a list of all resources with state != UNLOADED.  This includes
+ // resources that are in the process of being loaded, reloaded, or unloaded.
+UniqueArray<Resource> loaded_resources ();
 
 ///// ERRORS
 

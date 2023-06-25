@@ -147,11 +147,10 @@ Reference Resource::get_ref () const {
 ///// RESOURCE OPERATIONS
 
 void load (Resource res) {
-    std::vector<Resource> rs {res};
-    load(rs);
+    load(Slice<Resource>(&res, 1));
 }
-void load (const std::vector<Resource>& reses) {
-    std::vector<Resource> rs;
+void load (Slice<Resource> reses) {
+    UniqueArray<Resource> rs;
     for (auto res : reses)
     switch (res.data->state) {
         case UNLOADED: rs.push_back(res); break;
@@ -160,9 +159,7 @@ void load (const std::vector<Resource>& reses) {
         default: throw X<InvalidResourceState>("load"_s, res, res.data->state);
     }
     try {
-        for (auto res : rs) {
-            res.data->state = LOAD_CONSTRUCTING;
-        }
+        for (auto res : rs) res.data->state = LOAD_CONSTRUCTING;
         for (auto res : rs) {
             auto scheme = universe().require_scheme(res.data->name);
             auto filename = scheme->get_file(res.data->name);
@@ -172,16 +169,12 @@ void load (const std::vector<Resource>& reses) {
                 &res.data->value, tree, Location(res), DELAY_SWIZZLE
             );
         }
-        for (auto res : rs) {
-            res.data->state = LOADED;
-        }
+        for (auto res : rs) res.data->state = LOADED;
     }
     catch (...) {
          // TODO: When recursing load(), rollback innerly loading resources if
          // an outerly loading resource throws.
-        for (auto res : rs) {
-            res.data->state = LOAD_ROLLBACK;
-        }
+        for (auto res : rs) res.data->state = LOAD_ROLLBACK;
         for (auto res : rs) {
             try {
                 res.data->value = Dynamic();
@@ -208,21 +201,18 @@ void rename (Resource old_res, Resource new_res) {
 }
 
 void save (Resource res) {
-    std::vector<Resource> reses {res};
-    save(reses);
+    save(Slice<Resource>(&res, 1));
 }
-void save (const std::vector<Resource>& reses) {
+void save (Slice<Resource> reses) {
     for (auto res : reses) {
         if (res.data->state != LOADED) {
             throw X<InvalidResourceState>("save"_s, res, res.data->state);
         }
     }
     try {
-        for (auto res : reses) {
-            res.data->state = SAVE_VERIFYING;
-        }
+        for (auto res : reses) res.data->state = SAVE_VERIFYING;
          // Serialize all before writing to disk
-        std::vector<std::function<void()>> committers (reses.size());
+        UniqueArray<std::function<void()>> committers (reses.size());
         {
             KeepLocationCache klc;
             for (usize i = 0; i < reses.size(); i++) {
@@ -249,30 +239,21 @@ void save (const std::vector<Resource>& reses) {
                 };
             }
         }
-        for (auto res : reses) {
-            res.data->state = SAVE_COMMITTING;
-        }
-        for (usize i = 0; i < reses.size(); i++) {
-            committers[i]();
-        }
-        for (auto res : reses) {
-            res.data->state = LOADED;
-        }
+        for (auto res : reses) res.data->state = SAVE_COMMITTING;
+        for (auto& commit : committers) commit();
+        for (auto res : reses) res.data->state = LOADED;
     }
     catch (...) {
-        for (auto res : reses) {
-            res.data->state = LOADED;
-        }
+        for (auto res : reses) res.data->state = LOADED;
         throw;
     }
 }
 
 void unload (Resource res) {
-    std::vector<Resource> reses {res};
-    unload(reses);
+    unload(Slice<Resource>(&res, 1));
 }
-void unload (const std::vector<Resource>& reses) {
-    std::vector<Resource> rs;
+void unload (Slice<Resource> reses) {
+    UniqueArray<Resource> rs;
     for (auto res : reses)
     switch (res.data->state) {
         case UNLOADED: continue;
@@ -281,10 +262,8 @@ void unload (const std::vector<Resource>& reses) {
     }
      // Verify step
     try {
-        for (auto res : rs) {
-            res.data->state = UNLOAD_VERIFYING;
-        }
-        std::vector<Resource> others;
+        for (auto res : rs) res.data->state = UNLOAD_VERIFYING;
+        UniqueArray<Resource> others;
         for (auto& [name, other] : universe().resources) {
             switch (other->state) {
                 case UNLOADED: continue;
@@ -326,15 +305,11 @@ void unload (const std::vector<Resource>& reses) {
          // If we got here, no references will be broken by the unload
     }
     catch (...) {
-        for (auto res : rs) {
-            res.data->state = LOADED;
-        }
+        for (auto res : rs) res.data->state = LOADED;
         throw;
     }
      // Destruct step
-    for (auto res : rs) {
-        res.data->state = UNLOAD_COMMITTING;
-    }
+    for (auto res : rs) res.data->state = UNLOAD_COMMITTING;
     try {
         for (auto res : rs) {
             res.data->value = Dynamic();
@@ -347,11 +322,10 @@ void unload (const std::vector<Resource>& reses) {
 }
 
 void force_unload (Resource res) {
-    std::vector<Resource> reses {res};
-    force_unload(reses);
+    force_unload(Slice<Resource>(&res, 1));
 }
-void force_unload (const std::vector<Resource>& reses) {
-    std::vector<Resource> rs;
+void force_unload (Slice<Resource> reses) {
+    UniqueArray<Resource> rs;
     for (auto res : reses)
     switch (res.data->state) {
         case UNLOADED: continue;
@@ -359,9 +333,7 @@ void force_unload (const std::vector<Resource>& reses) {
         default: throw X<InvalidResourceState>("force_unload"_s, res, res.data->state);
     }
      // Skip straight to destruct step
-    for (auto res : rs) {
-        res.data->state = UNLOAD_COMMITTING;
-    }
+    for (auto res : rs) res.data->state = UNLOAD_COMMITTING;
     try {
         for (auto res : rs) {
             res.data->value = Dynamic();
@@ -374,10 +346,9 @@ void force_unload (const std::vector<Resource>& reses) {
 }
 
 void reload (Resource res) {
-    std::vector<Resource> reses {res};
-    reload(reses);
+    reload(Slice<Resource>(&res, 1));
 }
-void reload (const std::vector<Resource>& reses) {
+void reload (Slice<Resource> reses) {
     for (auto res : reses)
     if (res.data->state != LOADED) {
         throw X<InvalidResourceState>("reload"_s, res, res.data->state);
@@ -403,7 +374,7 @@ void reload (const std::vector<Resource>& reses) {
             res.data->state = RELOAD_VERIFYING;
         }
          // Verify step
-        std::vector<Resource> others;
+        UniqueArray<Resource> others;
         for (auto& [name, other] : universe().resources) {
             switch (other->state) {
                 case UNLOADED: continue;
@@ -451,9 +422,7 @@ void reload (const std::vector<Resource>& reses) {
         }
     }
     catch (...) {
-        for (auto res : reses) {
-            res.data->state = RELOAD_ROLLBACK;
-        }
+        for (auto res : reses) res.data->state = RELOAD_ROLLBACK;
         for (auto res : reses) {
             try {
                 res.data->value = Dynamic();
@@ -463,9 +432,7 @@ void reload (const std::vector<Resource>& reses) {
             }
             res.data->value = move(res.data->old_value);
         }
-        for (auto res : reses) {
-            res.data->state = LOADED;
-        }
+        for (auto res : reses) res.data->state = LOADED;
         throw;
     }
      // Commit step
@@ -483,20 +450,14 @@ void reload (const std::vector<Resource>& reses) {
         unrecoverable_exception(e, "while updating references for reload");
     }
      // Destruct step
-    for (auto res : reses) {
-        res.data->state = RELOAD_COMMITTING;
-    }
+    for (auto res : reses) res.data->state = RELOAD_COMMITTING;
     try {
-        for (auto res : reses) {
-            res.data->value = Dynamic();
-        }
+        for (auto res : reses) res.data->value = Dynamic();
     }
     catch (std::exception& e) {
         unrecoverable_exception(e, "while destructing old values for reload");
     }
-    for (auto res : reses) {
-        res.data->state = LOADED;
-    }
+    for (auto res : reses) res.data->state = LOADED;
 }
 
 AnyString resource_filename (Resource res) {
@@ -527,8 +488,8 @@ Resource current_resource () {
     else return Resource();
 }
 
-std::vector<Resource> loaded_resources () {
-    std::vector<Resource> r;
+UniqueArray<Resource> loaded_resources () {
+    UniqueArray<Resource> r;
     for (auto& [name, rd] : universe().resources)
     if (rd->state != UNLOADED) {
         r.push_back(&*rd);
