@@ -8,7 +8,6 @@
 #include "../exception.h"
 #include "../type.h"
 #include "char-cases-private.h"
-#include "tree-private.h"
 
 namespace ayu {
 namespace in {
@@ -212,7 +211,7 @@ struct Printer {
                 );
             }
             case REP_ARRAY: {
-                TreeArraySlice a = tree_Array(t);
+                auto a = TreeArraySlice(*t);
                 if (a.empty()) {
                     return pstr(p, "[]");
                 }
@@ -251,7 +250,7 @@ struct Printer {
                 return pchar(p, ']');
             }
             case REP_OBJECT: {
-                TreeObjectSlice o = tree_Object(t);
+                auto o = TreeObjectSlice(*t);
                 if (o.empty()) {
                     return pstr(p, "{}");
                 }
@@ -288,7 +287,7 @@ struct Printer {
             }
             case REP_ERROR: {
                 try {
-                    std::rethrow_exception(tree_Error(t));
+                    std::rethrow_exception(std::exception_ptr(*t));
                 }
                 catch (const std::exception& e) {
                     Str name;

@@ -56,32 +56,36 @@ AYU_DESCRIBE(const Command*,
     ))
 )
 
+ // External for debugging
+ayu::Tree Statement_to_tree (const Statement& s) {
+     // Serialize the args and stick the command name in front
+     // TODO: allow constructing readonly Reference from const Dynamic
+    auto args_tree = ayu::item_to_tree(const_cast<ayu::Dynamic&>(s.args).ptr());
+    auto a = ayu::TreeArray(args_tree);
+    a.emplace(a.begin(), Str(s.command->name));
+    return ayu::Tree(a);
+}
+void Statement_from_tree (Statement& s, const ayu::Tree& t) {
+     // Get the command from the first elem, then args from the rest.
+     // TODO: optional parameters
+    auto a = ayu::TreeArraySlice(t);
+    if (a.size() == 0) {
+        s = {}; return;
+    }
+    s.command = require_command(Str(a[0]));
+    ayu::TreeArray args_a;
+    for (usize i = 1; i < a.size(); i++) {
+        args_a.push_back(a[i]);
+    }
+    s.args = ayu::Dynamic(s.command->args_type());
+    ayu::item_from_tree(
+        s.args.ptr(), ayu::Tree(args_a), ayu::Location(), ayu::DELAY_SWIZZLE
+    );
+}
+
 AYU_DESCRIBE(Statement,
-    to_tree([](const Statement& s){
-         // Serialize the args and stick the command name in front
-         // TODO: allow constructing readonly Reference from const Dynamic
-        auto args_tree = ayu::item_to_tree(const_cast<ayu::Dynamic&>(s.args).ptr());
-        auto a = ayu::TreeArray(args_tree);
-        a.emplace(a.begin(), Str(s.command->name));
-        return ayu::Tree(a);
-    }),
-    from_tree([](Statement& s, const ayu::Tree& t){
-         // Get the command from the first elem, then args from the rest.
-         // TODO: optional parameters
-        auto a = ayu::TreeArraySlice(t);
-        if (a.size() == 0) {
-            s = {}; return;
-        }
-        s.command = require_command(Str(a[0]));
-        ayu::TreeArray args_a;
-        for (usize i = 1; i < a.size(); i++) {
-            args_a.push_back(a[i]);
-        }
-        s.args = ayu::Dynamic(s.command->args_type());
-        ayu::item_from_tree(
-            s.args.ptr(), ayu::Tree(args_a), ayu::Location(), ayu::DELAY_SWIZZLE
-        );
-    })
+    to_tree(&Statement_to_tree),
+    from_tree(&Statement_from_tree)
 )
 
 AYU_DESCRIBE(control::ConflictingCommandName,

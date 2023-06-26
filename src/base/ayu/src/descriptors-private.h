@@ -2,8 +2,6 @@
 
 #include "../internal/descriptors-internal.h"
 
-#include "tree-private.h"
-
 namespace ayu::in {
 
 template <class C>

@@ -61,113 +61,108 @@ struct Tree {
         const std::exception_ptr* as_error_ptr;
     } data;
 
-    bool has_value () const { return form != UNDEFINED; }
+    constexpr bool has_value () const { return form != UNDEFINED; }
 
      // Default construction.  The only valid operation on an UNDEFINED tree is
      // has_value().
-    constexpr Tree () :
-        form(UNDEFINED), rep(0), flags(0), length(0), data{.as_int64 = 0}
-    { }
+    constexpr Tree ();
      // Move construction.
-    constexpr Tree (Tree&& o) :
-        form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
-    {
-        const_cast<TreeForm&>(o.form) = UNDEFINED;
-        const_cast<int8&>(o.rep) = 0;
-         // TODO: These are not needed
-        o.flags = 0;
-        const_cast<uint32&>(o.length) = 0;
-        const_cast<int64&>(o.data.as_int64) = 0;
-    }
+    constexpr Tree (Tree&& o);
      // Copy construction.  May twiddle reference counts.
-    Tree (const Tree&);
+    constexpr Tree (const Tree&);
      // Destructor.
-    ~Tree ();
-
-    Tree& operator = (const Tree& o) {
-        this->~Tree();
-        return *new (this) Tree(o);
-    }
-    Tree& operator = (Tree&& o) {
+    constexpr ~Tree ();
+     // Assignment boilerplate
+    constexpr Tree& operator = (Tree&& o) {
+        if (this == &o) [[unlikely]] return *this;
         this->~Tree();
         return *new (this) Tree(move(o));
     }
+    constexpr Tree& operator = (const Tree& o) {
+        if (this == &o) [[unlikely]] return *this;
+        this->~Tree();
+        return *new (this) Tree(o);
+    }
 
-    explicit Tree (Null);
-
+    ///// CONVERSION TO TREE
+    explicit constexpr Tree (Null);
      // Disable implicit coercion of the argument to bool
-    struct ExplicitBool { bool v; };
-    explicit Tree (ExplicitBool);
-    template <class T> requires (std::is_same_v<std::remove_cvref_t<T>, bool>)
-    explicit Tree (T v) : Tree(ExplicitBool{v}) { }
-
-     // TODO: Reduce these overloads with a template (for shorter error
-     // messages)
-    explicit Tree (int8 v) : Tree(int64(v)) { }
-    explicit Tree (uint8 v) : Tree(int64(v)) { }
-    explicit Tree (int16 v) : Tree(int64(v)) { }
-    explicit Tree (uint16 v) : Tree(int64(v)) { }
-    explicit Tree (int32 v) : Tree(int64(v)) { }
-    explicit Tree (uint32 v) : Tree(int64(v)) { }
-    explicit Tree (int64 v);
-    explicit Tree (uint64 v) : Tree(int64(v)) { }
-    explicit Tree (float v) : Tree(double(v)) { }
-    explicit Tree (double v);
+    template <class T> requires (std::is_same_v<T, bool>)
+    explicit constexpr Tree (T v);
+     // Templatize this instead of providing an overload for each int type, to
+     // shorten error messages about "no candidate found".
+    template <class T> requires (
+         // ACTUAL integer, not bool or char
+        std::is_integral_v<T> &&
+        !std::is_same_v<T, bool> && !std::is_same_v<T, char>
+    )
+    explicit constexpr Tree (T v);
+     // May as well do this too
+    template <class T> requires (std::is_floating_point_v<T>)
+    explicit constexpr Tree (T v);
 
      // plain (not signed or unsigned) chars are represented as strings
+     // This is not optimal but who serializes individual 8-bit code units
     explicit Tree (char v) : Tree(SharedString(1,v)) { }
-    explicit Tree (AnyString v);
+    explicit constexpr Tree (AnyString v);
     explicit Tree (Str16 v); // Converts to UTF8
 
-    explicit Tree (TreeArray v);
-    explicit Tree (TreeObject v);
+    explicit constexpr Tree (TreeArray v);
+    explicit constexpr Tree (TreeObject v);
     explicit Tree (std::exception_ptr p);
 
+    ///// CONVERSION FROM TREE
      // These throw if the tree is not the right form or if
      // the requested type cannot store the value, e.g. try to convert to a
      // uint8 a Tree containing the number 257.
-    explicit operator Null () const;
-    explicit operator bool () const;
-    explicit operator char () const;
-    explicit operator int8 () const;
-    explicit operator uint8 () const;
-    explicit operator int16 () const;
-    explicit operator uint16 () const;
-    explicit operator int32 () const;
-    explicit operator uint32 () const;
-    explicit operator int64 () const;
-    explicit operator uint64 () const;
-    explicit operator float () const { return double(*this); }
-    explicit operator double () const;
+    explicit constexpr operator Null () const;
+    explicit constexpr operator bool () const;
+    explicit constexpr operator char () const;
+    explicit constexpr operator int8 () const;
+    explicit constexpr operator uint8 () const;
+    explicit constexpr operator int16 () const;
+    explicit constexpr operator uint16 () const;
+    explicit constexpr operator int32 () const;
+    explicit constexpr operator uint32 () const;
+    explicit constexpr operator int64 () const;
+    explicit constexpr operator uint64 () const;
+    explicit constexpr operator float () const { return double(*this); }
+    explicit constexpr operator double () const;
      // Warning 1: The returned Str is not NUL-terminated.
      // Warning 2: The Str will be invalidated when this Tree is destructed.
-    explicit operator Str () const;
-    explicit operator AnyString () const;
+    explicit constexpr operator Str () const;
+     // TODO: provide rvalue conversions
+    explicit constexpr operator AnyString () const;
     explicit operator UniqueString16 () const;
-    explicit operator TreeArraySlice () const;
-    explicit operator TreeArray () const;
-    explicit operator TreeObjectSlice () const;
-    explicit operator TreeObject () const;
+    explicit constexpr operator TreeArraySlice () const;
+    explicit constexpr operator TreeArray () const;
+    explicit constexpr operator TreeObjectSlice () const;
+    explicit constexpr operator TreeObject () const;
+    explicit operator std::exception_ptr () const;
 
+    ///// CONVENIENCE
      // Returns null if the invocant is not an OBJECT or does not have an
      // attribute with the given key.
-    const Tree* attr (Str key) const;
+    constexpr const Tree* attr (Str key) const;
      // Returns null if the invocant is not an ARRAY or does not have an
      // element at the given index.
-    const Tree* elem (usize index) const;
+    constexpr const Tree* elem (usize index) const;
 
      // Throws if the tree is not an object or doesn't have that attribute.
-    const Tree& operator[] (Str key) const;
+    constexpr const Tree& operator[] (Str key) const;
      // Throws if the tree is not an array or the index is out of bounds.
-    const Tree& operator[] (usize index) const;
+    constexpr const Tree& operator[] (usize index) const;
 };
  // Make sure earlier CRef<Tree, 16> alias is correct
-static_assert(sizeof(Tree) == 16);
+static_assert(sizeof(Tree) == sizeof(TreeRef));
 
  // Test for equality.  Trees of different forms are considered unequal.
- // Objects are equal if they have all the same attributes, but the attributes
- // don't have to be in the same order.  Unlike float and double, Tree(NAN)
- // == Tree(NAN).  Like float and double, -0.0 == +0.0.
+ //  - Unlike float and double, Tree(NAN) == Tree(NAN).
+ //  - Like float and double, -0.0 == +0.0.
+ //  - Objects are equal if they have all the same attributes, but the
+ //  attributes don't have to be in the same order.  Note that comparing
+ //  TreeObjects or TreeObjectSlices will NOT do an order-independent
+ //  comparison, it'll just do ordinary array comparison.
 bool operator == (TreeRef a, TreeRef b);
 
 struct TreeError : Error { };
@@ -179,8 +174,10 @@ struct WrongForm : TreeError {
  // Tried to extract a number from a tree, but the tree's number won't fit
  // into the requested type.
 struct CantRepresent : TreeError {
-    std::string type_name;
+    AnyString type_name;
     Tree tree;
 };
 
 }  // namespace ayu
+
+#include "internal/tree-internal.h"

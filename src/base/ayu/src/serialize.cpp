@@ -124,7 +124,8 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
     switch (tree->form) {
         case OBJECT: {
             if (trav.desc->accepts_object()) {
-                TreeObjectSlice o = tree_Object(tree);
+                expect(tree->rep == REP_OBJECT);
+                auto o = TreeObjectSlice(*tree);
                 UniqueArray<AnyString> ks;
                 for (auto& p : o) {
                     ks.emplace_back(p.first);
@@ -143,7 +144,8 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
         }
         case ARRAY: {
             if (trav.desc->accepts_array()) {
-                TreeArraySlice a = tree_Array(tree);
+                expect(tree->rep == REP_ARRAY);
+                auto a = TreeArraySlice(*tree);
                 ser_set_length(trav, a.size());
                 for (usize i = 0; i < a.size(); i++) {
                     ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
@@ -156,7 +158,7 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
         }
         case ERROR: {
              // Dunno how we got this far but whatever
-            std::rethrow_exception(tree_Error(tree));
+            std::rethrow_exception(std::exception_ptr(*tree));
         }
         default: {
              // All other tree types support the values descriptor
@@ -317,7 +319,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
                 if (tree.form != ARRAY) {
                     throw X<InvalidKeysType>(trav_location(trav), trav.desc, keys_type);
                 }
-                for (const Tree& e : tree_Array(move(tree))) {
+                for (const Tree& e : TreeArraySlice(tree)) {
                     if (e.form != STRING) {
                         throw X<InvalidKeysType>(trav_location(trav), trav.desc, keys_type);
                     }

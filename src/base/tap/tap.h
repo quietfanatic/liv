@@ -394,8 +394,15 @@ std::string Show<T>::show (const T& v) {
     else if constexpr (std::is_same_v<T, char>) {
         return std::string("'") + v + "'";
     }
+     // TODO: Generalize to anything that stringifies
     else if constexpr (std::is_same_v<T, const char*>) {
         return v ? "\"" + std::string(v) + "\"" : "nullptr";
+    }
+    else if constexpr (
+        std::is_array_v<T> &&
+        std::is_same_v<std::remove_cvref_t<std::remove_extent_t<T>>, char>
+    ) {
+        return "\"" + std::string(v) + "\"";
     }
     else if constexpr (std::is_same_v<T, std::string>) {
         return "\"" + v + "\"";

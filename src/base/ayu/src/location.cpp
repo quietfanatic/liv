@@ -5,7 +5,6 @@
 #include "../reference.h"
 #include "../resource.h"
 #include "char-cases-private.h"
-#include "tree-private.h"
 
 namespace ayu {
 namespace in {
