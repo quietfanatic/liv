@@ -454,7 +454,7 @@ struct ArrayInterface {
     }
 
      // Construct from a pointer(-like iterator) and a size
-    template <ArrayIterator Ptr> constexpr
+    template <ArrayIterator Ptr> explicit constexpr
     ArrayInterface (Ptr p, usize s) requires (!is_Static) {
         if constexpr (is_Slice) {
             static_assert(ArrayIteratorFor<Ptr, T>,
@@ -469,7 +469,7 @@ struct ArrayInterface {
             set_as_copy(move(p), s);
         }
     }
-    template <ArrayIterator Ptr> consteval
+    template <ArrayIterator Ptr> explicit consteval
     ArrayInterface (Ptr p, usize s) requires (is_Static) {
         static_assert(ArrayIteratorFor<Ptr, T>,
             "Cannot construct static array from iterator with non-exact "
@@ -482,7 +482,8 @@ struct ArrayInterface {
     }
 
      // Construct from a pair of iterators.
-    template <ArrayIterator Begin, ArraySentinelFor<Begin> End> constexpr
+    template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
+    explicit constexpr
     ArrayInterface (Begin b, End e) requires (!is_Static) {
         if constexpr (is_Slice) {
             static_assert(ArrayIteratorFor<Begin, T>,
@@ -501,7 +502,8 @@ struct ArrayInterface {
             set_as_copy(move(b), move(e));
         }
     }
-    template <ArrayIterator Begin, ArraySentinelFor<Begin> End> consteval
+    template <ArrayIterator Begin, ArraySentinelFor<Begin> End>
+    explicit consteval
     ArrayInterface (Begin b, End e) requires (is_Static) {
         static_assert(ArrayIteratorFor<Begin, T>,
             "Cannot construct static array from iterator with non-exact "
@@ -543,7 +545,8 @@ struct ArrayInterface {
     }
 
      // This constructor constructs a repeating sequence of one element.  It's
-     // only available for owned array classes.
+     // only available for owned classes.
+    explicit
     ArrayInterface (usize s, const T& v) requires (
         supports_owned && std::is_copy_constructible_v<T>
     ) {
@@ -1664,21 +1667,21 @@ struct ArrayInterface {
         }
         else if constexpr (std::is_copy_constructible_v<T>) { // Not unique
             usize head_i = 0;
-            usize tail_i = 0;
+            usize tail_i = split;
             try {
-                for (; head_i < self.size(); ++head_i) {
+                for (; head_i < split; ++head_i) {
                     new (&dat[head_i]) T(self.impl.data[head_i]);
                 }
-                for (; tail_i < cap - self.size(); ++tail_i) {
-                    new (&dat[split + shift + tail_i]) T(
-                        self.impl.data[split + tail_i]
+                for (; tail_i < self.size(); ++tail_i) {
+                    new (&dat[shift + tail_i]) T(
+                        self.impl.data[tail_i]
                     );
                 }
             }
             catch (...) {
                  // Yuck, someone threw an exception in a copy constructor!
-                while (tail_i > 0) {
-                    dat[split + shift + --tail_i].~T();
+                while (tail_i > split) {
+                    dat[shift + --tail_i].~T();
                 }
                 while (head_i > 0) {
                     dat[--head_i].~T();
