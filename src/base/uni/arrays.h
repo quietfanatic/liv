@@ -4,8 +4,23 @@
  // a common interface and differ by ownership model.  They're largely
  // compatible with STL containers, but not quite a drop-in replacement.
  //
+ // COPY-ON-WRITE
+ // The AnyArray and AnyString classes have copy-on-write behavior when you try
+ // to modify them.  By default simple access operations like begin(), end(),
+ // operator[], and at() do not trigger a copy-on-write and instead return const
+ // references.  To trigger a copy-on-write use mut_begin(), mut_end(),
+ // mut_get(), and mut_at().  For simplicity, AnyArray and AnyString can only be
+ // used with element types that have a copy constructor.  To work with move-
+ // only element types, use UniqueArray.
+ //
+ // STATIC STRING OPTIMIZATION
+ // Not to be confused with Small String Optimization.  AnyArray and AnyString
+ // can be refer to a static string (a string which will stay alive for the
+ // duration of the program, or at least the foreseeable future).  This allows
+ // them to be created and passed around with no allocation cost.
+ //
  // THREAD-SAFETY
- // SharedArray and AnyArray use reference counting which is not thread-safe.
+ // SharedArray and AnyArray use reference counting which is not threadsafe.
  // To pass arrays between threads you should use UniqueArray.
  //
  // EXCEPTION-SAFETY
@@ -39,13 +54,14 @@ struct ArrayInterface;
 
  // A generic dynamically-sized array class which can either own shared
  // (refcounted) data or reference static data.  Has semi-implicit
- // copy-on-write behavior.
+ // copy-on-write behavior (at no cost if you don't use it).
 template <class T>
 using AnyArray = ArrayInterface<ArrayClass::AnyA, T>;
 
  // An array that can only reference shared data.  There isn't much reason to
  // use this instead of AnyArray, but it's here as an intermediate between AnyArray
- // and UniqueArray.  TODO: Disable COW and make this mutable
+ // and UniqueArray.  This should probably be renamed because its name suggests
+ // it might be have shared mutability, but it does not.
 template <class T>
 using SharedArray = ArrayInterface<ArrayClass::SharedA, T>;
 
@@ -646,6 +662,10 @@ struct ArrayInterface {
     ///// ASSIGNMENT OPERATORS
     // These only take assignment from the exact same array class, relying on
     // implicit coercion for the others.
+    // There is an opportunity for optimization that we aren't taking, that
+    // being for copy assignment to unique strings to reuse the allocated buffer
+    // instead of making a new one.  Currently I think this is more complicated
+    // than it's worth.
 
     constexpr
     ArrayInterface& operator= (ArrayInterface&& o) requires (
