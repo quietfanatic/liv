@@ -88,7 +88,7 @@ struct Tree {
     explicit constexpr Tree (Null);
      // Disable implicit coercion of the argument to bool
     template <class T> requires (std::is_same_v<T, bool>)
-    explicit constexpr Tree (T v);
+    explicit constexpr Tree (T);
      // Templatize this instead of providing an overload for each int type, to
      // shorten error messages about "no candidate found".
     template <class T> requires (
@@ -96,20 +96,20 @@ struct Tree {
         std::is_integral_v<T> &&
         !std::is_same_v<T, bool> && !std::is_same_v<T, char>
     )
-    explicit constexpr Tree (T v);
+    explicit constexpr Tree (T);
      // May as well do this too
     template <class T> requires (std::is_floating_point_v<T>)
-    explicit constexpr Tree (T v);
+    explicit constexpr Tree (T);
 
      // plain (not signed or unsigned) chars are represented as strings
      // This is not optimal but who serializes individual 8-bit code units
     explicit Tree (char v) : Tree(SharedString(1,v)) { }
-    explicit constexpr Tree (AnyString v);
-    explicit Tree (Str16 v); // Converts to UTF8
+    explicit constexpr Tree (AnyString);
+    explicit Tree (Str16); // Converts to UTF8
 
-    explicit constexpr Tree (TreeArray v);
-    explicit constexpr Tree (TreeObject v);
-    explicit Tree (std::exception_ptr p);
+    explicit constexpr Tree (TreeArray);
+    explicit constexpr Tree (TreeObject);
+    explicit Tree (std::exception_ptr);
 
     ///// CONVERSION FROM TREE
      // These throw if the tree is not the right form or if
@@ -132,12 +132,15 @@ struct Tree {
      // Warning 2: The Str will be invalidated when this Tree is destructed.
     explicit constexpr operator Str () const;
      // TODO: provide rvalue conversions
-    explicit constexpr operator AnyString () const;
+    explicit constexpr operator AnyString () const&;
+    explicit operator AnyString () &&;
     explicit operator UniqueString16 () const;
     explicit constexpr operator TreeArraySlice () const;
-    explicit constexpr operator TreeArray () const;
+    explicit constexpr operator TreeArray () const&;
+    explicit operator TreeArray () &&;
     explicit constexpr operator TreeObjectSlice () const;
-    explicit constexpr operator TreeObject () const;
+    explicit constexpr operator TreeObject () const&;
+    explicit operator TreeObject () &&;
     explicit operator std::exception_ptr () const;
 
     ///// CONVENIENCE

@@ -669,6 +669,7 @@ struct ArrayInterface {
     // being for copy assignment to unique strings to reuse the allocated buffer
     // instead of making a new one.  Currently I think this is more complicated
     // than it's worth.
+    // Also, we should maybe detect when assigning a substr of self to self.
 
     constexpr
     ArrayInterface& operator= (ArrayInterface&& o) requires (

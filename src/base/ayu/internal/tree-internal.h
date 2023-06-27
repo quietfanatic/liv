@@ -164,7 +164,7 @@ constexpr Tree::operator Str () const {
         default: in::bad_Tree_form(*this, STRING);
     }
 }
-constexpr Tree::operator AnyString () const {
+constexpr Tree::operator AnyString () const& {
     switch (rep) {
         case in::REP_STATICSTRING:
             return StaticString::Static(data.as_char_ptr, length);
@@ -179,6 +179,20 @@ constexpr Tree::operator AnyString () const {
         default: in::bad_Tree_form(*this, STRING);
     }
 }
+inline Tree::operator AnyString () && {
+    switch (rep) {
+        case in::REP_STATICSTRING:
+            return StaticString::Static(data.as_char_ptr, length);
+        case in::REP_SHAREDSTRING: {
+            auto r = SharedString::Materialize(
+                const_cast<char*>(data.as_char_ptr), length
+            );
+            new (this) Tree();
+            return r;
+        }
+        default: in::bad_Tree_form(*this, STRING);
+    }
+}
 inline Tree::operator UniqueString16 () const {
     return to_utf16(Str(*this));
 }
@@ -186,7 +200,7 @@ constexpr Tree::operator TreeArraySlice () const {
     if (rep != in::REP_ARRAY) in::bad_Tree_form(*this, ARRAY);
     return TreeArraySlice(data.as_array_ptr, length);
 }
-constexpr Tree::operator TreeArray () const {
+constexpr Tree::operator TreeArray () const& {
     if (rep != in::REP_ARRAY) in::bad_Tree_form(*this, ARRAY);
     if (data.as_array_ptr) {
         ++ArrayOwnedHeader::get(data.as_array_ptr)->ref_count;
@@ -195,11 +209,19 @@ constexpr Tree::operator TreeArray () const {
         const_cast<Tree*>(data.as_array_ptr), length
     );
 }
+inline Tree::operator TreeArray () && {
+    if (rep != in::REP_ARRAY) in::bad_Tree_form(*this, ARRAY);
+    auto r = TreeArray::Materialize(
+        const_cast<Tree*>(data.as_array_ptr), length
+    );
+    new (this) Tree();
+    return r;
+}
 constexpr Tree::operator TreeObjectSlice () const {
     if (rep != in::REP_OBJECT) in::bad_Tree_form(*this, OBJECT);
     return TreeObjectSlice(data.as_object_ptr, length);
 }
-constexpr Tree::operator TreeObject () const {
+constexpr Tree::operator TreeObject () const& {
     if (rep != in::REP_OBJECT) in::bad_Tree_form(*this, OBJECT);
     if (data.as_object_ptr) {
         ++ArrayOwnedHeader::get(data.as_object_ptr)->ref_count;
@@ -207,6 +229,14 @@ constexpr Tree::operator TreeObject () const {
     return TreeObject::Materialize(
         const_cast<TreePair*>(data.as_object_ptr), length
     );
+}
+inline Tree::operator TreeObject () && {
+    if (rep != in::REP_OBJECT) in::bad_Tree_form(*this, OBJECT);
+    auto r = TreeObject::Materialize(
+        const_cast<TreePair*>(data.as_object_ptr), length
+    );
+    new (this) Tree();
+    return r;
 }
 inline Tree::operator std::exception_ptr () const {
     if (rep != in::REP_ERROR) in::bad_Tree_form(*this, ERROR);

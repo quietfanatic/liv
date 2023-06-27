@@ -199,9 +199,9 @@ AYU_DESCRIBE_TEMPLATE(
      // doesn't make sense, so use to_tree and from_tree instead of length and
      // elem_func
     desc::to_tree([](const std::unordered_set<T>& v){
-        ayu::TreeArray a;
+        ayu::TreeArray a; a.reserve(v.size());
         for (auto& e : v) {
-            a.emplace_back(ayu::item_to_tree(e));
+            a.emplace_back_expect_capacity(ayu::item_to_tree(e));
         }
         return ayu::Tree(move(a));
     }),
@@ -250,9 +250,9 @@ AYU_DESCRIBE_TEMPLATE(
         return uni::StaticString::Static(r);
     }),
     desc::to_tree([](const std::set<T>& v){
-        ayu::TreeArray a;
+        ayu::TreeArray a; a.reserve(v.size());
         for (auto& e : v) {
-            a.emplace_back(ayu::item_to_tree(&e));
+            a.emplace_back_expect_capacity(ayu::item_to_tree(&e));
         }
         return ayu::Tree(move(a));
     }),

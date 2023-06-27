@@ -34,6 +34,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                 TreeObject o;
                 UniqueArray<AnyString> ks;
                 ser_collect_keys(trav, ks);
+                o.reserve(ks.size());
                 for (auto& k : ks) {
                     ser_attr(
                         trav, k, ACR_READ, [&](const Traversal& child)
@@ -49,7 +50,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                              // It's okay to move k even though the traversal
                              // stack has a pointer to it, because this is the
                              // last thing that happens before ser_attr returns.
-                            o.emplace_back(move(k), move(t));
+                            o.emplace_back_expect_capacity(move(k), move(t));
                         }
                     });
                 }
@@ -62,6 +63,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
             case Description::PREFER_ARRAY: {
                 TreeArray a;
                 usize l = ser_get_length(trav);
+                a.reserve(l);
                 for (usize i = 0; i < l; i++) {
                     ser_elem(
                         trav, i, ACR_READ, [&](const Traversal& child)
@@ -75,7 +77,7 @@ Tree in::ser_to_tree (const Traversal& trav) {
                         if (child.op == ATTR) {
                             t.flags |= child.acr->tree_flags();
                         }
-                        a.emplace_back(move(t));
+                        a.emplace_back_expect_capacity(move(t));
                     });
                 }
                 return Tree(move(a));
@@ -126,9 +128,9 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
             if (trav.desc->accepts_object()) {
                 expect(tree->rep == REP_OBJECT);
                 auto o = TreeObjectSlice(*tree);
-                UniqueArray<AnyString> ks;
+                UniqueArray<AnyString> ks; ks.reserve(o.size());
                 for (auto& p : o) {
-                    ks.emplace_back(p.first);
+                    ks.emplace_back_expect_capacity(p.first);
                 }
                 ser_set_keys(trav, move(ks));
                 for (auto& p : o) {

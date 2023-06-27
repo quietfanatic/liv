@@ -106,6 +106,7 @@ Input input_from_string (Str name) {
 #include "keys-table-internal.h"
 #undef ALT
 #undef KEY
+         // TODO: Put these in the keys table
         case fast_hash("button1"):
         case fast_hash("btn1"):
         case fast_hash("leftbutton"):
@@ -185,7 +186,7 @@ static ayu::Tree input_to_tree (const Input& input) {
         }
         default: require(false);
     }
-    return ayu::Tree(a);
+    return ayu::Tree(move(a));
 }
 static void input_from_tree (Input& input, const ayu::Tree& tree) {
     auto a = ayu::TreeArraySlice(tree);

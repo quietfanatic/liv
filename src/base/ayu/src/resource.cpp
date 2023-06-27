@@ -34,6 +34,10 @@ namespace in {
                 throw X<UnacceptableResourceType>{res.name().spec(), type};
             }
         }
+        else {
+             // TODO: Figure out/remember what to do here
+            require(false);
+        }
     }
 
 } using namespace in;
