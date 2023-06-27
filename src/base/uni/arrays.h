@@ -759,7 +759,7 @@ struct ArrayInterface {
      // 64-bit platforms.  If you need to process arrays larger than 2 billion
      // eleents, you're probably already managing your own memory anyway.
     static constexpr usize max_size_ =
-        supports_owned ? 0x7fff'fff0 : usize(-1) >> 1;
+        supports_owned ? uint32(-1) >> 1 : usize(-1) >> 1;
     ALWAYS_INLINE constexpr
     usize max_size () const { return max_size_; }
 
@@ -1513,7 +1513,7 @@ struct ArrayInterface {
         usize cap = capacity_for_size(s);
          // On 32-bit platforms we need to make sure we don't overflow usize
         uint64 bytes = sizeof(ArrayOwnedHeader) + (uint64)cap * sizeof(T);
-        require(bytes < usize(-1));
+        require(bytes <= usize(-1));
         auto header = (ArrayOwnedHeader*)std::malloc(bytes);
         const_cast<uint32&>(header->capacity) = cap;
         header->ref_count = 0;
