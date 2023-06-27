@@ -46,35 +46,35 @@ struct ArrayImplementation<ArrayClass::AnyA, T> {
      // owned = sizex2_with_owned & 1
      // size = sizex2_with_owned >> 1
      // We are not using bitfields because they are not optimized very well.
-    usize sizex2_with_owned;
+    uint32 sizex2_with_owned;
     T* data;
 };
 
 template <class T>
 struct ArrayImplementation<ArrayClass::AnyS, T> {
-    usize sizex2_with_owned;
+    uint32 sizex2_with_owned;
     T* data;
 };
 
 template <class T>
 struct ArrayImplementation<ArrayClass::SharedA, T> {
-    usize size;
+    uint32 size;
     T* data;
 };
 template <class T>
 struct ArrayImplementation<ArrayClass::SharedS, T> {
-    usize size;
+    uint32 size;
     T* data;
 };
 
 template <class T>
 struct ArrayImplementation<ArrayClass::UniqueA, T> {
-    usize size;
+    uint32 size;
     T* data;
 };
 template <class T>
 struct ArrayImplementation<ArrayClass::UniqueS, T> {
-    usize size;
+    uint32 size;
     T* data;
 };
 
