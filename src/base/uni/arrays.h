@@ -531,7 +531,7 @@ struct ArrayInterface {
         usize i = 0;
         try {
             for (; i < s; ++i) {
-                new (&dat[i]) T();
+                new ((void*)&dat[i]) T();
             }
         }
         catch (...) {
@@ -557,7 +557,7 @@ struct ArrayInterface {
         usize i = 0;
         try {
             for (; i < s; ++i) {
-                new (&dat[i]) T(v);
+                new ((void*)&dat[i]) T(v);
             }
         }
         catch (...) {
@@ -1077,7 +1077,7 @@ struct ArrayInterface {
         usize i = old_size;
         try {
             for (; i < new_size; ++i) {
-                new (&impl.data[i]) T();
+                new ((void*)&impl.data[i]) T();
             }
         }
         catch (...) {
@@ -1116,7 +1116,7 @@ struct ArrayInterface {
     template <class... Args>
     T& emplace_back (Args&&... args) requires (supports_owned) {
         reserve_plenty(size() + 1);
-        T& r = *new (&impl.data[size()]) T(std::forward<Args>(args)...);
+        T& r = *new ((void*)&impl.data[size()]) T(std::forward<Args>(args)...);
         add_size(1);
         return r;
     }
@@ -1126,7 +1126,7 @@ struct ArrayInterface {
     T& emplace_back_expect_capacity (Args&&... args) requires (supports_owned) {
         expect(size() + 1 <= max_size_);
         expect(unique() && capacity() > size());
-        T& r = *new (&impl.data[size()]) T(std::forward<Args>(args)...);
+        T& r = *new ((void*)&impl.data[size()]) T(std::forward<Args>(args)...);
         add_size(1);
         return r;
     }
@@ -1232,7 +1232,7 @@ struct ArrayInterface {
         expect(offset < size());
         if constexpr (noexcept(T(std::forward<Args>(args)...))) {
             T* dat = do_split(impl, offset, 1);
-            T* r = new (&dat[offset]) T(std::forward<Args>(args)...);
+            T* r = new ((void*)&dat[offset]) T(std::forward<Args>(args)...);
             set_as_unique(dat, size() + 1);
             return *r;
         }
@@ -1241,7 +1241,7 @@ struct ArrayInterface {
             T* dat = do_split(impl, offset, 1);
             T* r;
             try {
-                r = new (&dat[offset]) T(move(v));
+                r = new ((void*)&dat[offset]) T(move(v));
             }
             catch (...) { never(); }
             set_as_unique(dat, size() + 1);
@@ -1528,7 +1528,7 @@ struct ArrayInterface {
         usize i = 0;
         try {
             for (auto p = move(ptr); i < s; ++i, ++p) {
-                new (&dat[i]) T(*p);
+                new ((void*)&dat[i]) T(*p);
             }
         }
         catch (...) {
@@ -1590,7 +1590,7 @@ struct ArrayInterface {
              // even if they aren't marked noexcept.
             try {
                 for (usize i = 0; i < self.size(); ++i) {
-                    new (&dat[i]) T(move(self.impl.data[i]));
+                    new ((void*)&dat[i]) T(move(self.impl.data[i]));
                     self.impl.data[i].~T();
                 }
             }
@@ -1630,7 +1630,7 @@ struct ArrayInterface {
             try {
                  // Move elements forward, starting at the back
                 for (usize i = self.size(); i > split; --i) {
-                    new (&self.impl.data[i-1 + shift]) T(
+                    new ((void*)&self.impl.data[i-1 + shift]) T(
                         move(self.impl.data[i-1])
                     );
                     self.impl.data[i-1].~T();
@@ -1651,11 +1651,11 @@ struct ArrayInterface {
              // if they aren't marked noexcept.
             try {
                 for (usize i = 0; i < split; ++i) {
-                    new (&dat[i]) T(move(self.impl.data[i]));
+                    new ((void*)&dat[i]) T(move(self.impl.data[i]));
                     self.impl.data[i].~T();
                 }
                 for (usize i = 0; i < self.size() - split; ++i) {
-                    new (&dat[split + shift + i]) T(
+                    new ((void*)&dat[split + shift + i]) T(
                         move(self.impl.data[split + i])
                     );
                     self.impl.data[split + i].~T();
@@ -1670,10 +1670,10 @@ struct ArrayInterface {
             usize tail_i = split;
             try {
                 for (; head_i < split; ++head_i) {
-                    new (&dat[head_i]) T(self.impl.data[head_i]);
+                    new ((void*)&dat[head_i]) T(self.impl.data[head_i]);
                 }
                 for (; tail_i < self.size(); ++tail_i) {
-                    new (&dat[shift + tail_i]) T(
+                    new ((void*)&dat[shift + tail_i]) T(
                         self.impl.data[tail_i]
                     );
                 }
@@ -1725,10 +1725,10 @@ struct ArrayInterface {
             usize i = 0;
             try {
                 for (; i < offset; i++) {
-                    new (&dat[i]) T(self.impl.data[i]);
+                    new ((void*)&dat[i]) T(self.impl.data[i]);
                 }
                 for (; i < old_size - count; i++) {
-                    new (&dat[i]) T(self.impl.data[count + i]);
+                    new ((void*)&dat[i]) T(self.impl.data[count + i]);
                 }
             }
             catch (...) {
