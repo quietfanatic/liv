@@ -54,6 +54,9 @@ my %configs = (
         opts => [qw(-O3 -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
         strip => 1,
     },
+    dog => {
+        opts => [qw(-O3 -DTAP_DISABLE_TESTS -ggdb -flto)],
+    },
 );
 
 ##### SOURCES
