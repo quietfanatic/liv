@@ -10,22 +10,10 @@ using namespace in;
 
 void ResourceScheme::activate () const {
     auto& schemes = universe().schemes;
-     // Validate
-    if (!scheme_name) {
+     // Easiest way to validate is just try creating an IRI
+    if (!IRI(cat(scheme_name, ":"))) {
         throw X<InvalidResourceScheme>(scheme_name);
     }
-    for (const char& c : scheme_name)
-    switch (c) {
-        case ANY_LOWERCASE: break;
-        case ANY_UPPERCASE:
-        case ANY_DECIMAL_DIGIT:
-        case '+': case '-': case '.':
-            if (&c == &scheme_name.front()) {
-                throw X<InvalidResourceScheme>(scheme_name);
-            }
-            else break;
-    }
-     // Register
     auto [iter, emplaced] = schemes.emplace(scheme_name, this);
     if (!emplaced) throw X<DuplicateResourceScheme>(scheme_name);
 }

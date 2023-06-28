@@ -110,7 +110,8 @@ struct IRI {
      // bool accessors will return false and all string and IRI accessors will
      // return empty.
     bool is_valid () const;
-     // Returns whether this IRI is empty.  The empty IRI is also invalid.
+     // Returns whether this IRI is empty.  The empty IRI is also invalid, but
+     // not all invalid IRIs are empty.
     bool is_empty () const;
      // Equivalent to is_valid
     explicit operator bool () const;

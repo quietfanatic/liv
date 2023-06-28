@@ -253,6 +253,7 @@ AYU_DESCRIBE(ayu::Type,
     delegate(mixed_funcs<AnyString>(
         [](const Type& v){
             if (v.readonly()) {
+                 // TODO: Put this at the end instead of the beginning
                 return AnyString(cat("(readonly)", v.name()));
             }
             else return AnyString(v.name());
