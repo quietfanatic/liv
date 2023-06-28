@@ -58,6 +58,7 @@ struct Traversal {
         LocationRef location;
          // ATTR, ATTR_FUNC
          // Can't include AnyString directly because it's too non-trivial.
+         // TODO: CRef<AnyString> then?
         const AnyString* key;
          // ELEM, ELEM_FUNC
         usize index;

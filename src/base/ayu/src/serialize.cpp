@@ -31,10 +31,9 @@ Tree in::ser_to_tree (const Traversal& trav) {
         }
         switch (trav.desc->preference()) {
             case Description::PREFER_OBJECT: {
-                TreeObject o;
                 UniqueArray<AnyString> ks;
                 ser_collect_keys(trav, ks);
-                o.reserve(ks.size());
+                TreeObject o; o.reserve(ks.size());
                 for (auto& k : ks) {
                     ser_attr(
                         trav, k, ACR_READ, [&](const Traversal& child)
@@ -54,16 +53,11 @@ Tree in::ser_to_tree (const Traversal& trav) {
                         }
                     });
                 }
-                 // Evil optimization: We know we've cleared out the array, so
-                 // manually zero it out to prevent its destructor from
-                 // iterating over it again
-                // ks.materialize_size(0);
                 return Tree(move(o));
             }
             case Description::PREFER_ARRAY: {
-                TreeArray a;
                 usize l = ser_get_length(trav);
-                a.reserve(l);
+                TreeArray a; a.reserve(l);
                 for (usize i = 0; i < l; i++) {
                     ser_elem(
                         trav, i, ACR_READ, [&](const Traversal& child)
