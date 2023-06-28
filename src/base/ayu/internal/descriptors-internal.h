@@ -210,54 +210,19 @@ struct InitDcr : AttachedDescriptor<T> {
     void(* f )(T&);
 };
 
-enum ValueForm {
-    VFNULL,
-    VFBOOL,
-    VFINT64,
-    VFDOUBLE,
-    VFSTRING
+template <class T>
+struct alignas(std::max_align_t) ValueDcr : ComparableAddress {
+    Tree name;
+     // If this is null, it means this is a ValueDcrWithValue.
+     // I'd love to just have this point to ValueDcrWithValue::value, but this
+     // object will be moved around at compile time, so the address won't stick.
+    const T* address;
 };
 
 template <class T>
-struct ValueDcr : ComparableAddress {
-    uint8 form;
-    bool pointer;
-     // For optimization (skips a jump table)
-    uint8 value_offset;
+struct ValueDcrWithValue : ValueDcr<T> {
+    alignas(std::max_align_t) T value;
 };
-
-template <class T, class VF, bool pointer>
-struct ValueDcrWith;
-
- // Disable "offsetof within non-standard-layout class is conditionally
- // supported" warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-
-template <class T, class VF>
-struct ValueDcrWith<T, VF, false> : ValueDcr<T> {
-     // Don't reorder these
-    alignas(void*) VF name;
-    alignas(void*) T value;
-    constexpr ValueDcrWith (uint8 f, VF n, const T& v) :
-        ValueDcr<T>{{}, f, false, offsetof(ValueDcrWith, value)},
-        name(n),
-        value(v)
-    { }
-};
-
-template <class T, class VF>
-struct ValueDcrWith<T, VF, true> : ValueDcr<T> {
-    alignas(void*) VF name;
-    const T* ptr;
-    constexpr ValueDcrWith (uint8 f, VF n, const T* p) :
-        ValueDcr<T>{{}, f, true, offsetof(ValueDcrWith, ptr)},
-        name(n),
-        ptr(p)
-    { }
-};
-
-#pragma GCC diagnostic pop
 
 template <class T>
 struct ValuesDcr : AttachedDescriptor<T> {

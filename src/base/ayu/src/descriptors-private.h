@@ -11,73 +11,9 @@ const C* offset_get (const void* base, uint16 offset) {
 }
 
 struct ValueDcrPrivate : ValueDcr<Mu> {
-    Mu* name () const {
-         // Name should have the same address for all forms, but just in case,
-         // skip the Null form.
-        return (Mu*)&((const ValueDcrWith<void*, bool, false>*)this)->name;
-    }
     Mu* get_value () const {
-        Mu* value = (Mu*)((char*)this + this->value_offset);
-        if (pointer) return *(Mu**)value;
-        else return value;
-    }
-    Tree value_to_tree (const ValuesDcr<Mu>* values, Mu& v) const {
-        if (values->compare(v, *get_value())) {
-            switch (form) {
-                case VFNULL: return Tree(null);
-                case VFBOOL: return Tree(*(const bool*)name());
-                case VFINT64: return Tree(*(const int64*)name());
-                case VFDOUBLE: return Tree(*(const double*)name());
-                case VFSTRING: return Tree(*(const StaticString*)name());
-                default: never();
-            }
-        }
-        else return Tree();
-    }
-    bool matches_tree (TreeRef tree) const {
-        switch (form) {
-            case VFNULL:
-                return tree->rep == REP_NULL;
-            case VFBOOL:
-                return tree->rep == REP_BOOL
-                    && tree->data.as_bool == *(const bool*)name();
-            case VFINT64:
-                switch (tree->rep) {
-                    case REP_INT64:
-                        return tree->data.as_int64 == *(const int64*)name();
-                    case REP_DOUBLE:
-                        return tree->data.as_double == *(const int64*)name();
-                    default: return false;
-                }
-            case VFDOUBLE:
-                switch (tree->rep) {
-                    case REP_INT64:
-                        return tree->data.as_int64 == *(const double*)name();
-                    case REP_DOUBLE: {
-                        double a = tree->data.as_double;
-                        double b = *(const double*)name();
-                        return a == b || (a != a && b != b);
-                    }
-                    default: return false;
-                }
-            case VFSTRING: {
-                StaticString n = *(const StaticString*)name();
-                switch (tree->rep) {
-                    case REP_STATICSTRING:
-                    case REP_SHAREDSTRING: {
-                        if (tree->length != n.size()) return false;
-                        if (tree->data.as_char_ptr == n.data()) return true;
-                        return Str(tree->data.as_char_ptr, tree->length) == n;
-                    }
-                    default: return false;
-                }
-            }
-            default: never();
-        }
-    }
-    Mu* tree_to_value (TreeRef tree) const {
-        if (matches_tree(tree)) return get_value();
-        else return null;
+        if (address) return (Mu*)address;
+        else return (Mu*)((char*)this + sizeof(ValueDcr<Mu>));
     }
 };
 

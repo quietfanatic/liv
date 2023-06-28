@@ -53,67 +53,43 @@ template <class T>
 template <class N>
     requires (requires (T v) { T(move(v)); })
 constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
-    if constexpr (std::is_null_pointer_v<N>) {
-        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, move(v));
+     // Be aggressive about converting to StaticString to make sure nothing goes
+     // through the non-constexpr SharedString path.
+    if constexpr (
+        !requires { Null(n); } &&
+        requires { StaticString::Static(n); }
+    ) {
+        return in::ValueDcrWithValue<T>{
+            {{}, Tree(StaticString::Static(n)), null}, move(v)
+        };
     }
-    else if constexpr (std::is_same_v<N, bool>) {
-        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, move(v));
-    }
-    else if constexpr (std::is_integral_v<N>) {
-        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, move(v));
-    }
-    else if constexpr (std::is_floating_point_v<N>) {
-        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, move(v));
-    }
-    else {
-         // Assume something that can be made into a StaticString
-        return in::ValueDcrWith<T, StaticString, false>(
-            in::VFSTRING, StaticString::Static(n), move(v)
-        );
-    }
+    else return in::ValueDcrWithValue<T>{{{}, Tree(n), null}, move(v)};
 }
+ // TODO: Do we actually need this overload?
 template <class T>
 template <class N>
     requires (requires (const T& v) { T(v); })
 constexpr auto _AYU_DescribeBase<T>::value (const N& n, const T& v) {
-    if constexpr (std::is_null_pointer_v<N>) {
-        return in::ValueDcrWith<T, Null, false>(in::VFNULL, n, v);
+    if constexpr (
+        !requires { Null(n); } &&
+        requires { StaticString::Static(n); }
+    ) {
+        return in::ValueDcrWithValue<T>{
+            {{}, Tree(StaticString::Static(n)), null}, move(v)
+        };
     }
-    else if constexpr (std::is_same_v<N, bool>) {
-        return in::ValueDcrWith<T, bool, false>(in::VFBOOL, n, v);
-    }
-    else if constexpr (std::is_integral_v<N>) {
-        return in::ValueDcrWith<T, int64, false>(in::VFINT64, n, v);
-    }
-    else if constexpr (std::is_floating_point_v<N>) {
-        return in::ValueDcrWith<T, double, false>(in::VFDOUBLE, n, v);
-    }
-    else {
-        return in::ValueDcrWith<T, StaticString, false>(
-            in::VFSTRING, StaticString::Static(n), v
-        );
-    }
+    else return {in::ValueDcrWithValue<T>{{}, Tree(n), null}, move(v)};
 }
 template <class T>
 template <class N>
-constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* v) {
-    if constexpr (std::is_null_pointer_v<N>) {
-        return in::ValueDcrWith<T, Null, true>(in::VFNULL, n, v);
+constexpr auto _AYU_DescribeBase<T>::value_pointer (const N& n, const T* p) {
+    if constexpr (
+        !requires { Null(n); } &&
+        requires { StaticString::Static(n); }
+    ) {
+        return in::ValueDcr<T>{{}, Tree(StaticString::Static(n)), p};
     }
-    else if constexpr (std::is_same_v<N, bool>) {
-        return in::ValueDcrWith<T, bool, true>(in::VFBOOL, n, v);
-    }
-    else if constexpr (std::is_integral_v<N>) {
-        return in::ValueDcrWith<T, int64, true>(in::VFINT64, n, v);
-    }
-    else if constexpr (std::is_floating_point_v<N>) {
-        return in::ValueDcrWith<T, double, true>(in::VFDOUBLE, n, v);
-    }
-    else {
-        return in::ValueDcrWith<T, StaticString, true>(
-            in::VFSTRING, StaticString::Static(n), v
-        );
-    }
+    else return in::ValueDcr<T>{{}, Tree(n), p};
 }
 
 template <class T>

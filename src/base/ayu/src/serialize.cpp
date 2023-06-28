@@ -25,8 +25,10 @@ Tree in::ser_to_tree (const Traversal& trav) {
         }
         if (auto values = trav.desc->values()) {
             for (uint i = 0; i < values->n_values; i++) {
-                Tree r = values->value(i)->value_to_tree(values, *trav.address);
-                if (r.has_value()) return r;
+                auto value = values->value(i);
+                if (values->compare(*trav.address, *value->get_value())) {
+                    return value->name;
+                }
             }
         }
         switch (trav.desc->preference()) {
@@ -160,8 +162,9 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
              // All other tree types support the values descriptor
             if (auto values = trav.desc->values()) {
                 for (uint i = 0; i < values->n_values; i++) {
-                    if (Mu* v = values->value(i)->tree_to_value(tree)) {
-                        values->assign(*trav.address, *v);
+                    auto value = values->value(i);
+                    if (tree == value->name) {
+                        values->assign(*trav.address, *value->get_value());
                         goto done;
                     }
                 }

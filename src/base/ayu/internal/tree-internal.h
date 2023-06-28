@@ -83,11 +83,16 @@ inline Tree::Tree (std::exception_ptr v) :
 constexpr Tree::Tree (Tree&& o) :
     form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
 {
-    const_cast<TreeForm&>(o.form) = UNDEFINED;
-    const_cast<int8&>(o.rep) = 0;
-    o.flags = 0;
-    const_cast<uint32&>(o.length) = 0;
-    const_cast<int64&>(o.data.as_int64) = 0;
+    if (std::is_constant_evaluated()) {
+        require(o.rep >= 0);
+    }
+    else {
+        const_cast<TreeForm&>(o.form) = UNDEFINED;
+        const_cast<int8&>(o.rep) = 0;
+        o.flags = 0;
+        const_cast<uint32&>(o.length) = 0;
+        const_cast<int64&>(o.data.as_int64) = 0;
+    }
 }
 constexpr Tree::Tree (const Tree& o) :
     form(o.form), rep(o.rep), flags(o.flags), length(o.length), data(o.data)
