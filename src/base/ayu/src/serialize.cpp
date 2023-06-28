@@ -20,7 +20,8 @@ DiagnosticSerialization::~DiagnosticSerialization () {
 
 Tree in::ser_to_tree (const Traversal& trav) {
     try {
-        if (auto to_tree = trav.desc->to_tree()) {
+         // The majority of items are [[likely]] to be atomic.
+        if (auto to_tree = trav.desc->to_tree()) [[likely]] {
             return to_tree->f(*trav.address);
         }
         if (auto values = trav.desc->values()) {
@@ -114,7 +115,7 @@ Tree item_to_tree (const Reference& item, LocationRef loc) {
 ///// FROM_TREE
 void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
      // If description has a from_tree, just use that.
-    if (auto from_tree = trav.desc->from_tree()) {
+    if (auto from_tree = trav.desc->from_tree()) [[likely]] {
         from_tree->f(*trav.address, tree);
         goto done;
     }
@@ -186,7 +187,6 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
     if (trav.desc->swizzle()) goto done;
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong.
-    [[unlikely]]
     if (tree->form == OBJECT &&
         (trav.desc->values() || trav.desc->accepts_array())
     ) {
@@ -213,7 +213,7 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
      // their parent.
     auto swizzle = trav.desc->swizzle();
     auto init = trav.desc->init();
-    if (swizzle || init) {
+    if (swizzle || init) [[unlikely]] {
         Reference ref = trav_reference(trav);
         if (swizzle) {
             IFTContext::current->swizzle_ops.emplace_back(
@@ -265,7 +265,6 @@ void item_from_tree (
     const Reference& item, TreeRef tree, LocationRef loc,
     ItemFromTreeFlags flags
 ) {
-     // TODO: Replace with expect()
     if (tree->form == UNDEFINED) {
         throw X<GenericError>("Undefined tree passed to item_from_tree");
     }
