@@ -100,29 +100,29 @@ int input_to_integer (const Input& input) {
 }
 
 Input input_from_string (Str name) {
-    switch (fast_hash(name)) {
-#define KEY(name, sdlk) case fast_hash(name): return {.type = KEY, .code = sdlk};
+    switch (hash(name)) {
+#define KEY(name, sdlk) case hash(name): return {.type = KEY, .code = sdlk};
 #define ALT(name, sdlk) KEY(name, sdlk)
 #include "keys-table-internal.h"
 #undef ALT
 #undef KEY
          // TODO: Put these in the keys table
-        case fast_hash("button1"):
-        case fast_hash("btn1"):
-        case fast_hash("leftbutton"):
-        case fast_hash("leftbtn"): return {.type = BUTTON, .code = SDL_BUTTON_LEFT};
-        case fast_hash("button2"):
-        case fast_hash("btn2"):
-        case fast_hash("middlebutton"):
-        case fast_hash("middlebtn"): return {.type = BUTTON, .code = SDL_BUTTON_MIDDLE};
-        case fast_hash("button3"):
-        case fast_hash("btn3"):
-        case fast_hash("rightbutton"):
-        case fast_hash("rightbtn"): return {.type = BUTTON, .code = SDL_BUTTON_RIGHT};
-        case fast_hash("button4"):
-        case fast_hash("btn4"): return {.type = BUTTON, .code = SDL_BUTTON_X1};
-        case fast_hash("button5"):
-        case fast_hash("btn5"): return {.type = BUTTON, .code = SDL_BUTTON_X2};
+        case hash("button1"):
+        case hash("btn1"):
+        case hash("leftbutton"):
+        case hash("leftbtn"): return {.type = BUTTON, .code = SDL_BUTTON_LEFT};
+        case hash("button2"):
+        case hash("btn2"):
+        case hash("middlebutton"):
+        case hash("middlebtn"): return {.type = BUTTON, .code = SDL_BUTTON_MIDDLE};
+        case hash("button3"):
+        case hash("btn3"):
+        case hash("rightbutton"):
+        case hash("rightbtn"): return {.type = BUTTON, .code = SDL_BUTTON_RIGHT};
+        case hash("button4"):
+        case hash("btn4"): return {.type = BUTTON, .code = SDL_BUTTON_X1};
+        case hash("button5"):
+        case hash("btn5"): return {.type = BUTTON, .code = SDL_BUTTON_X2};
         default: return {};
     }
 }

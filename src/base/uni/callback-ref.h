@@ -1,3 +1,7 @@
+ // CallbackRef<Ret(Args...)>
+ // A super lightweight callback class with reference semantics (std::function
+ // has value semantics and can be copied and moved, so it's way bigger.)
+
 #pragma once
 
 #include <type_traits>
@@ -9,9 +13,6 @@ concept HasExactCallOperator = std::is_convertible_v<
     decltype(&F::operator()),
     Ret (F::*)(Args...)
 >;
-
- // A super lightweight callback class with reference semantics (std::function
- // has value semantics and can be copied and moved, so it's way bigger.)
 template <class> struct CallbackRefV;
 template <class Ret, class... Args>
 struct CallbackRefV<Ret(Args...)> {
@@ -23,7 +24,9 @@ struct CallbackRefV<Ret(Args...)> {
      // GCC allows casting a method pointer to a function pointer, so take
      // advantage of that if we can.  This is not mainly for optimization (the
      // compiler does that pretty well already), it's to clean up the stack
-     // for debugging.
+     // for debugging.  With this the stack goes straight from the caller to the
+     // callee with no ugly wrapper functions inbetween.  This might not work
+     // for virtual operator() but why would you do that.
     template <class F> requires(
         HasExactCallOperator<F, Ret, Args...>
     )
