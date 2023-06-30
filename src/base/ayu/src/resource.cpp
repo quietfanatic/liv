@@ -62,8 +62,6 @@ StaticString show_ResourceState (ResourceState state) {
 
 ///// RESOURCES
 
- // These are separate because it's not known at call time whether we will need
- // to copy or not.  We won't know until just about the end of the constructor.
 Resource::Resource (const IRI& name) {
     if (name.has_fragment()) {
         new (this) Resource(name.iri_without_fragment());
