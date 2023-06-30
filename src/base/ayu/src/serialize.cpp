@@ -18,92 +18,79 @@ DiagnosticSerialization::~DiagnosticSerialization () {
     diagnostic_serialization -= 1;
 }
 
-Tree in::ser_to_tree (const Traversal& trav) {
-    try {
-         // The majority of items are [[likely]] to be atomic.
-        if (auto to_tree = trav.desc->to_tree()) [[likely]] {
-            return to_tree->f(*trav.address);
-        }
-        if (auto values = trav.desc->values()) {
-            for (uint i = 0; i < values->n_values; i++) {
-                auto value = values->value(i);
-                if (values->compare(*trav.address, *value->get_value())) {
-                    return value->name;
-                }
-            }
-        }
-        switch (trav.desc->preference()) {
-            case Description::PREFER_OBJECT: {
-                UniqueArray<AnyString> ks;
-                ser_collect_keys(trav, ks);
-                TreeObject o; o.reserve(ks.size());
-                for (auto& k : ks) {
-                    ser_attr(
-                        trav, k, ACR_READ, [&](const Traversal& child)
-                    {
-                         // Don't serialize readonly attributes, because they
-                         // can't be deserialized.
-                        if (!child.readonly) {
-                            Tree t = ser_to_tree(child);
-                             // Get flags from acr
-                            if (child.op == ATTR) {
-                                t.flags |= child.acr->tree_flags();
-                            }
-                             // It's okay to move k even though the traversal
-                             // stack has a pointer to it, because this is the
-                             // last thing that happens before ser_attr returns.
-                            o.emplace_back_expect_capacity(move(k), move(t));
-                        }
-                    });
-                }
-                return Tree(move(o));
-            }
-            case Description::PREFER_ARRAY: {
-                usize l = ser_get_length(trav);
-                TreeArray a; a.reserve(l);
-                for (usize i = 0; i < l; i++) {
-                    ser_elem(
-                        trav, i, ACR_READ, [&](const Traversal& child)
-                    {
-                         // Readonly elems are problematic, because they can't
-                         // just be skipped without changing the order of other
-                         // elems.  We should probably just forbid them.
-                         // TODO: do that?  Or will that interfere with
-                         // exception printing?
-                        Tree t = ser_to_tree(child);
-                        if (child.op == ATTR) {
-                            t.flags |= child.acr->tree_flags();
-                        }
-                        a.emplace_back_expect_capacity(move(t));
-                    });
-                }
-                return Tree(move(a));
-            }
-            default: {
-                if (auto acr = trav.desc->delegate_acr()) {
-                    Tree r;
-                    trav_delegate(
-                        trav, acr, ACR_READ, [&](const Traversal& child)
-                    {
-                        r = ser_to_tree(child);
-                        r.flags |= acr->tree_flags();
-                    });
-                    return r;
-                }
-                else if (trav.desc->values()) {
-                    throw X<NoNameForValue>(trav_location(trav), trav.desc);
-                }
-                else throw X<CannotToTree>(trav_location(trav), trav.desc);
+Tree in::ser_to_tree (const Traversal& trav) try {
+     // The majority of items are [[likely]] to be atomic.
+    if (auto to_tree = trav.desc->to_tree()) [[likely]] {
+        return to_tree->f(*trav.address);
+    }
+    if (auto values = trav.desc->values()) {
+        for (uint i = 0; i < values->n_values; i++) {
+            auto value = values->value(i);
+            if (values->compare(*trav.address, *value->get_value())) {
+                return value->name;
             }
         }
     }
-    catch (const Error& e) {
-        if (diagnostic_serialization) {
-            return Tree(std::current_exception());
+    if (trav.desc->preference() == Description::PREFER_OBJECT) {
+        UniqueArray<AnyString> ks;
+        ser_collect_keys(trav, ks);
+        TreeObject o; o.reserve(ks.size());
+        for (auto& k : ks) {
+            ser_attr(trav, k, ACR_READ, [&](const Traversal& child){
+                 // Don't serialize readonly attributes, because they can't
+                 // be deserialized.
+                if (child.readonly) return;
+                Tree t = ser_to_tree(child);
+                 // Get flags from acr
+                if (child.op == ATTR) {
+                    t.flags |= child.acr->tree_flags();
+                }
+                 // It's okay to move k even though the traversal stack has
+                 // a pointer to it, because this is the last thing that
+                 // happens before ser_attr returns.
+                o.emplace_back_expect_capacity(move(k), move(t));
+            });
         }
-        else throw;
+        return Tree(move(o));
     }
+    if (trav.desc->preference() == Description::PREFER_ARRAY) {
+        usize l = ser_get_length(trav);
+        TreeArray a; a.reserve(l);
+        for (usize i = 0; i < l; i++) {
+            ser_elem(trav, i, ACR_READ, [&](const Traversal& child){
+                 // Readonly elems are problematic, because they can't just
+                 // be skipped without changing the order of other elems.
+                 // We should probably just forbid them.  TODO: do that?  Or
+                 // will that interfere with exception printing?
+                Tree t = ser_to_tree(child);
+                if (child.op == ATTR) {
+                    t.flags |= child.acr->tree_flags();
+                }
+                a.emplace_back_expect_capacity(move(t));
+            });
+        }
+        return Tree(move(a));
+    }
+    if (auto acr = trav.desc->delegate_acr()) {
+        Tree r;
+        trav_delegate(trav, acr, ACR_READ, [&](const Traversal& child){
+            r = ser_to_tree(child);
+            r.flags |= acr->tree_flags();
+        });
+        return r;
+    }
+    if (trav.desc->values()) {
+        throw X<NoNameForValue>(trav_location(trav), trav.desc);
+    }
+    else throw X<CannotToTree>(trav_location(trav), trav.desc);
 }
+catch (const Error& e) {
+    if (diagnostic_serialization) {
+        return Tree(std::current_exception());
+    }
+    else throw;
+}
+
 Tree item_to_tree (const Reference& item, LocationRef loc) {
     Tree r;
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
@@ -122,38 +109,32 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
      // Now the behavior depends on what kind of tree we've been given
     switch (tree->form) {
         case OBJECT: {
-            if (trav.desc->accepts_object()) {
-                expect(tree->rep == REP_OBJECT);
-                auto o = TreeObjectSlice(*tree);
-                UniqueArray<AnyString> ks; ks.reserve(o.size());
-                for (auto& p : o) {
-                    ks.emplace_back_expect_capacity(p.first);
-                }
-                ser_set_keys(trav, move(ks));
-                for (auto& p : o) {
-                    ser_attr(
-                        trav, p.first, ACR_WRITE, [&](const Traversal& child)
-                    {
-                        ser_from_tree(child, p.second);
-                    });
-                }
-                goto done;
+            if (!trav.desc->accepts_object()) break;
+            expect(tree->rep == REP_OBJECT);
+            auto o = TreeObjectSlice(*tree);
+            UniqueArray<AnyString> ks; ks.reserve(o.size());
+            for (auto& p : o) {
+                ks.emplace_back_expect_capacity(p.first);
             }
-            else break;
+            ser_set_keys(trav, move(ks));
+            for (auto& p : o) {
+                ser_attr(trav, p.first, ACR_WRITE, [&](const Traversal& child){
+                    ser_from_tree(child, p.second);
+                });
+            }
+            goto done;
         }
         case ARRAY: {
-            if (trav.desc->accepts_array()) {
-                expect(tree->rep == REP_ARRAY);
-                auto a = TreeArraySlice(*tree);
-                ser_set_length(trav, a.size());
-                for (usize i = 0; i < a.size(); i++) {
-                    ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
-                        ser_from_tree(child, a[i]);
-                    });
-                }
-                goto done;
+            if (!trav.desc->accepts_array()) break;
+            expect(tree->rep == REP_ARRAY);
+            auto a = TreeArraySlice(*tree);
+            ser_set_length(trav, a.size());
+            for (usize i = 0; i < a.size(); i++) {
+                ser_elem(trav, i, ACR_WRITE, [&](const Traversal& child){
+                    ser_from_tree(child, a[i]);
+                });
             }
-            else break;
+            goto done;
         }
         case ERROR: {
              // Dunno how we got this far but whatever
@@ -169,22 +150,20 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
                         goto done;
                     }
                 }
-                break;
             }
-            else break;
+            break;
         }
     }
      // Nothing matched, so use delegate
     if (auto acr = trav.desc->delegate_acr()) {
-        trav_delegate(
-            trav, acr, ACR_WRITE, [&](const Traversal& child)
-        {
+        trav_delegate(trav, acr, ACR_WRITE, [&](const Traversal& child){
             ser_from_tree(child, tree);
         });
         goto done;
     }
      // Still nothing?  Allow swizzle with no from_tree.
     if (trav.desc->swizzle()) goto done;
+
      // If we got here, we failed to find any method to from_tree this item.
      // Go through maybe a little too much effort to figure out what went wrong.
     if (tree->form == OBJECT &&
@@ -456,17 +435,15 @@ void in::ser_claim_keys (
             auto acr = attr->acr();
             if (acr->attr_flags & ATTR_INHERIT) {
                  // Skip if attribute was given directly, uncollapsed
-                if (!claimed_inherited[i]) {
-                    trav_attr(
-                        trav, acr, attr->key, ACR_WRITE,
-                        [&](const Traversal& child)
-                    {
-                        ser_claim_keys(
-                            child, ks,
-                            optional || acr->attr_flags & ATTR_OPTIONAL
-                        );
-                    });
-                }
+                if (claimed_inherited[i]) continue;
+                trav_attr(
+                    trav, acr, attr->key, ACR_WRITE, [&](const Traversal& child)
+                {
+                    ser_claim_keys(
+                        child, ks,
+                        optional || acr->attr_flags & ATTR_OPTIONAL
+                    );
+                });
             }
         }
     }
