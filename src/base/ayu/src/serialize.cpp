@@ -107,9 +107,8 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
         goto done;
     }
      // Now the behavior depends on what kind of tree we've been given
-    switch (tree->form) {
-        case OBJECT: {
-            if (!trav.desc->accepts_object()) break;
+    if (tree->form == OBJECT) {
+        if (trav.desc->accepts_object()) {
             expect(tree->rep == REP_OBJECT);
             auto o = TreeObjectSlice(*tree);
             UniqueArray<AnyString> ks; ks.reserve(o.size());
@@ -124,8 +123,9 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
             }
             goto done;
         }
-        case ARRAY: {
-            if (!trav.desc->accepts_array()) break;
+    }
+    else if (tree->form == ARRAY) {
+        if (trav.desc->accepts_array()) {
             expect(tree->rep == REP_ARRAY);
             auto a = TreeArraySlice(*tree);
             ser_set_length(trav, a.size());
@@ -136,22 +136,19 @@ void in::ser_from_tree (const Traversal& trav, TreeRef tree) {
             }
             goto done;
         }
-        case ERROR: {
-             // Dunno how we got this far but whatever
-            std::rethrow_exception(std::exception_ptr(*tree));
-        }
-        default: {
-             // All other tree types support the values descriptor
-            if (auto values = trav.desc->values()) {
-                for (uint i = 0; i < values->n_values; i++) {
-                    auto value = values->value(i);
-                    if (tree == value->name) {
-                        values->assign(*trav.address, *value->get_value());
-                        goto done;
-                    }
-                }
+    }
+    else if (tree->form == ERROR) {
+         // Dunno how we got this far but whatever
+        std::rethrow_exception(std::exception_ptr(*tree));
+    }
+    else if (auto values = trav.desc->values()) {
+         // All other tree types support the values descriptor
+        for (uint i = 0; i < values->n_values; i++) {
+            auto value = values->value(i);
+            if (tree == value->name) {
+                values->assign(*trav.address, *value->get_value());
+                goto done;
             }
-            break;
         }
     }
      // Nothing matched, so use delegate
