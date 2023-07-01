@@ -34,15 +34,11 @@ constexpr T normalize (T v) {
 }
 
  // These aren't very interesting for integers.
-template <Integral T>
+template <class T> requires (Integral<T> || Pointing<T>)
 constexpr T next_quantum (T v) { return v+1; }
-template <Pointing P>
-constexpr P next_quantum (P v) { return v+1; }
 
-template <Integral T>
+template <class T> requires (Integral<T> || Pointing<T>)
 constexpr T prev_quantum (T v) { return v-1; }
-template <Pointing P>
-constexpr P prev_quantum (P v) { return v-1; }
 
 ///// COMBINERS
 
