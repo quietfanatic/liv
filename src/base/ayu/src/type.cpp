@@ -16,7 +16,6 @@
 namespace ayu {
 
 Str Type::name () const {
-     // TODO: if (!*this) return "";
     auto desc = in::DescriptionPrivate::get(*this);
     if (!desc) return "";
     return in::get_description_name(desc);
@@ -253,14 +252,13 @@ AYU_DESCRIBE(ayu::Type,
     delegate(mixed_funcs<AnyString>(
         [](const Type& v){
             if (v.readonly()) {
-                 // TODO: Put this at the end instead of the beginning
-                return AnyString(cat("(readonly)", v.name()));
+                return AnyString(cat(" const", v.name()));
             }
             else return AnyString(v.name());
         },
         [](Type& v, const AnyString& m){
-            if (m.substr(0,10) == "(readonly)") {
-                v = Type(m.substr(10), true);
+            if (m.substr(m.size() - 6) == " const") {
+                v = Type(m.substr(0, m.size() - 6), true);
             }
             else v = Type(m);
         }

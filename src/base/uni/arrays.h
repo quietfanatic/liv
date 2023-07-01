@@ -880,7 +880,8 @@ struct ArrayInterface {
     }
 
      // Substr takes an offset and a length, and caps both to the length of the
-     // string.
+     // string.  Note that unlike the STL's substr, this returns a Slice/Str,
+     // not a new copy.
     constexpr
     SelfSlice substr (usize offset, usize length = usize(-1)) const {
         if (offset >= size()) offset = size();
