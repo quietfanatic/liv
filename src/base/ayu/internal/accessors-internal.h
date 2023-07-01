@@ -101,11 +101,12 @@ struct AccessorVT {
 struct Accessor {
     static constexpr AccessorVT _vt = {};
     const AccessorVT* vt = &_vt;
-     // If ref_count is uint16(-1), this is a constexpr accessor and it can't be
-     // modified.  Yes, this does mean that if an accessor accumulates 65535
-     // references it won't be deleted.  I doubt you'll care.  (Usually
-     // refcounts are marked mutable, but that's illegal in constexpr classes.)
-    uint16 ref_count = 0;
+     // If ref_count is 0, this is a constexpr accessor and it can't be
+     // modified.  Yes, this does mean that if an accessor accumulates enough
+     // references to overflow the count it won't be deleted.  I doubt you'll
+     // care.  (Usually refcounts are marked mutable, but that's illegal in
+     // constexpr classes.)
+    uint16 ref_count = 1;
     uint8 accessor_flags = 0;
      // These belong on AttrDcr and ElemDcr but we're storing them here to
      //  save space.
@@ -147,15 +148,13 @@ struct Accessor {
     }
 
     void inc () const {
-        if (ref_count != uint16(-1)) {
-             // Most ACRs are constexpr
-            [[unlikely]]
+         // Most ACRs are constexpr
+        if (ref_count) [[unlikely]] {
             const_cast<uint16&>(ref_count)++;
         }
     }
     void dec () const {
-        if (ref_count != uint16(-1)) {
-            [[unlikely]]
+        if (ref_count) [[unlikely]] {
             if (!--const_cast<uint16&>(ref_count)) {
                 vt->destroy_this(const_cast<Accessor*>(this));
                 delete this;
@@ -165,10 +164,9 @@ struct Accessor {
 };
 
 template <class Acr>
-constexpr Acr constexpr_acr (const Acr& a) {
-    Acr r = a;
-    r.ref_count = uint16(-1);
-    return r;
+constexpr Acr constexpr_acr (Acr a) {
+    a.ref_count = 0;
+    return a;
 }
 
 ///// ACCESSOR TYPES
