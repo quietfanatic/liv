@@ -65,7 +65,7 @@ constexpr auto _AYU_DescribeBase<T>::value (const N& n, T&& v) {
     }
     else return in::ValueDcrWithValue<T>{{{}, Tree(n), null}, move(v)};
 }
- // TODO: Do we actually need this overload?
+ // Forwarding references don't seem to work in the above T&& overload.
 template <class T>
 template <class N>
     requires (requires (const T& v) { T(v); })
@@ -317,7 +317,7 @@ template <> \
 struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
     using desc = ayu::_AYU_DescribeBase<T>; \
     static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(name,
+    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(name
 
 #define AYU_DESCRIBE_END(T) \
     ); \
@@ -331,23 +331,8 @@ const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description =
 #define AYU_DESCRIBE(T, ...) AYU_DESCRIBE_NAME(T, #T, __VA_ARGS__)
 #define AYU_DESCRIBE_NAME(T, name, ...) \
 AYU_DESCRIBE_BEGIN_NAME(T, name) \
-    __VA_ARGS__ \
+    __VA_OPT__(,) __VA_ARGS__ \
 AYU_DESCRIBE_END(T)
-
- // The only way to make an empty description work
- // TODO: use __VA_OPT__ instead
-#define AYU_DESCRIBE_0(T) \
-template <> \
-struct ayu_desc::_AYU_Describe<T> : ayu::_AYU_DescribeBase<T> { \
-    using desc = ayu::_AYU_DescribeBase<T>; \
-    static constexpr bool _ayu_defined = true; \
-    static constexpr auto _ayu_full_description = ayu::_AYU_DescribeBase<T>::_ayu_describe(#T); \
-    static const ayu::in::Description* const _ayu_description; \
-}; \
-const ayu::in::Description* const ayu_desc::_AYU_Describe<T>::_ayu_description = \
-    ayu::in::register_description( \
-        _ayu_full_description.template get<ayu::in::Description>(0) \
-    );
 
 #define AYU_DESCRIBE_TEMPLATE_PARAMS(...) <__VA_ARGS__>
 #define AYU_DESCRIBE_TEMPLATE_TYPE(...) __VA_ARGS__

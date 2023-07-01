@@ -346,7 +346,6 @@ struct LengthDcr : AttachedDescriptor<T> { };
 template <class T, class Acr>
 struct LengthDcrWith : LengthDcr<T> {
     static_assert(std::is_same_v<typename Acr::AccessorFromType, T>);
-     // TODO: allow other integer-like types here
     static_assert(std::is_same_v<typename Acr::AccessorToType, usize>);
     Acr acr;
     constexpr LengthDcrWith (const Acr& a) :

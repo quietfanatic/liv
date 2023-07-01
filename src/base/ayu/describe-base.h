@@ -5,10 +5,10 @@
  //     AYU_DESCRIBE(myns::MyClass,
  //         attrs(
  //             attr("MyBase", base<MyBase>(), inherit),
- //             attr("data", &MyClass::data, optional),
- //             attr("size", value_funcs<int32>(
- //                  [](const MyClass& v){ return v.get_size(); },
- //                  [](MyClass& v, int32 m){ v.set_size(m); }
+ //             attr("stuff", &MyClass::stuff, optional),
+ //             attr("cousin", value_funcs<OtherClass*>(
+ //                  [](const MyClass& v){ return v.get_cousin(); },
+ //                  [](MyClass& v, OtherClass* m){ v.set_cousin(m); }
  //             )
  //         )
  //     )
@@ -36,8 +36,9 @@
  // the "template" keyword added to help out the C++ parser.  See
  // describe-standard.h for some examples of template descriptions.
  //
- // If the list of descriptors passed to AYU_DESCRIBE is empty, you will get a
- // syntax error.  To work around this, use AYU_DESCRIBE_0.
+ // The list of descriptors passed to AYU_DESCRIBE may be empty, in which case
+ // the type cannot be serialized or deserialized, but it can still be used with
+ // Reference and Dynamic, etc.
 
 #pragma once
 

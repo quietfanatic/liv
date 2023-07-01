@@ -89,7 +89,7 @@ void item_set_keys (
     LocationRef loc = Location()
 );
  // Get an attribute of an object-like item by its key, or empty Reference if
- // the attribute doesn't exist.  TODO: Take an AnyString?
+ // the attribute doesn't exist.
 Reference item_maybe_attr (
     const Reference&, AnyString, LocationRef loc = Location());
  // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or

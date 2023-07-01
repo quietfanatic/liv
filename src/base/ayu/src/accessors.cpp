@@ -225,8 +225,8 @@ namespace ayu::test {
 
  // Don't actually need any description, we just need these to be usable with
  // AYU
-AYU_DESCRIBE_0(ayu::test::Thing)
-AYU_DESCRIBE_0(ayu::test::SubThing)
+AYU_DESCRIBE(ayu::test::Thing)
+AYU_DESCRIBE(ayu::test::SubThing)
 
 static tap::TestSet tests ("base/ayu/accessors", []{
     using namespace tap;

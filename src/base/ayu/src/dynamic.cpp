@@ -71,12 +71,12 @@ namespace ayu::test {
 } using namespace ayu::test;
 
  // The things here should work without any descriptions
-AYU_DESCRIBE_0(ayu::test::DynamicTest)
-AYU_DESCRIBE_0(ayu::test::Test2)
-AYU_DESCRIBE_0(ayu::test::NoConstructor)
-AYU_DESCRIBE_0(ayu::test::NoCopy)
-AYU_DESCRIBE_0(ayu::test::NoDestructor)
-AYU_DESCRIBE_0(ayu::test::WeirdAlign)
+AYU_DESCRIBE(ayu::test::DynamicTest)
+AYU_DESCRIBE(ayu::test::Test2)
+AYU_DESCRIBE(ayu::test::NoConstructor)
+AYU_DESCRIBE(ayu::test::NoCopy)
+AYU_DESCRIBE(ayu::test::NoDestructor)
+AYU_DESCRIBE(ayu::test::WeirdAlign)
 
 AYU_DESCRIBE(ayu::test::CustomConstructor,
     default_construct([](void*){ }),

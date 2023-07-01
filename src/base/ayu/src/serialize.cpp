@@ -560,7 +560,8 @@ Reference item_attr (const Reference& item, AnyString key, LocationRef loc) {
 usize in::ser_get_length (const Traversal& trav) {
     if (auto acr = trav.desc->length_acr()) {
         usize len;
-         // TODO: support other integral types besides usize
+         // Do we want to support other integral types besides usize?  Probably
+         // not very high priority.
         acr->read(*trav.address, [&](Mu& lv){
             len = reinterpret_cast<const usize&>(lv);
         });
