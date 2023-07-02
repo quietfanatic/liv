@@ -94,7 +94,10 @@ Objects are delimited by curly braces (`{` and `}`) and contain key-value pairs,
 called attributes.  A key-value pair is a string (following the above rules for
 strings), followed by a colon (`:`), followed by an item.  Commas are allowed
 but not required between attributes.  Keys named `null`, `true`, `false` must
-be quoted, just as with strings.
+be quoted, just as with strings.  The order of attributes in an object should be
+preserved for human-readability, but should not be semantically significant.  If
+you think you want an object with order-significant attributes, use an array of
+pairs instead.
 
 ### Other Syntax
 
@@ -111,15 +114,15 @@ ampersand (`&`), followed by a string, followed by either an item or a colon and
 an item.  If there is no colon, a copy of the item is left in the declaration's
 place (like in YAML).  If there is a colon, the whole declaration is discarded
 at that point.  (This is so you can declare shortcuts ahead of time at the
-beginning of a file.)
+beginning of a file or block.)
 ```
-[1 &a 2 3] # Equivalent to [1 2 3]
-[1 &a:2 3] # Equivalent to [1 3]
+[1 &a 2 3] // Equivalent to [1 2 3]
+[1 &a:2 3] // Equivalent to [1 3]
 ```
 Shortcuts can be used later with an asterisk (`\*`) followed by a string.
 Whatever item the shortcut was declared with earlier will be used in its
 place.  Shortcuts can be used as the keys in objects if they refer to strings.
-Shortcuts are a syntax only; they are semantically invisible and cannot be
+Shortcuts are syntax only; they are semantically invisible and cannot be
 recursive.  Shortcut names are global to the file or string being parsed, and
 can only be used after they are declared.
 
@@ -144,6 +147,20 @@ is the value.
 [float 3.5]
 [app::Settings {foo:3 bar:4}]
 [std::vector<int32> [408 502]]
+```
+
+The AYU data language does not natively support references, but the AYU
+serialization library supports references in the form of IRI strings.  As an
+example,
+```
+[ayu::Document {
+    some_object: [MyObject {
+        foo: 1
+        bar: 2
+    }]
+     // The following makes some_pointer point to some_object.bar
+    some_pointer: ["int*" #some_object/1/bar]
+]]
 ```
 
 AYU does not have a form for binary data.  To represent binary data, you can use
