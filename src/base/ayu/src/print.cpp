@@ -169,6 +169,29 @@ struct Printer {
         return p;
     }
 
+    static usize approx_width (TreeRef t) {
+        switch (t->rep) {
+            case REP_STATICSTRING:
+            case REP_SHAREDSTRING: return t->length;
+            case REP_ARRAY: {
+                usize r = 2;
+                for (usize i = 0; i < t->length; ++i) {
+                    r += 1 + approx_width(t->data.as_array_ptr[i]);
+                }
+                return r;
+            }
+            case REP_OBJECT: {
+                usize r = 2;
+                for (usize i = 0; i < t->length; ++i) {
+                    r += 2 + t->data.as_object_ptr[i].first.size() +
+                        approx_width(t->data.as_object_ptr[i].second);
+                }
+                return r;
+            }
+            default: return 4;
+        }
+    }
+
     [[nodiscard]]
     char* print_subtree (char* p, TreeRef t, uint ind) {
         switch (t->rep) {
@@ -205,10 +228,15 @@ struct Printer {
             }
             case REP_STATICSTRING:
             case REP_SHAREDSTRING: {
-                return print_string(
-                    p, Str(t->data.as_char_ptr, t->length),
-                    t->flags & PREFER_EXPANDED
-                );
+                 // The expanded form of a string uses raw newlines and tabs
+                 // instead of escaping them.  Ironically, this takes fewer
+                 // characters than the compact form, so expand it when not
+                 // pretty-printing.
+                bool expand = !(opts & PRETTY) ? true
+                            : t->flags & PREFER_EXPANDED ? true
+                            : t->flags & PREFER_COMPACT ? false
+                            : t->length <= 50;
+                return print_string(p, Str(*t), expand);
             }
             case REP_ARRAY: {
                 auto a = TreeArraySlice(*t);
@@ -217,14 +245,14 @@ struct Printer {
                 }
 
                  // Print "small" arrays compactly.
-                 // TODO: Revise this?
                 bool expand = !(opts & PRETTY) ? false
                             : t->flags & PREFER_EXPANDED ? true
                             : t->flags & PREFER_COMPACT ? false
-                            : a.size() > 4;
+                            : a.size() <= 2 ? false
+                            : approx_width(t) >= 50;
 
                 bool show_indices = expand
-                                 && a.size() > 4
+                                 && a.size() > 2
                                  && !(opts & JSON);
                 p = pchar(p, '[');
                 for (auto& elem : a) {
@@ -259,7 +287,8 @@ struct Printer {
                 bool expand = !(opts & PRETTY) ? false
                             : t->flags & PREFER_EXPANDED ? true
                             : t->flags & PREFER_COMPACT ? false
-                            : o.size() > 1;
+                            : o.size() <= 1 ? false
+                            : approx_width(t) >= 50;
 
                 p = pchar(p, '{');
                 for (auto& attr : o) {
@@ -277,7 +306,7 @@ struct Printer {
                             p = pchar(p, opts & JSON ? ',' : ' ');
                         }
                     }
-                    p = print_string(p, attr.first, ind + expand);
+                    p = print_string(p, attr.first, false);
                     p = pchar(p, ':');
                     if (expand) p = pchar(p, ' ');
                     p = print_subtree(p, attr.second, ind + expand);
