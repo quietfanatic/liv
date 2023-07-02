@@ -11,12 +11,10 @@ namespace in {
 
 static usize parse_numbered_name (Str name) {
     if (name.empty() || name[0] != '_') return -1;
-    for (usize i = 1; i < name.size(); i++) {
-        if (!isdigit(name[i])) return usize(-1);
-    }
-     // Assuming name is nul-terminated
-     // TODO: use std::from_chars
-    return atoll(name.data() + 1);
+    usize id;
+    auto [ptr, ec] = std::from_chars(name.begin() + 1, name.end(), id);
+    if (ptr == name.end()) return id;
+    else return -1;
 }
 
 struct DocumentLinks {
