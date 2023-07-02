@@ -453,7 +453,7 @@ Tree tree_from_file (AnyString filename) {
 
 AYU_DESCRIBE(ayu::ParseError,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&ParseError::mess),
         elem(&ParseError::filename),
         elem(&ParseError::line),

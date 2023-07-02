@@ -242,26 +242,26 @@ AYU_DESCRIBE(ayu::DocumentError,
 
 AYU_DESCRIBE(ayu::DocumentInvalidName,
     elems(
-        elem(base<DocumentError>(), inherit),
+        elem(base<DocumentError>(), include),
         elem(&DocumentInvalidName::name)
     )
 )
 AYU_DESCRIBE(ayu::DocumentDuplicateName,
     elems(
-        elem(base<DocumentError>(), inherit),
+        elem(base<DocumentError>(), include),
         elem(&DocumentDuplicateName::name)
     )
 )
 AYU_DESCRIBE(ayu::DocumentDeleteWrongType,
     elems(
-        elem(base<DocumentError>(), inherit),
+        elem(base<DocumentError>(), include),
         elem(&DocumentDeleteWrongType::existing),
         elem(&DocumentDeleteWrongType::deleted_as)
     )
 )
 AYU_DESCRIBE(ayu::DocumentDeleteMissing,
     elems(
-        elem(base<DocumentError>(), inherit),
+        elem(base<DocumentError>(), include),
         elem(&DocumentDeleteMissing::name)
     )
 )

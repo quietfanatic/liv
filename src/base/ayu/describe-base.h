@@ -4,7 +4,7 @@
  // AYU_DESCRIBE macro.  Here's an example of its usage.
  //     AYU_DESCRIBE(myns::MyClass,
  //         attrs(
- //             attr("MyBase", base<MyBase>(), inherit),
+ //             attr("MyBase", base<MyBase>(), include),
  //             attr("stuff", &MyClass::stuff, optional),
  //             attr("cousin", value_funcs<OtherClass*>(
  //                  [](const MyClass& v){ return v.get_cousin(); },
@@ -191,17 +191,16 @@ struct _AYU_DescribeBase {
      //   - optional: This attribute does not need to be provided when
      //   deserializing.  If it is not provided, `accessor`'s write operation
      //   will not be called (normally MissingAttr would be thrown).
-     //   - inherit: When serializing, `key` will be ignored and this
-     //   attribute's attributes will be included in this item's attributes (and
-     //   if any of those attributes have inherit specified, their attributes
-     //   will also be included).  When deserializing, the Tree may either
+     //   - include: When serializing, `key` will be ignored and this
+     //   attribute's attributes will be merged with this item's attributes (and
+     //   if any of those attributes have include specified, their attributes
+     //   will also be merged in).  When deserializing, the Tree may either
      //   ignore inheritance and provide this attribute with `key`, or it may
      //   provide all of this attribute's attributes directly without `key`.  If
-     //   both optional and inherit are specified, then it's acceptable if none
-     //   of the child item's attributes are included, but if any of the child
-     //   item's attributes are included, then all of its other non-optional
-     //   attributes must also be included.
-     //   TODO: rename this to include
+     //   both optional and include are specified, then it's acceptable if none
+     //   of the child item's attributes are given, but if any of the child
+     //   item's attributes are given, then all of its other non-optional
+     //   attributes must also be given.
     template <class Acr>
     static constexpr auto attr (
         StaticString key,
@@ -285,9 +284,9 @@ struct _AYU_DescribeBase {
      //   will not be called (normally WrongLength will be thrown).  This
      //   flag is ignored if there are any elements after this one which are not
      //   optional (this might be a compile-time error later).
-     //   - inherit: Unlike with attrs, this doesn't do much; all it does is
+     //   - include: Unlike with attrs, this doesn't do much; all it does is
      //   allow casting between this item and the element.  Earlier prototypes
-     //   of this library allowed inherited elements to be flattened into the
+     //   of this library allowed included elements to be flattened into the
      //   array representation of the parent item, but the behavior and
      //   implementation were unbelievably complicated, all just to save a few
      //   square brackets.
@@ -637,7 +636,7 @@ struct _AYU_DescribeBase {
     ///// INTERNAL
 
     static constexpr in::AttrFlags optional = in::ATTR_OPTIONAL;
-    static constexpr in::AttrFlags inherit = in::ATTR_INHERIT;
+    static constexpr in::AttrFlags include = in::ATTR_INCLUDE;
     static constexpr in::AccessorFlags readonly = in::ACR_READONLY;
     static constexpr in::AccessorFlags prefer_hex = in::ACR_PREFER_HEX;
     static constexpr in::AccessorFlags prefer_compact = in::ACR_PREFER_COMPACT;

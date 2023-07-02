@@ -113,14 +113,14 @@ AYU_DESCRIBE(ayu::Reference,
 
 AYU_DESCRIBE(ayu::ReferenceError,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&ReferenceError::location),
         elem(&ReferenceError::type)
     )
 )
 AYU_DESCRIBE(ayu::WriteReadonlyReference,
-    elems(elem(base<ReferenceError>(), inherit))
+    elems(elem(base<ReferenceError>(), include))
 )
 AYU_DESCRIBE(ayu::UnaddressableReference,
-    elems(elem(base<ReferenceError>(), inherit))
+    elems(elem(base<ReferenceError>(), include))
 )

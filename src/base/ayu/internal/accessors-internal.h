@@ -49,7 +49,7 @@ enum AttrFlags {
      // serialization of this item and available through calls to attr().  In
      // addition, this item will be able to be upcasted to the type of the attr
      // if it is addressable.  This is not currently supported on elems.
-    ATTR_INHERIT = 0x2
+    ATTR_INCLUDE = 0x2
 };
 constexpr AttrFlags operator | (const AttrFlags& a, const AttrFlags& b) {
     return AttrFlags(int(a)|int(b));

@@ -383,7 +383,7 @@ void tree_to_file (TreeRef t, AnyString filename, PrintOptions opts) {
 
 AYU_DESCRIBE(ayu::InvalidPrintOptions,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&InvalidPrintOptions::opts)
     )
 )

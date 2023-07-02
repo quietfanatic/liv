@@ -40,13 +40,13 @@ AYU_DESCRIBE(ayu::Error,
 
 AYU_DESCRIBE(ayu::GenericError,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&GenericError::mess)
     )
 )
 AYU_DESCRIBE(ayu::IOError,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&IOError::filename),
         elem(&IOError::errnum)
     )

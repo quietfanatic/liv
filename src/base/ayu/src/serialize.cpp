@@ -303,13 +303,11 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
         }
     }
     else if (auto attrs = trav.desc->attrs()) {
-         // TODO: Optimize for the case where there are no inherited attrs
+         // TODO: Optimize for the case where there are no included attrs
         for (uint16 i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
-             // TODO: Parents inheriting children is weird so let's rename
-             // the inherit flag
-            if (acr->attr_flags & ATTR_INHERIT) {
+            if (acr->attr_flags & ATTR_INCLUDE) {
                 trav_attr(
                     trav, acr, attr->key, ACR_READ, [&](const Traversal& child)
                 {
@@ -339,7 +337,7 @@ AnyArray<AnyString> item_get_keys (
 
 bool in::ser_claim_key (UniqueArray<AnyString>& ks, Str k) {
      // This algorithm overall is O(N^3), we may be able to speed it up by
-     // setting a flag if there are no inherited attrs, or maybe by using an
+     // setting a flag if there are no included attrs, or maybe by using an
      // unordered_set?
      // TODO: Just use a bool array for claiming instead of erasing from
      // the vector?
@@ -406,33 +404,33 @@ void in::ser_claim_keys (
          // attr always consumes at least 14 bytes, so the max n_attrs is
          // something like 4500.  TODO: enforce a reasonable max n_attrs in
          // descriptors-internal.h.
-        bool claimed_inherited [attrs->n_attrs] = {};
+        bool claimed_included [attrs->n_attrs] = {};
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
             if (ser_claim_key(ks, attr->key)) {
                  // If any attrs are given, all required attrs must be given
-                 // (only matters if this item is an inherited attr)
+                 // (only matters if this item is an included attr)
                  // TODO: this should fail a test depending on the order of attrs
                 optional = false;
-                if (acr->attr_flags & ATTR_INHERIT) {
-                    claimed_inherited[i] = true;
+                if (acr->attr_flags & ATTR_INCLUDE) {
+                    claimed_included[i] = true;
                 }
             }
-            else if (optional || acr->attr_flags & (ATTR_OPTIONAL|ATTR_INHERIT)) {
-                 // Allow omitting optional or inherited attrs
+            else if (optional || acr->attr_flags & (ATTR_OPTIONAL|ATTR_INCLUDE)) {
+                 // Allow omitting optional or included attrs
             }
             else {
                 throw X<MissingAttr>(trav_location(trav), trav.desc, attr->key);
             }
         }
-         // Then check inherited attrs
+         // Then check included attrs
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
-            if (acr->attr_flags & ATTR_INHERIT) {
+            if (acr->attr_flags & ATTR_INCLUDE) {
                  // Skip if attribute was given directly, uncollapsed
-                if (claimed_inherited[i]) continue;
+                if (claimed_included[i]) continue;
                 trav_attr(
                     trav, acr, attr->key, ACR_WRITE, [&](const Traversal& child)
                 {
@@ -485,22 +483,21 @@ bool in::ser_maybe_attr (
                 return true;
             }
         }
-         // Then inherited attrs
+         // Then included attrs
         for (uint i = 0; i < attrs->n_attrs; i++) {
             auto attr = attrs->attr(i);
             auto acr = attr->acr();
             bool found = false;
-            if (acr->attr_flags & ATTR_INHERIT) {
+            if (acr->attr_flags & ATTR_INCLUDE) {
                  // Change mode to modify so we don't clobber the other attrs of
-                 // the inherited item.  Hopefully it won't matter, because
+                 // the included item.  Hopefully it won't matter, because
                  // inheriting through a non-addressable reference will be
                  // pretty slow no matter what.  Perhaps if we really wanted to
                  // optimize this, then in claim_keys we could build up a
-                 // structure mirroring the inheritance diagram and follow it,
+                 // structure mirroring the inclusion diagram and follow it,
                  // instead of just keeping the flat list of keys.
-                AccessMode inherit_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
                 trav_attr(
-                    trav, acr, attr->key, inherit_mode,
+                    trav, acr, attr->key, mode == ACR_WRITE ? ACR_MODIFY : mode,
                     [&](const Traversal& child)
                 {
                     found = ser_maybe_attr(child, key, mode, cb);
@@ -519,8 +516,10 @@ bool in::ser_maybe_attr (
     }
     else if (auto acr = trav.desc->delegate_acr()) {
         bool r;
-        AccessMode del_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
-        trav_delegate(trav, acr, del_mode, [&](const Traversal& child){
+        trav_delegate(
+            trav, acr, mode == ACR_WRITE ? ACR_MODIFY : mode,
+            [&](const Traversal& child)
+        {
             r = ser_maybe_attr(child, key, mode, cb);
         });
         return r;
@@ -654,9 +653,11 @@ bool in::ser_maybe_elem (
         return false;
     }
     else if (auto acr = trav.desc->delegate_acr()) {
-        AccessMode del_mode = mode == ACR_WRITE ? ACR_MODIFY : mode;
         bool found;
-        trav_delegate(trav, acr, del_mode, [&](const Traversal& child){
+        trav_delegate(
+            trav, acr, mode == ACR_WRITE ? ACR_MODIFY : mode,
+            [&](const Traversal& child)
+        {
             found = ser_maybe_elem(child, index, mode, cb);
         });
         return found;
@@ -674,8 +675,9 @@ Reference item_maybe_elem (
     const Reference& item, usize index, LocationRef loc
 ) {
     Reference r;
-     // TODO: We probably don't need to set up a whole traversal stack for this,
-     // now that we've removed inherited elems.
+     // Maybe we don't need to set up a whole traversal stack for this,
+     // now that we've removed included elems.  This isn't that important to
+     // optimize though.
     trav_start(item, loc, false, ACR_READ, [&](const Traversal& trav){
         ser_maybe_elem(trav, index, ACR_READ, [&](const Traversal& child){
             r = trav_reference(child);
@@ -703,7 +705,7 @@ Location current_location () {
 
 AYU_DESCRIBE(ayu::SerError,
     elems(
-        elem(base<Error>(), inherit),
+        elem(base<Error>(), include),
         elem(&SerError::location),
         elem(&SerError::type)
     )
@@ -723,25 +725,25 @@ AYU_DESCRIBE(ayu::NoNameForValue,
 )
 AYU_DESCRIBE(ayu::NoValueForName,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&NoValueForName::name)
     )
 )
 AYU_DESCRIBE(ayu::MissingAttr,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&MissingAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::UnwantedAttr,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&UnwantedAttr::key)
     )
 )
 AYU_DESCRIBE(ayu::WrongLength,
     attrs(
-        attr("ayu::SerError", base<SerError>(), inherit),
+        attr("ayu::SerError", base<SerError>(), include),
         attr("min", &WrongLength::min),
         attr("max", &WrongLength::max),
         attr("got", &WrongLength::got)
@@ -755,19 +757,19 @@ AYU_DESCRIBE(ayu::NoElems,
 )
 AYU_DESCRIBE(ayu::AttrNotFound,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&AttrNotFound::key)
     )
 )
 AYU_DESCRIBE(ayu::ElemNotFound,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&ElemNotFound::index)
     )
 )
 AYU_DESCRIBE(ayu::InvalidKeysType,
     elems(
-        elem(base<SerError>(), inherit),
+        elem(base<SerError>(), include),
         elem(&InvalidKeysType::type)
     )
 )
@@ -896,13 +898,13 @@ AYU_DESCRIBE(ayu::test::BaseTest,
 )
 AYU_DESCRIBE(ayu::test::InheritTest,
     attrs(
-        attr("BaseTest", base<BaseTest>(), inherit),
+        attr("BaseTest", base<BaseTest>(), include),
         attr("d", &InheritTest::d)
     )
 )
 AYU_DESCRIBE(ayu::test::InheritOptionalTest,
     attrs(
-        attr("BaseTest", base<BaseTest>(), inherit|optional),
+        attr("BaseTest", base<BaseTest>(), include|optional),
         attr("d", &InheritOptionalTest::d)
     )
 )
@@ -1085,7 +1087,7 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     is(bt.b, -6, "item_from_tree with base attr");
     throws<MissingAttr>([&]{
         item_from_string(&bt, "{a:-7,b:-8,c:-9}");
-    }, "item_from_tree with base attr throws when collapsed but inherit is not specified");
+    }, "item_from_tree with base attr throws when collapsed but include is not specified");
 
     auto it = InheritTest{{{99, 88}, 77}, 66};
     Tree itt = item_to_tree(&it);
@@ -1101,14 +1103,14 @@ static tap::TestSet tests ("base/ayu/serialize", []{
     Tree from_tree_iot1 = tree_from_string("{d:44}");
     item_from_tree(&iot, from_tree_iot1);
     is(iot.d, 44, "Inherit optional works");
-    is(iot.a, 23, "Didn't set attrs of optional inherited attrs");
+    is(iot.a, 23, "Didn't set attrs of optional included attrs");
     throws<MissingAttr>([&]{
         item_from_tree(&iot, tree_from_string("{d:34 MemberTest:{a:56 b:67}}"));
-    }, "Optional inherited attrs need either all or no attrs");
+    }, "Optional included attrs need either all or no attrs");
     todo(1);
     throws<MissingAttr>([&]{
         item_from_tree(&iot, tree_from_string("{d:34 c:78}"));
-    }, "Optional inherited attrs need either all or no attrs (2)");
+    }, "Optional included attrs need either all or no attrs (2)");
 
     auto et = ElemTest{0.5, 1.5, 2.5};
     Tree ett = item_to_tree(&et);

@@ -97,10 +97,9 @@ AYU_DESCRIBE(glow::SubImage,
 
 AYU_DESCRIBE(glow::ImageTexture,
     attrs(
-         // TODO: make inherit work in ayu
          // TODO: figure out how to make this optional without regenning texture
-        attr("Texture", base<Texture>(), inherit),
-        attr("SubImage", &ImageTexture::source, inherit),
+        attr("Texture", base<Texture>(), include),
+        attr("SubImage", &ImageTexture::source, include),
         attr("flip", &ImageTexture::flip, optional),
         attr("internalformat", &ImageTexture::internalformat, optional)
     ),

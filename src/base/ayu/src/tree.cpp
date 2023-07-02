@@ -129,7 +129,7 @@ AYU_DESCRIBE(ayu::TreeError,
 
 AYU_DESCRIBE(ayu::WrongForm,
     elems(
-        elem(base<TreeError>(), inherit),
+        elem(base<TreeError>(), include),
         elem(&WrongForm::form),
         elem(&WrongForm::tree)
     )
@@ -137,7 +137,7 @@ AYU_DESCRIBE(ayu::WrongForm,
 
 AYU_DESCRIBE(ayu::CantRepresent,
     elems(
-        elem(base<TreeError>(), inherit),
+        elem(base<TreeError>(), include),
         elem(&CantRepresent::type_name),
         elem(&CantRepresent::tree)
     )

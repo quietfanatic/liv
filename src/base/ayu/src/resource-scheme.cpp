@@ -31,38 +31,38 @@ AYU_DESCRIBE(ayu::ResourceNameError,
 )
 AYU_DESCRIBE(ayu::InvalidResourceName,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&InvalidResourceName::name)
     )
 )
 AYU_DESCRIBE(ayu::UnknownResourceScheme,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&UnknownResourceScheme::name)
     )
 )
 AYU_DESCRIBE(ayu::UnacceptableResourceName,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&UnacceptableResourceName::name)
     )
 )
 AYU_DESCRIBE(ayu::UnacceptableResourceType,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&UnacceptableResourceType::name),
         elem(&UnacceptableResourceType::type)
     )
 )
 AYU_DESCRIBE(ayu::InvalidResourceScheme,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&InvalidResourceScheme::scheme)
     )
 )
 AYU_DESCRIBE(ayu::DuplicateResourceScheme,
     elems(
-        elem(base<ResourceNameError>(), inherit),
+        elem(base<ResourceNameError>(), include),
         elem(&DuplicateResourceScheme::scheme)
     )
 )

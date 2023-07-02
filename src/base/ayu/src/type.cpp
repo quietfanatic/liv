@@ -271,7 +271,7 @@ AYU_DESCRIBE(ayu::TypeError,
 
 AYU_DESCRIBE(ayu::UnknownType,
     elems(
-        elem(base<TypeError>(), inherit),
+        elem(base<TypeError>(), include),
         elem(value_func<UniqueString>(
             [](const ayu::UnknownType& v){ return get_demangled_name(v.cpp_type); }
         ))
@@ -280,26 +280,26 @@ AYU_DESCRIBE(ayu::UnknownType,
 
 AYU_DESCRIBE(ayu::TypeNotFound,
     elems(
-        elem(base<TypeError>(), inherit),
+        elem(base<TypeError>(), include),
         elem(&TypeNotFound::name)
     )
 )
 
 AYU_DESCRIBE(ayu::CannotDefaultConstruct,
     elems(
-        elem(base<TypeError>(), inherit),
+        elem(base<TypeError>(), include),
         elem(&CannotDefaultConstruct::type)
     )
 )
 AYU_DESCRIBE(ayu::CannotDestroy,
     elems(
-        elem(base<TypeError>(), inherit),
+        elem(base<TypeError>(), include),
         elem(&CannotDestroy::type)
     )
 )
 AYU_DESCRIBE(ayu::CannotCoerce,
     elems(
-        elem(base<TypeError>(), inherit),
+        elem(base<TypeError>(), include),
         elem(&CannotCoerce::from),
         elem(&CannotCoerce::to)
     )

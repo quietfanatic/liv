@@ -94,8 +94,8 @@ struct Type {
      // Cast from derived class to base class.  Does a depth-first search
      // through the derived class's description looking for accessors like:
      //  - delegate(...)
-     //  - attr("name", ..., inherit)
-     //  - elem(..., inherit)
+     //  - attr("name", ..., include)
+     //  - elem(..., include)
      // and recurses through those accessors.  Note also only information
      // provided through AYU_DESCRIBE will be used; C++'s native inheritance
      // system has no influence.

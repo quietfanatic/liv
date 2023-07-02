@@ -535,7 +535,7 @@ AYU_DESCRIBE(ayu::ResourceError,
 )
 AYU_DESCRIBE(ayu::InvalidResourceState,
     elems(
-        elem(base<ResourceError>(), inherit),
+        elem(base<ResourceError>(), include),
         elem(&InvalidResourceState::tried),
         elem(&InvalidResourceState::state),
         elem(&InvalidResourceState::res)
@@ -543,27 +543,27 @@ AYU_DESCRIBE(ayu::InvalidResourceState,
 )
 AYU_DESCRIBE(ayu::EmptyResourceValue,
     elems(
-        elem(base<ResourceError>(), inherit),
+        elem(base<ResourceError>(), include),
         elem(&EmptyResourceValue::name)
     )
 )
 AYU_DESCRIBE(ayu::UnloadWouldBreak,
     elems(
-        elem(base<ResourceError>(), inherit),
+        elem(base<ResourceError>(), include),
         elem(&UnloadWouldBreak::from),
         elem(&UnloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::ReloadWouldBreak,
     elems(
-        elem(base<ResourceError>(), inherit),
+        elem(base<ResourceError>(), include),
         elem(&ReloadWouldBreak::from),
         elem(&ReloadWouldBreak::to)
     )
 )
 AYU_DESCRIBE(ayu::RemoveSourceFailed,
     elems(
-        elem(base<ResourceError>(), inherit),
+        elem(base<ResourceError>(), include),
         elem(&RemoveSourceFailed::res),
         elem(value_func<Str>(
             [](const RemoveSourceFailed& v){
