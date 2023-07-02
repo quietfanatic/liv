@@ -7,8 +7,7 @@
 namespace ayu {
 
  // The filename parameter is used for error reporting.
- // If the parse fails, an X<ParseError> exception will be thrown.  TODO: Make a
- // non-throwing function.
+ // If the parse fails, an X<ParseError> exception will be thrown.
 Tree tree_from_string (Str, AnyString filename = "");
 
 UniqueString string_from_file (AnyString filename);

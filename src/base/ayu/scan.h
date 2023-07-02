@@ -94,7 +94,10 @@ bool scan_universe_references (
  // Required the location of a reference, but a global scan or cache lookup
  // couldn't find it.
 struct ReferenceNotFound : Error {
-     // TODO: add a void*
+     // We can't stuff the reference in here because the error message will try
+     // to call reference_to_location on it, consuming infinite stack.
+     // TODO: Is there any more information we can stuff in here?  Would a void*
+     // be useful?
     Type type;
 };
 

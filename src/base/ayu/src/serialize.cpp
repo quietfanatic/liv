@@ -724,7 +724,7 @@ AYU_DESCRIBE(ayu::NoNameForValue,
 AYU_DESCRIBE(ayu::NoValueForName,
     elems(
         elem(base<SerError>(), inherit),
-        elem(&NoValueForName::tree)
+        elem(&NoValueForName::name)
     )
 )
 AYU_DESCRIBE(ayu::MissingAttr,

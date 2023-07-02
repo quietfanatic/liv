@@ -56,9 +56,6 @@ namespace ayu {
 template <class T>
 struct _AYU_DescribeBase {
     ///// GENERAL-PURPOSE DESCRIPTORS
-     // TODO: Document which descriptors take priority over which other ones in
-     // which situations.
-
      // Specifies the name of the type, as it will appear in serialized strings.
      // You do not need to provide this for non-template types, since the
      // AYU_DESCRIBE macro will stringify the type name given to it and use that
@@ -108,7 +105,8 @@ struct _AYU_DescribeBase {
      // Make this type behave like another type.  `accessor` must be the result
      // of one of the accessor functions in the ACCESSOR section below.  If both
      // delegate() and other descriptors are specified, some behaviors may be
-     // overridden by those other descriptors (TODO: document the particulars).
+     // overridden by those other descriptors.  See serialization.h for details
+     // about which descriptors override delegate() during which operations.
     template <class Acr>
     static constexpr auto delegate (const Acr& accessor);
      // Specify custom behavior for default construction.  You shouldn't need
@@ -144,7 +142,7 @@ struct _AYU_DescribeBase {
      //
      // Using this, you can provide names for specific values of more complex
      // types.  For instance, for a matrix item, you can provide special names
-     // like "id" and "fliph" that refer to specific matrixes, and still allow
+     // like "id" and "flipx" that refer to specific matrixes, and still allow
      // an arbitrary matrix to be specified with a list of numbers.
     template <class... Values>
         requires (requires (T v) { v == v; v = v; })
@@ -353,9 +351,11 @@ struct _AYU_DescribeBase {
      // In addition, accessors can take these flags:
      //   - readonly: Make this accessor readonly and disable its write
      //   operation.  If an accessor doesn't support the write operation, it is
-     //   readonly by default and this flag is ignored.  Attrs and elems with
-     //   readonly accessors will not be serialized, because they can't be
-     //   deserialized anyway, so there's no point.
+     //   readonly by default and this flag is ignored.  Attrs with readonly
+     //   accessors will not be serialized, because they can't be deserialized
+     //   anyway, so there's no point.  Elems with readonly accessors are
+     //   currently problematic, and will likely make your type unable to be
+     //   deserialized.
      //   - prefer_hex: The item this accessor points to prefers to be
      //   serialized in hexadecimal format if it's a number.
      //   - prefer_compact: The item this accessor points to prefers to be
@@ -387,7 +387,8 @@ struct _AYU_DescribeBase {
      // fundamental C++ types.
      //
      // For attr() and elem(), you can pass the pointer-to-member directly and
-     // it's as if you had used member().
+     // it's as if you had used member().  If you need to specify any accessor
+     // flags you still have to use member().
      //
      // If the class's data members are private but you still want to access
      // them through this, you can declare the AYU description as a friend
@@ -474,7 +475,7 @@ struct _AYU_DescribeBase {
      // returns a child item by value, the second of which takes a child item by
      // const reference and writes a copy to the parent.  This is what you want
      // if the child item is something like a std::vector that's generated on
-     // the fly, and is useful for the keys() descriptor.
+     // the fly.
     template <class M>
         requires (requires (M m) { M(move(m)); })
     static constexpr auto mixed_funcs (
@@ -553,8 +554,6 @@ struct _AYU_DescribeBase {
      // value_methods<
      //     usize, &std::vector<T>::size, &std::vector<T>::resize
      // >()
-     //
-     // TODO: Add accessor flags to these
     using T3 = std::conditional_t<
         std::is_class_v<T> || std::is_union_v<T>,
         T, Mu

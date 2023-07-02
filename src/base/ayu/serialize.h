@@ -17,7 +17,18 @@ namespace ayu {
 
 ////// MAIN OPERATIONS
  // Convert an item to a tree.  The optional location should match the
- // reference's location if provided.
+ // reference's location if provided.  One of the below AYU_DESCRIBE descriptors
+ // will be used for this, with earlier ones preferred over later ones:
+ //   1. to_tree()
+ //   2. values() if any of them match the item
+ //   3. whichever of these was declared first in the description:
+ //       - attrs()
+ //       - elems()
+ //       - keys() and attr_func()
+ //       - length() and elem_func()
+ //   4. delegate()
+ // If none of the above are applicable, a CannotToTree exception will be
+ // thrown.
 Tree item_to_tree (
     const Reference&, LocationRef loc = Location()
 );
@@ -46,7 +57,19 @@ enum : ItemFromTreeFlags {
  // Write to an item from a tree.  If an exception is thrown, the item may be
  // left in an incomplete state, so if you're worried about that, construct a
  // fresh item, call item_from_tree on that, and then move it onto the original
- // item (this is what ayu::reload() on resources does).
+ // item (this is what ayu::reload() on resources does).  One of the following
+ // AYU_DESCRIBE descriptors will be used for deserialization, with earlier ones
+ // prioritized over later ones:
+ //   1. from_tree()
+ //   2. values(), if any of them match the given Tree
+ //   3. whichever of these is highest in the description:
+ //       - attrs()
+ //       - elems()
+ //       - keys() and attr_func()
+ //       - length() and elem_func()
+ //   4. delegate()
+ // If none of those descriptors are applicable, a CannotFromTree exception will
+ // be thrown.
 void item_from_tree (
     const Reference&, TreeRef, LocationRef loc = Location(),
     ItemFromTreeFlags flags = 0
@@ -77,13 +100,18 @@ inline void item_from_file (
     return item_from_tree(item, tree_from_file(move(filename)), loc);
 }
 
-///// ACCESS OPERATIONS
+///// OPERATIONS FOR OBJECT-LIKE TYPES
+ // These use either the attrs() descriptor or the keys() and attr_func()
+ // descriptors.  If neither are available, they use the delegate() descriptor,
+ // and if that isn't available, they throw a NoAttrs exception.
+
  // Get a list of the keys in a object-like item.
 AnyArray<AnyString> item_get_keys (
     const Reference&, LocationRef loc = Location()
 );
  // Set the keys in an object-like item.  This may clear the entire contents
- // of the item.
+ // of the item.  If the item only accepts certain attribute keys, this may
+ // throw MissingAttr or UnwantedAttr.
 void item_set_keys (
     const Reference&, AnyArray<AnyString>,
     LocationRef loc = Location()
@@ -92,24 +120,30 @@ void item_set_keys (
  // the attribute doesn't exist.
 Reference item_maybe_attr (
     const Reference&, AnyString, LocationRef loc = Location());
- // Throws if the attribute doesn't exist.  Guaranteed not to return an empty or
- // null Reference.
+ // Throws AttrNotFound if the attribute doesn't exist.  Guaranteed not to
+ // return an empty or null Reference.
 Reference item_attr (const Reference&, AnyString, LocationRef loc = Location());
+
+///// OPERATIONS FOR ARRAY-LIKE TYPES
+ // These use either the elems() descriptor or the keys() and elem_func()
+ // descriptors.  If neither are available, they use the delegate() descriptor,
+ // and if that isn't available, they throw a NoElems exception.
 
  // Get the length of an array-like item.
 usize item_get_length (const Reference&, LocationRef loc = Location());
  // Set the length of an array-like item.  This may clear some or all of the
- // contents of the item.
+ // contents of the item.  If the item only allows certain lengths, this may
+ // throw WrongLength.
 void item_set_length (
     const Reference&, usize, LocationRef loc = Location()
 );
  // Get an element of an array-like item by its index.  Returns an empty
- // Reference if te element doesn't exist.
+ // Reference if the element doesn't exist.
 Reference item_maybe_elem (
     const Reference&, usize, LocationRef loc = Location()
 );
- // Throws if the element doesn't exist.  Guaranteed not to return an empty or
- // null Reference.
+ // Throws ElemNotFound if the element doesn't exist.  Guaranteed not to return
+ // an empty or null Reference.
 Reference item_elem (
     const Reference&, usize, LocationRef loc = Location()
 );
@@ -126,7 +160,7 @@ Location current_location ();
  // item (and that exception is described to AYU), then the exception will be
  // caught and reported inline in the serialized output.  It will be in a format
  // that is not valid to read back in, so only use it for debugging.
- // Internally, this is used when generating the .what() message for exceptions.
+ // Internally, this is used when generating the .what() message for exceptions
 struct DiagnosticSerialization {
     DiagnosticSerialization ();
     ~DiagnosticSerialization ();
@@ -152,10 +186,10 @@ struct NoNameForValue : SerError { };
  // Tried to deserialize an item using a values() descriptor, but no value()
  // entry was found that matched the provided name.
 struct NoValueForName : SerError {
-    Tree tree;
+    Tree name;
 };
- // Tried to deserialize an item from an object tree, but the tree is
- // an attribute that the item requires.
+ // Tried to deserialize an item from an object tree, but the tree lacks an
+ // attribute that the item requires.
 struct MissingAttr : SerError {
     AnyString key;
 };
@@ -183,7 +217,7 @@ struct AttrNotFound : SerError {
     AnyString key;
 };
  // Tried to get an element from an item, but it doesn't have an element
- // with the given index.
+ // with the given index (the index is out of bounds).
 struct ElemNotFound : SerError {
     usize index;
 };
