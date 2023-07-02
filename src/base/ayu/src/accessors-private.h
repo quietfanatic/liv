@@ -18,7 +18,6 @@ struct ChainAcr : Accessor {
     explicit ChainAcr (const Accessor* a, const Accessor* b);
 };
 
- // TODO: Do we need to do something with accessor_flags for this?
 struct AttrFuncAcr : Accessor {
     Reference(* fp )(Mu&, AnyString);
     AnyString key;

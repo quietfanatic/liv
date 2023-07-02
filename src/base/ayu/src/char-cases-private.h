@@ -32,6 +32,5 @@
          ANY_LETTER: \
     case '_': case '/': case '?': case '#'
 
- // TODO: Where does ';' go?
 #define ANY_RESERVED_SYMBOL \
-    '\\': case '`': case '(': case ')': case '\''
+    '\\': case '`': case '(': case ')': case '\'': case ';'

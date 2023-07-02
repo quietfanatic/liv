@@ -117,7 +117,8 @@ AYU_DESCRIBE(ayu::TreeForm,
     )
 )
 
- // TODO: Add attrs and elems?
+ // Theoretically we could add support for attr and elem access to this, but
+ // we'll save that for when we need it.
 AYU_DESCRIBE(ayu::Tree,
     to_tree([](const Tree& v){ return v; }),
     from_tree([](Tree& v, const Tree& t){ v = t; })

@@ -34,28 +34,23 @@ struct DocumentLinks {
     }
 };
 
- // TODO: make sure item is aligned properly
-struct DocumentItemHeader : DocumentLinks {
+ // This alignas shouldn't be necessary but just in case.
+struct alignas(std::max_align_t) DocumentItemHeader : DocumentLinks {
     usize id = 0;
-    AnyString name_;
+    AnyString name;
     Type type;
     DocumentItemHeader (DocumentLinks* links, Type t, usize id) :
         DocumentLinks(links),
         id(id),
-        name_(""),
+        name(""),
         type(t)
     { }
-    DocumentItemHeader (DocumentLinks* links, Type t, usize id, AnyString name) :
+    DocumentItemHeader (DocumentLinks* links, Type t, AnyString name) :
         DocumentLinks(links),
-        id(id),
-        name_(move(name)),
+        id(-1),
+        name(move(name)),
         type(t)
     { }
-    Str name () {
-         // TODO: Do we really want to cache this?
-        if (!name_) name_ = cat('_', id);
-        return name_;
-    }
     Mu* data () {
         return (Mu*)(this + 1);
     }
@@ -77,9 +72,10 @@ struct DocumentData {
 struct DocumentItemRef {
     DocumentItemHeader* header;
     DocumentItemRef (DocumentData* doc, Str name) {
+        usize id = parse_numbered_name(name);
         for (auto link = doc->items.next; link != &doc->items; link = link->next) {
             auto h = static_cast<DocumentItemHeader*>(link);
-            if (h->name() == name) {
+            if (id != usize(-1) ? h->id == id : h->name == name) {
                 header = h;
                 return;
             }
@@ -112,14 +108,14 @@ void* Document::allocate_named (Type t, AnyString name) {
 
     if (id == usize(-1)) {
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, move(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, move(name));
         return header+1;
     }
     else { // Actually a numbered item
         if (id > data->next_id + 10000) throw X<GenericError>("Unreasonable growth of next_id");
         if (id >= data->next_id) data->next_id = id + 1;
         auto p = malloc(sizeof(DocumentItemHeader) + (t ? t.cpp_size() : 0));
-        auto header = new (p) DocumentItemHeader(&data->items, t, id, move(name));
+        auto header = new (p) DocumentItemHeader(&data->items, t, id);
         return header+1;
     }
 }
@@ -167,7 +163,11 @@ AYU_DESCRIBE(ayu::Document,
         [](const ayu::Document& v){
             UniqueArray<AnyString> r;
             for (auto link = v.data->items.next; link != &v.data->items; link = link->next) {
-                r.emplace_back(static_cast<DocumentItemHeader*>(link)->name());
+                auto header = static_cast<DocumentItemHeader*>(link);
+                r.emplace_back(header->id != usize(-1)
+                    ? AnyString(cat('_', header->id))
+                    : header->name
+                );
             }
             r.emplace_back("_next_id"_s);
             return AnyArray(r);
@@ -209,7 +209,8 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
                 if (v.header->type) {
                     v.header->type.destroy(v.header->data());
                 }
-                 // This is a very bad idea which should work.
+                 // Using realloc on a C++ object is questionably legal, but
+                 // nothing in DocumentItemHeader requires a stable address.
                  // (cast to void* to silence warning)
                  // (note: if instead we call ~DocumentItemHeader without
                  //  first cleaning prev and next, it will reorder items in

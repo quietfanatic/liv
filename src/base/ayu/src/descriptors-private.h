@@ -29,15 +29,13 @@ struct AttrDcrPrivate : AttrDcr<Mu> {
          // because we can't instantiate AttrDcrWith<Mu, Accessor> because
          // Accessor is abstract, and we can't pretend it's a concrete Accessor
          // type because then the optimizer will devirtualize method calls
-         // incorrectly.
+         // incorrectly (this may no longer be true now that we're using our own
+         // vtables, but it's still good to be precise).
          //
          // The Accessor should be right after the attr base in memory, without
          // any padding.  This should be the case if vtable pointers have the
          // same alignment as StaticString and there's nothing else funny going
          // on.
-         //
-         // TODO: We may be able to simplify this now that we're using our own
-         // vtables.
         static_assert(sizeof(AttrDcr<Mu>) % alignof(Accessor) == 0);
         return (const Accessor*)((char*)this + sizeof(AttrDcr<Mu>));
     }
