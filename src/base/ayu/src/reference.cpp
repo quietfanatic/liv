@@ -25,7 +25,7 @@ Mu* Reference::require_address () const {
 
 Reference Reference::chain (const Accessor* o_acr) const {
     if (auto a = address()) {
-        return Reference(Pointer(a, type()), o_acr);
+        return Reference(Pointer(type(), a), o_acr);
     }
     else {
         return Reference(host, new ChainAcr(acr, o_acr));

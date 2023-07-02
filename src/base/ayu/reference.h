@@ -73,7 +73,7 @@ struct Reference {
         requires (!std::is_same_v<T, Mu>)
     Reference (T* p) : host(p), acr(null) { }
      // Construct from unknown pointer and type
-    Reference (Mu* p, Type t) : host(p, t), acr(null) { }
+    Reference (Type t, Mu* p) : host(t, p), acr(null) { }
      // For use in attr_func and elem_func.
      // TODO: Also check std::is_base_of
     template <class From, class Acr> requires (
@@ -235,7 +235,7 @@ struct Reference {
 
      // Cast to pointer
     operator Pointer () const {
-        return Pointer(require_address(), type());
+        return Pointer(type(), require_address());
     }
 
      // Shortcuts for serialize functions

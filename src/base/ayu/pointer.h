@@ -15,7 +15,7 @@ struct Pointer {
     Type type;
 
     constexpr Pointer (Null n = null) : address(n) { }
-    Pointer (Mu* a, Type t) : address(a), type(t) { }
+    Pointer (Type t, Mu* a) : address(a), type(t) { }
 
     template <class T>
         requires (!std::is_same_v<std::remove_cv_t<T>, void>
@@ -32,7 +32,7 @@ struct Pointer {
     }
 
     Pointer try_upcast_to (Type t) const {
-        return Pointer(type.try_upcast_to(t, address), t);
+        return Pointer(t, type.try_upcast_to(t, address));
     }
     template <class T>
     T* try_upcast_to () const {
@@ -40,7 +40,7 @@ struct Pointer {
     }
 
     Pointer upcast_to (Type t) const {
-        return Pointer(type.upcast_to(t, address), t);
+        return Pointer(t, type.upcast_to(t, address));
     }
     template <class T>
     T* upcast_to () const {
@@ -48,7 +48,7 @@ struct Pointer {
     }
 
     Pointer try_downcast_to (Type t) const {
-        return Pointer(type.try_downcast_to(t, address), t);
+        return Pointer(t, type.try_downcast_to(t, address));
     }
     template <class T>
     T* try_downcast_to () const {
@@ -56,7 +56,7 @@ struct Pointer {
     }
 
     Pointer downcast_to (Type t) const {
-        return Pointer(type.downcast_to(t, address), t);
+        return Pointer(t, type.downcast_to(t, address));
     }
     template <class T>
     T* downcast_to () const {
@@ -64,7 +64,7 @@ struct Pointer {
     }
 
     Pointer try_cast_to (Type t) const {
-        return Pointer(type.try_cast_to(t, address), t);
+        return Pointer(t, type.try_cast_to(t, address));
     }
     template <class T>
     T* try_cast_to () const {
@@ -72,7 +72,7 @@ struct Pointer {
     }
 
     Pointer cast_to (Type t) const {
-        return Pointer(type.cast_to(t, address), t);
+        return Pointer(t, type.cast_to(t, address));
     }
     template <class T>
     T* cast_to () const {

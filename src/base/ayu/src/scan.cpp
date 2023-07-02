@@ -97,7 +97,7 @@ bool scan_pointers (
             trav, base_loc, [&](const Traversal& trav, LocationRef loc)
         {
             if (trav.addressable) {
-                return cb(Pointer(trav.address, trav.desc), loc);
+                return cb(Pointer(trav.desc, trav.address), loc);
             }
             else return false;
         });
@@ -176,7 +176,7 @@ Location find_reference (const Reference& item) {
     else if (auto cache = get_location_cache()) {
         if (Mu* address = item.address()) {
              // Addressable! This will be fast.
-            auto it = cache->find(Pointer(address, item.type()));
+            auto it = cache->find(Pointer(item.type(), address));
             if (it != cache->end()) return it->second;
             else return Location();
         }

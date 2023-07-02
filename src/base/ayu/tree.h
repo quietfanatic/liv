@@ -30,15 +30,18 @@ using TreeFlags = uint16;
 enum : TreeFlags {
      // For NUMBER: Print the number as hexadecimal.
     PREFER_HEX = 1 << 0,
-     // For ARRAY or OBJECT: When pretty-printing, prefer printing this item
-     // compactly.
+     // For ARRAY or OBJECT: When pretty-printing, print this item compactly,
+     // all on one line (unless one of its children is expanded).
      // For STRING: When printing in non-JSON mode, encode newlines and tabs as
      // \n and \t.
     PREFER_COMPACT = 1 << 1,
-     // For ARRAY or OBJECT: When pretty-printing, prefer printing this item
-     // fully expanded with one element/attribute per line.
+     // For ARRAY or OBJECT: When pretty-printing, print fully expanded with one
+     // element/attribute per line.
      // For STRING: When printing in non-JSON mode, print newlines and tabs
      // as-is without escaping them.
+     // If neither PREFER_EXPANDED nor PREFER_COMPACT is set, the printer will
+     // use some heuristics to decide which way to print it.  If both are set,
+     // which one takes priority is unspecified.
     PREFER_EXPANDED = 1 << 2,
 
     VALID_TREE_FLAG_BITS = PREFER_HEX | PREFER_COMPACT | PREFER_EXPANDED
@@ -131,7 +134,6 @@ struct Tree {
      // Warning 1: The returned Str is not NUL-terminated.
      // Warning 2: The Str will be invalidated when this Tree is destructed.
     explicit constexpr operator Str () const;
-     // TODO: provide rvalue conversions
     explicit constexpr operator AnyString () const&;
     explicit operator AnyString () &&;
     explicit operator UniqueString16 () const;

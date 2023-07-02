@@ -20,7 +20,6 @@
 
 namespace ayu {
 
- // TODO: Should we rename this to Any?
 struct Dynamic {
     const Type type;
     Mu* const data;
@@ -28,7 +27,6 @@ struct Dynamic {
      // The empty value will cause null derefs if you do anything with it.
     constexpr Dynamic () : type(), data(null) { }
      // Create from internal data.  Takes ownership.
-     // TODO: reverse these args
     Dynamic (Type t, Mu*&& d) : type(t), data(d) { d = null; }
      // Default construction
     explicit Dynamic (Type t) :
@@ -89,8 +87,8 @@ struct Dynamic {
         return !type;
     }
      // Get Pointer to the value
-    Pointer ptr () { return Pointer(data, type); }
-    Pointer readonly_ptr () const { return Pointer(data, type.add_readonly()); }
+    Pointer ptr () { return Pointer(type, data); }
+    Pointer readonly_ptr () const { return Pointer(type.add_readonly(), data); }
      // Runtime casting
     Mu& as (Type t) {
         return *type.cast_to(t, data);

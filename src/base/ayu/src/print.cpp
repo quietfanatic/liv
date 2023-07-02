@@ -235,7 +235,7 @@ struct Printer {
                 bool expand = !(opts & PRETTY) ? true
                             : t->flags & PREFER_EXPANDED ? true
                             : t->flags & PREFER_COMPACT ? false
-                            : t->length <= 50;
+                            : t->length > 50;
                 return print_string(p, Str(*t), expand);
             }
             case REP_ARRAY: {
@@ -249,7 +249,7 @@ struct Printer {
                             : t->flags & PREFER_EXPANDED ? true
                             : t->flags & PREFER_COMPACT ? false
                             : a.size() <= 2 ? false
-                            : approx_width(t) >= 50;
+                            : approx_width(t) > 50;
 
                 bool show_indices = expand
                                  && a.size() > 2
@@ -288,7 +288,7 @@ struct Printer {
                             : t->flags & PREFER_EXPANDED ? true
                             : t->flags & PREFER_COMPACT ? false
                             : o.size() <= 1 ? false
-                            : approx_width(t) >= 50;
+                            : approx_width(t) > 50;
 
                 p = pchar(p, '{');
                 for (auto& attr : o) {

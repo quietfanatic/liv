@@ -229,7 +229,7 @@ AYU_DESCRIBE(ayu::in::DocumentItemRef,
         )),
         elem(reference_func([](DocumentItemRef& v){
             if (v.header->type) {
-                return Reference(v.header->data(), v.header->type);
+                return Reference(v.header->type, v.header->data());
             }
             else return Reference();
         }))

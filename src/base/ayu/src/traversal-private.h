@@ -225,8 +225,8 @@ static inline void trav_elem_func (
 static Reference trav_reference (const Traversal& trav) {
     if (trav.addressable) {
         return Pointer(
-            trav.address,
-            trav.readonly ? Type(trav.desc).add_readonly() : trav.desc
+            trav.readonly ? Type(trav.desc).add_readonly() : trav.desc,
+            trav.address
         );
     }
     else if (trav.op == START) {

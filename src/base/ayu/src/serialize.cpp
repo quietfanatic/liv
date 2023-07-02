@@ -289,7 +289,7 @@ void in::ser_collect_keys (const Traversal& trav, UniqueArray<AnyString>& ks) {
             acr->read(*trav.address, [&](Mu& ksv){
                  // We might be able to optimize this more, but it's not that
                  // important.
-                auto tree = item_to_tree(Pointer(&ksv, keys_type));
+                auto tree = item_to_tree(Pointer(keys_type, &ksv));
                 if (tree.form != ARRAY) {
                     throw X<InvalidKeysType>(trav_location(trav), trav.desc, keys_type);
                 }
@@ -375,7 +375,7 @@ void in::ser_claim_keys (
                 }
                 acr->write(*trav.address, [&](Mu& ksv){
                     item_from_tree(
-                        Pointer(&ksv, keys_type), Tree(move(a))
+                        Pointer(keys_type, &ksv), Tree(move(a))
                     );
                 });
             }
