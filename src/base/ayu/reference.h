@@ -15,8 +15,6 @@
 // contain a raw pointer to a parent object and a possibly-refcounted pointer to
 // an accessor, so they are cheap to copy, but not threadsafe.
 //
-// TODO: remove the _as from the following methods.
-//
 // References can be read from with read_as<> which takes a callback or get_as<>
 // which returns the referenced value after copying it with operator=.
 //
@@ -53,6 +51,7 @@
 #include "dynamic.h"
 #include "location.h"
 #include "pointer.h"
+#include "serialize.h"
 
 namespace ayu {
 
@@ -75,7 +74,6 @@ struct Reference {
      // Construct from unknown pointer and type
     Reference (Type t, Mu* p) : host(t, p), acr(null) { }
      // For use in attr_func and elem_func.
-     // TODO: Also check std::is_base_of
     template <class From, class Acr> requires (
         std::is_same_v<typename Acr::AccessorFromType, From>
     )
@@ -238,21 +236,6 @@ struct Reference {
         return Pointer(type(), require_address());
     }
 
-     // Shortcuts for serialize functions
-     // TODO: Get rid of these.
-    Tree to_tree () const;
-    void from_tree (Tree t) const;
-     // If this reference is got through value_funcs or somesuch, then calling
-     // these a bunch of times may be slow.
-    AnyArray<AnyString> get_keys () const;
-    void set_keys (AnyArray<AnyString> ks) const;
-    Reference maybe_attr (AnyString key) const;
-    Reference attr (AnyString key) const;
-    usize get_length () const;
-    void set_length (usize l) const;
-    Reference maybe_elem (usize index) const;
-    Reference elem (usize index) const;
-
      // These are used by serialize.  They will be most efficient if this
      // Reference has an address().
     Reference chain (const in::Accessor*) const;
@@ -269,9 +252,9 @@ struct Reference {
         }
     }
 
-     // Syntax sugar.
-    Reference operator [] (AnyString key) const { return attr(move(key)); }
-    Reference operator [] (usize index) const { return elem(index); }
+     // Syntax sugar for item_attr and item_elem
+    Reference operator [] (AnyString key) const;
+    Reference operator [] (usize index) const;
 
     template <class T>
     operator T* () const {
@@ -289,7 +272,6 @@ struct Reference {
  // elem_func will not be comparable, and thus cannot be serialized.  Those
  // references are likely to be very inefficient anyway, so try not to create
  // them.
- // TODO: Should this return false if only one Reference is readonly?
 inline bool operator == (const Reference& a, const Reference& b) {
     if (a.host == b.host && a.acr == b.acr) return true;
     if (!a || !b) return false;
@@ -331,20 +313,3 @@ struct std::hash<ayu::Reference> {
     }
 };
 
- // Break cyclic dependency
- // TODO: Check if this is still necessary
-#include "serialize.h"
-namespace ayu {
-
-inline Tree Reference::to_tree () const { return item_to_tree(*this); }
-inline void Reference::from_tree (Tree t) const { item_from_tree(*this, t); }
-inline AnyArray<AnyString> Reference::get_keys () const { return item_get_keys(*this); }
-inline void Reference::set_keys (AnyArray<AnyString> ks) const { item_set_keys(*this, move(ks)); }
-inline Reference Reference::maybe_attr (AnyString key) const { return item_maybe_attr(*this, move(key)); }
-inline Reference Reference::attr (AnyString key) const { return item_attr(*this, move(key)); }
-inline usize Reference::get_length () const { return item_get_length(*this); }
-inline void Reference::set_length (usize l) const { item_set_length(*this, l); }
-inline Reference Reference::maybe_elem (usize index) const { return item_maybe_elem(*this, index); }
-inline Reference Reference::elem (usize index) const { return item_elem(*this, index); }
-
-} // namespace ayu

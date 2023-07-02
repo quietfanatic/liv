@@ -32,7 +32,9 @@ Reference Reference::chain (const Accessor* o_acr) const {
     }
 }
 
-Reference Reference::chain_attr_func (Reference(* f )(Mu&, AnyString), AnyString k) const {
+Reference Reference::chain_attr_func (
+    Reference(* f )(Mu&, AnyString), AnyString k
+) const {
     if (auto a = address()) {
         auto r = f(*a, k);
         if (r) return r;
@@ -45,14 +47,18 @@ Reference Reference::chain_attr_func (Reference(* f )(Mu&, AnyString), AnyString
         read([&](const Mu& v){
             Reference ref = f(const_cast<Mu&>(v), k);
             if (!ref) {
-                throw X<AttrNotFound>(reference_to_location(*this), type(), move(k));
+                throw X<AttrNotFound>(
+                    reference_to_location(*this), type(), move(k)
+                );
             }
         });
         return Reference(host, new ChainAcr(acr, new AttrFuncAcr(f, move(k))));
     }
 }
 
-Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) const {
+Reference Reference::chain_elem_func (
+    Reference(* f )(Mu&, size_t), size_t i
+) const {
     if (auto a = address()) {
         auto r = f(*a, i);
         if (r) return r;
@@ -67,6 +73,13 @@ Reference Reference::chain_elem_func (Reference(* f )(Mu&, size_t), size_t i) co
         });
         return Reference(host, new ChainAcr(acr, new ElemFuncAcr(f, i)));
     }
+}
+
+Reference Reference::operator[] (AnyString key) const {
+    return item_attr(*this, move(key));
+}
+Reference Reference::operator[] (usize i) const {
+    return item_elem(*this, i);
 }
 
 } using namespace ayu;

@@ -260,10 +260,10 @@ Reference reference_from_location (Location loc) {
     if (!loc) return Reference();
     if (auto parent = loc.parent()) {
         if (auto key = loc.key()) {
-            return reference_from_location(*parent).attr(*key);
+            return reference_from_location(*parent)[*key];
         }
         else if (auto index = loc.index()) {
-            return reference_from_location(*parent).elem(*index);
+            return reference_from_location(*parent)[*index];
         }
         else never();
     }
