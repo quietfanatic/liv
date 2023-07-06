@@ -39,6 +39,11 @@ enum InterpolationMode : uint8 {
     SMART_CUBIC
 };
 
+enum TrimMode : uint8 {
+    TRIM_NONE,
+    TRIM_PAGE_CACHE
+};
+
 struct Mapping {
     control::Input input;
     control::Statement action;
@@ -72,6 +77,7 @@ struct MemorySettings {
     std::optional<uint32> preload_ahead;
     std::optional<uint32> preload_behind;
     std::optional<double> page_cache_mb;
+    std::optional<TrimMode> trim_when_minimized;
 };
 
  // Using inheritance instead of containment because it makes using member

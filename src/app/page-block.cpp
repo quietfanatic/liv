@@ -1,6 +1,7 @@
 #include "page-block.h"
 
 #include "../base/geo/scalar.h"
+#include "book.h"
 #include "files.h"
 #include "page.h"
 
@@ -35,7 +36,34 @@ void PageBlock::unload_page (Page* page) {
     }
 }
 
-bool PageBlock::idle_processing (const Settings* settings, IRange viewing_range) {
+bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
+    auto viewing_range = book->viewing_pages;
+
+     // Unload a cached page if we're minimized
+    if (book->is_minimized()) {
+        switch (settings->get(&MemorySettings::trim_when_minimized)) {
+            case TRIM_NONE: break;
+            case TRIM_PAGE_CACHE: {
+                for (int32 i = 0; i < viewing_range.l; ++i) {
+                    Page* page = get(i);
+                    if (page->texture) {
+                        unload_page(page);
+                        return true;
+                    }
+                }
+                for (int32 i = viewing_range.r; i < count(); ++i) {
+                    Page* page = get(i);
+                    if (page->texture) {
+                        unload_page(page);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+     // Otherwise continue as normal...
+
     int32 preload_ahead = settings->get(&MemorySettings::preload_ahead);
     int32 preload_behind = settings->get(&MemorySettings::preload_behind);
     int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
@@ -43,7 +71,7 @@ bool PageBlock::idle_processing (const Settings* settings, IRange viewing_range)
     auto preload_range = IRange(
         viewing_range.l - preload_behind,
         viewing_range.r + preload_ahead
-    ) & IRange(1, count());
+    ) & IRange(0, count());
 
      // Preload pages forwards
     for (int32 i = viewing_range.r; i < preload_range.r; i++) {
@@ -81,6 +109,7 @@ bool PageBlock::idle_processing (const Settings* settings, IRange viewing_range)
         }
         if (oldest_page) {
             unload_page(oldest_page);
+            return true;
         }
     }
      // Didn't do anything

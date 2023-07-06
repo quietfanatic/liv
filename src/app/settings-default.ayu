@@ -81,14 +81,18 @@ files: {
 
  // Options regarding memory usage
 memory: {
-     // Load this many pages ahead of the current page
+     // Load this many pages ahead of the current page(s)
     preload_ahead: 1
-     // Load this many pages behind the current page
+     // Load this many pages behind the current page(s)
     preload_behind: 1
      // Start unloading pages when their cumulative texture memory exceeds this
      // amount.  This is an estimate; actual video memory usage may vary.  The
      // current page and pages in the preloading window will never be unloaded.
-    page_cache_mb: 200
+    page_cache_mb: 100
+     // Reduce memory usage when the window is minimized.  Options:
+     //   none = Don't do anything
+     //   page_cache = Unload pages not being viewing
+    trim_when_minimized: page_cache
 }
 
  // Key and mouse bindings.  See app/app-commands.h for a list of supported

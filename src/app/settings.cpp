@@ -36,7 +36,8 @@ const Settings builtin_default_settings = {
     MemorySettings{
         .preload_ahead = 1,
         .preload_behind = 1,
-        .page_cache_mb = 200
+        .page_cache_mb = 200,
+        .trim_when_minimized = TRIM_PAGE_CACHE
     },
     { }
 };
@@ -85,6 +86,13 @@ AYU_DESCRIBE(app::SpreadDirection,
         value("left", LEFT),
         value("down", DOWN),
         value("up", UP)
+    )
+)
+
+AYU_DESCRIBE(app::TrimMode,
+    values(
+        value("none", TRIM_NONE),
+        value("page_cache", TRIM_PAGE_CACHE)
     )
 )
 
@@ -137,7 +145,8 @@ AYU_DESCRIBE(app::MemorySettings,
     attrs(
         attr("preload_ahead", &MemorySettings::preload_ahead, optional),
         attr("preload_behind", &MemorySettings::preload_behind, optional),
-        attr("page_cache_mb", &MemorySettings::page_cache_mb, optional)
+        attr("page_cache_mb", &MemorySettings::page_cache_mb, optional),
+        attr("trim_when_minimized", &MemorySettings::trim_when_minimized, optional)
     )
 )
 

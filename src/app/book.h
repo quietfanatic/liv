@@ -79,6 +79,8 @@ struct Book {
     bool is_fullscreen () const;
     void set_fullscreen (bool);
 
+    bool is_minimized () const;
+
     ///// Internal stuff
     wind::Window window;
      // Set these to nullopt or false when you change things they depend on.

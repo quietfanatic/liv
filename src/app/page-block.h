@@ -1,7 +1,7 @@
 // Implements a collection of Pages.  State includes whether those Pages are
 // loaded or not (actually, the Pages themselves include that), and the total
 // estimated video memory of all pages.  Does not include the current page or
-// any view parameters.  Pages are indexed by 1.
+// any view parameters.  Pages are indexed by 0.
 
 #pragma once
 
@@ -30,8 +30,8 @@ struct PageBlock {
     void load_page (Page*);
     void unload_page (Page*);
      // Preload pages perhaps
-     // Returns true if any processing was actually done
-    bool idle_processing (const Settings* settings, IRange);
+     // Returns true if any processing was actually done.
+    bool idle_processing (const Book* book, const Settings* settings);
 };
 
 } // namespace app

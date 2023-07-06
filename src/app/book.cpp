@@ -151,6 +151,11 @@ void Book::set_fullscreen (bool fs) {
     ));
 }
 
+bool Book::is_minimized () const {
+    auto flags = glow::require_sdl(SDL_GetWindowFlags(window));
+    return flags & SDL_WINDOW_MINIMIZED;
+}
+
 ///// Internal stuff
 
 const Spread& Book::get_spread () {
@@ -236,7 +241,7 @@ bool Book::draw_if_needed () {
 }
 
 bool Book::idle_processing () {
-    return block.idle_processing(settings, viewing_pages);
+    return block.idle_processing(this, settings);
 }
 
 IVec Book::get_window_size () const {
