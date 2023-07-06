@@ -15,7 +15,7 @@
 
 namespace ayu {
 
-Str Type::name () const {
+StaticString Type::name () const {
     auto desc = in::DescriptionPrivate::get(*this);
     if (!desc) return "";
     return in::get_description_name(desc);
@@ -215,7 +215,7 @@ void throw_UnknownType (const std::type_info& t) {
     throw X<UnknownType>(t);
 }
 
-Str get_description_name (const Description* desc) {
+StaticString get_description_name (const Description* desc) {
     return desc->name_offset
         ? ((NameDcr<Mu>*)((char*)desc + desc->name_offset))->f()
         : !desc->name.empty() ? desc->name
