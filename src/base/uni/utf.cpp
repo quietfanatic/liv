@@ -163,26 +163,29 @@ std::FILE* fopen_utf8 (const char* filename, const char* mode) {
 #endif
 }
 
-void fprint_utf8 (FILE* f, Str s) {
-#ifdef _WIN32
-    fputws(reinterpret_cast<const wchar_t*>(to_utf16(s).c_str()), f);
-#else
-    fputs(s.data(), f);
-#endif
-}
 void print_utf8 (Str s) {
 #ifdef _WIN32
     [[maybe_unused]] static auto set = _setmode(_fileno(stdout), _O_WTEXT);
+    auto s16 = to_utf16(s);
+    auto len = fwrite(s16.data(), 2, s16.size(), stdout);
+    require(len == s16.size());
+#else
+    auto len = fwrite(s.data(), 1, s.size(), stdout);
+    require(len == s.size());
 #endif
-    fprint_utf8(stdout, s);
-    std::fflush(stdout);
+    fflush(stdout);
 }
 void warn_utf8 (Str s) {
 #ifdef _WIN32
     [[maybe_unused]] static auto set = _setmode(_fileno(stderr), _O_WTEXT);
+    auto s16 = to_utf16(s);
+    auto len = fwrite(s16.data(), 2, s16.size(), stderr);
+    require(len == s16.size());
+#else
+    auto len = fwrite(s.data(), 1, s.size(), stderr);
+    require(len == s.size());
 #endif
-    fprint_utf8(stderr, s);
-    std::fflush(stderr);
+    fflush(stderr);
 }
 
 int remove_utf8 (const char* filename) {
