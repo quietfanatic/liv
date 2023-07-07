@@ -14,23 +14,23 @@ Requires libsdl2-dev and libsdl2-image-dev (or equivalent).
 
     perl make.pl --jobs=7 release
 
-Output will be in `out/rel`.
+The program and all runtime files will be put into `out/rel`.
 
 ### USAGE
 
 Requires a video driver that supports OpenGL 3.1 or higher.  Anything made since
 2011 should work.
 
-The main settings file is at `res/app/settings.ayu`.  It'll be moved to a more
-convenient place eventually.
+You can configure the app by editing the file `settings.ayu` in the program
+directory (it may not exist until you run the program once).
 
 ### ROADMAP
 
 - [x] Dragging and zooming
 - [x] Nice filtering
-- [ ] View two pages side-by-side
-- [ ] Folder support
-- [ ] Better settings management
+- [x] View two pages side-by-side
+- [x] Folder support
+- [x] Better settings management
 - [ ] Customizable mouse controls
 - [ ] Support avif images (maybe switch to SAIL)
 - [ ] Official Windows (mingw) support
