@@ -3,9 +3,9 @@
 #include <filesystem>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
-#include "../base/geo/scalar.h"
-#include "../base/glow/gl.h"
-#include "../base/uni/time.h"
+#include "../dirt/geo/scalar.h"
+#include "../dirt/glow/gl.h"
+#include "../dirt/uni/time.h"
 #include "app.h"
 #include "files.h"
 #include "layout.h"
@@ -262,9 +262,9 @@ void Book::window_size_changed (IVec size) {
 
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
-#include "../base/ayu/resource.h"
-#include "../base/glow/image.h"
-#include "../base/tap/tap.h"
+#include "../dirt/ayu/resource.h"
+#include "../dirt/glow/image.h"
+#include "../dirt/tap/tap.h"
 
 static tap::TestSet tests ("app/book", []{
     using namespace tap;
@@ -279,8 +279,8 @@ static tap::TestSet tests ("app/book", []{
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, FilesToOpen{{
-        cat(exe_folder, "/res/base/glow/test/image.png"sv),
-        cat(exe_folder, "/res/base/glow/test/image2.png"sv)
+        cat(exe_folder, "/res/dirt/glow/test/image.png"sv),
+        cat(exe_folder, "/res/dirt/glow/test/image2.png"sv)
     }});
 
     book.draw_if_needed();

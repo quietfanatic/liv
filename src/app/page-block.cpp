@@ -1,6 +1,6 @@
 #include "page-block.h"
 
-#include "../base/geo/scalar.h"
+#include "../dirt/geo/scalar.h"
 #include "book.h"
 #include "files.h"
 #include "page.h"

@@ -1,7 +1,7 @@
 #include "settings.h"
 
-#include "../base/ayu/describe.h"
-#include "../base/ayu/resource.h"
+#include "../dirt/ayu/describe.h"
+#include "../dirt/ayu/resource.h"
 
 namespace app {
 

@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
-#include "../base/ayu/parse.h"
-#include "../base/ayu/resource.h"
+#include "../dirt/ayu/parse.h"
+#include "../dirt/ayu/resource.h"
 #include "files.h"
 #include "settings.h"
 
@@ -178,8 +178,8 @@ Book* current_book = null;
 #ifndef TAP_DISABLE_TESTS
 #include <cstring>
 #include <SDL2/SDL.h>
-#include "../base/tap/tap.h"
-#include "../base/glow/image.h"
+#include "../dirt/tap/tap.h"
+#include "../dirt/glow/image.h"
 
 static tap::TestSet tests ("app/app", []{
     using namespace tap;
@@ -193,8 +193,8 @@ static tap::TestSet tests ("app/app", []{
     //app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            ayu::cat(exe_folder, "/res/base/glow/test/image.png"),
-            ayu::cat(exe_folder, "/res/base/glow/test/image2.png")
+            ayu::cat(exe_folder, "/res/dirt/glow/test/image.png"),
+            ayu::cat(exe_folder, "/res/dirt/glow/test/image2.png")
         });
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));

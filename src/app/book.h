@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "../base/uni/common.h"
-#include "../base/wind/window.h"
+#include "../dirt/uni/common.h"
+#include "../dirt/wind/window.h"
 #include "common.h"
 #include "layout.h"
 #include "page.h"

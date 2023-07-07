@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../base/geo/range.h"
-#include "../base/geo/vec.h"
+#include "../dirt/geo/range.h"
+#include "../dirt/geo/vec.h"
 #include "common.h"
 #include "settings.h"
 

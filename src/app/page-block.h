@@ -7,8 +7,8 @@
 
 #include <vector>
 #include <memory>
-#include "../base/geo/range.h"
-#include "../base/uni/common.h"
+#include "../dirt/geo/range.h"
+#include "../dirt/uni/common.h"
 #include "common.h"
 
 namespace app {

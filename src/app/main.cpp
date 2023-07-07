@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <SDL2/SDL.h>
-#include "../base/ayu/common.h"
-#include "../base/ayu/resource.h"
-#include "../base/ayu/resource-scheme.h"
-#include "../base/glow/common.h"
-#include "../base/tap/tap.h"
-#include "../base/uni/common.h"
+#include "../dirt/ayu/common.h"
+#include "../dirt/ayu/resource.h"
+#include "../dirt/ayu/resource-scheme.h"
+#include "../dirt/glow/common.h"
+#include "../dirt/tap/tap.h"
+#include "../dirt/uni/common.h"
 #include "app.h"
 #include "common.h"
 

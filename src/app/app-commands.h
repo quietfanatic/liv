@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../base/control/command.h"
+#include "../dirt/control/command.h"
 #include "common.h"
 
 namespace app::command {

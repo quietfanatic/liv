@@ -1,9 +1,9 @@
 #include "page.h"
 
-#include "../base/glow/program.h"
-#include "../base/uni/utf.h"
-#include "../base/ayu/describe.h"
-#include "../base/ayu/resource.h"
+#include "../dirt/glow/program.h"
+#include "../dirt/uni/utf.h"
+#include "../dirt/ayu/describe.h"
+#include "../dirt/ayu/resource.h"
 #include "app.h"
 #include "book.h"
 
@@ -99,10 +99,10 @@ AYU_DESCRIBE(app::PageProgram,
 
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
-#include "../base/glow/image.h"
-#include "../base/ayu/serialize.h"
-#include "../base/tap/tap.h"
-#include "../base/wind/window.h"
+#include "../dirt/glow/image.h"
+#include "../dirt/ayu/serialize.h"
+#include "../dirt/tap/tap.h"
+#include "../dirt/wind/window.h"
 
 static tap::TestSet tests ("app/page", []{
     using namespace tap;
@@ -123,7 +123,7 @@ static tap::TestSet tests ("app/page", []{
     SDL_MinimizeWindow(window);
     glow::init();
 
-    Page page (cat(exe_folder, "/res/base/glow/test/image.png"));
+    Page page (cat(exe_folder, "/res/dirt/glow/test/image.png"));
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");

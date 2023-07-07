@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../base/uni/common.h"
-#include "../base/uni/strings.h"
+#include "../dirt/uni/common.h"
+#include "../dirt/uni/strings.h"
 #include "common.h"
 
 namespace app {

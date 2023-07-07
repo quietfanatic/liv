@@ -3,11 +3,11 @@
 #pragma once
 
 #include <memory>
-#include "../base/geo/rect.h"
-#include "../base/geo/scalar.h"
-#include "../base/geo/vec.h"
-#include "../base/glow/file-texture.h"
-#include "../base/uni/common.h"
+#include "../dirt/geo/rect.h"
+#include "../dirt/geo/scalar.h"
+#include "../dirt/geo/vec.h"
+#include "../dirt/glow/file-texture.h"
+#include "../dirt/uni/common.h"
 #include "common.h"
 #include "settings.h"
 

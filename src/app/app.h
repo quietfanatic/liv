@@ -2,9 +2,9 @@
 
 #include <memory>
 #include <unordered_map>
-#include "../base/geo/vec.h"
-#include "../base/uni/strings.h"
-#include "../base/wind/passive_loop.h"
+#include "../dirt/geo/vec.h"
+#include "../dirt/uni/strings.h"
+#include "../dirt/wind/passive_loop.h"
 #include "common.h"
 #include "book.h"
 #include "settings.h"

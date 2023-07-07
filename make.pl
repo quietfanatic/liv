@@ -73,56 +73,56 @@ my @sources = (qw(
     app/page-block.cpp
     app/page.cpp
     app/settings.cpp
-    base/ayu/describe-standard.cpp
-    base/ayu/src/accessors.cpp
-    base/ayu/src/common.cpp
-    base/ayu/src/document.cpp
-    base/ayu/src/dynamic.cpp
-    base/ayu/src/exception.cpp
-    base/ayu/src/location.cpp
-    base/ayu/src/parse.cpp
-    base/ayu/src/pointer.cpp
-    base/ayu/src/print.cpp
-    base/ayu/src/reference.cpp
-    base/ayu/src/resource.cpp
-    base/ayu/src/resource-scheme.cpp
-    base/ayu/src/scan.cpp
-    base/ayu/src/serialize.cpp
-    base/ayu/src/tree.cpp
-    base/ayu/src/type.cpp
-    base/control/command.cpp
-    base/control/command-builtins.cpp
-    base/control/input.cpp
-    base/geo/floating.t.cpp
-    base/geo/mat.t.cpp
-    base/geo/vec.t.cpp
-    base/glow/colors.cpp
-    base/glow/common.cpp
-    base/glow/file-texture.cpp
-    base/glow/gl.cpp
-    base/glow/image.cpp
-    base/glow/objects.cpp
-    base/glow/program.cpp
-    base/glow/test-environment.cpp
-    base/glow/texture-program.cpp
-    base/uni/arrays.t.cpp
-    base/uni/iri.cpp
-    base/uni/requirements.cpp
-    base/uni/text.cpp
-    base/uni/utf.cpp
-    base/wind/passive_loop.cpp
-    base/wind/window.cpp
+    dirt/ayu/describe-standard.cpp
+    dirt/ayu/src/accessors.cpp
+    dirt/ayu/src/common.cpp
+    dirt/ayu/src/document.cpp
+    dirt/ayu/src/dynamic.cpp
+    dirt/ayu/src/exception.cpp
+    dirt/ayu/src/location.cpp
+    dirt/ayu/src/parse.cpp
+    dirt/ayu/src/pointer.cpp
+    dirt/ayu/src/print.cpp
+    dirt/ayu/src/reference.cpp
+    dirt/ayu/src/resource.cpp
+    dirt/ayu/src/resource-scheme.cpp
+    dirt/ayu/src/scan.cpp
+    dirt/ayu/src/serialize.cpp
+    dirt/ayu/src/tree.cpp
+    dirt/ayu/src/type.cpp
+    dirt/control/command.cpp
+    dirt/control/command-builtins.cpp
+    dirt/control/input.cpp
+    dirt/geo/floating.t.cpp
+    dirt/geo/mat.t.cpp
+    dirt/geo/vec.t.cpp
+    dirt/glow/colors.cpp
+    dirt/glow/common.cpp
+    dirt/glow/file-texture.cpp
+    dirt/glow/gl.cpp
+    dirt/glow/image.cpp
+    dirt/glow/objects.cpp
+    dirt/glow/program.cpp
+    dirt/glow/test-environment.cpp
+    dirt/glow/texture-program.cpp
+    dirt/uni/arrays.t.cpp
+    dirt/uni/iri.cpp
+    dirt/uni/requirements.cpp
+    dirt/uni/text.cpp
+    dirt/uni/utf.cpp
+    dirt/wind/passive_loop.cpp
+    dirt/wind/window.cpp
 ),
-    [qw(base/tap/tap.cpp -DTAP_SELF_TEST)],
+    [qw(dirt/tap/tap.cpp -DTAP_SELF_TEST)],
 );
 
 my @resources = (qw(
     app/page.ayu
     app/settings-default.ayu
     app/settings-template.ayu
-    base/ayu/src/test/*
-    base/glow/test/*
-    base/glow/texture-program.ayu
+    dirt/ayu/src/test/*
+    dirt/glow/test/*
+    dirt/glow/texture-program.ayu
 ));
 
 ##### MISC

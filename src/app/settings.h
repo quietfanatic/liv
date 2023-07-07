@@ -1,12 +1,12 @@
 #pragma once
 
 #include <optional>
-#include "../base/control/command.h"
-#include "../base/control/input.h"
-#include "../base/geo/vec.h"
-#include "../base/glow/colors.h"
-#include "../base/uni/common.h"
-#include "../base/uni/strings.h"
+#include "../dirt/control/command.h"
+#include "../dirt/control/input.h"
+#include "../dirt/geo/vec.h"
+#include "../dirt/glow/colors.h"
+#include "../dirt/uni/common.h"
+#include "../dirt/uni/strings.h"
 #include "common.h"
 
 namespace app {
