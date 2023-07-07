@@ -78,7 +78,6 @@ my @sources = (qw(
     dirt/ayu/src/common.cpp
     dirt/ayu/src/document.cpp
     dirt/ayu/src/dynamic.cpp
-    dirt/ayu/src/exception.cpp
     dirt/ayu/src/location.cpp
     dirt/ayu/src/parse.cpp
     dirt/ayu/src/pointer.cpp
@@ -105,9 +104,9 @@ my @sources = (qw(
     dirt/glow/program.cpp
     dirt/glow/test-environment.cpp
     dirt/glow/texture-program.cpp
+    dirt/iri/iri.cpp
     dirt/uni/arrays.t.cpp
-    dirt/uni/iri.cpp
-    dirt/uni/requirements.cpp
+    dirt/uni/assertions.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp
     dirt/wind/passive_loop.cpp

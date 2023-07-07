@@ -33,7 +33,7 @@ int main (int argc, char** argv) {
             else if (arg == "--list") {
                 list = true;
             }
-            else throw ayu::X<ayu::GenericError>(cat("Unrecognized option ", arg));
+            else throw ayu::GenericError("Unrecognized option ", arg);
         }
         else args.emplace_back(arg);
     }
@@ -41,7 +41,7 @@ int main (int argc, char** argv) {
     App app;
     if (list) {
         if (args.size() != 1) {
-            throw ayu::X<ayu::GenericError>("Wrong number of arguments given with --list (must be 1)");
+            throw ayu::GenericError("Wrong number of arguments given with --list (must be 1)");
         }
         app.open_list(args[0]);
     }
