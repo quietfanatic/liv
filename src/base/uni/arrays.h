@@ -1755,7 +1755,7 @@ struct ArrayInterface {
  // Make this template as generic as possible but nail one side down to
  // ArrayInterface.
 template <ArrayClass ac, class T, class B>
-bool operator== (
+constexpr bool operator== (
     const ArrayInterface<ac, T>& a, const B& b
 ) requires (
     requires { usize(b.size()); a.data()[0] == b.data()[0]; }
@@ -1779,7 +1779,7 @@ bool operator== (
 }
  // Allow comparing to NUL-terminated pointer for string types only.
 template <ArrayClass ac, class T>
-bool operator== (
+constexpr bool operator== (
     const ArrayInterface<ac, T>& a, const T* b
 ) requires (ArrayInterface<ac, T>::is_String) {
     usize as = a.size();
@@ -1797,7 +1797,7 @@ bool operator== (
  // I can't be bothered to learn what <=> is supposed to return.  They should
  // have just made it int.
 template <ArrayClass ac, class T, class B>
-auto operator<=> (
+constexpr auto operator<=> (
     const ArrayInterface<ac, T>& a, const B& b
 ) requires (
     requires { usize(b.size()); a.data()[0] <=> b.data()[0]; }
@@ -1816,7 +1816,7 @@ auto operator<=> (
     return as <=> bs;
 }
 template <ArrayClass ac, class T>
-auto operator<=> (
+constexpr auto operator<=> (
     const ArrayInterface<ac, T>& a, const T* b
 ) requires (ArrayInterface<ac, T>::is_String) {
     const T* ad = a.data();

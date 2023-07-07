@@ -51,6 +51,8 @@
 //
 // The IRI class is pretty lightweight, with one reference-counted string and
 // four uint16s.  16 bytes on 32-bit and 24 bytes on 64-bit.
+//
+// There are no facilities for parsing query strings yet.
 
 #pragma once
 
@@ -86,7 +88,7 @@ IRIRelativity classify_reference (Str);
 
 struct IRI {
      // Construct the empty IRI.  This is not a valid IRI.
-    IRI () { }
+    constexpr IRI () { }
      // Construct from an IRI string.  Does validation and canonicalization.  If
      // base is provided, resolved ref as a IRI reference (AKA a relative IRI)
      // with base as its base. If base is not provided, ref must be an absolute
@@ -94,38 +96,38 @@ struct IRI {
     explicit IRI (Str ref, const IRI& base = IRI());
      // Construct an already-parsed IRI.  This will not do any validation.  If
      // you provide invalid parameters, you will wreak havoc and mayhem.
-    IRI (
+    constexpr IRI (
         AnyString&& spec,
         uint16 colon_position, uint16 path_position,
         uint16 question_position, uint16 hash_position
     );
 
      // Copy and move construction and assignment
-    IRI (const IRI& o);
-    IRI (IRI&& o);
-    IRI& operator = (const IRI& o);
-    IRI& operator = (IRI&& o);
+    constexpr IRI (const IRI& o);
+    constexpr IRI (IRI&& o);
+    constexpr IRI& operator = (const IRI& o);
+    constexpr IRI& operator = (IRI&& o);
 
      // Returns whether this IRI is valid or not.  If the IRI is invalid, all
      // bool accessors will return false and all string and IRI accessors will
      // return empty.
-    bool is_valid () const;
+    constexpr bool is_valid () const;
      // Returns whether this IRI is empty.  The empty IRI is also invalid, but
      // not all invalid IRIs are empty.
-    bool is_empty () const;
+    constexpr bool is_empty () const;
      // Equivalent to is_valid
-    explicit operator bool () const;
+    explicit constexpr operator bool () const;
 
      // Gets the full text of the IRI only if this IRI is valid.
-    const AnyString& spec () const;
+    constexpr const AnyString& spec () const;
      // Get full text of IRI even it is not valid.  This is only for diagnosing
      // what is wrong with the IRI.  Don't use it for anything important.
-    const AnyString& possibly_invalid_spec () const;
+    constexpr const AnyString& possibly_invalid_spec () const;
 
      // Steal the spec string, leaving this IRI empty.
-    AnyString move_spec ();
+    constexpr AnyString move_spec ();
      // Steal the spec string even if it's invalid.
-    AnyString move_possibly_invalid_spec ();
+    constexpr AnyString move_possibly_invalid_spec ();
 
      // Returns an IRI reference that's relative to base, or just spec() if
      // this IRI has nothing in common with base.  Returning relative paths is
@@ -134,23 +136,23 @@ struct IRI {
     UniqueString spec_relative_to (const IRI& base) const;
 
      // Check for existence of components.
-    bool has_scheme () const;
-    bool has_authority () const;
-    bool has_path () const;
-    bool has_query () const;
-    bool has_fragment () const;
+    constexpr bool has_scheme () const;
+    constexpr bool has_authority () const;
+    constexpr bool has_path () const;
+    constexpr bool has_query () const;
+    constexpr bool has_fragment () const;
 
      // If there is a path and the path starts with /
-    bool is_hierarchical () const;
+    constexpr bool is_hierarchical () const;
 
      // Get the scheme of the IRI.  Doesn't include the :.
      // This will always return something for a valid IRI.
-    Str scheme () const;
+    constexpr Str scheme () const;
      // Get the authority (host and port).  Doesn't include the //.  Will
      // return empty if has_authority is false.  May still return empty if
      // has_authority is true, but the IRI has an empty authority (e.g.
      // file:///foo/bar)
-    Str authority () const;
+    constexpr Str authority () const;
      // Get the path component of the IRI.
      //   scheme://host/path => /path
      //   scheme://host/ => /
@@ -159,42 +161,42 @@ struct IRI {
      //   scheme:/path => /path
      //   scheme:path => path
      // If has_path is true, will always return non-empty.
-    Str path () const;
+    constexpr Str path () const;
      // Get the query.  Will not include the ?.  May be existent but empty.
-    Str query () const;
+    constexpr Str query () const;
      // Get the fragment.  Will not include the #.  May be existent but empty.
-    Str fragment () const;
+    constexpr Str fragment () const;
 
      // Returns a new IRI with just the scheme (and the colon).
-    IRI iri_with_scheme () const;
+    constexpr IRI iri_with_scheme () const;
      // Get the origin (scheme plus authority if it exists).  Never ends with
      // a /.
-    IRI iri_with_origin () const;
+    constexpr IRI iri_with_origin () const;
      // Get everything up to and including the last / in the path.  If this is
      // not a hierarchical scheme (path doesn't start with /), returns empty.
-    IRI iri_without_filename () const;
+    constexpr IRI iri_without_filename () const;
      // Get the scheme, authority, and path but not the query or fragment.
-    IRI iri_without_query () const;
+    constexpr IRI iri_without_query () const;
      // Get everything but the fragment
-    IRI iri_without_fragment () const;
+    constexpr IRI iri_without_fragment () const;
 
      // The following are the same as above, but return a raw Str instead of a
      // new IRI.  This saves a string copy, but can cost an extra parse if you
      // turn the Str back into an IRI.
-    Str spec_with_scheme () const;
-    Str spec_with_origin () const;
-    Str spec_without_filename () const;
-    Str spec_without_query () const;
-    Str spec_without_fragment () const;
+    constexpr Str spec_with_scheme () const;
+    constexpr Str spec_with_origin () const;
+    constexpr Str spec_without_filename () const;
+    constexpr Str spec_without_query () const;
+    constexpr Str spec_without_fragment () const;
 
-    Str path_without_filename () const;
+    constexpr Str path_without_filename () const;
 
      // Destruct this object
-    ~IRI ();
+    constexpr ~IRI ();
 
      // Comparisons just do string comparisons on the spec
 #define IRI_FRIEND_OP(op) \
-    friend auto operator op (const IRI& a, const IRI& b) { \
+    friend constexpr auto operator op (const IRI& a, const IRI& b) { \
         return a.spec_ op b.spec_; \
     }
 #if __cplusplus >= 202002L
@@ -231,3 +233,6 @@ struct IRI {
 // I was going to specialize std::hash, but using IRIs as keys in an
 // unordered_map would likely be a mistake, since you can just use Strings or
 // Strs instead with the same behavior but less weight.
+
+// Inline implementations
+#include "internal/iri-internal.h"
