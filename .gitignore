@@ -12,5 +12,5 @@ callgrind.out.*
 # externals
 /src/external/SDL2-2.0.14
 
-# ????
+# artifact of using an NTFS drive on Linux
 .fuse_hidden*
