@@ -1,4 +1,0 @@
-[ayu::Document {
-    val:[int32 4]
-    ref:[int32* rec1.ayu#val/1]
-}]
