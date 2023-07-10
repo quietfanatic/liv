@@ -77,6 +77,7 @@ my @sources = (qw(
     dirt/ayu/src/accessors.cpp
     dirt/ayu/src/common.cpp
     dirt/ayu/src/document.cpp
+    dirt/ayu/src/describe-builtin.cpp
     dirt/ayu/src/dynamic.cpp
     dirt/ayu/src/location.cpp
     dirt/ayu/src/parse.cpp
