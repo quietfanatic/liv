@@ -1,34 +1,34 @@
-// This is the settings file for liv.  Take a look at
-// res/app/settings-default.ayu to see what you can configure.
+-- This is the settings file for liv.  Take a look at
+-- res/app/settings-default.ayu to see what you can configure.
 
 [app::Settings {
 
- // Options for initial window properties
+ -- Options for initial window properties
 window: {
 }
 
- // Settings for how pages are laid out in the window
+ -- Settings for how pages are laid out in the window
 layout: {
 }
 
- // Settings for how individual pages are displayed
+ -- Settings for how individual pages are displayed
 page: {
 }
 
- // Options about control and input
+ -- Options about control and input
 control: {
 }
 
- // Options dealing with files and filenames
+ -- Options dealing with files and filenames
 files: {
 }
 
- // Options regarding memory usage
+ -- Options regarding memory usage
 memory: {
 }
 
- // Key and mouse bindings.  These will be added to the default bindings.  To
- // disable a default binding, map that binding to an action of []
+ -- Key and mouse bindings.  These will be added to the default bindings.  To
+ -- disable a default binding, map that binding to an action of []
 mappings: [
 ]
 
