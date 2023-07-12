@@ -16,8 +16,8 @@ int main (int argc, char** argv) {
     char* base = glow::require_sdl(SDL_GetBasePath());
      // TODO: allow resource schemes to be readonly
     ayu::FileResourceScheme res_scheme ("res", uni::cat(base, + "res"));
-    ayu::FileResourceScheme data_scheme ("data", const_cast<const char*>(base));
-    SDL_free(base);
+    ayu::FileResourceScheme data_scheme ("data", UniqueString(base));
+    free(base);
 
     tap::allow_testing(argc, argv);
 
@@ -25,7 +25,7 @@ int main (int argc, char** argv) {
     bool list = false;
     bool done_flags = false;
     for (int i = 1; i < argc; i++) {
-        auto arg = StaticString::Static(argv[i]);
+        auto arg = StaticString(argv[i]);
         if (!done_flags && arg && arg[0] == '-' && arg != "-") {
             if (arg == "--") {
                 done_flags = true;

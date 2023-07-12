@@ -108,7 +108,7 @@ static tap::TestSet tests ("app/page", []{
     using namespace tap;
 
     char* base = require_sdl(SDL_GetBasePath());
-    UniqueString exe_folder = base;
+    auto exe_folder = UniqueString(base);
     SDL_free(base);
 
     IVec test_size = {120, 120};

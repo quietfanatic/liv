@@ -270,7 +270,7 @@ static tap::TestSet tests ("app/book", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());
-    UniqueString exe_folder = base;
+    auto exe_folder = UniqueString(base);
     SDL_free(base);
 
     IVec size = {120, 120};

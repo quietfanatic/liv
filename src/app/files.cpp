@@ -28,7 +28,7 @@ FilesToOpen expand_files (
                 if (name[i-1] == '.') break;
             }
             Str ext = i ? name.substr(i) : "";
-            if (!extensions.count(StaticString::Static(ext))) continue;
+            if (!extensions.count(StaticString(ext))) continue;
             r.files.emplace_back(move(name));
         }
         std::sort(
@@ -62,7 +62,7 @@ FilesToOpen expand_files (
                         if (name[i-1] == '.') break;
                     }
                     Str ext = i ? name.substr(i) : "";
-                    if (!extensions.count(StaticString::Static(ext))) continue;
+                    if (!extensions.count(StaticString(ext))) continue;
                     r.files.emplace_back(move(name));
                 }
                 std::sort(
