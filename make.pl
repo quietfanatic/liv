@@ -26,36 +26,38 @@ my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #    -lmingw32 -lSDL2main -lSDL2
 #));
 
+my @optimize_opts = (qw(-O3 -fweb -frename-registers -flto));
+
 $ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
 my %configs = (
     deb => {
         opts => [qw(-ggdb)],
     },
     opt => {
-        opts => [qw(-O3 -DNDEBUG -ggdb -flto)],
+        opts => [qw(-DNDEBUG -ggdb), @optimize_opts],
+    },
+    dog => {
+        opts => [qw(-DTAP_DISABLE_TESTS -ggdb), @optimize_opts],
+    },
+    rel => {
+        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS), @optimize_opts],
+        strip => 1,
     },
     opt32 => {
-        opts => [qw(-m32 -fno-pie -O3 -DNDEBUG -ggdb -flto)],
+        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @optimize_opts],
     },
     val => {
-        opts => [qw(-O3 -DNDEBUG -ggdb -flto -fno-inline-functions -fno-inline-small-functions)],
+        opts => [qw(-DNDEBUG -ggdb), @optimize_opts, qw(-fno-inline-functions -fno-inline-small-functions)],
     },
     san => {
         opts => [qw(-ggdb), '-fsanitize=address,undefined', '-fno-sanitize=enum'],
     },
-    ana => {
-        opts => [qw(-ggdb -fanalyzer)],
-        fork => 0,  # Absolutely thrashes RAM
-    },
     pro => {
         opts => [qw(-Og -DNDEBUG -flto -pg)],
     },
-    rel => {
-        opts => [qw(-O3 -DNDEBUG -DTAP_DISABLE_TESTS -flto)],
-        strip => 1,
-    },
-    dog => {
-        opts => [qw(-O3 -DTAP_DISABLE_TESTS -ggdb -flto)],
+    ana => {
+        opts => [qw(-ggdb -fanalyzer)],
+        fork => 0,  # Absolutely thrashes RAM
     },
 );
 

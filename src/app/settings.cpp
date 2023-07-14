@@ -29,8 +29,8 @@ const Settings builtin_default_settings = {
     },
     FilesSettings{
         .supported_extensions = std::set<AnyString>{
-            "bmp"_s, "gif"_s, "jfif"_s, "jpe"_s, "jpeg"_s, "jpg"_s,
-            "png"_s, "tif"_s, "tiff"_s, "xbm"_s, "xpm"_s, "webp"_s,
+            "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
+            "png", "tif", "tiff", "xbm", "xpm", "webp",
         },
     },
     MemorySettings{

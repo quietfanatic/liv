@@ -208,10 +208,10 @@ bool Book::draw_if_needed () {
     AnyString title;
     IRange visible = visible_pages();
     if (block.count() == 0) {
-        title = "Little Image Viewer (nothing loaded)"_s;
+        title = "Little Image Viewer (nothing loaded)";
     }
     else if (empty(visible)) {
-        title = "Little Image Viewer (no pages visible)"_s;
+        title = "Little Image Viewer (no pages visible)";
     }
     else {
         if (block.count() > 1) {
