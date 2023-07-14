@@ -26,7 +26,7 @@ my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #    -lmingw32 -lSDL2main -lSDL2
 #));
 
-my @optimize_opts = (qw(-O3 -fweb -frename-registers -flto));
+my @optimize_opts = (qw(-O3 -fweb -frename-registers -flto=7));
 
 $ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
 my %configs = (
@@ -47,7 +47,7 @@ my %configs = (
         opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @optimize_opts],
     },
     val => {
-        opts => [qw(-DNDEBUG -ggdb), @optimize_opts, qw(-fno-inline-functions -fno-inline-small-functions)],
+        opts => [qw(-DNDEBUG -ggdb), grep $_ ne '-flto', @optimize_opts],
     },
     san => {
         opts => [qw(-ggdb), '-fsanitize=address,undefined', '-fno-sanitize=enum'],
@@ -80,7 +80,9 @@ my @sources = (qw(
     dirt/ayu/src/common.cpp
     dirt/ayu/src/document.cpp
     dirt/ayu/src/describe-builtin.cpp
+    dirt/ayu/src/description.cpp
     dirt/ayu/src/dynamic.cpp
+    dirt/ayu/src/errors.cpp
     dirt/ayu/src/location.cpp
     dirt/ayu/src/parse.cpp
     dirt/ayu/src/pointer.cpp
