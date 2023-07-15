@@ -15,7 +15,7 @@ my @linker = 'g++';
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
-    -fstrict-aliasing -finline-small-functions -fdce
+    -fstrict-aliasing
     -Wall -Wextra -Wno-terminate
     -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
     -fconcepts-diagnostics-depth=4
@@ -26,31 +26,31 @@ my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #    -lmingw32 -lSDL2main -lSDL2
 #));
 
-my @optimize_opts = (qw(-O3 -fweb -frename-registers -flto=7));
+ # Dead code elimination actually makes compilation slightly faster
+my @O0_opts = (qw(-fdce));
+
+my @O3_opts = (qw(-O3 -flto=7));
 
 $ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
 my %configs = (
     deb => {
-        opts => [qw(-ggdb)],
+        opts => [qw(-ggdb), @O0_opts],
     },
     opt => {
-        opts => [qw(-DNDEBUG -ggdb), @optimize_opts],
+        opts => [qw(-DNDEBUG -ggdb), @O3_opts],
     },
     dog => {
-        opts => [qw(-DTAP_DISABLE_TESTS -ggdb), @optimize_opts],
+        opts => [qw(-DTAP_DISABLE_TESTS -ggdb), @O3_opts],
     },
     rel => {
-        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS), @optimize_opts],
+        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS), @O3_opts],
         strip => 1,
     },
     opt32 => {
-        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @optimize_opts],
-    },
-    val => {
-        opts => [qw(-DNDEBUG -ggdb), grep $_ ne '-flto', @optimize_opts],
+        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @O3_opts],
     },
     san => {
-        opts => [qw(-ggdb), '-fsanitize=address,undefined', '-fno-sanitize=enum'],
+        opts => [qw(-ggdb), @O0_opts, '-fsanitize=address,undefined', '-fno-sanitize=enum'],
     },
     pro => {
         opts => [qw(-Og -DNDEBUG -flto -pg)],
@@ -163,15 +163,12 @@ for my $cfg (keys %configs) {
                 @opts,
                 '-o', $_[0][0];
         }, {fork => $configs{$cfg}{fork} // 1};
-        rule "tmp/$cfg/$mod.tmp.s", "src/$mod.cpp", sub {
+        rule "tmp/$cfg/$mod.s", "src/$mod.cpp", sub {
             ensure_path($_[0][0]);
             run @$compiler, '-S', '-masm=intel', @{$_[1]},
                 grep($_ ne '-ggdb' && $_ !~ /^-flto/, @opts),
                 '-o', $_[0][0];
         }, {fork => $configs{$cfg}{fork} // 1};
-        rule "tmp/$cfg/$mod.s", "tmp/$cfg/$mod.tmp.s", sub {
-            run "c++filt < $_[1][0] > $_[0][0]";
-        }, {fork => 1};
 
         push @objects, "tmp/$cfg/$mod.o";
     }
