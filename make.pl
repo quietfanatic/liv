@@ -163,12 +163,15 @@ for my $cfg (keys %configs) {
                 @opts,
                 '-o', $_[0][0];
         }, {fork => $configs{$cfg}{fork} // 1};
-        rule "tmp/$cfg/$mod.s", "src/$mod.cpp", sub {
+        rule "tmp/$cfg/$mod.tmp.s", "src/$mod.cpp", sub {
             ensure_path($_[0][0]);
             run @$compiler, '-S', '-masm=intel', @{$_[1]},
-                grep($_ ne '-ggdb' && $_ ne '-flto', @opts),
+                grep($_ ne '-ggdb' && $_ !~ /^-flto/, @opts),
                 '-o', $_[0][0];
         }, {fork => $configs{$cfg}{fork} // 1};
+        rule "tmp/$cfg/$mod.s", "tmp/$cfg/$mod.tmp.s", sub {
+            run "c++filt < $_[1][0] > $_[0][0]";
+        }, {fork => 1};
 
         push @objects, "tmp/$cfg/$mod.o";
     }
