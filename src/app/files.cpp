@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <unordered_set>
+#include "../dirt/ayu/parse.h"
 #include "../dirt/uni/text.h"
 #include "settings.h"
 

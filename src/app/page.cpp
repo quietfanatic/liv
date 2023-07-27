@@ -100,7 +100,7 @@ AYU_DESCRIBE(app::PageProgram,
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
 #include "../dirt/glow/image.h"
-#include "../dirt/ayu/serialize.h"
+#include "../dirt/ayu/serialize-to-tree.h"
 #include "../dirt/tap/tap.h"
 #include "../dirt/wind/window.h"
 

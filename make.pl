@@ -26,9 +26,10 @@ my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #    -lmingw32 -lSDL2main -lSDL2
 #));
 
- # Dead code elimination actually makes compilation slightly faster
+ # Dead code elimination actually makes compilation slightly faster.
 my @O0_opts = (qw(-fdce));
 
+ # MFW I discovered parallel LTO
 my @O3_opts = (qw(-O3 -flto=7));
 
 $ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
@@ -82,7 +83,6 @@ my @sources = (qw(
     dirt/ayu/src/describe-builtin.cpp
     dirt/ayu/src/description.cpp
     dirt/ayu/src/dynamic.cpp
-    dirt/ayu/src/errors.cpp
     dirt/ayu/src/location.cpp
     dirt/ayu/src/parse.cpp
     dirt/ayu/src/pointer.cpp
@@ -91,7 +91,10 @@ my @sources = (qw(
     dirt/ayu/src/resource.cpp
     dirt/ayu/src/resource-scheme.cpp
     dirt/ayu/src/scan.cpp
-    dirt/ayu/src/serialize.cpp
+    dirt/ayu/src/serialize-compound.cpp
+    dirt/ayu/src/serialize-from-tree.cpp
+    dirt/ayu/src/serialize-test.cpp
+    dirt/ayu/src/serialize-to-tree.cpp
     dirt/ayu/src/tree.cpp
     dirt/ayu/src/type.cpp
     dirt/control/command.cpp
