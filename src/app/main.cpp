@@ -23,6 +23,7 @@ int main (int argc, char** argv) {
     tap::allow_testing(argc, argv);
 
     UniqueArray<AnyString> args;
+    bool help = false;
     bool list = false;
     bool done_flags = false;
     for (int i = 1; i < argc; i++) {
@@ -30,6 +31,9 @@ int main (int argc, char** argv) {
         if (!done_flags && arg && arg[0] == '-' && arg != "-") {
             if (arg == "--") {
                 done_flags = true;
+            }
+            if (arg == "--help" || arg == "-help" || arg == "-h") {
+                help = true;
             }
             else if (arg == "--list") {
                 list = true;
@@ -40,6 +44,15 @@ int main (int argc, char** argv) {
     }
 
     App app;
+    if (help) {
+        warn_utf8(
+R"(liv <options> [--] <filenames>
+    --help: Print this help message
+    --list: Read a list of filenames, one per line.  Use - for stdin.
+)"
+        );
+        return 1;
+    }
     if (list) {
         if (args.size() != 1) {
             ayu::raise(ayu::e_General,
