@@ -7,6 +7,7 @@
 #include "../dirt/glow/common.h"
 #include "../dirt/tap/tap.h"
 #include "../dirt/uni/common.h"
+#include "../dirt/uni/io.h"
 #include "app.h"
 #include "common.h"
 
@@ -38,7 +39,7 @@ int main (int argc, char** argv) {
             else if (arg == "--list") {
                 list = true;
             }
-            else ayu::raise(ayu::e_General, cat("Unrecognized option ", arg));
+            else raise(e_General, cat("Unrecognized option ", arg));
         }
         else args.emplace_back(arg);
     }
@@ -55,7 +56,7 @@ R"(liv <options> [--] <filenames>
     }
     if (list) {
         if (args.size() != 1) {
-            ayu::raise(ayu::e_General,
+            raise(e_General,
                 "Wrong number of arguments given with --list (must be 1)"
             );
         }

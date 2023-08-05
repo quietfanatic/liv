@@ -115,6 +115,8 @@ my @sources = (qw(
     dirt/iri/iri.cpp
     dirt/uni/arrays.t.cpp
     dirt/uni/assertions.cpp
+    dirt/uni/errors.cpp
+    dirt/uni/io.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp
     dirt/wind/passive_loop.cpp

@@ -1,7 +1,7 @@
 #include "page.h"
 
 #include "../dirt/glow/program.h"
-#include "../dirt/uni/utf.h"
+#include "../dirt/uni/io.h"
 #include "../dirt/ayu/describe.h"
 #include "../dirt/ayu/resource.h"
 #include "app.h"
