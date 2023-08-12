@@ -2,8 +2,8 @@
 
 #include "../dirt/glow/program.h"
 #include "../dirt/uni/io.h"
-#include "../dirt/ayu/describe.h"
-#include "../dirt/ayu/resource.h"
+#include "../dirt/ayu/reflection/describe.h"
+#include "../dirt/ayu/resources/resource.h"
 #include "app.h"
 #include "book.h"
 
@@ -100,7 +100,7 @@ AYU_DESCRIBE(app::PageProgram,
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
 #include "../dirt/glow/image.h"
-#include "../dirt/ayu/serialize-to-tree.h"
+#include "../dirt/ayu/traversal/to-tree.h"
 #include "../dirt/tap/tap.h"
 #include "../dirt/wind/window.h"
 

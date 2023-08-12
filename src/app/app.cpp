@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
-#include "../dirt/ayu/resource.h"
+#include "../dirt/ayu/resources/resource.h"
 #include "files.h"
 #include "settings.h"
 

@@ -262,7 +262,7 @@ void Book::window_size_changed (IVec size) {
 
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
-#include "../dirt/ayu/resource.h"
+#include "../dirt/ayu/resources/resource.h"
 #include "../dirt/glow/image.h"
 #include "../dirt/tap/tap.h"
 

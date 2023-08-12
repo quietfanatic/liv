@@ -76,27 +76,27 @@ my @sources = (qw(
     app/page-block.cpp
     app/page.cpp
     app/settings.cpp
-    dirt/ayu/describe-standard.cpp
-    dirt/ayu/src/accessors.cpp
-    dirt/ayu/src/common.cpp
-    dirt/ayu/src/document.cpp
-    dirt/ayu/src/describe-builtin.cpp
-    dirt/ayu/src/description.cpp
-    dirt/ayu/src/dynamic.cpp
-    dirt/ayu/src/location.cpp
-    dirt/ayu/src/parse.cpp
-    dirt/ayu/src/pointer.cpp
-    dirt/ayu/src/print.cpp
-    dirt/ayu/src/reference.cpp
-    dirt/ayu/src/resource.cpp
-    dirt/ayu/src/resource-scheme.cpp
-    dirt/ayu/src/scan.cpp
-    dirt/ayu/src/serialize-compound.cpp
-    dirt/ayu/src/serialize-from-tree.cpp
-    dirt/ayu/src/serialize-test.cpp
-    dirt/ayu/src/serialize-to-tree.cpp
-    dirt/ayu/src/tree.cpp
-    dirt/ayu/src/type.cpp
+    dirt/ayu/common.cpp
+    dirt/ayu/data/parse.cpp
+    dirt/ayu/data/print.cpp
+    dirt/ayu/data/tree.cpp
+    dirt/ayu/reflection/accessors.cpp
+    dirt/ayu/reflection/describe-builtin.cpp
+    dirt/ayu/reflection/describe-standard.cpp
+    dirt/ayu/reflection/description.cpp
+    dirt/ayu/reflection/dynamic.cpp
+    dirt/ayu/reflection/pointer.cpp
+    dirt/ayu/reflection/reference.cpp
+    dirt/ayu/reflection/type.cpp
+    dirt/ayu/resources/document.cpp
+    dirt/ayu/resources/resource.cpp
+    dirt/ayu/resources/scheme.cpp
+    dirt/ayu/traversal/compound.cpp
+    dirt/ayu/traversal/from-tree.cpp
+    dirt/ayu/traversal/location.cpp
+    dirt/ayu/traversal/scan.cpp
+    dirt/ayu/traversal/test.cpp
+    dirt/ayu/traversal/to-tree.cpp
     dirt/control/command.cpp
     dirt/control/command-builtins.cpp
     dirt/control/input.cpp
@@ -129,7 +129,8 @@ my @resources = (qw(
     app/page.ayu
     app/settings-default.ayu
     app/settings-template.ayu
-    dirt/ayu/src/test/*
+    dirt/ayu/test/*.ayu
+    dirt/ayu/test/*.json
     dirt/glow/test/*
     dirt/glow/texture-program.ayu
 ));

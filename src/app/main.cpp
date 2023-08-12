@@ -1,9 +1,8 @@
 #include <cstdio>
 #include <SDL2/SDL.h>
 #include "../dirt/ayu/common.h"
-#include "../dirt/ayu/reference.h"
-#include "../dirt/ayu/resource.h"
-#include "../dirt/ayu/resource-scheme.h"
+#include "../dirt/ayu/resources/resource.h"
+#include "../dirt/ayu/resources/scheme.h"
 #include "../dirt/glow/common.h"
 #include "../dirt/tap/tap.h"
 #include "../dirt/uni/common.h"
