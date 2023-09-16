@@ -21,6 +21,10 @@ extern Command prev;
  // clamped to the valid range.
 extern Command seek;
 
+ // () Print the filename of the current page.  If more than one page is being
+ // viewed, only prints the filename of the lowest-numbered one.
+extern Command print_current_filename;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously

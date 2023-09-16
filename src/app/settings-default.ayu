@@ -11,7 +11,7 @@ window: {
      -- Initial fullscreen state of the window
     fullscreen: false
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
-     -- where r,g,b,a : 0..255)
+     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
     window_background: black
 }
 
@@ -98,6 +98,7 @@ memory: {
  -- Key and mouse bindings.  See app/app-commands.h for a list of supported
  -- commands.
 mappings: [
+  ----- PAGES
      -- Go to next page(s)
     [[right] [next]]
      -- Go to previous page(s)
@@ -119,6 +120,9 @@ mappings: [
     [[2] [spread_count 2]]
     [[3] [spread_count 3]]
     [[4] [spread_count 4]]
+     -- Print filename of current page to stdout
+    [[enter] [print_current_filename]]
+  ----- LAYOUT
      -- Toggle fullscreen mode
     [[f11] [fullscreen]]
      -- Set background color
@@ -145,12 +149,14 @@ mappings: [
     [["-"] [zoom_multiply 0.707106781186547]]
      -- Reset layout to default
     [[r] [reset_layout]]
+  ----- DISPLAY
      -- Set interpolation mode
     [[ctrl 1] [interpolation_mode nearest]]
     [[ctrl 2] [interpolation_mode linear]]
     [[ctrl 3] [interpolation_mode cubic]]
     [[ctrl 4] [interpolation_mode smart_cubic]]
     [[ctrl 9] [interpolation_mode smoothed]]
+  ---- EXECUTION
      -- Quitting
     [[escape] [leave_fullscreen_or_quit]]
     [[ctrl q] [quit]]

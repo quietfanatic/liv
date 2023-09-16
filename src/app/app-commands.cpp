@@ -1,6 +1,7 @@
 #include "app-commands.h"
 
 #include <SDL2/SDL_video.h>
+#include "../dirt/uni/io.h"
 #include "app.h"
 #include "book.h"
 #include "settings.h"
@@ -30,6 +31,15 @@ static void seek_ (int32 count) {
     if (current_book) current_book->seek(count);
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
+
+static void print_current_filename_ () {
+    if (!current_book) return;
+    auto visible = current_book->visible_pages();
+    if (empty(visible)) return;
+    auto page = current_book->block.get(visible.l);
+    print_utf8(cat(page->filename, "\n"));
+}
+Command print_current_filename (print_current_filename_, "print_current_filename", "Print the filename of the first current page to stdout.");
 
 ///// LAYOUT COMMANDS
 
