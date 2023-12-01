@@ -65,6 +65,7 @@ void Book::set_page_offset (int32 off) {
 }
 
 void Book::set_spread_count (int32 count) {
+     // TODO: clamp viewing_pages.l too
     viewing_pages.r = viewing_pages.l + clamp(count, 1, 2048);
     spread = {};
     layout = {};
