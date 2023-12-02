@@ -7,10 +7,10 @@ use File::Copy;
 ##### COMMAND LINE CONFIGURATION
 
 my %compilers = (
-    'cpp' => [qw(g++ -std=c++20)],
+    'cpp' => [qw(g++-12 -std=c++20)],
     'c' => ['gcc']
 );
-my @linker = 'g++';
+my @linker = 'g++-12';
 
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
