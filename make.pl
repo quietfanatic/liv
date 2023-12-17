@@ -15,7 +15,7 @@ my @linker = 'g++-12';
 my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
-    -fstrict-aliasing
+    -fstrict-aliasing -fstack-protector
     -Wall -Wextra -Wno-terminate
     -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
     -fconcepts-diagnostics-depth=4
@@ -185,6 +185,7 @@ for my $cfg (keys %configs) {
     my $link_target;
     if ($configs{$cfg}{strip} // 0) {
         $link_target = $tmp_program;
+        ensure_path $out_program;
         rule $out_program, $tmp_program, sub {
             run 'strip', $tmp_program, '-o', $out_program;
         }, {fork => 1};
