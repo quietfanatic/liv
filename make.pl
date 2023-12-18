@@ -151,10 +151,11 @@ sub ensure_path {
 for my $cfg (keys %configs) {
      # Compile sources
     my @objects;
-    for my $src (@sources) {
+    for (@sources) {
+        my $src = $_; # Don't alias
         my @opts = (@compile_opts, @{$configs{$cfg}{opts}});
-        if (ref $src eq 'ARRAY') {
-            my @src_opts = @$src;
+        if (ref $_ eq 'ARRAY') {
+            my @src_opts = (@$src);
             $src = shift @src_opts;
             push @opts, @src_opts;
         }
