@@ -11,12 +11,12 @@ using namespace uni;
 namespace fs = std::filesystem;
 struct App;
 struct Book;
-struct FilesToOpen;
 struct Layout;
-struct LayoutParameters;
+struct LayoutParams;
+struct Memory;
 struct Page;
 struct PageBlock;
-struct PageParameters;
+struct PageParams;
 struct Settings;
 
 } // namespace app

@@ -15,7 +15,8 @@ namespace app {
 
 struct PageParams {
     InterpolationMode interpolation_mode;
-    PageParams () { }
+    PageParams () = default;
+    PageParams (const PageParams&) = default;
     PageParams (const Settings*);
 };
 

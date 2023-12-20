@@ -9,29 +9,60 @@
 #include "app.h"
 #include "files.h"
 #include "layout.h"
+#include "memory.h"
 #include "page.h"
 
 namespace app {
 
 ///// Contents
 
-Book::Book (App& app, FilesToOpen&& to_open) :
+Book::Book (
+    App& app,
+    Slice<AnyString> page_filenames,
+    const AnyString& book_filename,
+    const AnyString& start_filename
+) :
     settings(app.settings),
-    block(move(to_open)),
-    viewing_pages(
-        to_open.start_index,
-        to_open.start_index + settings->get(&LayoutSettings::spread_count)
-    ),
+    memory(app.memory),
+    block(page_filenames),
     window_background(
         settings->get(&WindowSettings::window_background)
     ),
-    layout_params(settings),
-    page_params(settings),
     window(
         "Little Image Viewer",
         settings->get(&WindowSettings::size)
     )
 {
+     // Figure out where to start and initialize view params from memory if
+     // applicable.
+    const MemoryOfBook* mem = null;
+    for (auto& m : memory->books) {
+        if (m.book_filename == book_filename) {
+            mem = &m;
+            break;
+        }
+    }
+    if (mem) {
+        layout_params = mem->layout_params;
+        page_params = mem->page_params;
+    }
+    else {
+        layout_params = LayoutParams(settings);
+        page_params = PageParams(settings);
+    }
+     // Find start page
+    int32 offset = 0;
+    if (start_filename) {
+        for (usize i = 0; i < page_filenames.size(); i++) {
+            if (page_filenames[i] == start_filename) {
+                offset = i;
+            }
+        }
+    }
+    viewing_pages = {
+        offset, offset + settings->get(&LayoutSettings::spread_count)
+    };
+     // Set up window
     SDL_SetWindowResizable(window, SDL_TRUE);
     expect(!SDL_GL_SetSwapInterval(1));
     if (settings->get(&WindowSettings::fullscreen)) {
@@ -279,10 +310,10 @@ static tap::TestSet tests ("app/book", []{
     App app;
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
-    Book book (app, FilesToOpen{{
+    Book book (app, {
         cat(exe_folder, "/res/dirt/glow/test/image.png"sv),
         cat(exe_folder, "/res/dirt/glow/test/image2.png"sv)
-    }});
+    });
 
     book.draw_if_needed();
     glow::Image img (size);

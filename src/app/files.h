@@ -6,15 +6,16 @@
 
 namespace app {
 
-struct FilesToOpen {
-    UniqueArray<AnyString> files;
-    AnyString folder = "";
-    usize start_index = 0;
-};
+AnyString containing_folder (Str filename);
 
-FilesToOpen expand_files (const Settings*, UniqueArray<AnyString>&& filenames);
- // Note: This will set the working directory to the folder containing
- // list_filename.
-UniqueArray<AnyString> read_list (AnyString list_filename);
+UniqueArray<AnyString> expand_folder (
+    const Settings*, Str foldername
+);
+
+UniqueArray<AnyString> expand_recursively (
+    const Settings*, Slice<AnyString> filenames
+);
+
+UniqueArray<AnyString> read_list (Str list_filename);
 
 } // namespace files

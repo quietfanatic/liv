@@ -73,6 +73,7 @@ my @sources = (qw(
     app/files.cpp
     app/layout.cpp
     app/main.cpp
+    app/memory.cpp
     app/page-block.cpp
     app/page.cpp
     app/settings.cpp

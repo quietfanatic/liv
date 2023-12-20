@@ -15,13 +15,20 @@ struct SDL_Window;
 namespace app {
 
 struct Book {
-    const Settings* settings;
-
     explicit Book (
         App& app,
-        FilesToOpen&& files
+         // All page filenames.
+        Slice<AnyString> page_filenames,
+         // Either folder or list filename.  Will be used as memory key.  This
+         // should be an absolute filename.
+        const AnyString& book_filename = "",
+         // Page filename to start at (starts at page 1 if empty)
+        const AnyString& start_filename = ""
     );
     ~Book ();
+
+    const Settings* settings;
+    const Memory* memory;
 
     ///// Book contents
     PageBlock block;
@@ -34,6 +41,7 @@ struct Book {
     ///// Display parameters
     Fill window_background = BLACK;
 
+     // TODO: combine these into something
     LayoutParams layout_params;
     PageParams page_params;
 

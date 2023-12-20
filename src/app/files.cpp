@@ -8,81 +8,65 @@
 
 namespace app {
 
-FilesToOpen expand_files (
-    const Settings* settings, UniqueArray<AnyString>&& specified
+AnyString containing_folder (Str filename) {
+    return AnyString(fs::path(filename).remove_filename().u8string());
+}
+
+UniqueArray<AnyString> expand_folder (
+    const Settings* settings, Str foldername
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
 
-    if (specified.size() == 1 &&
-        fs::exists(specified[0]) &&
-        !fs::is_directory(specified[0])
-    ) {
-         // Only one file was specified, and it isn't a folder, so include
-         // everything else in the same folder as the file (but not recursively)
-        auto folder_p = fs::path(specified[0]).remove_filename();
-        FilesToOpen r;
-        r.folder = AnyString(folder_p.u8string());
-        for (auto& entry : fs::directory_iterator(folder_p)) {
-            auto name = AnyString(entry.path().u8string());
-            usize i;
-            for (i = name.size(); i > 0; --i) {
-                if (name[i-1] == '.') break;
-            }
-            Str ext = i ? name.substr(i) : "";
-            if (!extensions.count(StaticString(ext))) continue;
-            r.files.emplace_back(move(name));
+    UniqueArray<AnyString> r;
+    for (auto& entry : fs::directory_iterator(foldername)) {
+        auto name = AnyString(entry.path().u8string());
+        usize i;
+        for (i = name.size(); i > 0; --i) {
+            if (name[i-1] == '.') break;
         }
-        std::sort(
-            r.files.begin(), r.files.end(), &uni::natural_lessthan
-        );
-         // Start the book open to the actual file specified.
-        r.start_index = usize(-1);
-        for (auto& file : r.files) {
-            if (file == specified[0]) {
-                r.start_index = &file - r.files.begin();
-                break;
-            }
-        }
-         // If the specified file is not in the list, then it must have been
-         // deleted or moved between fs::exists and fs::directory_iterator.
-         // There's nothing reasonable to do in this case, so just crash.
-        require(r.start_index != usize(-1));
-        return r;
+        Str ext = i ? name.substr(i) : "";
+        if (!extensions.count(StaticString(ext))) continue;
+        r.emplace_back(move(name));
     }
-    else {
-         // Multiple files were specified or the specified file was a directory,
-         // so search through all specified directories recursively.
-        FilesToOpen r;
-        for (auto& file : specified) {
-            if (fs::is_directory(file)) {
-                usize subfiles_begin = r.files.size();
-                for (auto& entry : fs::recursive_directory_iterator(file)) {
-                    auto name = AnyString(entry.path().u8string());
-                    usize i;
-                    for (i = name.size(); i > 0; --i) {
-                        if (name[i-1] == '.') break;
-                    }
-                    Str ext = i ? name.substr(i) : "";
-                    if (!extensions.count(StaticString(ext))) continue;
-                    r.files.emplace_back(move(name));
-                }
-                std::sort(
-                    r.files.begin() + subfiles_begin,
-                    r.files.end(),
-                    &uni::natural_lessthan
-                );
-            }
-            else {
-                 // Don't check the file extension for explicitly specified
-                 // files.
-                r.files.emplace_back(move(file));
-            }
-        }
-        return r;
-    }
+    std::sort(
+        r.begin(), r.end(), &uni::natural_lessthan
+    );
+    return r;
 }
 
-UniqueArray<AnyString> read_list (AnyString list_filename) {
+UniqueArray<AnyString> expand_recursively (
+    const Settings* settings, Slice<AnyString> filenames
+) {
+    auto& extensions = settings->get(&FilesSettings::supported_extensions);
+
+    UniqueArray<AnyString> r;
+    for (auto& given : filenames) {
+        if (fs::is_directory(given)) {
+            usize subfiles_begin = r.size();
+            for (auto& entry : fs::recursive_directory_iterator(given)) {
+                auto name = AnyString(entry.path().u8string());
+                usize i;
+                for (i = name.size(); i > 0; --i) {
+                    if (name[i-1] == '.') break;
+                }
+                Str ext = i ? name.substr(i) : "";
+                if (!extensions.count(StaticString(ext))) continue;
+                r.emplace_back(move(name));
+            }
+            std::sort(
+                r.begin() + subfiles_begin, r.end(), &uni::natural_lessthan
+            );
+        }
+        else {
+             // Don't check the file extension for explicitly specified
+             // files.
+            r.emplace_back(given);
+        }
+    }
+    return r;
+}
+
+UniqueArray<AnyString> read_list (Str list_filename) {
     UniqueArray<AnyString> lines {""};
     if (list_filename == "-") {
          // TODO: Make ayu support stdin for string_from_file.
@@ -106,9 +90,6 @@ UniqueArray<AnyString> read_list (AnyString list_filename) {
             }
             else lines.back().push_back(c);
         }
-         // Set working directory to folder containing list, to makes list's
-         // filenames relative to itself.
-        fs::current_path(fs::absolute(list_filename).remove_filename());
     }
     if (lines.back() == "") lines.pop_back();
     return lines;

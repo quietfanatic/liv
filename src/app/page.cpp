@@ -93,6 +93,12 @@ void Page::draw (
 
 } using namespace app;
 
+AYU_DESCRIBE(app::PageParams,
+    attrs(
+        attr("interpolation_mode", &PageParams::interpolation_mode)
+    )
+)
+
 AYU_DESCRIBE(app::PageProgram,
     delegate(base<Program>())
 )

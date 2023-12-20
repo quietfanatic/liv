@@ -14,11 +14,10 @@
 namespace app {
 
 struct PageBlock {
-    AnyString folder; // empty if not in a folder
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    PageBlock (FilesToOpen&&);
+    PageBlock (Slice<AnyString> filenames);
     ~PageBlock ();
 
      // Returns null if i is out of range

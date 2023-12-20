@@ -3,6 +3,7 @@
 #include "app.h"
 #include "book.h"
 #include "page-block.h"
+#include "../dirt/ayu/reflection/describe.h"
 
 namespace app {
 
@@ -152,4 +153,16 @@ Layout::Layout (
     }
 }
 
-} // namespace app
+} using namespace app;
+
+AYU_DESCRIBE(app::LayoutParams,
+    attrs(
+        attr("spread_direction", &LayoutParams::spread_direction),
+        attr("auto_zoom_mode", &LayoutParams::auto_zoom_mode),
+        attr("small_align", &LayoutParams::small_align),
+        attr("large_align", &LayoutParams::large_align),
+        attr("manual_zoom", &LayoutParams::manual_zoom),
+        attr("manual_offset", &LayoutParams::manual_offset)
+    )
+)
+

@@ -6,8 +6,6 @@
 #include "../dirt/uni/strings.h"
 #include "../dirt/wind/passive_loop.h"
 #include "common.h"
-#include "book.h"
-#include "settings.h"
 
 namespace app {
 
@@ -15,16 +13,29 @@ struct App {
     App();
     ~App();
 
-    void open_files (AnyArray<AnyString> files);
-    void open_list (AnyString filename);
+     // Select between open_files, open_file, and open_folder.
+    void open_args (Slice<AnyString> args);
+     // Open all files and folders (recursively) in a temprary book.
+    void open_files (Slice<AnyString> filenames);
+     // Open one file as the current page, including all other files in the same
+     // folder (non-recursively) as pages in a temporary book.
+    void open_file (const AnyString& filename);
+     // Open all files in the folder (recursively) as a book.
+    void open_folder (const AnyString& filename);
+     // Open all files and folders (recursively) written in the list
+     // one-per-line as a book (temporary if filename is - for stdin).
+     // This changes the CWD to the folder containing the filename (if it isn't
+     // stdin).
+    void open_list (const AnyString& filename);
 
     void close_book (Book*);
 
     void run ();
     void stop ();
 
-     // Loaded from an ayu::Resource
+     // Loaded from ayu::Resources
     Settings* settings;
+    Memory* memory;
 
     UniqueArray<std::unique_ptr<Book>> books;
     std::unordered_map<uint32, Book*> books_by_window_id;

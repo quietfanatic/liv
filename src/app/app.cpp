@@ -4,7 +4,9 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include "../dirt/ayu/resources/resource.h"
+#include "book.h"
 #include "files.h"
+#include "memory.h"
 #include "settings.h"
 
 namespace app {
@@ -115,14 +117,22 @@ static bool on_idle (App& self) {
 }
 
 App::App () {
-    ayu::Resource settings_ayu ("data:/settings.ayu");
-    if (!ayu::source_exists(settings_ayu)) {
+     // Load settings
+    ayu::Resource settings_res ("data:/settings.ayu");
+    if (!ayu::source_exists(settings_res)) {
         fs::copy(
             ayu::resource_filename("res:/app/settings-template.ayu"),
-            ayu::resource_filename(settings_ayu)
+            ayu::resource_filename(settings_res)
         );
     }
-    settings = settings_ayu.ref();
+    settings = settings_res.ref();
+     // Load memory
+    ayu::Resource memory_res ("data:/memory.ayu");
+    if (!ayu::source_exists(memory_res)) {
+        memory_res.set_value(ayu::Dynamic::make<Memory>());
+    }
+    memory = memory_res.ref();
+     // Set loop handlers
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
 }
@@ -137,14 +147,53 @@ static void add_book (App& self, std::unique_ptr<Book>&& b) {
     );
 }
 
-void App::open_files (AnyArray<AnyString> files) {
+void App::open_args (Slice<AnyString> args) {
+    if (args.size() == 1) {
+        if (fs::is_directory(args[0])) {
+            open_folder(args[0]);
+        }
+        else open_file(args[0]);
+    }
+    else open_files(args);
+}
+
+void App::open_files (Slice<AnyString> filenames) {
+    auto expanded = expand_recursively(settings, filenames);
+
     add_book(*this, std::make_unique<Book>(
-        *this, expand_files(settings, move(files))
+        *this, expanded
     ));
 }
 
-void App::open_list (AnyString list_filename) {
-    return open_files(read_list(move(list_filename)));
+void App::open_file (const AnyString& file) {
+    auto neighborhood = expand_folder(settings, containing_folder(file));
+
+    add_book(*this, std::make_unique<Book>(
+        *this, neighborhood, "", file
+    ));
+}
+
+void App::open_folder (const AnyString& foldername) {
+    auto contents = expand_recursively(settings, {foldername});
+    auto book_filename = AnyString(fs::absolute(foldername).u8string());
+
+    add_book(*this, std::make_unique<Book>(
+        *this, contents, book_filename
+    ));
+}
+
+void App::open_list (const AnyString& list_filename) {
+    auto absolute_p = fs::absolute(list_filename);
+    if (list_filename != "-") {
+        fs::current_path(absolute_p.remove_filename());
+    }
+    auto lines = read_list(list_filename);
+    auto expanded = expand_recursively(settings, lines);
+
+    auto book_filename = AnyString(absolute_p.u8string());
+    add_book(*this, std::make_unique<Book>(
+        *this, expanded, book_filename
+    ));
 }
 
 void App::close_book (Book* book) {

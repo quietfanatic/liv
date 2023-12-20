@@ -7,6 +7,7 @@
 
 namespace app {
 
+ // TODO: put spread count in this
 struct LayoutParams {
     SpreadDirection spread_direction;
     AutoZoomMode auto_zoom_mode;
@@ -21,6 +22,8 @@ struct LayoutParams {
      // NAN means no manual zoom/offset is applied, so use auto_zoom_mode.
     float manual_zoom = GNAN;
     Vec manual_offset = GNAN;
+    LayoutParams () = default;
+    LayoutParams (const LayoutParams&) = default;
     LayoutParams (const Settings*);
 };
 
