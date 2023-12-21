@@ -98,6 +98,7 @@ static void on_event (App& self, SDL_Event* event) {
 
 static bool on_idle (App& self) {
      // No more events?  Draw or do some background processing
+     // TODO: we probably only need to draw one book
     bool did_stuff = false;
     for (auto& book : self.books) {
         if (book->draw_if_needed()) {
@@ -113,12 +114,17 @@ static bool on_idle (App& self) {
          // we only have one book per process anyway.
         if (book->idle_processing()) return true;
     }
+    if (self.memory->need_write) {
+        ayu::save(self.memory_res);
+        self.memory->need_write = false;
+        return true;
+    }
     return false;
 }
 
 App::App () {
      // Load settings
-    ayu::Resource settings_res ("data:/settings.ayu");
+    settings_res = ayu::Resource("data:/settings.ayu");
     if (!ayu::source_exists(settings_res)) {
         fs::copy(
             ayu::resource_filename("res:/app/settings-template.ayu"),
@@ -127,7 +133,7 @@ App::App () {
     }
     settings = settings_res.ref();
      // Load memory
-    ayu::Resource memory_res ("data:/memory.ayu");
+    memory_res = ayu::Resource("data:/memory.ayu");
     if (!ayu::source_exists(memory_res)) {
         memory_res.set_value(ayu::Dynamic::make<Memory>());
     }

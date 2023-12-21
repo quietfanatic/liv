@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include "../dirt/ayu/resources/resource.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/uni/strings.h"
 #include "../dirt/wind/passive_loop.h"
@@ -33,7 +34,10 @@ struct App {
     void run ();
     void stop ();
 
-     // Loaded from ayu::Resources
+     // Loaded from ayu resources
+     // TODO: make ayu::TypedResource
+    ayu::Resource settings_res;
+    ayu::Resource memory_res;
     Settings* settings;
     Memory* memory;
 

@@ -7,9 +7,13 @@
 
 namespace app {
 
-PageBlock::PageBlock (Slice<AnyString> filenames) :
-    pages(filenames.size(), [&](usize i){
-        return std::make_unique<Page>(filenames[i]);
+PageBlock::PageBlock (
+    const AnyString& book_filename,
+    Slice<AnyString> page_filenames
+) :
+    book_filename(book_filename),
+    pages(page_filenames.size(), [&](usize i){
+        return std::make_unique<Page>(page_filenames[i]);
     })
 { }
 PageBlock::~PageBlock () { }

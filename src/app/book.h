@@ -28,7 +28,7 @@ struct Book {
     ~Book ();
 
     const Settings* settings;
-    const Memory* memory;
+    Memory* memory;
 
     ///// Book contents
     PageBlock block;

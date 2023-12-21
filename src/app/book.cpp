@@ -24,7 +24,7 @@ Book::Book (
 ) :
     settings(app.settings),
     memory(app.memory),
-    block(page_filenames),
+    block(book_filename, page_filenames),
     window_background(
         settings->get(&WindowSettings::window_background)
     ),
@@ -36,10 +36,12 @@ Book::Book (
      // Figure out where to start and initialize view params from memory if
      // applicable.
     const MemoryOfBook* mem = null;
-    for (auto& m : memory->books) {
-        if (m.book_filename == book_filename) {
-            mem = &m;
-            break;
+    if (book_filename) {
+        for (auto& m : memory->books) {
+            if (m.book_filename == book_filename) {
+                mem = &m;
+                break;
+            }
         }
     }
     if (mem) {
@@ -52,10 +54,14 @@ Book::Book (
     }
      // Find start page
     int32 offset = 0;
-    if (start_filename) {
+    const AnyString& start =
+        start_filename ? start_filename :
+        mem ? mem->current_filename : "";
+    if (start) {
         for (usize i = 0; i < page_filenames.size(); i++) {
-            if (page_filenames[i] == start_filename) {
+            if (page_filenames[i] == start) {
                 offset = i;
+                break;
             }
         }
     }
@@ -72,6 +78,30 @@ Book::Book (
     if (!app.hidden) SDL_ShowWindow(window);
 }
 Book::~Book () { }
+
+static void update_memory (Book& self) {
+    if (self.block.book_filename) {
+        MemoryOfBook mem;
+        mem.book_filename = self.block.book_filename;
+        mem.current_offset = self.viewing_pages.l;
+        if (auto page = self.block.get(self.viewing_pages.l)) {
+            mem.current_filename = page->filename;
+        }
+        else mem.current_filename = "";
+        mem.layout_params = self.layout_params;
+        mem.page_params = self.page_params;
+        mem.updated_at = uni::now();
+        for (auto& m : self.memory->books) {
+            if (m.book_filename == self.block.book_filename) {
+                m = move(mem);
+                goto done;
+            }
+        }
+        self.memory->books.emplace_back(move(mem));
+        done:
+        self.memory->need_write = true;
+    }
+}
 
 ///// Controls
 
@@ -93,6 +123,7 @@ void Book::set_page_offset (int32 off) {
     spread = {};
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::set_spread_count (int32 count) {
@@ -101,6 +132,7 @@ void Book::set_spread_count (int32 count) {
     spread = {};
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::set_spread_direction (SpreadDirection dir) {
@@ -108,6 +140,7 @@ void Book::set_spread_direction (SpreadDirection dir) {
     spread = {};
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::set_align (Vec small, Vec large) {
@@ -119,6 +152,7 @@ void Book::set_align (Vec small, Vec large) {
     spread = {};
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::set_auto_zoom_mode (AutoZoomMode mode) {
@@ -127,11 +161,13 @@ void Book::set_auto_zoom_mode (AutoZoomMode mode) {
     layout_params.manual_offset = GNAN;
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::set_interpolation_mode (InterpolationMode mode) {
     page_params.interpolation_mode = mode;
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::drag (Vec amount) {
@@ -143,6 +179,7 @@ void Book::drag (Vec amount) {
     layout_params.manual_offset += amount;
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::zoom_multiply (float factor) {
@@ -160,6 +197,7 @@ void Book::zoom_multiply (float factor) {
     }
     this->layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 void Book::reset_layout () {
@@ -167,6 +205,7 @@ void Book::reset_layout () {
     spread = {};
     layout = {};
     need_draw = true;
+    update_memory(*this);
 }
 
 bool Book::is_fullscreen () const {

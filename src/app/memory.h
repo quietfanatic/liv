@@ -10,14 +10,14 @@ struct MemoryOfBook {
     AnyString current_filename;  // filename of current page (relative to book_filename)
     LayoutParams layout_params;
     PageParams page_params;
-    double last_viewed_at = 0;
+    double updated_at = 0;
     int32 current_offset = 0;
-     // Non-semantic
-    bool need_write = false;
 };
 
 struct Memory {
     UniqueArray<MemoryOfBook> books;
+     // Non-semantic
+    bool need_write = false;
 };
 
 } // namespace app

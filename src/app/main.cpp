@@ -62,7 +62,7 @@ R"(liv <options> [--] <filenames>
         app.open_list(args[0]);
     }
     else {
-        app.open_files(move(args));
+        app.open_args(move(args));
     }
     app.run();
     return 0;

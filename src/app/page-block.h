@@ -14,10 +14,11 @@
 namespace app {
 
 struct PageBlock {
+    AnyString book_filename;
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    PageBlock (Slice<AnyString> filenames);
+    PageBlock (const AnyString& book_filename, Slice<AnyString> page_filenames);
     ~PageBlock ();
 
      // Returns null if i is out of range
