@@ -53,10 +53,10 @@ Book::Book (
         page_params = PageParams(settings);
     }
      // Find start page
-    int32 offset = 0;
     const AnyString& start =
         start_filename ? start_filename :
         mem ? mem->current_filename : "";
+    int32 offset = 0;
     if (start) {
         for (usize i = 0; i < page_filenames.size(); i++) {
             if (page_filenames[i] == start) {
@@ -65,9 +65,9 @@ Book::Book (
             }
         }
     }
-    viewing_pages = {
-        offset, offset + settings->get(&LayoutSettings::spread_count)
-    };
+    auto spread_count = mem ? size(mem->current_range) :
+            settings->get(&LayoutSettings::spread_count);
+    viewing_pages = {offset, offset + spread_count};
      // Set up window
     SDL_SetWindowResizable(window, SDL_TRUE);
     expect(!SDL_GL_SetSwapInterval(1));
@@ -83,7 +83,7 @@ static void update_memory (Book& self) {
     if (self.block.book_filename) {
         MemoryOfBook mem;
         mem.book_filename = self.block.book_filename;
-        mem.current_offset = self.viewing_pages.l;
+        mem.current_range = self.viewing_pages;
         if (auto page = self.block.get(self.viewing_pages.l)) {
             mem.current_filename = page->filename;
         }

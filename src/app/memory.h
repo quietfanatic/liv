@@ -2,6 +2,7 @@
 #include "layout.h"
 #include "page.h"
 #include "../dirt/uni/arrays.h"
+#include "../dirt/geo/range.h"
 
 namespace app {
 
@@ -11,7 +12,7 @@ struct MemoryOfBook {
     LayoutParams layout_params;
     PageParams page_params;
     double updated_at = 0;
-    int32 current_offset = 0;
+    IRange current_range;
 };
 
 struct Memory {
