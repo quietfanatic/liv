@@ -11,7 +11,7 @@
 #include "../dirt/uni/common.h"
 #include "common.h"
 
-namespace app {
+namespace liv {
 
 struct PageBlock {
     AnyString book_filename;
@@ -34,4 +34,4 @@ struct PageBlock {
     bool idle_processing (const Book* book, const Settings* settings);
 };
 
-} // namespace app
+} // namespace liv

@@ -9,7 +9,7 @@
 #include "memory.h"
 #include "settings.h"
 
-namespace app {
+namespace liv {
 
 static Book* book_with_window_id (App& self, uint32 id) {
     auto iter = self.books_by_window_id.find(id);
@@ -127,7 +127,7 @@ App::App () {
     settings_res = ayu::Resource("data:/settings.ayu");
     if (!ayu::source_exists(settings_res)) {
         fs::copy(
-            ayu::resource_filename("res:/app/settings-template.ayu"),
+            ayu::resource_filename("res:/liv/settings-template.ayu"),
             ayu::resource_filename(settings_res)
         );
     }
@@ -227,7 +227,7 @@ void App::stop () {
 App* current_app = null;
 Book* current_book = null;
 
-} using namespace app;
+} using namespace liv;
 
 #ifndef TAP_DISABLE_TESTS
 #include <cstring>
@@ -235,7 +235,7 @@ Book* current_book = null;
 #include "../dirt/tap/tap.h"
 #include "../dirt/glow/image.h"
 
-static tap::TestSet tests ("app/app", []{
+static tap::TestSet tests ("liv/app", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());

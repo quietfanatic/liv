@@ -12,7 +12,7 @@
 
 struct SDL_Window;
 
-namespace app {
+namespace liv {
 
 struct Book {
     explicit Book (
@@ -109,4 +109,4 @@ struct Book {
     void window_size_changed (geo::IVec new_size);
 };
 
-} // namespace app
+} // namespace liv

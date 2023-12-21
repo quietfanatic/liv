@@ -4,7 +4,7 @@
 #include "../dirt/uni/strings.h"
 #include "common.h"
 
-namespace app {
+namespace liv {
 
 AnyString containing_folder (Str filename);
 
@@ -18,4 +18,4 @@ UniqueArray<AnyString> expand_recursively (
 
 UniqueArray<AnyString> read_list (Str list_filename);
 
-} // namespace files
+} // namespace liv

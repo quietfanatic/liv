@@ -5,7 +5,7 @@
 #include "common.h"
 #include "settings.h"
 
-namespace app {
+namespace liv {
 
  // TODO: put spread count in this
 struct LayoutParams {
@@ -55,4 +55,4 @@ struct Layout {
     );
 };
 
-} // namespace app
+} // namespace liv

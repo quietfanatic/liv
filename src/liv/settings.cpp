@@ -3,7 +3,7 @@
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/resources/resource.h"
 
-namespace app {
+namespace liv {
 
 const Settings builtin_default_settings = {
     WindowSettings{
@@ -46,13 +46,13 @@ const Settings* res_default_settings;
 
 void init_settings () {
     if (!res_default_settings) {
-        res_default_settings = ayu::Resource("res:/app/settings-default.ayu").ref();
+        res_default_settings = ayu::Resource("res:/liv/settings-default.ayu").ref();
     }
 }
 
-} using namespace app;
+} using namespace liv;
 
-AYU_DESCRIBE(app::Fill,
+AYU_DESCRIBE(liv::Fill,
     values(
         value("black", BLACK),
         value("white", WHITE),
@@ -61,7 +61,7 @@ AYU_DESCRIBE(app::Fill,
     delegate(base<glow::RGBA8>())
 )
 
-AYU_DESCRIBE(app::AutoZoomMode,
+AYU_DESCRIBE(liv::AutoZoomMode,
     values(
         value("fit", FIT),
         value("fit_width", FIT_WIDTH),
@@ -70,7 +70,7 @@ AYU_DESCRIBE(app::AutoZoomMode,
     )
 )
 
-AYU_DESCRIBE(app::InterpolationMode,
+AYU_DESCRIBE(liv::InterpolationMode,
     values(
         value("nearest", NEAREST),
         value("linear", LINEAR),
@@ -80,7 +80,7 @@ AYU_DESCRIBE(app::InterpolationMode,
     )
 )
 
-AYU_DESCRIBE(app::SpreadDirection,
+AYU_DESCRIBE(liv::SpreadDirection,
     values(
         value("right", RIGHT),
         value("left", LEFT),
@@ -89,21 +89,21 @@ AYU_DESCRIBE(app::SpreadDirection,
     )
 )
 
-AYU_DESCRIBE(app::TrimMode,
+AYU_DESCRIBE(liv::TrimMode,
     values(
         value("none", TRIM_NONE),
         value("page_cache", TRIM_PAGE_CACHE)
     )
 )
 
-AYU_DESCRIBE(app::Mapping,
+AYU_DESCRIBE(liv::Mapping,
     elems(
         elem(&Mapping::input),
         elem(&Mapping::action)
     )
 )
 
-AYU_DESCRIBE(app::LayoutSettings,
+AYU_DESCRIBE(liv::LayoutSettings,
     attrs(
         attr("spread_count", &LayoutSettings::spread_count, optional),
         attr("spread_direction", &LayoutSettings::spread_direction, optional),
@@ -115,13 +115,13 @@ AYU_DESCRIBE(app::LayoutSettings,
         attr("large_align", &LayoutSettings::large_align, optional)
     )
 )
-AYU_DESCRIBE(app::PageSettings,
+AYU_DESCRIBE(liv::PageSettings,
     attrs(
         attr("interpolation_mode", &PageSettings::interpolation_mode, optional)
     )
 )
 
-AYU_DESCRIBE(app::WindowSettings,
+AYU_DESCRIBE(liv::WindowSettings,
     attrs(
         attr("size", &WindowSettings::size, optional),
         attr("fullscreen", &WindowSettings::fullscreen, optional),
@@ -129,19 +129,19 @@ AYU_DESCRIBE(app::WindowSettings,
     )
 )
 
-AYU_DESCRIBE(app::FilesSettings,
+AYU_DESCRIBE(liv::FilesSettings,
     attrs(
         attr("supported_extensions", &FilesSettings::supported_extensions, optional)
     )
 )
 
-AYU_DESCRIBE(app::ControlSettings,
+AYU_DESCRIBE(liv::ControlSettings,
     attrs(
         attr("drag_speed", &ControlSettings::drag_speed, optional)
     )
 )
 
-AYU_DESCRIBE(app::MemorySettings,
+AYU_DESCRIBE(liv::MemorySettings,
     attrs(
         attr("preload_ahead", &MemorySettings::preload_ahead, optional),
         attr("preload_behind", &MemorySettings::preload_behind, optional),
@@ -150,7 +150,7 @@ AYU_DESCRIBE(app::MemorySettings,
     )
 )
 
-AYU_DESCRIBE(app::Settings,
+AYU_DESCRIBE(liv::Settings,
     attrs(
         attr("window", base<WindowSettings>(), optional),
         attr("layout", base<LayoutSettings>(), optional),

@@ -1,8 +1,8 @@
 -- This is the default settings file for liv.  You probably don't want to
--- manually modify this file; instead add settings to settings.ayu in the same
--- directory as the program.
+-- manually modify this file; instead modify settings.ayu in the same folder as
+-- the program.
 
-[app::Settings {
+[liv::Settings {
 
  -- Options for initial window properties
 window: {

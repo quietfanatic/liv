@@ -5,7 +5,7 @@
 #include "files.h"
 #include "page.h"
 
-namespace app {
+namespace liv {
 
 PageBlock::PageBlock (
     const AnyString& book_filename,
@@ -118,4 +118,4 @@ bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
     return false;
 }
 
-} // namespace app
+} // namespace liv

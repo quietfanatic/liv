@@ -8,7 +8,7 @@
 #include "../dirt/wind/passive_loop.h"
 #include "common.h"
 
-namespace app {
+namespace liv {
 
 struct App {
     App();
@@ -55,4 +55,4 @@ struct App {
 extern App* current_app;
 extern Book* current_book;
 
-} // namespace app
+} // namespace liv

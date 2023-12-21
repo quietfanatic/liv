@@ -149,7 +149,7 @@ void main () {
 }"
 
 [ayu::Document {
-    program: [app::PageProgram {
+    program: [liv::PageProgram {
         shaders: [#/vertex+1 #/fragment+1]
     }]
     vertex: [glow::Shader {

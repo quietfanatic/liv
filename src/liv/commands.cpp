@@ -1,4 +1,4 @@
-#include "app-commands.h"
+#include "commands.h"
 
 #include <SDL2/SDL_video.h>
 #include "../dirt/uni/io.h"
@@ -6,7 +6,7 @@
 #include "book.h"
 #include "settings.h"
 
-namespace app::command {
+namespace liv::commands {
 
 ///// APP COMMANDS
 
@@ -107,4 +107,4 @@ static void window_background_ (Fill bg) {
 }
 Command window_background (window_background_, "window_background", "Change window background fill");
 
-} // namespace app::command
+} // namespace liv::commands

@@ -9,7 +9,7 @@
 #include "../dirt/uni/strings.h"
 #include "common.h"
 
-namespace app {
+namespace liv {
 
 struct Fill : glow::RGBA8 { using glow::RGBA8::RGBA8; };
 
@@ -111,4 +111,4 @@ const T& Settings::get (
     else return *(builtin_default_settings.*setting_generic);
 }
 
-} // namespace app
+} // namespace liv

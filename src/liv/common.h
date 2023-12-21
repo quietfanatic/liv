@@ -4,7 +4,7 @@ namespace std::filesystem { }
 namespace geo { }
 namespace uni { }
 
-namespace app {
+namespace liv {
 
 using namespace geo;
 using namespace uni;
@@ -19,4 +19,4 @@ struct PageBlock;
 struct PageParams;
 struct Settings;
 
-} // namespace app
+} // namespace liv

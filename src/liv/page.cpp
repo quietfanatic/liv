@@ -9,7 +9,7 @@
 
 using namespace glow;
 
-namespace app {
+namespace liv {
 
 PageParams::PageParams (const Settings* settings) :
     interpolation_mode(settings->get(&PageSettings::interpolation_mode))
@@ -74,7 +74,7 @@ void Page::draw (
     require(!!*texture);
     require(texture->target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = ayu::Resource("res:/app/page.ayu")["program"][1];
+    static PageProgram* program = ayu::Resource("res:/liv/page.ayu")["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
@@ -91,15 +91,15 @@ void Page::draw (
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-} using namespace app;
+} using namespace liv;
 
-AYU_DESCRIBE(app::PageParams,
+AYU_DESCRIBE(liv::PageParams,
     attrs(
         attr("interpolation_mode", &PageParams::interpolation_mode)
     )
 )
 
-AYU_DESCRIBE(app::PageProgram,
+AYU_DESCRIBE(liv::PageProgram,
     delegate(base<Program>())
 )
 
@@ -110,7 +110,7 @@ AYU_DESCRIBE(app::PageProgram,
 #include "../dirt/tap/tap.h"
 #include "../dirt/wind/window.h"
 
-static tap::TestSet tests ("app/page", []{
+static tap::TestSet tests ("liv/page", []{
     using namespace tap;
 
     char* base = require_sdl(SDL_GetBasePath());

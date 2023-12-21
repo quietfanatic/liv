@@ -6,7 +6,7 @@
 #include "../dirt/uni/text.h"
 #include "settings.h"
 
-namespace app {
+namespace liv {
 
 AnyString containing_folder (Str filename) {
     return AnyString(fs::path(filename).remove_filename().u8string());
@@ -95,4 +95,4 @@ UniqueArray<AnyString> read_list (Str list_filename) {
     return lines;
 }
 
-} // namespace app
+} // namespace liv

@@ -10,7 +10,7 @@
 #include "app.h"
 #include "common.h"
 
-using namespace app;
+using namespace liv;
 
 int main (int argc, char** argv) {
     glow::require_sdl(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));

@@ -5,7 +5,7 @@
 #include "page-block.h"
 #include "../dirt/ayu/reflection/describe.h"
 
-namespace app {
+namespace liv {
 
 LayoutParams::LayoutParams (const Settings* settings) :
     spread_direction(settings->get(&LayoutSettings::spread_direction)),
@@ -153,9 +153,9 @@ Layout::Layout (
     }
 }
 
-} using namespace app;
+} using namespace liv;
 
-AYU_DESCRIBE(app::LayoutParams,
+AYU_DESCRIBE(liv::LayoutParams,
     attrs(
         attr("spread_direction", &LayoutParams::spread_direction),
         attr("auto_zoom_mode", &LayoutParams::auto_zoom_mode),

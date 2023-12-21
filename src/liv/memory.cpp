@@ -1,11 +1,11 @@
 #include "memory.h"
 #include "../dirt/ayu/reflection/describe.h"
 
-namespace app {
+namespace liv {
 
-} using namespace app;
+} using namespace liv;
 
-AYU_DESCRIBE(app::MemoryOfBook,
+AYU_DESCRIBE(liv::MemoryOfBook,
     attrs(
         attr("book_filename", &MemoryOfBook::book_filename),
         attr("updated_at", &MemoryOfBook::updated_at),
@@ -16,7 +16,7 @@ AYU_DESCRIBE(app::MemoryOfBook,
     )
 )
 
-AYU_DESCRIBE(app::Memory,
+AYU_DESCRIBE(liv::Memory,
     attrs(
         attr("books", &Memory::books)
     )

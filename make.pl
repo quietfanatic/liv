@@ -67,16 +67,16 @@ my %configs = (
 my $program = 'liv';
 
 my @sources = (qw(
-    app/app.cpp
-    app/app-commands.cpp
-    app/book.cpp
-    app/files.cpp
-    app/layout.cpp
-    app/main.cpp
-    app/memory.cpp
-    app/page-block.cpp
-    app/page.cpp
-    app/settings.cpp
+    liv/app.cpp
+    liv/commands.cpp
+    liv/book.cpp
+    liv/files.cpp
+    liv/layout.cpp
+    liv/main.cpp
+    liv/memory.cpp
+    liv/page-block.cpp
+    liv/page.cpp
+    liv/settings.cpp
     dirt/ayu/common.cpp
     dirt/ayu/data/parse.cpp
     dirt/ayu/data/print.cpp
@@ -127,9 +127,9 @@ my @sources = (qw(
 );
 
 my @resources = (qw(
-    app/page.ayu
-    app/settings-default.ayu
-    app/settings-template.ayu
+    liv/page.ayu
+    liv/settings-default.ayu
+    liv/settings-template.ayu
     dirt/ayu/test/*.ayu
     dirt/ayu/test/*.json
     dirt/glow/test/*

@@ -4,7 +4,7 @@
 #include "../dirt/uni/arrays.h"
 #include "../dirt/geo/range.h"
 
-namespace app {
+namespace liv {
 
 struct MemoryOfBook {
     AnyString book_filename;  // filename of either folder or list
@@ -21,4 +21,4 @@ struct Memory {
     bool need_write = false;
 };
 
-} // namespace app
+} // namespace liv

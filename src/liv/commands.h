@@ -3,7 +3,7 @@
 #include "../dirt/control/command.h"
 #include "common.h"
 
-namespace app::command {
+namespace liv::commands {
 using namespace control;
 
 ///// APP COMMANDS
@@ -59,4 +59,4 @@ extern Command leave_fullscreen_or_quit;
  // (Fill) change window background fill
 extern Command window_background;
 
-} // namespace app::command
+} // namespace liv::commands

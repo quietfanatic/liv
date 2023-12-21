@@ -11,7 +11,7 @@
 #include "common.h"
 #include "settings.h"
 
-namespace app {
+namespace liv {
 
 struct PageParams {
     InterpolationMode interpolation_mode;
@@ -42,4 +42,4 @@ struct Page {
     );
 };
 
-} // namespace app
+} // namespace liv

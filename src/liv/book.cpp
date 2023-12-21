@@ -12,7 +12,7 @@
 #include "memory.h"
 #include "page.h"
 
-namespace app {
+namespace liv {
 
 ///// Contents
 
@@ -329,7 +329,7 @@ void Book::window_size_changed (IVec size) {
     need_draw = true;
 }
 
-} using namespace app;
+} using namespace liv;
 
 #ifndef TAP_DISABLE_TESTS
 #include <SDL2/SDL.h>
@@ -337,7 +337,7 @@ void Book::window_size_changed (IVec size) {
 #include "../dirt/glow/image.h"
 #include "../dirt/tap/tap.h"
 
-static tap::TestSet tests ("app/book", []{
+static tap::TestSet tests ("liv/book", []{
     using namespace tap;
 
     char* base = glow::require_sdl(SDL_GetBasePath());

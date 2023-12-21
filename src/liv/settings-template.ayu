@@ -1,7 +1,7 @@
 -- This is the settings file for liv.  Take a look at
--- res/app/settings-default.ayu to see what you can configure.
+-- res/liv/settings-default.ayu to see what you can configure.
 
-[app::Settings {
+[liv::Settings {
 
  -- Options for initial window properties
 window: {
