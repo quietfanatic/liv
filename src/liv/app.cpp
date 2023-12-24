@@ -4,8 +4,8 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include "../dirt/ayu/resources/resource.h"
+#include "book-source.h"
 #include "book.h"
-#include "files.h"
 #include "memory.h"
 #include "settings.h"
 
@@ -145,8 +145,10 @@ App::App () {
 
 App::~App () { }
 
-static void add_book (App& self, std::unique_ptr<Book>&& b) {
-    auto& book = self.books.emplace_back(move(b));
+static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
+    auto& book = self.books.emplace_back(
+        std::make_unique<Book>(self, move(src))
+    );
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->window)),
         &*book
@@ -164,42 +166,36 @@ void App::open_args (Slice<AnyString> args) {
 }
 
 void App::open_files (Slice<AnyString> filenames) {
-    auto expanded = expand_recursively(settings, filenames);
-
-    add_book(*this, std::make_unique<Book>(
-        *this, expanded
-    ));
+    auto src = std::make_unique<BookSource>(
+        settings, BookType::Misc, filenames
+    );
+    add_book(*this, move(src));
 }
 
 void App::open_file (const AnyString& file) {
-    auto neighborhood = expand_folder(settings, containing_folder(file));
-
-    add_book(*this, std::make_unique<Book>(
-        *this, neighborhood, "", file
-    ));
+    auto src = std::make_unique<BookSource>(
+        settings, BookType::FileWithNeighbors, file
+    );
+    add_book(*this, move(src));
 }
 
-void App::open_folder (const AnyString& foldername) {
-    auto contents = expand_recursively(settings, {foldername});
-    auto book_filename = AnyString(fs::absolute(foldername).u8string());
-
-    add_book(*this, std::make_unique<Book>(
-        *this, contents, book_filename
-    ));
+void App::open_folder (const AnyString& folder) {
+    auto src = std::make_unique<BookSource>(
+        settings, BookType::Folder, folder
+    );
+    add_book(*this, move(src));
 }
 
 void App::open_list (const AnyString& list_filename) {
-    auto absolute_p = fs::absolute(list_filename);
+     // Hack: change cwd so filenames can be relative to list.  TODO: make this
+     // not necessary.
     if (list_filename != "-") {
-        fs::current_path(absolute_p.remove_filename());
+        fs::current_path(fs::absolute(list_filename).remove_filename());
     }
-    auto lines = read_list(list_filename);
-    auto expanded = expand_recursively(settings, lines);
-
-    auto book_filename = AnyString(absolute_p.u8string());
-    add_book(*this, std::make_unique<Book>(
-        *this, expanded, book_filename == "-" ? "" : book_filename
-    ));
+    auto src = std::make_unique<BookSource>(
+        settings, BookType::List, list_filename
+    );
+    add_book(*this, move(src));
 }
 
 void App::close_book (Book* book) {

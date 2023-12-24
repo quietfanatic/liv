@@ -7,7 +7,7 @@
 #include "../dirt/glow/gl.h"
 #include "../dirt/uni/time.h"
 #include "app.h"
-#include "files.h"
+#include "book-source.h"
 #include "layout.h"
 #include "memory.h"
 #include "page.h"
@@ -18,13 +18,12 @@ namespace liv {
 
 Book::Book (
     App& app,
-    Slice<AnyString> page_filenames,
-    const AnyString& book_filename,
-    const AnyString& start_filename
+    std::unique_ptr<BookSource>&& src
 ) :
     settings(app.settings),
     memory(app.memory),
-    block(book_filename, page_filenames),
+    source(move(src)),
+    block(*source),
     window_background(
         settings->get(&WindowSettings::window_background)
     ),
@@ -34,32 +33,34 @@ Book::Book (
     )
 {
      // Figure out where to start and initialize view params from memory if
-     // applicable.
+     // applicable.  This is pretty messy but it's gonna get refactored to
+     // various places soon.
     const MemoryOfBook* mem = null;
-    if (book_filename) {
+    Str start;
+    if (auto& memname = source->name_for_memory()) {
         for (auto& m : memory->books) {
-            if (m.book_filename == book_filename) {
+            if (m.book_filename == memname) {
                 mem = &m;
                 break;
             }
         }
     }
+    else if (source->type == BookType::FileWithNeighbors) {
+        start = source->name;
+    }
     if (mem) {
         layout_params = mem->layout_params;
         page_params = mem->page_params;
+        start = mem->current_filename;
     }
     else {
         layout_params = LayoutParams(settings);
         page_params = PageParams(settings);
     }
-     // Find start page
-    const AnyString& start =
-        start_filename ? start_filename :
-        mem ? mem->current_filename : "";
     int32 offset = 0;
     if (start) {
-        for (usize i = 0; i < page_filenames.size(); i++) {
-            if (page_filenames[i] == start) {
+        for (usize i = 0; i < source->pages.size(); i++) {
+            if (source->pages[i] == start) {
                 offset = i;
                 break;
             }
@@ -80,9 +81,9 @@ Book::Book (
 Book::~Book () { }
 
 static void update_memory (Book& self) {
-    if (self.block.book_filename) {
+    if (auto& memname = self.source->name_for_memory()) {
         MemoryOfBook mem;
-        mem.book_filename = self.block.book_filename;
+        mem.book_filename = memname;
         mem.current_range = self.viewing_pages;
         if (auto page = self.block.get(self.viewing_pages.l)) {
             mem.current_filename = page->filename;
@@ -92,7 +93,7 @@ static void update_memory (Book& self) {
         mem.page_params = self.page_params;
         mem.updated_at = uni::now();
         for (auto& m : self.memory->books) {
-            if (m.book_filename == self.block.book_filename) {
+            if (m.book_filename == memname) {
                 m = move(mem);
                 goto done;
             }
@@ -349,10 +350,12 @@ static tap::TestSet tests ("liv/book", []{
     App app;
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
-    Book book (app, {
-        cat(exe_folder, "/res/dirt/glow/test/image.png"sv),
-        cat(exe_folder, "/res/dirt/glow/test/image2.png"sv)
-    });
+    Book book (app, std::make_unique<BookSource>(
+        app.settings, BookType::Misc, Slice<AnyString>{
+            cat(exe_folder, "/res/dirt/glow/test/image.png"sv),
+            cat(exe_folder, "/res/dirt/glow/test/image2.png"sv)
+        }
+    ));
 
     book.draw_if_needed();
     glow::Image img (size);

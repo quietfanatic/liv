@@ -1,19 +1,15 @@
 #include "page-block.h"
 
 #include "../dirt/geo/scalar.h"
+#include "book-source.h"
 #include "book.h"
-#include "files.h"
 #include "page.h"
 
 namespace liv {
 
-PageBlock::PageBlock (
-    const AnyString& book_filename,
-    Slice<AnyString> page_filenames
-) :
-    book_filename(book_filename),
-    pages(page_filenames.size(), [&](usize i){
-        return std::make_unique<Page>(page_filenames[i]);
+PageBlock::PageBlock (const BookSource& src) :
+    pages(src.pages.size(), [&](usize i){
+        return std::make_unique<Page>(src.pages[i]);
     })
 { }
 PageBlock::~PageBlock () { }

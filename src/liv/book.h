@@ -17,18 +17,13 @@ namespace liv {
 struct Book {
     explicit Book (
         App& app,
-         // All page filenames.
-        Slice<AnyString> page_filenames,
-         // Either folder or list filename.  Will be used as memory key.  This
-         // should be an absolute filename.
-        const AnyString& book_filename = "",
-         // Page filename to start at (starts at page 1 if empty)
-        const AnyString& start_filename = ""
+        std::unique_ptr<BookSource>&& src
     );
     ~Book ();
 
     const Settings* settings;
     Memory* memory;
+    std::unique_ptr<BookSource> source;
 
     ///// Book contents
     PageBlock block;

@@ -14,11 +14,10 @@
 namespace liv {
 
 struct PageBlock {
-    AnyString book_filename;
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    PageBlock (const AnyString& book_filename, Slice<AnyString> page_filenames);
+    PageBlock (const BookSource&);
     ~PageBlock ();
 
      // Returns null if i is out of range

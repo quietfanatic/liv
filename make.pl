@@ -69,8 +69,8 @@ my $program = 'liv';
 my @sources = (qw(
     liv/app.cpp
     liv/commands.cpp
+    liv/book-source.cpp
     liv/book.cpp
-    liv/files.cpp
     liv/layout.cpp
     liv/main.cpp
     liv/memory.cpp

@@ -11,6 +11,7 @@ using namespace uni;
 namespace fs = std::filesystem;
 struct App;
 struct Book;
+struct BookSource;
 struct Layout;
 struct LayoutParams;
 struct Memory;
