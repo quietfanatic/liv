@@ -243,8 +243,8 @@ static tap::TestSet tests ("liv/app", []{
     //app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            ayu::cat(exe_folder, "/res/dirt/glow/test/image.png"),
-            ayu::cat(exe_folder, "/res/dirt/glow/test/image2.png")
+            cat(exe_folder, "/res/liv/test/image.png"),
+            cat(exe_folder, "/res/liv/test/image2.png")
         });
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));

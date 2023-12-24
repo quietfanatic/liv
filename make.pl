@@ -130,6 +130,7 @@ my @resources = (qw(
     liv/page.ayu
     liv/settings-default.ayu
     liv/settings-template.ayu
+    liv/test/*
     dirt/ayu/test/*.ayu
     dirt/ayu/test/*.json
     dirt/glow/test/*

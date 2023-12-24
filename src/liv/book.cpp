@@ -352,8 +352,8 @@ static tap::TestSet tests ("liv/book", []{
     app.settings->WindowSettings::size = size;
     Book book (app, std::make_unique<BookSource>(
         app.settings, BookType::Misc, Slice<AnyString>{
-            cat(exe_folder, "/res/dirt/glow/test/image.png"sv),
-            cat(exe_folder, "/res/dirt/glow/test/image2.png"sv)
+            cat(exe_folder, "/res/liv/test/image.png"),
+            cat(exe_folder, "/res/liv/test/image2.png")
         }
     ));
 

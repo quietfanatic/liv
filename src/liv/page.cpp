@@ -129,7 +129,7 @@ static tap::TestSet tests ("liv/page", []{
     SDL_MinimizeWindow(window);
     glow::init();
 
-    Page page (cat(exe_folder, "/res/dirt/glow/test/image.png"));
+    Page page (cat(exe_folder, "/res/liv/test/image.png"));
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");
@@ -171,6 +171,8 @@ static tap::TestSet tests ("liv/page", []{
     }
     no_match:;
     ok(match, "Page program wrote correct pixels");
+
+     // TODO: test failure to load image
 
     done_testing();
 });
