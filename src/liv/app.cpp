@@ -198,7 +198,7 @@ void App::open_list (const AnyString& list_filename) {
 
     auto book_filename = AnyString(absolute_p.u8string());
     add_book(*this, std::make_unique<Book>(
-        *this, expanded, book_filename
+        *this, expanded, book_filename == "-" ? "" : book_filename
     ));
 }
 
