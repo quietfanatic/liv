@@ -69,31 +69,27 @@ UniqueArray<AnyString> expand_recursively (
 
 static
 UniqueArray<AnyString> read_list (Str path) {
-    UniqueArray<AnyString> lines {""};
+    UniqueArray<AnyString> lines;
+    UniqueString line;
     if (path == "-") {
          // TODO: Make string_from_file support filehandles
         for (;;) {
             int c = getchar();
             if (c == EOF) break;
             else if (c == '\n') {
-                if (lines.back() != "") {
-                    lines.emplace_back();
-                }
+                if (line) lines.emplace_back(move(line));
             }
-            else lines.back().push_back(c);
+            else line.push_back(c);
         }
     }
     else {
         for (char c : string_from_file(path)) {
             if (c == '\n') {
-                if (lines.back() != "") {
-                    lines.emplace_back();
-                }
+                if (line) lines.emplace_back(move(line));
             }
-            else lines.back().push_back(c);
+            else line.push_back(c);
         }
     }
-    if (lines.back() == "") lines.pop_back();
     return lines;
 }
 
