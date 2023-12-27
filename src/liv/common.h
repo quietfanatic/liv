@@ -2,6 +2,8 @@
 
 namespace std::filesystem { }
 namespace geo { }
+namespace iri { struct IRI; }
+using iri::IRI;
 namespace uni { }
 
 namespace liv {

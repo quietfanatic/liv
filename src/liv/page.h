@@ -7,6 +7,7 @@
 #include "../dirt/geo/scalar.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/glow/file-texture.h"
+#include "../dirt/iri/iri.h"
 #include "../dirt/uni/common.h"
 #include "common.h"
 #include "settings.h"
@@ -21,14 +22,14 @@ struct PageParams {
 };
 
 struct Page {
-    AnyString filename;
+    IRI location;
     std::unique_ptr<glow::FileTexture> texture;
     IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;
     bool load_failed = false;
 
-    explicit Page (AnyString filename);
+    explicit Page (const IRI&);
     ~Page ();
 
     void load ();

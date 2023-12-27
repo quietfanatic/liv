@@ -1,6 +1,7 @@
 #include "commands.h"
 
 #include <SDL2/SDL_video.h>
+#include "../dirt/iri/path.h"
 #include "../dirt/uni/io.h"
 #include "app.h"
 #include "book.h"
@@ -37,7 +38,7 @@ static void print_current_filename_ () {
     auto visible = current_book->visible_pages();
     if (empty(visible)) return;
     auto page = current_book->block.get(visible.l);
-    print_utf8(cat(page->filename, "\n"));
+    print_utf8(cat(iri::to_fs_path(page->location), "\n"));
 }
 Command print_current_filename (print_current_filename_, "print_current_filename", "Print the filename of the first current page to stdout.");
 

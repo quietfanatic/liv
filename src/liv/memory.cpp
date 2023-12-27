@@ -7,10 +7,10 @@ namespace liv {
 
 AYU_DESCRIBE(liv::MemoryOfBook,
     attrs(
-        attr("book_filename", &MemoryOfBook::book_filename),
+        attr("location", &MemoryOfBook::location),
         attr("updated_at", &MemoryOfBook::updated_at),
         attr("current_range", &MemoryOfBook::current_range),
-        attr("current_filename", &MemoryOfBook::current_filename),
+        attr("current_page", &MemoryOfBook::current_page),
         attr("layout_params", &MemoryOfBook::layout_params),
         attr("page_params", &MemoryOfBook::page_params)
     )

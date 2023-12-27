@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include "../dirt/iri/path.h"
 #include "../dirt/ayu/resources/resource.h"
 #include "book-source.h"
 #include "book.h"
@@ -166,34 +167,36 @@ void App::open_args (Slice<AnyString> args) {
 }
 
 void App::open_files (Slice<AnyString> filenames) {
+    auto iris = UniqueArray<IRI>(filenames.size(), [=](usize i){
+        return iri::from_fs_path(filenames[i]);
+    });
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Misc, filenames
+        settings, BookType::Misc, iris
     );
     add_book(*this, move(src));
 }
 
 void App::open_file (const AnyString& file) {
+    auto loc = iri::from_fs_path(file);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::FileWithNeighbors, file
+        settings, BookType::FileWithNeighbors, loc
     );
     add_book(*this, move(src));
 }
 
 void App::open_folder (const AnyString& folder) {
+    auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Folder, folder
+        settings, BookType::Folder, loc
     );
     add_book(*this, move(src));
 }
 
-void App::open_list (const AnyString& list_filename) {
-     // Hack: change cwd so filenames can be relative to list.  TODO: make this
-     // not necessary.
-    if (list_filename != "-") {
-        fs::current_path(fs::absolute(list_filename).remove_filename());
-    }
+void App::open_list (const AnyString& list_path) {
+    constexpr IRI stdin_loc ("liv:stdin");
+    auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::List, list_filename
+        settings, BookType::List, loc
     );
     add_book(*this, move(src));
 }

@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "../dirt/uni/arrays.h"
+#include "../dirt/iri/iri.h"
 
 namespace liv {
 
@@ -16,11 +17,10 @@ enum class BookType {
 struct BookSource {
      // Saved
     BookType type;
-    AnyString name;
+     // Base IRI to resolve page filenames against.
+    IRI location;
      // Not saved
-     // Currently these are relative to the current working directory.
-     // TODO: Make them relative to the book's folder.
-    UniqueArray<AnyString> pages;
+    UniqueArray<IRI> pages;
 
      // pages will be populated with:
      //   Folder: The recursive contents of the folder.
@@ -28,12 +28,12 @@ struct BookSource {
      //   FileWithNeighbors: The non-recursive contents of the folder containing
      //     the given filename.
      //   Misc: Not allowed
-    BookSource (const Settings*, BookType, const AnyString&);
+    BookSource (const Settings*, BookType, const IRI&);
 
      // Type must be Misc.  Folders and lists will be recursively expanded.
-    BookSource (const Settings*, BookType, Slice<AnyString>);
+    BookSource (const Settings*, BookType, Slice<IRI>);
      // Empty if this book should not be remembered.
-    const AnyString& name_for_memory ();
+    const IRI& location_for_memory ();
 };
 
 } // liv

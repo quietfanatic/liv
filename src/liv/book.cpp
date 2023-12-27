@@ -5,6 +5,7 @@
 #include <SDL2/SDL_video.h>
 #include "../dirt/geo/scalar.h"
 #include "../dirt/glow/gl.h"
+#include "../dirt/iri/path.h"
 #include "../dirt/uni/time.h"
 #include "app.h"
 #include "book-source.h"
@@ -36,22 +37,22 @@ Book::Book (
      // applicable.  This is pretty messy but it's gonna get refactored to
      // various places soon.
     const MemoryOfBook* mem = null;
-    Str start;
-    if (auto& memname = source->name_for_memory()) {
+    IRI start;
+    if (auto& memloc = source->location_for_memory()) {
         for (auto& m : memory->books) {
-            if (m.book_filename == memname) {
+            if (m.location == memloc) {
                 mem = &m;
                 break;
             }
         }
     }
     else if (source->type == BookType::FileWithNeighbors) {
-        start = source->name;
+        start = source->location;
     }
     if (mem) {
         layout_params = mem->layout_params;
         page_params = mem->page_params;
-        start = mem->current_filename;
+        start = IRI(mem->current_page, mem->location);
     }
     else {
         layout_params = LayoutParams(settings);
@@ -81,19 +82,19 @@ Book::Book (
 Book::~Book () { }
 
 static void update_memory (Book& self) {
-    if (auto& memname = self.source->name_for_memory()) {
+    if (auto& memloc = self.source->location_for_memory()) {
         MemoryOfBook mem;
-        mem.book_filename = memname;
+        mem.location = memloc;
         mem.current_range = self.viewing_pages;
         if (auto page = self.block.get(self.viewing_pages.l)) {
-            mem.current_filename = page->filename;
+            mem.current_page = page->location.relative_to(memloc);
         }
-        else mem.current_filename = "";
+        else mem.current_page = "";
         mem.layout_params = self.layout_params;
         mem.page_params = self.page_params;
         mem.updated_at = uni::now();
         for (auto& m : self.memory->books) {
-            if (m.book_filename == memname) {
+            if (m.location == memloc) {
                 m = move(mem);
                 goto done;
             }
@@ -299,7 +300,8 @@ bool Book::draw_if_needed () {
             title = cat(move(title), '/', block.count(), "] ");
         }
          // TODO: Merge filenames
-        title = cat(move(title), block.get(visible.l)->filename);
+        auto filename = iri::to_fs_path(block.get(visible.l)->location);
+        title = cat(move(title), filename);
          // In general, direct comparisons of floats are not good, but we do
          // slight snapping of our zoom to half-integers, so this is fine.
         if (layout.zoom != 1) {
@@ -351,9 +353,9 @@ static tap::TestSet tests ("liv/book", []{
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
     Book book (app, std::make_unique<BookSource>(
-        app.settings, BookType::Misc, Slice<AnyString>{
-            cat(exe_folder, "/res/liv/test/image.png"),
-            cat(exe_folder, "/res/liv/test/image2.png")
+        app.settings, BookType::Misc, Slice<IRI>{
+            iri::from_fs_path(cat(exe_folder, "/res/liv/test/image.png")),
+            iri::from_fs_path(cat(exe_folder, "/res/liv/test/image2.png"))
         }
     ));
 

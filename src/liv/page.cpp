@@ -1,6 +1,7 @@
 #include "page.h"
 
 #include "../dirt/glow/program.h"
+#include "../dirt/iri/path.h"
 #include "../dirt/uni/io.h"
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/resources/resource.h"
@@ -15,13 +16,14 @@ PageParams::PageParams (const Settings* settings) :
     interpolation_mode(settings->get(&PageSettings::interpolation_mode))
 { }
 
-Page::Page (AnyString filename) :
-    filename(move(filename))
+Page::Page (const IRI& loc) :
+    location(loc)
 { }
 Page::~Page () { }
 
 void Page::load () {
     if (texture) return;
+    auto filename = iri::to_fs_path(location);
     try {
         texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
         glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -129,7 +131,7 @@ static tap::TestSet tests ("liv/page", []{
     SDL_MinimizeWindow(window);
     glow::init();
 
-    Page page (cat(exe_folder, "/res/liv/test/image.png"));
+    Page page (iri::from_fs_path(cat(exe_folder, "/res/liv/test/image.png")));
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");

@@ -1,5 +1,7 @@
 #include "book-source.h"
 
+#include <filesystem>
+#include "../dirt/iri/path.h"
 #include "../dirt/uni/text.h"
 #include "../dirt/uni/io.h"
 #include "settings.h"
@@ -7,113 +9,113 @@
 namespace liv {
 
 static
-AnyString containing_folder (Str path) {
-    return AnyString(fs::path(path).remove_filename().u8string());
-}
-
-static
-UniqueArray<AnyString> expand_folder (
-    const Settings* settings, Str path
+UniqueArray<IRI> expand_neighbors (
+    const Settings* settings, const IRI& loc
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
+    UniqueArray<IRI> r;
 
-    UniqueArray<AnyString> r;
-    for (auto& entry : fs::directory_iterator(path)) {
-        auto child = AnyString(entry.path().u8string());
-        usize i;
-        for (i = child.size(); i > 0; --i) {
-            if (child[i-1] == '.') break;
-        }
-        Str ext = i ? child.substr(i) : "";
+    IRI folder = loc.without_filename();
+    for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
+        auto child = iri::from_fs_path(entry.path());
+        Str ext = iri::path_extension(child.path());
         if (!extensions.count(StaticString(ext))) continue;
         r.emplace_back(move(child));
     }
-    std::sort(
-        r.begin(), r.end(), &uni::natural_lessthan
+    std::sort(r.begin(), r.end(),
+        [](const IRI& a, const IRI& b){
+            return uni::natural_lessthan(a.path(), b.path());
+        }
     );
     return r;
 }
 
 static
-UniqueArray<AnyString> expand_recursively (
-    const Settings* settings, Slice<AnyString> paths
+UniqueArray<IRI> expand_recursively (
+    const Settings* settings, Slice<IRI> locs
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
+    UniqueArray<IRI> r;
 
-    UniqueArray<AnyString> r;
-    for (auto& path : paths) {
-        if (fs::is_directory(path)) {
+    for (auto& loc : locs) {
+        auto fs_path = iri::to_fs_path(loc);
+        if (fs::is_directory(fs_path)) {
             usize old_size = r.size();
-            for (auto& entry : fs::recursive_directory_iterator(path)) {
-                auto child = AnyString(entry.path().u8string());
-                usize i;
-                for (i = child.size(); i > 0; --i) {
-                    if (child[i-1] == '.') break;
-                }
-                Str ext = i ? child.substr(i) : "";
+            for (auto& entry : fs::recursive_directory_iterator(fs_path)) {
+                auto child = iri::from_fs_path(entry.path());
+                Str ext = iri::path_extension(child.path());
                 if (!extensions.count(StaticString(ext))) continue;
                 r.emplace_back(move(child));
             }
-            std::sort(
-                r.begin() + old_size, r.end(), &uni::natural_lessthan
+            std::sort(r.begin() + old_size, r.end(),
+                [](const IRI& a, const IRI& b){
+                    return uni::natural_lessthan(a.path(), b.path());
+                }
             );
         }
         else {
              // Don't check the file extension for explicitly specified
              // files.
-            r.emplace_back(path);
+            r.emplace_back(loc);
         }
     }
     return r;
 }
 
 static
-UniqueArray<AnyString> read_list (Str path) {
-    UniqueArray<AnyString> lines;
+UniqueArray<IRI> read_list (const IRI& loc) {
+    UniqueArray<IRI> r;
+
     UniqueString line;
-    if (path == "-") {
+    if (loc == "liv:stdin") {
          // TODO: Make string_from_file support filehandles
         for (;;) {
             int c = getchar();
             if (c == EOF) break;
             else if (c == '\n') {
-                if (line) lines.emplace_back(move(line));
+                if (line) {
+                    r.emplace_back(iri::from_fs_path(line));
+                    line = "";
+                }
             }
             else line.push_back(c);
         }
     }
     else {
-        for (char c : string_from_file(path)) {
+        for (char c : string_from_file(iri::to_fs_path(loc))) {
             if (c == '\n') {
-                if (line) lines.emplace_back(move(line));
+                if (line) {
+                    r.emplace_back(iri::from_fs_path(line, loc));
+                    line = "";
+                }
             }
             else line.push_back(c);
         }
     }
-    return lines;
+    return r;
 }
 
 BookSource::BookSource (
-    const Settings* settings, BookType t, const AnyString& n
+    const Settings* settings, BookType t, const IRI& loc
 ) :
-    type(t),
-    name(fs::absolute(n).u8string())
+    type(t), location(loc)
 {
     switch (type) {
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
-            pages = expand_recursively(settings, {name});
+            require(location.path().back() == '/');
+            pages = expand_recursively(settings, {location});
             break;
         }
         case BookType::FileWithNeighbors: {
-            pages = expand_folder(settings, containing_folder(name));
+            require(location.path().back() != '/');
+            pages = expand_neighbors(settings, location);
             break;
         }
         case BookType::List: {
-             // This requires CWD to be set to the folder containing the list.
-             // TODO: Make this not the case.
-            auto lines = read_list(name);
-            pages = expand_recursively(settings, lines);
+            require(location.path().back() != '/');
+            auto entries = read_list(location);
+            pages = expand_recursively(settings, entries);
             break;
         }
         default: never();
@@ -121,20 +123,20 @@ BookSource::BookSource (
 }
 
 BookSource::BookSource (
-    const Settings* settings, BookType t, Slice<AnyString> args
+    const Settings* settings, BookType t, Slice<IRI> args
 ) :
-    type(t), name()
+    type(t), location()
 {
     require(type == BookType::Misc);
     pages = expand_recursively(settings, args);
 }
 
-const AnyString& BookSource::name_for_memory () {
-    static constexpr AnyString empty;
+const IRI& BookSource::location_for_memory () {
+    static constexpr IRI empty;
     switch (type) {
         case BookType::Misc: return empty;
-        case BookType::Folder: return name;
-        case BookType::List: return name == "-" ? empty : name;
+        case BookType::Folder: return location;
+        case BookType::List: return location == "liv:stdin" ? empty : location;
         case BookType::FileWithNeighbors: return empty;
         default: never();
     }
@@ -159,47 +161,43 @@ static tap::TestSet tests ("liv/book-source", []{
 
     fs::current_path(cat(exe_folder, "/res/liv"));
 
-    BookSource misc_src (settings, BookType::Misc, Slice<AnyString>{
-        "test/image.png",
-        "test/image2.png",
-        "test/non-image.txt",
-        "test"
+    IRI here = iri::from_fs_path("./");
+
+    BookSource misc_src (settings, BookType::Misc, Slice<IRI>{
+        iri::from_fs_path("test/image.png"),
+        iri::from_fs_path("test/image2.png"),
+        iri::from_fs_path("test/non-image.txt"),
+        iri::from_fs_path("test/")
     });
     is(misc_src.pages.size(), 5u, "BookType::Misc");
-    is(misc_src.pages[0], "test/image.png", "BookType::Misc 0");
-    is(misc_src.pages[1], "test/image2.png", "BookType::Misc 1");
-    is(misc_src.pages[2], "test/non-image.txt", "BookType::Misc 2");
+    is(misc_src.pages[0].relative_to(here), "test/image.png", "BookType::Misc 0");
+    is(misc_src.pages[1].relative_to(here), "test/image2.png", "BookType::Misc 1");
+    is(misc_src.pages[2].relative_to(here), "test/non-image.txt", "BookType::Misc 2");
     todo(2, "order is nonintuitive");
-    is(misc_src.pages[3], "test/image.png", "BookType::Misc 3");
-    is(misc_src.pages[4], "test/image2.png", "BookType::Misc 4");
-    is(misc_src.name_for_memory(), "", "BookType::Misc shouldn't be remembered");
+    is(misc_src.pages[3].relative_to(here), "test/image.png", "BookType::Misc 3");
+    is(misc_src.pages[4].relative_to(here), "test/image2.png", "BookType::Misc 4");
+    is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
 
     todo("absolute/relative failures", [&]{
-        BookSource folder_src (settings, BookType::Folder, "test");
+        BookSource folder_src (settings, BookType::Folder, iri::from_fs_path("test/"));
         is(folder_src.pages.size(), 2u, "BookType::Folder");
-        is(folder_src.pages[0], "test/image.png", "BookType::Folder 0");
-        is(folder_src.pages[1], "test/image2.png", "BookType::Folder 1");
-        is(folder_src.name_for_memory(),
-            cat(exe_folder, "/res/liv/test"),
-            "BookType::Folder name for memory"
-        );
+        is(folder_src.pages[0].relative_to(here), "test/image.png", "BookType::Folder 0");
+        is(folder_src.pages[1].relative_to(here), "test/image2.png", "BookType::Folder 1");
+        is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
 
-        BookSource file_src (settings, BookType::FileWithNeighbors, "test/image2.png");
+        BookSource file_src (settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png"));
         is(file_src.pages.size(), 2u, "BookType::FileWithNeighbors");
-        is(file_src.pages[0], "test/image.png", "BookType::FilewithNeighbors 0");
-        is(file_src.pages[1], "test/image2.png", "BookType::FilewithNeighbors 1");
-        is(file_src.name_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
+        is(file_src.pages[0].relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
+        is(file_src.pages[1].relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
+        is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
 
-         // Do this one last because it chdirs (TODO: don't)
-        BookSource list_src (settings, BookType::List, "test/list.lst");
+         // Do this one last because it chdirs (TODO: it doesn't any more)
+        BookSource list_src (settings, BookType::List, iri::from_fs_path("test/list.lst"));
         is(list_src.pages.size(), 2u, "BookType::List");
          // Intentionally backwards
-        is(list_src.pages[0], "test/image2.png", "BookType::List 0");
-        is(list_src.pages[1], "test/image.png", "BookType::List 1");
-        is(list_src.name_for_memory(),
-            cat(exe_folder, "/rest/liv/test/list.lst"),
-            "BookType::List name for memory"
-        );
+        is(list_src.pages[0].relative_to(here), "test/image2.png", "BookType::List 0");
+        is(list_src.pages[1].relative_to(here), "test/image.png", "BookType::List 1");
+        is(list_src.location_for_memory().relative_to(here), "test/list.lst", "BookType::List name for memory");
     });
 
     done_testing();
