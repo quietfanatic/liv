@@ -114,6 +114,7 @@ my @sources = (qw(
     dirt/glow/test-environment.cpp
     dirt/glow/texture-program.cpp
     dirt/iri/iri.cpp
+    dirt/iri/path.cpp
     dirt/uni/arrays.t.cpp
     dirt/uni/assertions.cpp
     dirt/uni/errors.cpp
