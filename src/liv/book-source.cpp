@@ -17,7 +17,7 @@ UniqueArray<IRI> expand_neighbors (
 
     IRI folder = loc.without_filename();
     for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
-        auto child = iri::from_fs_path(entry.path());
+        auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
         Str ext = iri::path_extension(child.path());
         if (!extensions.count(StaticString(ext))) continue;
         r.emplace_back(move(child));
@@ -42,7 +42,7 @@ UniqueArray<IRI> expand_recursively (
         if (fs::is_directory(fs_path)) {
             usize old_size = r.size();
             for (auto& entry : fs::recursive_directory_iterator(fs_path)) {
-                auto child = iri::from_fs_path(entry.path());
+                auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
                 Str ext = iri::path_extension(child.path());
                 if (!extensions.count(StaticString(ext))) continue;
                 r.emplace_back(move(child));
@@ -100,6 +100,7 @@ BookSource::BookSource (
 ) :
     type(t), location(loc)
 {
+    require(loc);
     switch (type) {
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
