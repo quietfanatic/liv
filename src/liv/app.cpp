@@ -237,17 +237,15 @@ Book* current_book = null;
 static tap::TestSet tests ("liv/app", []{
     using namespace tap;
 
-    char* base = glow::require_sdl(SDL_GetBasePath());
-    auto exe_folder = UniqueString(base);
-    SDL_free(base);
+    fs::current_path(iri::to_fs_path(iri::program_location().without_filename()));
 
     App app;
      // TODO: Figure out how to get headless rendering working on nvidia drivers
     //app.hidden = true;
     doesnt_throw([&]{
         app.open_files({
-            cat(exe_folder, "/res/liv/test/image.png"),
-            cat(exe_folder, "/res/liv/test/image2.png")
+            "/res/liv/test/image.png",
+            "/res/liv/test/image2.png"
         });
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));

@@ -154,21 +154,15 @@ static tap::TestSet tests ("liv/book-source", []{
     using namespace tap;
     using namespace liv;
 
-    char* base = glow::require_sdl(SDL_GetBasePath());
-    auto exe_folder = UniqueString(base);
-    SDL_free(base);
-
     auto settings = &builtin_default_settings;
 
-    fs::current_path(cat(exe_folder, "/res/liv"));
-
-    IRI here = iri::from_fs_path("./");
+    auto here = IRI("res/liv/", iri::program_location());
 
     BookSource misc_src (settings, BookType::Misc, Slice<IRI>{
-        iri::from_fs_path("test/image.png"),
-        iri::from_fs_path("test/image2.png"),
-        iri::from_fs_path("test/non-image.txt"),
-        iri::from_fs_path("test/")
+        iri::from_fs_path("test/image.png", here),
+        iri::from_fs_path("test/image2.png", here),
+        iri::from_fs_path("test/non-image.txt", here),
+        iri::from_fs_path("test/", here)
     });
     is(misc_src.pages.size(), 5u, "BookType::Misc");
     is(misc_src.pages[0].relative_to(here), "test/image.png", "BookType::Misc 0");
@@ -180,20 +174,20 @@ static tap::TestSet tests ("liv/book-source", []{
     is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
 
     todo("absolute/relative failures", [&]{
-        BookSource folder_src (settings, BookType::Folder, iri::from_fs_path("test/"));
+        BookSource folder_src (settings, BookType::Folder, iri::from_fs_path("test/", here));
         is(folder_src.pages.size(), 2u, "BookType::Folder");
         is(folder_src.pages[0].relative_to(here), "test/image.png", "BookType::Folder 0");
         is(folder_src.pages[1].relative_to(here), "test/image2.png", "BookType::Folder 1");
         is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
 
-        BookSource file_src (settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png"));
+        BookSource file_src (settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png", here));
         is(file_src.pages.size(), 2u, "BookType::FileWithNeighbors");
         is(file_src.pages[0].relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
         is(file_src.pages[1].relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
         is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
 
          // Do this one last because it chdirs (TODO: it doesn't any more)
-        BookSource list_src (settings, BookType::List, iri::from_fs_path("test/list.lst"));
+        BookSource list_src (settings, BookType::List, iri::from_fs_path("test/list.lst", here));
         is(list_src.pages.size(), 2u, "BookType::List");
          // Intentionally backwards
         is(list_src.pages[0].relative_to(here), "test/image2.png", "BookType::List 0");

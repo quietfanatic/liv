@@ -15,11 +15,8 @@ enum class BookType {
 
  // Defines a book and its contents.
 struct BookSource {
-     // Saved
     BookType type;
-     // Base IRI to resolve page filenames against.
     IRI location;
-     // Not saved
     UniqueArray<IRI> pages;
 
      // pages will be populated with:

@@ -121,6 +121,7 @@ my @sources = (qw(
     dirt/uni/io.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp
+    dirt/whereami/whereami.c
     dirt/wind/passive_loop.cpp
     dirt/wind/window.cpp
 ),

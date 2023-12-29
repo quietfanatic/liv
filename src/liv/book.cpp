@@ -343,10 +343,6 @@ void Book::window_size_changed (IVec size) {
 static tap::TestSet tests ("liv/book", []{
     using namespace tap;
 
-    char* base = glow::require_sdl(SDL_GetBasePath());
-    auto exe_folder = UniqueString(base);
-    SDL_free(base);
-
     IVec size = {120, 120};
 
     App app;
@@ -354,8 +350,8 @@ static tap::TestSet tests ("liv/book", []{
     app.settings->WindowSettings::size = size;
     Book book (app, std::make_unique<BookSource>(
         app.settings, BookType::Misc, Slice<IRI>{
-            iri::from_fs_path(cat(exe_folder, "/res/liv/test/image.png")),
-            iri::from_fs_path(cat(exe_folder, "/res/liv/test/image2.png"))
+            IRI("res/liv/test/image.png", iri::program_location()),
+            IRI("res/liv/test/image2.png", iri::program_location())
         }
     ));
 

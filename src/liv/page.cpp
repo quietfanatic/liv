@@ -115,10 +115,6 @@ AYU_DESCRIBE(liv::PageProgram,
 static tap::TestSet tests ("liv/page", []{
     using namespace tap;
 
-    char* base = require_sdl(SDL_GetBasePath());
-    auto exe_folder = UniqueString(base);
-    SDL_free(base);
-
     IVec test_size = {120, 120};
     wind::Window window (
         "Test window",
@@ -131,7 +127,7 @@ static tap::TestSet tests ("liv/page", []{
     SDL_MinimizeWindow(window);
     glow::init();
 
-    Page page (iri::from_fs_path(cat(exe_folder, "/res/liv/test/image.png")));
+    Page page (IRI("res/liv/test/image.png", iri::program_location()));
     is(page.size, IVec(0, 0), "Page isn't loaded yet");
     page.load();
     is(page.size, IVec(7, 5), "Page has correct size");
