@@ -168,21 +168,18 @@ static tap::TestSet tests ("liv/book-source", []{
     is(misc_src.pages[0].relative_to(here), "test/image.png", "BookType::Misc 0");
     is(misc_src.pages[1].relative_to(here), "test/image2.png", "BookType::Misc 1");
     is(misc_src.pages[2].relative_to(here), "test/non-image.txt", "BookType::Misc 2");
-    todo(2, "order is nonintuitive");
     is(misc_src.pages[3].relative_to(here), "test/image.png", "BookType::Misc 3");
     is(misc_src.pages[4].relative_to(here), "test/image2.png", "BookType::Misc 4");
     is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
 
     BookSource folder_src (settings, BookType::Folder, iri::from_fs_path("test/", here));
     is(folder_src.pages.size(), 2u, "BookType::Folder");
-    todo(2, "order is nonintuitive");
     is(folder_src.pages[0].relative_to(here), "test/image.png", "BookType::Folder 0");
     is(folder_src.pages[1].relative_to(here), "test/image2.png", "BookType::Folder 1");
     is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
 
     BookSource file_src (settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png", here));
     is(file_src.pages.size(), 2u, "BookType::FileWithNeighbors");
-    todo(2, "order is nonintuitive");
     is(file_src.pages[0].relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
     is(file_src.pages[1].relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
     is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
