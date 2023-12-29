@@ -37,7 +37,6 @@ struct App {
      // Loaded from ayu resources
      // TODO: make ayu::TypedResource
     ayu::Resource settings_res;
-    ayu::Resource memory_res;
     Settings* settings;
 
     UniqueArray<std::unique_ptr<Book>> books;

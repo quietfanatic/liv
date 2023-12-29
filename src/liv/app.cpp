@@ -103,7 +103,6 @@ static bool on_idle (App& self) {
     for (auto& book : self.books) {
         if (book->view.draw_if_needed()) return true;
     }
-    bool need_remember = false;
     for (auto& book : self.books) {
          // This prioritizes earlier-numbered books.  Probably
          // doesn't matter though, since idle processing generally
@@ -111,19 +110,11 @@ static bool on_idle (App& self) {
          // probably only interacting with one book.  And currently
          // we only have one book per process anyway.
         if (book->block.idle_processing(&*book, self.settings)) return true;
-        need_remember |= book->need_remember;
-    }
-    if (need_remember) {
-        Memory* memory = self.memory_res.ref();
-        for (auto& book : self.books) {
-            if (book->need_remember) {
-                memory->remember_book(&*book);
-                book->need_remember = false;
-            }
+        if (book->need_memorize) {
+            memorize_book(&*book);
+            book->need_memorize = false;
+            return true;
         }
-        ayu::save(self.memory_res);
-        ayu::unload(self.memory_res);
-        return true;
     }
     return false;
 }
@@ -140,8 +131,6 @@ App::App () {
         );
     }
     settings = settings_res.ref();
-     // Don't load memory until until we need it.
-    memory_res = ayu::Resource("data:/memory.ayu");
      // Set loop handlers
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
@@ -150,14 +139,10 @@ App::App () {
 App::~App () { }
 
 static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
-    if (!ayu::source_exists(self.memory_res)) {
-        self.memory_res.set_value(ayu::Dynamic::make<Memory>());
-        ayu::save(self.memory_res);
-    }
     auto& book = self.books.emplace_back(
-        std::make_unique<Book>(&self, move(src), self.memory_res.ref())
+        std::make_unique<Book>(&self, move(src))
     );
-    ayu::unload(self.memory_res);
+    remember_book(&*book);
 
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),

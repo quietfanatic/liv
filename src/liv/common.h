@@ -14,6 +14,8 @@ namespace fs = std::filesystem;
 struct App;
 struct Book;
 struct BookSource;
+struct BookState;
+struct BookView;
 struct Layout;
 struct LayoutParams;
 struct Memory;

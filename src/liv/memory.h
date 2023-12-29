@@ -7,7 +7,6 @@
 #include "layout.h"
 #include "page.h"
 #include "../dirt/iri/iri.h"
-#include "../dirt/uni/arrays.h"
 #include "../dirt/geo/range.h"
 
 namespace liv {
@@ -17,16 +16,11 @@ struct MemoryOfBook {
     AnyString current_page;  // location of current page (relative to book_filename)
     LayoutParams layout_params;
     PageParams page_params;
-    double updated_at = 0;
+    double updated_at = 0;  // For eviction (which is NYI)
     IRange current_range;
 };
 
-struct Memory {
-    UniqueArray<MemoryOfBook> books;
-     // Non-semantic
-    bool need_write = false;
-
-    void remember_book (const Book*);
-};
+void memorize_book (const Book*);
+void remember_book (Book*);
 
 } // namespace liv

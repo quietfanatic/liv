@@ -19,15 +19,13 @@ static tap::TestSet tests ("liv/book", []{
     App app;
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
-    Memory mem;
     Book book (
         &app, std::make_unique<BookSource>(
             app.settings, BookType::Misc, Slice<IRI>{
                 IRI("res/liv/test/image.png", iri::program_location()),
                 IRI("res/liv/test/image2.png", iri::program_location())
             }
-        ),
-        &mem
+        )
     );
 
     book.view.draw_if_needed();

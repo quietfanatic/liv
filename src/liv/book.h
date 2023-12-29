@@ -16,16 +16,15 @@ struct Book {
     BookState state;
     BookView view;
     PageBlock block;
-    bool need_remember = false;
+    bool need_memorize = false;
 
     explicit Book (
         App* app,
-        std::unique_ptr<BookSource>&& src,
-        const Memory* memory
+        std::unique_ptr<BookSource>&& src
     ) :
         app(app),
         source(move(src)),
-        state(this, memory),
+        state(this),
         view(this),
         block(&*source)
     { }
@@ -34,12 +33,12 @@ struct Book {
      // Commands
     void next () {
         seek(size(state.spread_range));
-        need_remember = true;
+        need_memorize = true;
     }
 
     void prev () {
         seek(-size(state.spread_range));
-        need_remember = true;
+        need_memorize = true;
     }
 
     void seek (int32 offset) {
@@ -48,7 +47,7 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     AnyString current_filename () {
@@ -63,7 +62,7 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void spread_direction (SpreadDirection dir) {
@@ -71,14 +70,14 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void auto_zoom_mode (AutoZoomMode mode) {
         state.set_auto_zoom_mode(mode);
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void align (Vec small, Vec large) {
@@ -86,14 +85,14 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void zoom_multiply (float factor) {
         state.zoom_multiply(factor);
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void reset_layout () {
@@ -101,13 +100,13 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void interpolation_mode (InterpolationMode mode) {
         state.page_params.interpolation_mode = mode;
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 
     void fullscreen () {
@@ -126,7 +125,7 @@ struct Book {
         state.drag(amount);
         view.layout = {};
         view.need_draw = true;
-        need_remember = true;
+        need_memorize = true;
     }
 };
 

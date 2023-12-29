@@ -7,67 +7,26 @@
 
 namespace liv {
 
-BookState::BookState (Book* b, const Memory* memory) :
+BookState::BookState (Book* b) :
     book(b),
     window_background(
         book->app->settings->get(&WindowSettings::window_background)
-    )
+    ),
+    layout_params(book->app->settings),
+    page_params(book->app->settings)
 {
-    auto settings = book->app->settings;
-    auto source = &*book->source;
-     // Figure out where to start and initialize view params from memory if
-     // applicable.
-    const MemoryOfBook* mem = null;
-    IRI start;
-    if (auto& memloc = source->location_for_memory()) {
-        for (auto& m : memory->books) {
-            if (m.location == memloc) {
-                mem = &m;
+    int32 start = 0;
+    if (book->source->type == BookType::FileWithNeighbors) {
+        for (usize i = 0; i < book->source->pages.size(); i++) {
+            if (book->source->pages[i] == book->source->location) {
+                start = i;
                 break;
             }
         }
     }
-    else if (source->type == BookType::FileWithNeighbors) {
-        start = source->location;
-    }
-    if (mem) {
-        layout_params = mem->layout_params;
-        page_params = mem->page_params;
-        start = IRI(mem->current_page, mem->location);
-    }
-    else {
-        layout_params = LayoutParams(settings);
-        page_params = PageParams(settings);
-    }
-    int32 start_index = 0;
-    if (start) {
-        for (usize i = 0; i < source->pages.size(); i++) {
-            if (source->pages[i] == start) {
-                start_index = i;
-                break;
-            }
-        }
-    }
-    else if (mem) {
-        start_index = mem->current_range.l;
-    }
-    auto spread_count = mem ? size(mem->current_range) :
-        settings->get(&LayoutSettings::spread_count);
-    spread_range = {start_index, start_index + spread_count};
-}
-
-MemoryOfBook BookState::make_memory () const {
-    MemoryOfBook mem;
-    mem.location = book->source->location_for_memory();
-    mem.current_range = spread_range;
-    if (auto page = book->block.get(spread_range.l)) {
-        mem.current_page = page->location.relative_to(mem.location);
-    }
-    else mem.current_page = "";
-    mem.layout_params = layout_params;
-    mem.page_params = page_params;
-    mem.updated_at = uni::now();
-    return mem;
+    spread_range = {
+        start, start + book->app->settings->get(&LayoutSettings::spread_count)
+    };
 }
 
 IRange BookState::visible_range () const {
