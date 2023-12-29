@@ -8,7 +8,7 @@
 
 namespace liv {
 
-static IRI memory_store_location (IRI location) {
+static IRI memory_store_location (const IRI& location) {
     expect(location);
     uint64 hash = uni::hash64(location.spec());
     char hex [16];
@@ -65,6 +65,7 @@ void remember_book (Book* book) {
     const MemoryOfBook* mem = res.ref();
     if (mem->location != memloc) {
          // Different location with the same hash?
+        ayu::force_unload(res);
         return;
     }
 
@@ -87,6 +88,7 @@ void remember_book (Book* book) {
     book->state.spread_range = {
         start_index, start_index + size(mem->current_range)
     };
+    ayu::force_unload(res);
 }
 
 } using namespace liv;
