@@ -1,35 +1,8 @@
 #include "book.h"
 
-#include "../dirt/uni/time.h"
 #include "memory.h"
 
 namespace liv {
-
-void Book::update_memory () {
-    if (auto& memloc = source->location_for_memory()) {
-        MemoryOfBook mem;
-        mem.location = memloc;
-        mem.current_range = state.spread_range;
-        if (auto page = block.get(state.spread_range.l)) {
-            mem.current_page = page->location.relative_to(memloc);
-        }
-        else mem.current_page = "";
-        mem.layout_params = state.layout_params;
-        mem.page_params = state.page_params;
-        mem.updated_at = uni::now();
-
-        for (auto& m : app->memory->books) {
-            if (m.location == memloc) {
-                m = move(mem);
-                goto done;
-            }
-        }
-        app->memory->books.emplace_back(move(mem));
-        done:
-        app->memory->need_write = true;
-    }
-}
-
 
 } using namespace liv;
 
@@ -46,12 +19,16 @@ static tap::TestSet tests ("liv/book", []{
     App app;
     //app.hidden = true;
     app.settings->WindowSettings::size = size;
-    Book book (&app, std::make_unique<BookSource>(
-        app.settings, BookType::Misc, Slice<IRI>{
-            IRI("res/liv/test/image.png", iri::program_location()),
-            IRI("res/liv/test/image2.png", iri::program_location())
-        }
-    ));
+    Memory mem;
+    Book book (
+        &app, std::make_unique<BookSource>(
+            app.settings, BookType::Misc, Slice<IRI>{
+                IRI("res/liv/test/image.png", iri::program_location()),
+                IRI("res/liv/test/image2.png", iri::program_location())
+            }
+        ),
+        &mem
+    );
 
     book.view.draw_if_needed();
     glow::Image img (size);

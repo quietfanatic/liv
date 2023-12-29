@@ -1,3 +1,8 @@
+ // This stores the book state should be saved between invocations of the
+ // program.
+
+#pragma once
+
 #include "common.h"
 #include "layout.h"
 #include "page.h"
@@ -20,6 +25,8 @@ struct Memory {
     UniqueArray<MemoryOfBook> books;
      // Non-semantic
     bool need_write = false;
+
+    void remember_book (const Book*);
 };
 
 } // namespace liv

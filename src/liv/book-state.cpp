@@ -1,19 +1,19 @@
 #include "book-state.h"
 
+#include "../dirt/uni/time.h"
 #include "book.h"
 #include "memory.h"
 #include "settings.h"
 
 namespace liv {
 
-BookState::BookState (Book* b) :
+BookState::BookState (Book* b, const Memory* memory) :
     book(b),
     window_background(
         book->app->settings->get(&WindowSettings::window_background)
     )
 {
     auto settings = book->app->settings;
-    auto memory = book->app->memory;
     auto source = &*book->source;
      // Figure out where to start and initialize view params from memory if
      // applicable.
@@ -48,9 +48,26 @@ BookState::BookState (Book* b) :
             }
         }
     }
+    else if (mem) {
+        start_index = mem->current_range.l;
+    }
     auto spread_count = mem ? size(mem->current_range) :
-            settings->get(&LayoutSettings::spread_count);
+        settings->get(&LayoutSettings::spread_count);
     spread_range = {start_index, start_index + spread_count};
+}
+
+MemoryOfBook BookState::make_memory () const {
+    MemoryOfBook mem;
+    mem.location = book->source->location_for_memory();
+    mem.current_range = spread_range;
+    if (auto page = book->block.get(spread_range.l)) {
+        mem.current_page = page->location.relative_to(mem.location);
+    }
+    else mem.current_page = "";
+    mem.layout_params = layout_params;
+    mem.page_params = page_params;
+    mem.updated_at = uni::now();
+    return mem;
 }
 
 IRange BookState::visible_range () const {

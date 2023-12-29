@@ -7,8 +7,8 @@ use File::Copy;
 ##### COMMAND LINE CONFIGURATION
 
 my %compilers = (
-    'cpp' => [qw(g++-12 -std=c++20)],
-    'c' => ['gcc']
+    'cpp' => [qw(g++-12 -std=c++20 -Wno-terminate -fconcepts-diagnostics-depth=4)],
+    'c' => ['gcc-12']
 );
 my @linker = 'g++-12';
 
@@ -16,9 +16,8 @@ my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -fstrict-aliasing -fstack-protector
-    -Wall -Wextra -Wno-terminate
+    -Wall -Wextra
     -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
-    -fconcepts-diagnostics-depth=4
 ));
 my @link_opts = (qw(-lSDL2 -lSDL2_image));
 #my @link_opts = (('-L' . rel2abs("$mingw_sdl2/lib")), qw(

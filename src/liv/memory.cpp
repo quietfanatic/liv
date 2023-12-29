@@ -1,7 +1,24 @@
 #include "memory.h"
+
 #include "../dirt/ayu/reflection/describe.h"
+#include "../dirt/uni/time.h"
+#include "book.h"
 
 namespace liv {
+
+void Memory::remember_book (const Book* book) {
+    if (auto& memloc = book->source->location_for_memory()) {
+        auto mem = book->state.make_memory();
+        need_write = true;
+        for (auto& m : books) {
+            if (m.location == memloc) {
+                m = move(mem);
+                return;
+            }
+        }
+        books.emplace_back(move(mem));
+    }
+}
 
 } using namespace liv;
 

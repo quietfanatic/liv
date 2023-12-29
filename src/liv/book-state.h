@@ -10,7 +10,9 @@
 namespace liv {
 
 struct BookState {
-    explicit BookState (Book* book);
+    explicit BookState (Book* book, const Memory*);
+
+    MemoryOfBook make_memory () const;
 
      // Object parent.  This has a link to Settings and BookSource.
     Book* book;

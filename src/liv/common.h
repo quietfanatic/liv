@@ -17,6 +17,7 @@ struct BookSource;
 struct Layout;
 struct LayoutParams;
 struct Memory;
+struct MemoryOfBook;
 struct Page;
 struct PageBlock;
 struct PageParams;

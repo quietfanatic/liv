@@ -99,15 +99,11 @@ static void on_event (App& self, SDL_Event* event) {
 }
 
 static bool on_idle (App& self) {
-     // No more events?  Draw or do some background processing
-     // TODO: we probably only need to draw one book
-    bool did_stuff = false;
+     // No more events?  Draw a book or do some background processing
     for (auto& book : self.books) {
-        if (book->view.draw_if_needed()) {
-            did_stuff = true;
-        }
+        if (book->view.draw_if_needed()) return true;
     }
-    if (did_stuff) return true;
+    bool need_remember = false;
     for (auto& book : self.books) {
          // This prioritizes earlier-numbered books.  Probably
          // doesn't matter though, since idle processing generally
@@ -115,17 +111,27 @@ static bool on_idle (App& self) {
          // probably only interacting with one book.  And currently
          // we only have one book per process anyway.
         if (book->block.idle_processing(&*book, self.settings)) return true;
+        need_remember |= book->need_remember;
     }
-    if (self.memory->need_write) {
+    if (need_remember) {
+        Memory* memory = self.memory_res.ref();
+        for (auto& book : self.books) {
+            if (book->need_remember) {
+                memory->remember_book(&*book);
+                book->need_remember = false;
+            }
+        }
         ayu::save(self.memory_res);
-        self.memory->need_write = false;
+        ayu::unload(self.memory_res);
         return true;
     }
     return false;
 }
 
 App::App () {
-     // Load settings
+     // Load settings.
+     // This doesn't really need to use AYU's resource system, but I need an app
+     // to test it while I'm not developing games.
     settings_res = ayu::Resource("data:/settings.ayu");
     if (!ayu::source_exists(settings_res)) {
         fs::copy(
@@ -134,12 +140,8 @@ App::App () {
         );
     }
     settings = settings_res.ref();
-     // Load memory
+     // Don't load memory until until we need it.
     memory_res = ayu::Resource("data:/memory.ayu");
-    if (!ayu::source_exists(memory_res)) {
-        memory_res.set_value(ayu::Dynamic::make<Memory>());
-    }
-    memory = memory_res.ref();
      // Set loop handlers
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
@@ -148,9 +150,15 @@ App::App () {
 App::~App () { }
 
 static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
+    if (!ayu::source_exists(self.memory_res)) {
+        self.memory_res.set_value(ayu::Dynamic::make<Memory>());
+        ayu::save(self.memory_res);
+    }
     auto& book = self.books.emplace_back(
-        std::make_unique<Book>(&self, move(src))
+        std::make_unique<Book>(&self, move(src), self.memory_res.ref())
     );
+    ayu::unload(self.memory_res);
+
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),
         &*book

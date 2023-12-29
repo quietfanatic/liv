@@ -39,7 +39,6 @@ struct App {
     ayu::Resource settings_res;
     ayu::Resource memory_res;
     Settings* settings;
-    Memory* memory;
 
     UniqueArray<std::unique_ptr<Book>> books;
     std::unordered_map<uint32, Book*> books_by_window_id;

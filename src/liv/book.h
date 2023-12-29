@@ -2,6 +2,7 @@
 
 #include "../dirt/iri/path.h"
 #include "app.h"
+#include "common.h"
 #include "book-state.h"
 #include "book-view.h"
 #include "book-source.h"
@@ -15,14 +16,16 @@ struct Book {
     BookState state;
     BookView view;
     PageBlock block;
+    bool need_remember = false;
 
     explicit Book (
         App* app,
-        std::unique_ptr<BookSource>&& src
+        std::unique_ptr<BookSource>&& src,
+        const Memory* memory
     ) :
         app(app),
         source(move(src)),
-        state(this),
+        state(this, memory),
         view(this),
         block(&*source)
     { }
@@ -31,12 +34,12 @@ struct Book {
      // Commands
     void next () {
         seek(size(state.spread_range));
-        update_memory();
+        need_remember = true;
     }
 
     void prev () {
         seek(-size(state.spread_range));
-        update_memory();
+        need_remember = true;
     }
 
     void seek (int32 offset) {
@@ -45,7 +48,7 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     AnyString current_filename () {
@@ -60,7 +63,7 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void spread_direction (SpreadDirection dir) {
@@ -68,14 +71,14 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void auto_zoom_mode (AutoZoomMode mode) {
         state.set_auto_zoom_mode(mode);
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void align (Vec small, Vec large) {
@@ -83,14 +86,14 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void zoom_multiply (float factor) {
         state.zoom_multiply(factor);
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void reset_layout () {
@@ -98,13 +101,13 @@ struct Book {
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void interpolation_mode (InterpolationMode mode) {
         state.page_params.interpolation_mode = mode;
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
 
     void fullscreen () {
@@ -123,11 +126,8 @@ struct Book {
         state.drag(amount);
         view.layout = {};
         view.need_draw = true;
-        update_memory();
+        need_remember = true;
     }
-
-    void update_memory ();
-
 };
 
 } // namespace liv
