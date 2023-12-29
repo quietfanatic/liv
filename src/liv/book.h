@@ -1,107 +1,133 @@
-// Implements a collection of images
-
 #pragma once
 
-#include "../dirt/uni/common.h"
-#include "../dirt/wind/window.h"
-#include "common.h"
-#include "layout.h"
-#include "page.h"
+#include "../dirt/iri/path.h"
+#include "app.h"
+#include "book-state.h"
+#include "book-view.h"
+#include "book-source.h"
 #include "page-block.h"
-#include "settings.h"
-
-struct SDL_Window;
 
 namespace liv {
 
 struct Book {
-    explicit Book (
-        App& app,
-        std::unique_ptr<BookSource>&& src
-    );
-    ~Book ();
-
-    const Settings* settings;
-    Memory* memory;
+    App* app;
     std::unique_ptr<BookSource> source;
-
-    ///// Book contents
+    BookState state;
+    BookView view;
     PageBlock block;
 
-    IRange viewing_pages;
-    IRange visible_pages () const {
-        return viewing_pages & block.valid_pages();
-    }
+    explicit Book (
+        App* app,
+        std::unique_ptr<BookSource>&& src
+    ) :
+        app(app),
+        source(move(src)),
+        state(this),
+        view(this),
+        block(&*source)
+    { }
+    ~Book () { }
 
-    ///// Display parameters
-    Fill window_background = BLACK;
-
-     // TODO: combine these into something
-    LayoutParams layout_params;
-    PageParams page_params;
-
-    ///// Controls
-     // Takes a 1-based page offset.  viewing_pages will be {off - 1, off +
-     // spread_count - 1}
-     // Clamps to valid page offset (such that there is at least one page being
-     // viewed)
-    void set_page_offset (int32 off);
-    int32 get_page_offset () const { return viewing_pages.l + 1; }
-
-     // Set number of pages to view simultaneously.  Clamps to 1..2048
-    void set_spread_count (int32 count);
-
-     // Add to current page (stopping at first/last page)
-    void seek (int32 count) {
-        int64 off = get_page_offset() + count;
-        set_page_offset(clamp(off, -2048, int32(GINF)));
-    }
-     // Increment current page(s) by spread_count
+     // Commands
     void next () {
-        seek(size(viewing_pages));
+        seek(size(state.spread_range));
+        update_memory();
     }
+
     void prev () {
-        seek(-size(viewing_pages));
+        seek(-size(state.spread_range));
+        update_memory();
     }
 
-     // Set direction to display multiple pages
-    void set_spread_direction (SpreadDirection);
+    void seek (int32 offset) {
+        int64 no = state.get_page_number() + offset;
+        state.set_page_number(clamp(no, -2048, int32(GINF)));
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-    void set_window_background (Fill);
-    void set_auto_zoom_mode (AutoZoomMode);
-    void set_align (geo::Vec small, geo::Vec large);
-    void set_interpolation_mode (InterpolationMode);
-     // Adds amount to view.offset
-    void drag (geo::Vec amount);
+    AnyString current_filename () {
+        auto visible = state.visible_range();
+        if (empty(visible)) return "";
+        auto page = block.get(visible.l);
+        return iri::to_fs_path(page->location);
+    }
 
-    void zoom_multiply (float factor);
+    void spread_count (int32 count) {
+        state.set_spread_count(count);
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-     // Reset all layout parameters
-    void reset_layout ();
+    void spread_direction (SpreadDirection dir) {
+        state.layout_params.spread_direction = dir;
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-    bool is_fullscreen () const;
-    void set_fullscreen (bool);
+    void auto_zoom_mode (AutoZoomMode mode) {
+        state.set_auto_zoom_mode(mode);
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-    bool is_minimized () const;
+    void align (Vec small, Vec large) {
+        state.set_align(small, large);
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-    ///// Internal stuff
-    wind::Window window;
-     // Set these to nullopt or false when you change things they depend on.
-    std::optional<Spread> spread;
-    const Spread& get_spread ();
-    std::optional<Layout> layout;
-    const Layout& get_layout ();
-     // Returns true if drawing was actually done.
-    bool draw_if_needed ();
-    bool need_draw = true;
+    void zoom_multiply (float factor) {
+        state.zoom_multiply(factor);
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-     // Preload images perhaps
-     // Returns true if any processing was actually done
-    bool idle_processing ();
+    void reset_layout () {
+        state.layout_params = LayoutParams(app->settings);
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
 
-    geo::IVec get_window_size () const;
+    void interpolation_mode (InterpolationMode mode) {
+        state.page_params.interpolation_mode = mode;
+        view.need_draw = true;
+        update_memory();
+    }
 
-    void window_size_changed (geo::IVec new_size);
+    void fullscreen () {
+        view.set_fullscreen(!view.is_fullscreen());
+        view.layout = {};
+        view.need_draw = true;
+    }
+
+    void window_background (Fill bg) {
+        state.window_background = bg;
+        view.need_draw = true;
+    }
+
+     // Not a command, but we need to figure out how to make this configurable.
+    void drag (Vec amount) {
+        state.drag(amount);
+        view.layout = {};
+        view.need_draw = true;
+        update_memory();
+    }
+
+    void update_memory ();
+
 };
 
 } // namespace liv

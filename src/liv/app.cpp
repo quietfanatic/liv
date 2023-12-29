@@ -26,14 +26,14 @@ static void on_event (App& self, SDL_Event* event) {
             current_book = book_with_window_id(self, event->window.windowID);
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                    current_book->window_size_changed({
+                    current_book->view.window_size_changed({
                         event->window.data1,
                         event->window.data2
                     });
                     break;
                 }
                 case SDL_WINDOWEVENT_EXPOSED: {
-                    current_book->need_draw = true;
+                    current_book->view.need_draw = true;
                     break;
                 }
                 case SDL_WINDOWEVENT_CLOSE: {
@@ -62,6 +62,7 @@ static void on_event (App& self, SDL_Event* event) {
                     self, event->motion.windowID
                 );
                 if (current_book) {
+                     // TODO: move the settings check to book.h or state.h
                     current_book->drag(geo::Vec(
                         event->motion.xrel,
                         event->motion.yrel
@@ -102,7 +103,7 @@ static bool on_idle (App& self) {
      // TODO: we probably only need to draw one book
     bool did_stuff = false;
     for (auto& book : self.books) {
-        if (book->draw_if_needed()) {
+        if (book->view.draw_if_needed()) {
             did_stuff = true;
         }
     }
@@ -113,7 +114,7 @@ static bool on_idle (App& self) {
          // happens in response to user input, and the user is
          // probably only interacting with one book.  And currently
          // we only have one book per process anyway.
-        if (book->idle_processing()) return true;
+        if (book->block.idle_processing(&*book, self.settings)) return true;
     }
     if (self.memory->need_write) {
         ayu::save(self.memory_res);
@@ -148,10 +149,10 @@ App::~App () { }
 
 static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
     auto& book = self.books.emplace_back(
-        std::make_unique<Book>(self, move(src))
+        std::make_unique<Book>(&self, move(src))
     );
     self.books_by_window_id.emplace(
-        glow::require_sdl(SDL_GetWindowID(book->window)),
+        glow::require_sdl(SDL_GetWindowID(book->view.window)),
         &*book
     );
 }
@@ -204,7 +205,7 @@ void App::open_list (const AnyString& list_path) {
 void App::close_book (Book* book) {
     require(book);
     books_by_window_id.erase(
-        glow::require_sdl(SDL_GetWindowID(book->window))
+        glow::require_sdl(SDL_GetWindowID(book->view.window))
     );
     for (auto iter = books.begin(); iter != books.end(); iter++) {
         if (&**iter == book) {
@@ -248,9 +249,9 @@ static tap::TestSet tests ("liv/app", []{
             "/res/liv/test/image2.png"
         });
     }, "App::open_files");
-    auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->window));
+    auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->view.window));
 
-    is(app.books[0]->get_page_offset(), 1, "Book starts on page 1");
+    is(app.books[0]->state.get_page_number(), 1, "Book starts on page 1");
 
     SDL_Event quit_event;
     std::memset(&quit_event, 0, sizeof(quit_event));
@@ -265,7 +266,7 @@ static tap::TestSet tests ("liv/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->get_page_offset(), 2, "Pressing right goes to next page");
+    is(app.books[0]->state.get_page_number(), 2, "Pressing right goes to next page");
 
     control::send_input_as_event(
         {.type = control::KEY, .code = SDLK_LEFT}, window_id
@@ -273,7 +274,7 @@ static tap::TestSet tests ("liv/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->get_page_offset(), 1, "Pressing left goes to previous page");
+    is(app.books[0]->state.get_page_number(), 1, "Pressing left goes to previous page");
 
     control::send_input_as_event(
         {.type = control::KEY, .ctrl = true, .code = SDLK_q}, window_id

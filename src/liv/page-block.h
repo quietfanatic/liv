@@ -17,7 +17,7 @@ struct PageBlock {
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    PageBlock (const BookSource&);
+    PageBlock (const BookSource*);
     ~PageBlock ();
 
      // Returns null if i is out of range

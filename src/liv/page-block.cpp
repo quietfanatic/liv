@@ -7,9 +7,9 @@
 
 namespace liv {
 
-PageBlock::PageBlock (const BookSource& src) :
-    pages(src.pages.size(), [&](usize i){
-        return std::make_unique<Page>(src.pages[i]);
+PageBlock::PageBlock (const BookSource* src) :
+    pages(src->pages.size(), [&](usize i){
+        return std::make_unique<Page>(src->pages[i]);
     })
 { }
 PageBlock::~PageBlock () { }
@@ -35,21 +35,21 @@ void PageBlock::unload_page (Page* page) {
 }
 
 bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
-    auto viewing_range = book->viewing_pages;
+    auto viewing = book->state.spread_range;
 
      // Unload a cached page if we're minimized
-    if (book->is_minimized()) {
+    if (book->view.is_minimized()) {
         switch (settings->get(&MemorySettings::trim_when_minimized)) {
             case TRIM_NONE: break;
             case TRIM_PAGE_CACHE: {
-                for (int32 i = 0; i < viewing_range.l; ++i) {
+                for (int32 i = 0; i < viewing.l; ++i) {
                     Page* page = get(i);
                     if (page->texture) {
                         unload_page(page);
                         return true;
                     }
                 }
-                for (int32 i = viewing_range.r; i < count(); ++i) {
+                for (int32 i = viewing.r; i < count(); ++i) {
                     Page* page = get(i);
                     if (page->texture) {
                         unload_page(page);
@@ -67,12 +67,12 @@ bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
     int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
 
     auto preload_range = IRange(
-        viewing_range.l - preload_behind,
-        viewing_range.r + preload_ahead
+        viewing.l - preload_behind,
+        viewing.r + preload_ahead
     ) & IRange(0, count());
 
      // Preload pages forwards
-    for (int32 i = viewing_range.r; i < preload_range.r; i++) {
+    for (int32 i = viewing.r; i < preload_range.r; i++) {
         if (Page* page = get(i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(page);
@@ -81,7 +81,7 @@ bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
         }
     }
      // Preload pages backwards
-    for (int32 i = viewing_range.l - 1; i > preload_range.l - 1; i--) {
+    for (int32 i = viewing.l - 1; i > preload_range.l - 1; i--) {
         if (Page* page = get(i)) {
             if (!page->texture && !page->load_failed) {
                 load_page(page);

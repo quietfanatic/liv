@@ -70,6 +70,8 @@ my @sources = (qw(
     liv/app.cpp
     liv/commands.cpp
     liv/book-source.cpp
+    liv/book-state.cpp
+    liv/book-view.cpp
     liv/book.cpp
     liv/layout.cpp
     liv/main.cpp
