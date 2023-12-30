@@ -97,7 +97,7 @@ control: {
 
  -- Options dealing with files and filenames
 files: {
-     -- When opening a folder, only open files ending with these extensions.
+     -- When scanning a folder, only open files ending with these extensions.
     supported_extensions: [
         bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
     ]
@@ -111,11 +111,11 @@ memory: {
     preload_behind: 1
      -- Start unloading pages when their cumulative texture memory exceeds this
      -- amount.  This is an estimate; actual video memory usage may vary.  The
-     -- current page and pages in the preloading window will never be unloaded.
+     -- current pages and pages in the preloading window will never be unloaded.
     page_cache_mb: 100
      -- Reduce memory usage when the window is minimized.  Options:
      --   none = Don't do anything
-     --   page_cache = Unload pages not being viewing
+     --   page_cache = Unload pages not being viewed
     trim_when_minimized: page_cache
 }
 
@@ -146,6 +146,7 @@ mappings: [
     [[4] [spread_count 4]]
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
+     -- Show some information in a message box
     [[i] [message_box ["Page Info"], [
         "Book: " [book_abs] "\n\n"
         "Page: " [page_rel_book] "\n"
@@ -185,7 +186,7 @@ mappings: [
     [[ctrl 3] [interpolation_mode cubic]]
     [[ctrl 4] [interpolation_mode smart_cubic]]
     [[ctrl 9] [interpolation_mode smoothed]]
-  ---- EXECUTION
+  ----- EXECUTION
      -- Quitting
     [[escape] [leave_fullscreen_or_quit]]
     [[ctrl q] [quit]]
