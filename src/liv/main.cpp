@@ -57,7 +57,7 @@ R"(liv <options> [--] <filenames>
     --help: Print this help message
     --list: Read a list of filenames, one per line.  Use - for stdin.
     --sort=<criterion>,<flags...>: Sort files.  <criterion> is one of:
-            natural unicode last_modified file_sort unsorted
+            natural unicode last_modified file_sort shuffle unsorted
         and <flags...> is zero or more of:
             reverse not_args not_lists
         See res/liv/settings-default.ayu for more documentation.

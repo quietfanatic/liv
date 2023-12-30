@@ -1,6 +1,7 @@
 #include "book-source.h"
 
 #include <filesystem>
+#include <random>
 #include "../dirt/iri/path.h"
 #include "../dirt/uni/text.h"
 #include "../dirt/uni/io.h"
@@ -10,6 +11,12 @@ namespace liv {
 
 static
 void do_sort (IRI* begin, IRI* end, SortMethod method) {
+    if (method.criterion == SortCriterion::Shuffle) {
+        static std::random_device rd;
+        static std::mt19937 g (rd());
+        std::shuffle(begin, end, g);
+        return;
+    }
     std::stable_sort(begin, end, [method](const IRI& aa, const IRI& bb){
         const IRI& a = !!(method.flags & SortFlags::Reverse)
             ? bb : aa;
@@ -138,13 +145,7 @@ BookSource::BookSource (
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
             require(location.path().back() == '/');
-            if (!!(sort.flags & SortFlags::NotArgs)) {
-                pages = expand_recursively(settings, {location}, sort);
-            }
-            else {
-                pages = expand_recursively(settings, {location}, SortMethod{});
-                do_sort(pages.begin(), pages.end(), sort);
-            }
+            pages = expand_recursively(settings, {location}, sort);
             break;
         }
         case BookType::FileWithNeighbors: {
@@ -174,7 +175,13 @@ BookSource::BookSource (
     type(t), location()
 {
     require(type == BookType::Misc);
-    pages = expand_recursively(settings, args, sort);
+    if (!!(sort.flags & SortFlags::NotArgs)) {
+        pages = expand_recursively(settings, args, sort);
+    }
+    else {
+        pages = expand_recursively(settings, args, SortMethod{});
+        do_sort(pages.begin(), pages.end(), sort);
+    }
 }
 
 const IRI& BookSource::location_for_memory () {

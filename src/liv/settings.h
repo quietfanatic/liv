@@ -51,6 +51,7 @@ enum class SortCriterion {
     Unicode,
     LastModified,
     FileSize,
+    Shuffle,
     Unsorted,
 };
 enum class SortFlags {

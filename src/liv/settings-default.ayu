@@ -102,12 +102,14 @@ files: {
      --   unicode: Sort according to Unicode order
      --   last_modified: Older files first
      --   file_size: Smaller files first
+     --   shuffle: Random order
      --   unsorted: No sorting, leave files in directory order
      -- And may contain any of:
      --   reverse: Reverse sort direction
      --   not_args: Leave program arguments in the same order they were given;
      --             only sort contents of folders in those arguments
      --   not_lists: Leave entries in list files as-is.
+     -- The sort method provided on the command line overrides this setting.
     sort: [natural not_args not_lists]
      -- When scanning a folder, only open files ending with these extensions.
      -- We'll always attempt to open explicit arguments and list entries
