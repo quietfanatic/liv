@@ -84,26 +84,9 @@ bool BookView::draw_if_needed () {
         title = "Little Image Viewer (no pages visible)";
     }
     else {
-        if (book->block.count() > 1) {
-            if (size(visible) == 1) {
-                title = cat('[', visible.l+1);
-            }
-            else if (size(visible) == 2) {
-                title = cat('[', visible.l+1, ',', visible.r+1 - 1);
-            }
-            else {
-                title = cat('[', visible.l+1, '-', visible.r+1 - 1);
-            }
-            title = cat(move(title), '/', book->block.count(), "] ");
-        }
-         // TODO: Merge filenames
-        auto filename = iri::to_fs_path(book->block.get(visible.l)->location);
-        title = cat(move(title), filename);
-         // In general, direct comparisons of floats are not good, but we do
-         // slight snapping of our zoom to half-integers, so this is fine.
-        if (layout.zoom != 1) {
-            title = cat(move(title), " (", round(layout.zoom * 100), "%)");
-        }
+        UniqueString t;
+        book->app->settings->get(&WindowSettings::title).write(t, book);
+        title = t;
     }
     SDL_SetWindowTitle(window, title.c_str());
      // vsync

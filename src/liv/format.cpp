@@ -45,7 +45,7 @@ void FormatToken::write (UniqueString& s, Book* book) const {
         }
         case FormatCommand::IfZoomed: {
             if (book->view.get_layout().zoom != 1) {
-                for (auto& sub : sublist) sub.write(s, book);
+                sublist.write(s, book);
             }
             break;
         }
@@ -71,12 +71,9 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
         case FormatCommand::ZoomPercent:
             return Tree(TreeArray::make(Tree("zoom_percent")));
         case FormatCommand::IfZoomed: {
-            auto a = TreeArray(Capacity(1 + v.sublist.size()));
-            a.emplace_back_expect_capacity(Tree("if_zoomed"));
-            for (auto& token : v.sublist) {
-                a.emplace_back_expect_capacity(ayu::item_to_tree(&token));
-            }
-            return Tree(a);
+            auto a = TreeArray(item_to_tree(&v.sublist));
+            a.insert(usize(0), Tree("if_zoomed"));
+            return Tree(move(a));
         }
         default: never();
     }

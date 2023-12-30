@@ -8,6 +8,7 @@
 #include "../dirt/uni/common.h"
 #include "../dirt/uni/strings.h"
 #include "common.h"
+#include "format.h"
 
 namespace liv {
 
@@ -53,6 +54,7 @@ struct WindowSettings {
     std::optional<geo::IVec> size;
     std::optional<bool> fullscreen;
     std::optional<Fill> window_background;
+    std::optional<FormatList> title;
 };
 struct LayoutSettings {
     std::optional<int32> spread_count;

@@ -10,6 +10,15 @@ const Settings builtin_default_settings = {
         .size = geo::IVec{720, 720},
         .fullscreen = false,
         .window_background = BLACK,
+        .title = FormatList(
+            FormatToken("["), FormatToken(FormatCommand::VisibleRange),
+            FormatToken("/"), FormatToken(FormatCommand::PageCount),
+            FormatToken("] "), FormatToken(FormatCommand::PageAbs),
+            FormatToken(FormatCommand::IfZoomed, FormatList(
+                FormatToken(" ("), FormatToken(FormatCommand::ZoomPercent),
+                FormatToken("%)")
+            ))
+        ),
     },
     LayoutSettings{
         .spread_count = 1,
@@ -125,7 +134,8 @@ AYU_DESCRIBE(liv::WindowSettings,
     attrs(
         attr("size", &WindowSettings::size, collapse_optional),
         attr("fullscreen", &WindowSettings::fullscreen, collapse_optional),
-        attr("window_background", &WindowSettings::window_background, collapse_optional)
+        attr("window_background", &WindowSettings::window_background, collapse_optional),
+        attr("title", &WindowSettings::title, collapse_optional)
     )
 )
 

@@ -13,6 +13,18 @@ window: {
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
      -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
     window_background: black
+     -- Format for the window title.  Strings will be printed literally and
+     -- special commands are in square brackets.  Available commands are:
+     --   [visible_range] = Currently visible page numbers, in one of the forms
+     --                   "1", "1,2", or "1-3"
+     --   [page_count] = Total number of pages in the current book
+     --   [page_abs] = Path of current paht in absolute form
+     --   [zoom_percent] = Current zoom level times 100
+     --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%).
+    title: [
+        "[" [visible_range] / [page_count] "] " [page_abs]
+        [if_zoomed " (" [zoom_percent] "%)"]
+    ]
 }
 
  -- Settings for how pages are laid out in the window
