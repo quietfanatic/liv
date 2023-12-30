@@ -69,22 +69,14 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
     switch (v.command) {
         case FormatCommand::None: return Tree(TreeArray());
         case FormatCommand::Literal: return Tree(v.literal);
-        case FormatCommand::VisibleRange:
-            return Tree(TreeArray::make(Tree("visible_range")));
-        case FormatCommand::PageCount:
-            return Tree(TreeArray::make(Tree("page_count")));
-        case FormatCommand::PageAbs:
-            return Tree(TreeArray::make(Tree("page_abs")));
-        case FormatCommand::PageRelCwd:
-            return Tree(TreeArray::make(Tree("page_rel_cwd")));
-        case FormatCommand::ZoomPercent:
-            return Tree(TreeArray::make(Tree("zoom_percent")));
         case FormatCommand::IfZoomed: {
             auto a = TreeArray(item_to_tree(&v.sublist));
             a.insert(usize(0), Tree("if_zoomed"));
             return Tree(move(a));
         }
-        default: never();
+        default: {
+            return Tree(TreeArray::make(item_to_tree(&v.command)));
+        }
     }
 }
 
@@ -101,50 +93,43 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
             v.command = FormatCommand::None;
             return;
         }
-        auto cmd = Str(a[0]);
-        switch (uni::hash32(cmd)) {
-            case uni::hash32("visible_range"): {
-                v.command = FormatCommand::VisibleRange;
-                goto no_args;
+        item_from_tree(&v.command, a[0]);
+        switch (v.command) {
+            case FormatCommand::IfZoomed: {
+                new (&v.sublist) FormatList();
+                auto args = TreeArray(a.slice(1));
+                item_from_tree(
+                    &v.sublist, ayu::Tree(move(args)),
+                    ayu::Location(), ayu::DELAY_SWIZZLE
+                );
+                break;
             }
-            case uni::hash32("page_count"): {
-                v.command = FormatCommand::PageCount;
-                goto no_args;
+            default: {
+                if (a.size() != 1) {
+                    raise_LengthRejected(
+                        ayu::Type::CppType<FormatToken>(),
+                        1, 1, a.size()
+                    );
+                }
+                break;
             }
-            case uni::hash32("page_abs"): {
-                v.command = FormatCommand::PageAbs;
-                goto no_args;
-            }
-            case uni::hash32("page_rel_cwd"): {
-                v.command = FormatCommand::PageRelCwd;
-                goto no_args;
-            }
-            case uni::hash32("zoom_percent"): {
-                v.command = FormatCommand::ZoomPercent;
-                goto no_args;
-            }
-            case uni::hash32("if_zoomed"): {
-                v.command = FormatCommand::IfZoomed;
-                goto args;
-            }
-            default: raise(e_General, "Invalid format command");
         }
-        return;
-        no_args:
-        if (a.size() != 1) {
-            raise_LengthRejected(ayu::Type::CppType<FormatToken>(), 1, 1, a.size());
-        }
-        return;
-        args:
-        new (&v.sublist) UniqueArray<FormatToken>();
-        auto args = TreeArray(a.slice(1));
-        item_from_tree(
-            &v.sublist, ayu::Tree(move(args)), ayu::Location(), ayu::DELAY_SWIZZLE
-        );
     }
 }
 
 } using namespace liv;
+
+AYU_DESCRIBE(liv::FormatCommand,
+    values(
+         // Leaving out None and Literal
+        value("visible_range", FormatCommand::VisibleRange),
+        value("page_count", FormatCommand::PageCount),
+        value("page_abs", FormatCommand::PageAbs),
+        value("page_rel_cwd", FormatCommand::PageRelCwd),
+        value("zoom_percent", FormatCommand::ZoomPercent),
+        value("if_zoomed", FormatCommand::IfZoomed)
+    )
+)
 
 AYU_DESCRIBE(liv::FormatToken,
     to_tree(&FormatToken_to_tree),
