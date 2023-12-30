@@ -32,12 +32,14 @@ static void seek_ (int32 count) {
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
 
-static void print_current_filename_ () {
+static void say_ (const FormatList& fmt) {
     if (current_book) {
-        print_utf8(cat(current_book->current_filename(), "\n"));
+        UniqueString s;
+        fmt.write(s, current_book);
+        print_utf8(cat(move(s), "\n"));
     }
 }
-Command print_current_filename (print_current_filename_, "print_current_filename", "Print the filename of the first current page to stdout.");
+Command say (say_, "say", "Print a formatted string to stdout with a newline.");
 
 ///// LAYOUT COMMANDS
 
