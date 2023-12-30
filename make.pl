@@ -72,6 +72,7 @@ my @sources = (qw(
     liv/book-state.cpp
     liv/book-view.cpp
     liv/book.cpp
+    liv/format.cpp
     liv/layout.cpp
     liv/main.cpp
     liv/memory.cpp
