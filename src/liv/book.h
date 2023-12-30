@@ -65,7 +65,7 @@ struct Book {
         need_memorize = true;
     }
 
-    void spread_direction (SpreadDirection dir) {
+    void spread_direction (Direction dir) {
         state.layout_params.spread_direction = dir;
         view.spread = {};
         view.layout = {};

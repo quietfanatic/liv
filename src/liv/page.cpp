@@ -87,7 +87,7 @@ void Page::draw (
         auto whole_page = Rect(Vec{0, 0}, size);
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
-    glUniform1i(program->u_interpolation_mode, params.interpolation_mode);
+    glUniform1i(program->u_interpolation_mode, uint8(params.interpolation_mode));
     glUniform1f(program->u_zoom, zoom);
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -136,7 +136,7 @@ static tap::TestSet tests ("liv/page", []{
     glClear(GL_COLOR_BUFFER_BIT);
 
     PageParams params;
-    params.interpolation_mode = LINEAR;
+    params.interpolation_mode = InterpolationMode::Linear;
 
     doesnt_throw([&]{
         page.draw(params, 1, Rect(-.5, -.5, .5, .5));

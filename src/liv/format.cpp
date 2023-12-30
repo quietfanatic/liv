@@ -239,7 +239,7 @@ static tap::TestSet tests ("liv/format", []{
     is(got, expected, "FormatList::write 1");
 
     book.next();
-    book.auto_zoom_mode(AutoZoomMode::ORIGINAL);
+    book.auto_zoom_mode(AutoZoomMode::Original);
     got = "";
     fmt.write(got, &book);
     expected = cat(

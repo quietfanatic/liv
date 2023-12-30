@@ -40,8 +40,8 @@ bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
      // Unload a cached page if we're minimized
     if (book->view.is_minimized()) {
         switch (settings->get(&MemorySettings::trim_when_minimized)) {
-            case TRIM_NONE: break;
-            case TRIM_PAGE_CACHE: {
+            case TrimMode::None: break;
+            case TrimMode::PageCache: {
                 for (int32 i = 0; i < viewing.l; ++i) {
                     Page* page = get(i);
                     if (page->texture) {

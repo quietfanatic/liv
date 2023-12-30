@@ -19,7 +19,7 @@ struct BookState {
      // page_indexes clamped to valid page indexes.
     IRange visible_range () const;
      // View parameters
-    Fill window_background = BLACK;
+    Fill window_background = Fill::Black;
     LayoutParams layout_params;
     PageParams page_params;
 

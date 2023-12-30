@@ -59,13 +59,13 @@ static tap::TestSet tests ("liv/book", []{
     is(book.state.get_page_number(), 1, "Can't go before page 1");
 
     is(img[{0, 60}], glow::RGBA8(0x2674dbff), "Default to auto_zoom_mode = fit");
-    book.auto_zoom_mode(ORIGINAL);
+    book.auto_zoom_mode(AutoZoomMode::Original);
     book.view.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{0, 60}], glow::RGBA8(0x000000ff), "auto_zoom_mode = original");
 
-    book.auto_zoom_mode(FIT);
+    book.auto_zoom_mode(AutoZoomMode::Fit);
     book.spread_count(2);
     book.state.set_page_number(1);
     is(book.state.spread_range, IRange{0, 2}, "Viewing two pages");
@@ -79,7 +79,7 @@ static tap::TestSet tests ("liv/book", []{
     is(img[{100, 60}], glow::RGBA8(0x45942eff), "Right side of spread is correct");
     is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
 
-    book.spread_direction(LEFT);
+    book.spread_direction(Direction::Left);
     book.view.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);

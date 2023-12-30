@@ -12,37 +12,43 @@
 
 namespace liv {
 
-struct Fill : glow::RGBA8 { using glow::RGBA8::RGBA8; };
+struct Fill : glow::RGBA8 {
+    using glow::RGBA8::RGBA8;
 
-constexpr Fill BLACK = {0, 0, 0, 255};
-constexpr Fill WHITE = {255, 255, 255, 255};
-constexpr Fill TRANSPARENT = {0, 0, 0, 0};
+    static const Fill Black;
+    static const Fill White;
+    static const Fill Transparent;
+};
+constexpr Fill Fill::Black = {0, 0, 0, 255};
+constexpr Fill Fill::White = {255, 255, 255, 255};
+constexpr Fill Fill::Transparent = {0, 0, 0, 0};
 
-enum SpreadDirection : uint8 {
-    RIGHT,
-    LEFT,
-    DOWN,
-    UP
+enum class Direction {
+    Right,
+    Left,
+    Down,
+    Up
 };
 
-enum AutoZoomMode : uint8 {
-    FIT,
-    FIT_WIDTH,
-    FIT_HEIGHT,
-    ORIGINAL
+enum class AutoZoomMode {
+    Fit,
+    FitWidth,
+    FitHeight,
+    Original
 };
 
-enum InterpolationMode : uint8 {
-    NEAREST,
-    LINEAR,
-    SMOOTHED,
-    CUBIC,
-    SMART_CUBIC
+ // This is sent to the shader as an int so the order matters
+enum class InterpolationMode {
+    Nearest,
+    Linear,
+    Smoothed,
+    Cubic,
+    SmartCubic
 };
 
-enum TrimMode : uint8 {
-    TRIM_NONE,
-    TRIM_PAGE_CACHE
+enum class TrimMode {
+    None,
+    PageCache
 };
 
 struct Mapping {
@@ -58,7 +64,7 @@ struct WindowSettings {
 };
 struct LayoutSettings {
     std::optional<int32> spread_count;
-    std::optional<SpreadDirection> spread_direction;
+    std::optional<Direction> spread_direction;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
     std::optional<float> min_zoomed_size;

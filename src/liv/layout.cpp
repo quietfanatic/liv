@@ -24,7 +24,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
     }
     size = {0, 0};
     switch (params.spread_direction) {
-        case RIGHT: {
+        case Direction::Right: {
              // Set height to height of tallest page
             for (auto& p : pages) {
                 if (p.page->size.y > size.y) size.y = p.page->size.y;
@@ -38,7 +38,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
             }
             break;
         }
-        case LEFT: {
+        case Direction::Left: {
             for (auto& p : pages) {
                 if (p.page->size.y > size.y) size.y = p.page->size.y;
             }
@@ -50,7 +50,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
             }
             break;
         }
-        case DOWN: {
+        case Direction::Down: {
             for (auto& p : pages) {
                 if (p.page->size.x > size.x) size.x = p.page->size.x;
             }
@@ -61,7 +61,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
             }
             break;
         }
-        case UP: {
+        case Direction::Up: {
             for (auto& p : pages) {
                 if (p.page->size.x > size.x) size.x = p.page->size.x;
             }
@@ -118,7 +118,7 @@ Layout::Layout (
         }
         else {
             switch (params.auto_zoom_mode) {
-                case FIT: {
+                case AutoZoomMode::Fit: {
                      // slope = 1 / aspect ratio
                     if (slope(spread.size) > slope(window_size)) {
                         zoom = window_size.y / spread.size.y;
@@ -129,15 +129,15 @@ Layout::Layout (
                     zoom = spread.clamp_zoom(settings, zoom);
                     break;
                 }
-                case FIT_WIDTH: {
+                case AutoZoomMode::FitWidth: {
                     zoom = spread.clamp_zoom(settings, window_size.x / spread.size.x);
                     break;
                 }
-                case FIT_HEIGHT: {
+                case AutoZoomMode::FitHeight: {
                     zoom = spread.clamp_zoom(settings, window_size.y / spread.size.y);
                     break;
                 }
-                case ORIGINAL: {
+                case AutoZoomMode::Original: {
                     zoom = 1;
                     break;
                 }

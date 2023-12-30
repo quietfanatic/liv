@@ -9,7 +9,7 @@ const Settings builtin_default_settings = {
     WindowSettings{
         .size = geo::IVec{720, 720},
         .fullscreen = false,
-        .window_background = BLACK,
+        .window_background = Fill::Black,
         .title = FormatList(
             FormatToken("["), FormatToken(FormatCommand::VisibleRange),
             FormatToken("/"), FormatToken(FormatCommand::PageCount),
@@ -22,8 +22,8 @@ const Settings builtin_default_settings = {
     },
     LayoutSettings{
         .spread_count = 1,
-        .spread_direction = RIGHT,
-        .auto_zoom_mode = FIT,
+        .spread_direction = Direction::Right,
+        .auto_zoom_mode = AutoZoomMode::Fit,
         .max_zoom = 32,
         .min_zoomed_size = 16,
         .reset_zoom_on_page_turn = true,
@@ -31,7 +31,7 @@ const Settings builtin_default_settings = {
         .large_align = geo::Vec{0.5, 0.5},
     },
     PageSettings{
-        .interpolation_mode = SMART_CUBIC,
+        .interpolation_mode = InterpolationMode::SmartCubic,
     },
     ControlSettings{
         .drag_speed = 1,
@@ -46,7 +46,7 @@ const Settings builtin_default_settings = {
         .preload_ahead = 1,
         .preload_behind = 1,
         .page_cache_mb = 200,
-        .trim_when_minimized = TRIM_PAGE_CACHE
+        .trim_when_minimized = TrimMode::PageCache,
     },
     { }
 };
@@ -63,45 +63,45 @@ void init_settings () {
 
 AYU_DESCRIBE(liv::Fill,
     values(
-        value("black", BLACK),
-        value("white", WHITE),
-        value("transparent", TRANSPARENT)
+        value("black", Fill::Black),
+        value("white", Fill::White),
+        value("transparent", Fill::Transparent)
     ),
     delegate(base<glow::RGBA8>())
 )
 
 AYU_DESCRIBE(liv::AutoZoomMode,
     values(
-        value("fit", FIT),
-        value("fit_width", FIT_WIDTH),
-        value("fit_height", FIT_HEIGHT),
-        value("original", ORIGINAL)
+        value("fit", AutoZoomMode::Fit),
+        value("fit_width", AutoZoomMode::FitWidth),
+        value("fit_height", AutoZoomMode::FitHeight),
+        value("original", AutoZoomMode::Original)
     )
 )
 
 AYU_DESCRIBE(liv::InterpolationMode,
     values(
-        value("nearest", NEAREST),
-        value("linear", LINEAR),
-        value("smoothed", SMOOTHED),
-        value("cubic", CUBIC),
-        value("smart_cubic", SMART_CUBIC)
+        value("nearest", InterpolationMode::Nearest),
+        value("linear", InterpolationMode::Linear),
+        value("smoothed", InterpolationMode::Smoothed),
+        value("cubic", InterpolationMode::Cubic),
+        value("smart_cubic", InterpolationMode::SmartCubic)
     )
 )
 
-AYU_DESCRIBE(liv::SpreadDirection,
+AYU_DESCRIBE(liv::Direction,
     values(
-        value("right", RIGHT),
-        value("left", LEFT),
-        value("down", DOWN),
-        value("up", UP)
+        value("right", Direction::Right),
+        value("left", Direction::Left),
+        value("down", Direction::Down),
+        value("up", Direction::Up)
     )
 )
 
 AYU_DESCRIBE(liv::TrimMode,
     values(
-        value("none", TRIM_NONE),
-        value("page_cache", TRIM_PAGE_CACHE)
+        value("none", TrimMode::None),
+        value("page_cache", TrimMode::PageCache)
     )
 )
 
