@@ -19,7 +19,7 @@ enum class FormatCommand {
 struct FormatList {
     UniqueArray<FormatToken> tokens;
     template <class... Args>
-    FormatList (Args&&... args) : tokens(
+    constexpr FormatList (Args&&... args) : tokens(
         UniqueArray<FormatToken>::make(std::forward<Args>(args)...)
     ) { }
     void write (UniqueString&, Book*) const;

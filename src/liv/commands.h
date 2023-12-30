@@ -26,6 +26,10 @@ extern Command seek;
  // lists.
 extern Command say;
 
+ // (FormatList, FormatList) Show a message box with the title formatted by the
+ // first format list and the message by the second.
+extern Command message_box;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously

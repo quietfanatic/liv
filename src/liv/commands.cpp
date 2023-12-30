@@ -1,6 +1,7 @@
 #include "commands.h"
 
 #include <SDL2/SDL_video.h>
+#include <SDL2/SDL_messagebox.h>
 #include "../dirt/uni/io.h"
 #include "app.h"
 #include "book.h"
@@ -40,6 +41,21 @@ static void say_ (const FormatList& fmt) {
     }
 }
 Command say (say_, "say", "Print a formatted string to stdout with a newline.");
+
+static void message_box_ (const FormatList& title, const FormatList& message) {
+    if (current_book) {
+        UniqueString t;
+        title.write(t, current_book);
+        UniqueString m;
+        message.write(m, current_book);
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_INFORMATION,
+            t.c_str(), m.c_str(),
+            current_book->view.window
+        );
+    }
+}
+Command message_box (message_box_, "message_box", "Show a message box with formatted title and content");
 
 ///// LAYOUT COMMANDS
 
