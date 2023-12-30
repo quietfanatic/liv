@@ -7,6 +7,7 @@
 #include "../dirt/uni/strings.h"
 #include "../dirt/wind/passive_loop.h"
 #include "common.h"
+#include "settings.h"
 
 namespace liv {
 
@@ -15,19 +16,19 @@ struct App {
     ~App();
 
      // Select between open_files, open_file, and open_folder.
-    void open_args (Slice<AnyString> args);
+    void open_args (Slice<AnyString> args, SortMethod sort = SortMethod{});
      // Open all files and folders (recursively) in a temprary book.
-    void open_files (Slice<AnyString> filenames);
+    void open_files (Slice<AnyString> filenames, SortMethod sort = SortMethod{});
      // Open one file as the current page, including all other files in the same
      // folder (non-recursively) as pages in a temporary book.
-    void open_file (const AnyString& filename);
+    void open_file (const AnyString& filename, SortMethod sort = SortMethod{});
      // Open all files in the folder (recursively) as a book.
-    void open_folder (const AnyString& filename);
+    void open_folder (const AnyString& filename, SortMethod sort = SortMethod{});
      // Open all files and folders (recursively) written in the list
      // one-per-line as a book (temporary if filename is - for stdin).
      // This changes the CWD to the folder containing the filename (if it isn't
      // stdin).
-    void open_list (const AnyString& filename);
+    void open_list (const AnyString& filename, SortMethod sort = SortMethod{});
 
     void close_book (Book*);
 

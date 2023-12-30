@@ -56,12 +56,14 @@ enum class SortCriterion {
 enum class SortFlags {
     Reverse = 0x1,
     NotArgs = 0x2,
+    NotLists = 0x4,
 };
 DECLARE_ENUM_BITWISE_OPERATORS(SortFlags)
 
 struct SortMethod {
     SortCriterion criterion;
     SortFlags flags;
+    explicit operator bool () const { return criterion != SortCriterion{}; }
 };
 
 enum class TrimMode {
@@ -98,7 +100,7 @@ struct ControlSettings {
 };
 struct FilesSettings {
     std::optional<SortMethod> sort;
-    std::optional<std::set<AnyString>> supported_extensions;
+    std::optional<std::set<AnyString>> page_extensions;
 };
 struct MemorySettings {
     std::optional<uint32> preload_ahead;

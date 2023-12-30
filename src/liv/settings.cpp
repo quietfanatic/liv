@@ -39,8 +39,10 @@ const Settings builtin_default_settings = {
         .drag_speed = 1,
     },
     FilesSettings{
-        .sort = SortMethod{SortCriterion::Natural, SortFlags::NotArgs},
-        .supported_extensions = std::set<AnyString>{
+        .sort = SortMethod{
+            SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
+        },
+        .page_extensions = std::set<AnyString>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
             "png", "tif", "tiff", "xbm", "xpm", "webp",
         },
@@ -58,7 +60,8 @@ const Settings* res_default_settings;
 
 void init_settings () {
     if (!res_default_settings) {
-        res_default_settings = ayu::Resource("res:/liv/settings-default.ayu").ref();
+        res_default_settings =
+            ayu::Resource("res:/liv/settings-default.ayu").ref();
     }
 }
 
@@ -116,7 +119,8 @@ AYU_DESCRIBE(liv::SortMethodToken,
         value("file_size", {SortCriterion::FileSize, SortFlags{}}),
         value("unsorted", {SortCriterion::Unsorted, SortFlags{}}),
         value("reverse", {SortCriterion{}, SortFlags::Reverse}),
-        value("not_args", {SortCriterion{}, SortFlags::NotArgs})
+        value("not_args", {SortCriterion{}, SortFlags::NotArgs}),
+        value("not_lists", {SortCriterion{}, SortFlags::NotLists})
     )
 )
 
@@ -126,7 +130,11 @@ AYU_DESCRIBE(liv::SortMethod,
         TreeArray a;
         SortMethodToken c = {v.criterion, SortFlags{}};
         a.push_back(item_to_tree(&c));
-        for (auto flag = SortFlags::Reverse; flag <= SortFlags::NotArgs; flag <<= 1) {
+        for (
+            auto flag = SortFlags::Reverse;
+            flag <= SortFlags::NotLists;
+            flag <<= 1
+        ) {
             if (!!(v.flags & flag)) {
                 SortMethodToken f = {SortCriterion{}, flag};
                 a.push_back(item_to_tree(&f));
@@ -203,7 +211,7 @@ AYU_DESCRIBE(liv::WindowSettings,
 AYU_DESCRIBE(liv::FilesSettings,
     attrs(
         attr("sort", &FilesSettings::sort, collapse_optional),
-        attr("supported_extensions", &FilesSettings::supported_extensions, collapse_optional)
+        attr("page_extensions", &FilesSettings::page_extensions, collapse_optional)
     )
 )
 

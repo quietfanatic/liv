@@ -1,8 +1,9 @@
 #pragma once
 
-#include "common.h"
 #include "../dirt/uni/arrays.h"
 #include "../dirt/iri/iri.h"
+#include "common.h"
+#include "settings.h"
 
 namespace liv {
 
@@ -25,10 +26,10 @@ struct BookSource {
      //   FileWithNeighbors: The non-recursive contents of the folder containing
      //     the given filename.
      //   Misc: Not allowed
-    BookSource (const Settings*, BookType, const IRI&);
+    BookSource (const Settings*, BookType, const IRI&, SortMethod sort = SortMethod{});
 
      // Type must be Misc.  Folders and lists will be recursively expanded.
-    BookSource (const Settings*, BookType, Slice<IRI>);
+    BookSource (const Settings*, BookType, Slice<IRI>, SortMethod sort = SortMethod{});
      // Empty if this book should not be remembered.
     const IRI& location_for_memory ();
 };

@@ -150,47 +150,47 @@ static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
     );
 }
 
-void App::open_args (Slice<AnyString> args) {
+void App::open_args (Slice<AnyString> args, SortMethod sort) {
     if (args.size() == 1) {
         if (fs::is_directory(args[0])) {
-            open_folder(args[0]);
+            open_folder(args[0], sort);
         }
-        else open_file(args[0]);
+        else open_file(args[0], sort);
     }
-    else open_files(args);
+    else open_files(args, sort);
 }
 
-void App::open_files (Slice<AnyString> filenames) {
+void App::open_files (Slice<AnyString> filenames, SortMethod sort) {
     auto iris = UniqueArray<IRI>(filenames.size(), [=](usize i){
         return iri::from_fs_path(filenames[i]);
     });
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Misc, iris
+        settings, BookType::Misc, iris, sort
     );
     add_book(*this, move(src));
 }
 
-void App::open_file (const AnyString& file) {
+void App::open_file (const AnyString& file, SortMethod sort) {
     auto loc = iri::from_fs_path(file);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::FileWithNeighbors, loc
+        settings, BookType::FileWithNeighbors, loc, sort
     );
     add_book(*this, move(src));
 }
 
-void App::open_folder (const AnyString& folder) {
+void App::open_folder (const AnyString& folder, SortMethod sort) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Folder, loc
+        settings, BookType::Folder, loc, sort
     );
     add_book(*this, move(src));
 }
 
-void App::open_list (const AnyString& list_path) {
+void App::open_list (const AnyString& list_path, SortMethod sort) {
     constexpr IRI stdin_loc ("liv:stdin");
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::List, loc
+        settings, BookType::List, loc, sort
     );
     add_book(*this, move(src));
 }

@@ -107,9 +107,12 @@ files: {
      --   reverse: Reverse sort direction
      --   not_args: Leave program arguments in the same order they were given;
      --             only sort contents of folders in those arguments
-    sort: [natural not_args]
+     --   not_lists: Leave entries in list files as-is.
+    sort: [natural not_args not_lists]
      -- When scanning a folder, only open files ending with these extensions.
-    supported_extensions: [
+     -- We'll always attempt to open explicit arguments and list entries
+     -- regardless of their extensions.
+    page_extensions: [
         bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
     ]
 }

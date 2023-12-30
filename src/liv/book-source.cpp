@@ -44,10 +44,9 @@ void do_sort (IRI* begin, IRI* end, SortMethod method) {
 
 static
 UniqueArray<IRI> expand_neighbors (
-    const Settings* settings, const IRI& loc
+    const Settings* settings, const IRI& loc, SortMethod sort
 ) {
-    auto& extensions = settings->get(&FilesSettings::supported_extensions);
-    auto sort = settings->get(&FilesSettings::sort);
+    auto& extensions = settings->get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
 
     IRI folder = loc.without_filename();
@@ -63,10 +62,9 @@ UniqueArray<IRI> expand_neighbors (
 
 static
 UniqueArray<IRI> expand_recursively (
-    const Settings* settings, Slice<IRI> locs
+    const Settings* settings, Slice<IRI> locs, SortMethod sort
 ) {
-    auto& extensions = settings->get(&FilesSettings::supported_extensions);
-    auto sort = settings->get(&FilesSettings::sort);
+    auto& extensions = settings->get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
 
     for (auto& loc : locs) {
@@ -79,7 +77,7 @@ UniqueArray<IRI> expand_recursively (
                 if (!extensions.count(StaticString(ext))) continue;
                 r.emplace_back(move(child));
             }
-            if (!!(sort.flags & SortFlags::NotArgs)) {
+            if (sort) {
                 do_sort(r.begin() + old_size, r.end(), sort);
             }
         }
@@ -88,9 +86,6 @@ UniqueArray<IRI> expand_recursively (
              // files.
             r.emplace_back(loc);
         }
-    }
-    if (!(sort.flags & SortFlags::NotArgs)) {
-        do_sort(r.begin(), r.end(), sort);
     }
     return r;
 }
@@ -129,27 +124,44 @@ UniqueArray<IRI> read_list (const IRI& loc) {
 }
 
 BookSource::BookSource (
-    const Settings* settings, BookType t, const IRI& loc
+    const Settings* settings,
+    BookType t, const IRI& loc,
+    SortMethod sort
 ) :
     type(t), location(loc)
 {
+    if (!sort) {
+        sort = settings->get(&FilesSettings::sort);
+    }
     require(loc);
     switch (type) {
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
             require(location.path().back() == '/');
-            pages = expand_recursively(settings, {location});
+            if (!!(sort.flags & SortFlags::NotArgs)) {
+                pages = expand_recursively(settings, {location}, sort);
+            }
+            else {
+                pages = expand_recursively(settings, {location}, SortMethod{});
+                do_sort(pages.begin(), pages.end(), sort);
+            }
             break;
         }
         case BookType::FileWithNeighbors: {
             require(location.path().back() != '/');
-            pages = expand_neighbors(settings, location);
+            pages = expand_neighbors(settings, location, sort);
             break;
         }
         case BookType::List: {
             require(location.path().back() != '/');
             auto entries = read_list(location);
-            pages = expand_recursively(settings, entries);
+            if (!!(sort.flags & SortFlags::NotLists)) {
+                pages = expand_recursively(settings, entries, sort);
+            }
+            else {
+                pages = expand_recursively(settings, entries, SortMethod{});
+                do_sort(pages.begin(), pages.end(), sort);
+            }
             break;
         }
         default: never();
@@ -157,12 +169,12 @@ BookSource::BookSource (
 }
 
 BookSource::BookSource (
-    const Settings* settings, BookType t, Slice<IRI> args
+    const Settings* settings, BookType t, Slice<IRI> args, SortMethod sort
 ) :
     type(t), location()
 {
     require(type == BookType::Misc);
-    pages = expand_recursively(settings, args);
+    pages = expand_recursively(settings, args, sort);
 }
 
 const IRI& BookSource::location_for_memory () {
