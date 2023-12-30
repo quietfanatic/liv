@@ -48,7 +48,7 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             break;
         }
         case FormatCommand::BookEstMem: {
-            s = cat(move(s), book->block.estimated_page_memory / 1024 + 1, 'K');
+            s = cat(move(s), (book->block.estimated_page_memory + 1023) / 1024, 'K');
             break;
         }
         case FormatCommand::PageAbs: {
@@ -74,17 +74,32 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             s = cat(move(s), iri::decode_path(rel));
             break;
         }
-        case FormatCommand::PageSizePx: {
+        case FormatCommand::PageFileSize: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            std::error_code code;
+            auto size = fs::file_size(iri::to_fs_path(
+                book->source->pages[visible.l]
+            ), code);
+            if (size == decltype(size)(-1)) {
+                s = cat(move(s), "(unavailable)");
+            }
+            else {
+                s = cat(move(s), (size + 1023) / 1024, "K");
+            }
+            break;
+        }
+        case FormatCommand::PagePixelSize: {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto size = book->block.get(visible.l)->size;
-            s = cat(move(s), size.x, 'x', size.y);
+            s = cat(move(s), size.x, 'x', size.y, "px");
             break;
         }
         case FormatCommand::PageEstMem: {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
-            s = cat(move(s), book->block.get(visible.l)->estimated_memory / 1024 + 1, 'K');
+            s = cat(move(s), (book->block.get(visible.l)->estimated_memory + 1023) / 1024, 'K');
             break;
         }
         case FormatCommand::ZoomPercent: {
@@ -172,7 +187,8 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_abs", FormatCommand::PageAbs),
         value("page_rel_cwd", FormatCommand::PageRelCwd),
         value("page_rel_book", FormatCommand::PageRelBook),
-        value("page_size_px", FormatCommand::PageSizePx),
+        value("page_file_size", FormatCommand::PageFileSize),
+        value("page_pixel_size", FormatCommand::PagePixelSize),
         value("page_est_mem", FormatCommand::PageEstMem),
         value("zoom_percent", FormatCommand::ZoomPercent),
         value("if_zoomed", FormatCommand::IfZoomed)

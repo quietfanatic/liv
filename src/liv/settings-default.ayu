@@ -14,15 +14,25 @@ window: {
      -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
     window_background: black
      -- Format for the window title.  Strings will be printed literally and
-     -- special commands are in square brackets.  Available commands are:
+     -- special tokens are in square brackets.  Available tokens are:
      --   [visible_range] = Currently visible page numbers, in one of the forms
      --                   "1", "1,2", or "1-3"
      --   [page_count] = Total number of pages in the current book
+     --   [book_abs] = Path of book in absolute form
+     --   [book_rel_cwd] = Path of book relative to current working directory
+     --   [book_est_mem] = Estimated video memory for all cached pages
      --   [page_abs] = Path of (lowest-numbered) current page in absolute form
      --   [page_rel_cwd] = Path of current page relative to current working
-     --                    directory.
+     --                    directory
+     --   [page_rel_book] = Path of current page relative to book path
+     --   [page_file_size] = Filesize of current page on disk
+     --   [page_pixel_size] = Dimensions of current page in pixels
+     --   [page_est_mem] = Estimated video memory usage of current page;
+     --                    Width * height * pixel depth
      --   [zoom_percent] = Current zoom level times 100
-     --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%).
+     --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%)
+     -- These tokens are available in the title setting, as well as the say
+     -- and message_box commands.
     title: [
         "[" [visible_range] / [page_count] "] " [page_rel_cwd]
         [if_zoomed " (" [zoom_percent] "%)"]
@@ -139,8 +149,7 @@ mappings: [
     [[i] [message_box ["Page Info"], [
         "Book: " [book_abs] "\n\n"
         "Page: " [page_rel_book] "\n"
-        "Size: " [page_size_px] "px\n\n"
-        "Estimated memory usage: " [page_est_mem] "/" [book_est_mem]
+        "Size: " [page_file_size] " -> " [page_pixel_size] " -> " [page_est_mem]
     ]]]
   ----- LAYOUT
      -- Toggle fullscreen mode
