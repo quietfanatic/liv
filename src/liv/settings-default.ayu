@@ -18,11 +18,13 @@ window: {
      --   [visible_range] = Currently visible page numbers, in one of the forms
      --                   "1", "1,2", or "1-3"
      --   [page_count] = Total number of pages in the current book
-     --   [page_abs] = Path of current paht in absolute form
+     --   [page_abs] = Path of (lowest-numbered) current page in absolute form
+     --   [page_rel_cwd] = Path of current page relative to current working
+     --                    directory.
      --   [zoom_percent] = Current zoom level times 100
      --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%).
     title: [
-        "[" [visible_range] / [page_count] "] " [page_abs]
+        "[" [visible_range] / [page_count] "] " [page_rel_cwd]
         [if_zoomed " (" [zoom_percent] "%)"]
     ]
 }

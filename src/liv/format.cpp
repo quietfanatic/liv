@@ -34,8 +34,15 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             break;
         case FormatCommand::PageAbs: {
             auto visible = book->state.visible_range();
-            auto abs = iri::to_fs_path(book->block.get(visible.l)->location);
-            s = cat(move(s), abs);
+            auto& loc = book->block.get(visible.l)->location;
+            s = cat(move(s), iri::to_fs_path(loc));
+            break;
+        }
+        case FormatCommand::PageRelCwd: {
+            auto visible = book->state.visible_range();
+            auto& loc = book->block.get(visible.l)->location;
+            auto rel = loc.relative_to(iri::working_directory());
+            s = cat(move(s), iri::decode_path(rel));
             break;
         }
         case FormatCommand::ZoomPercent: {
@@ -68,6 +75,8 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
             return Tree(TreeArray::make(Tree("page_count")));
         case FormatCommand::PageAbs:
             return Tree(TreeArray::make(Tree("page_abs")));
+        case FormatCommand::PageRelCwd:
+            return Tree(TreeArray::make(Tree("page_rel_cwd")));
         case FormatCommand::ZoomPercent:
             return Tree(TreeArray::make(Tree("zoom_percent")));
         case FormatCommand::IfZoomed: {
@@ -104,6 +113,10 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
             }
             case uni::hash32("page_abs"): {
                 v.command = FormatCommand::PageAbs;
+                goto no_args;
+            }
+            case uni::hash32("page_rel_cwd"): {
+                v.command = FormatCommand::PageRelCwd;
                 goto no_args;
             }
             case uni::hash32("zoom_percent"): {

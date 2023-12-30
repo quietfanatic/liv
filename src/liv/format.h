@@ -11,6 +11,7 @@ enum class FormatCommand {
     VisibleRange,
     PageCount,
     PageAbs,
+    PageRelCwd,
     ZoomPercent,
     IfZoomed,
 };

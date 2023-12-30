@@ -13,7 +13,7 @@ const Settings builtin_default_settings = {
         .title = FormatList(
             FormatToken("["), FormatToken(FormatCommand::VisibleRange),
             FormatToken("/"), FormatToken(FormatCommand::PageCount),
-            FormatToken("] "), FormatToken(FormatCommand::PageAbs),
+            FormatToken("] "), FormatToken(FormatCommand::PageRelCwd),
             FormatToken(FormatCommand::IfZoomed, FormatList(
                 FormatToken(" ("), FormatToken(FormatCommand::ZoomPercent),
                 FormatToken("%)")
