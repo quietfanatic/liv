@@ -32,17 +32,59 @@ void FormatToken::write (UniqueString& s, Book* book) const {
         case FormatCommand::PageCount:
             s = cat(move(s), book->block.count());
             break;
+        case FormatCommand::BookAbs: {
+            auto& loc = book->source->location_for_memory();
+            if (loc) {
+                s = cat(move(s), iri::to_fs_path(loc));
+            }
+            break;
+        }
+        case FormatCommand::BookRelCwd: {
+            auto& loc = book->source->location_for_memory();
+            if (loc) {
+                auto rel = loc.relative_to(iri::working_directory());
+                s = cat(move(s), iri::decode_path(rel));
+            }
+            break;
+        }
+        case FormatCommand::BookEstMem: {
+            s = cat(move(s), book->block.estimated_page_memory / 1024 + 1, 'K');
+            break;
+        }
         case FormatCommand::PageAbs: {
             auto visible = book->state.visible_range();
-            auto& loc = book->block.get(visible.l)->location;
+            if (!size(visible)) break;
+            auto& loc = book->source->pages[visible.l];
             s = cat(move(s), iri::to_fs_path(loc));
             break;
         }
         case FormatCommand::PageRelCwd: {
             auto visible = book->state.visible_range();
-            auto& loc = book->block.get(visible.l)->location;
+            if (!size(visible)) break;
+            auto& loc = book->source->pages[visible.l];
             auto rel = loc.relative_to(iri::working_directory());
             s = cat(move(s), iri::decode_path(rel));
+            break;
+        }
+        case FormatCommand::PageRelBook: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto& loc = book->source->pages[visible.l];
+            auto rel = loc.relative_to(book->source->location);
+            s = cat(move(s), iri::decode_path(rel));
+            break;
+        }
+        case FormatCommand::PageSizePx: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto size = book->block.get(visible.l)->size;
+            s = cat(move(s), size.x, 'x', size.y);
+            break;
+        }
+        case FormatCommand::PageEstMem: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            s = cat(move(s), book->block.get(visible.l)->estimated_memory / 1024 + 1, 'K');
             break;
         }
         case FormatCommand::ZoomPercent: {
@@ -124,8 +166,14 @@ AYU_DESCRIBE(liv::FormatCommand,
          // Leaving out None and Literal
         value("visible_range", FormatCommand::VisibleRange),
         value("page_count", FormatCommand::PageCount),
+        value("book_abs", FormatCommand::BookAbs),
+        value("book_rel_cwd", FormatCommand::BookRelCwd),
+        value("book_est_mem", FormatCommand::BookEstMem),
         value("page_abs", FormatCommand::PageAbs),
         value("page_rel_cwd", FormatCommand::PageRelCwd),
+        value("page_rel_book", FormatCommand::PageRelBook),
+        value("page_size_px", FormatCommand::PageSizePx),
+        value("page_est_mem", FormatCommand::PageEstMem),
         value("zoom_percent", FormatCommand::ZoomPercent),
         value("if_zoomed", FormatCommand::IfZoomed)
     )
