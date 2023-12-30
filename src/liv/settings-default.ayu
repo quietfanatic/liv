@@ -136,7 +136,7 @@ mappings: [
     [[4] [spread_count 4]]
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
-    [[i] [message_box ["test title"] ["test content"]]]
+    [[i] [message_box ["test title"] ["test conte'nt"]]]
   ----- LAYOUT
      -- Toggle fullscreen mode
     [[f11] [fullscreen]]

@@ -3,6 +3,7 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_messagebox.h>
 #include "../dirt/uni/io.h"
+#include "../dirt/uni/text.h"
 #include "app.h"
 #include "book.h"
 #include "settings.h"
@@ -48,11 +49,20 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
         title.write(t, current_book);
         UniqueString m;
         message.write(m, current_book);
-        SDL_ShowSimpleMessageBox(
-            SDL_MESSAGEBOX_INFORMATION,
-            t.c_str(), m.c_str(),
-            current_book->view.window
-        );
+        static bool have_zenity = system("zenity --help > /dev/null") == 0;
+        if (have_zenity) {
+            if (system(cat(
+                "zenity --title='", escape_for_shell(t), "' ",
+                "--info --text='", escape_for_shell(m), "'\0"
+            ).data()) != 0) { }
+        }
+        else {
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_INFORMATION,
+                t.c_str(), m.c_str(),
+                current_book->view.window
+            );
+        }
     }
 }
 Command message_box (message_box_, "message_box", "Show a message box with formatted title and content");
