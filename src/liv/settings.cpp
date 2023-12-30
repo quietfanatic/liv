@@ -150,19 +150,19 @@ AYU_DESCRIBE(liv::SortMethod,
             item_from_tree(&token, e);
             if (token.criterion != SortCriterion{}) {
                 if (v.criterion != SortCriterion{}) {
-                    raise(e_General, "Too many sort criteria in sort method description.");
+                    raise(e_General, "Too many sort criteria in sort method.");
                 }
                 v.criterion = token.criterion;
             }
             else {
                 if (!!(v.flags & token.flags)) {
-                    raise(e_General, "Duplicate sort flag in sort method description.");
+                    raise(e_General, "Duplicate sort flag in sort method.");
                 }
                 v.flags |= token.flags;
             }
         }
         if (v.criterion == SortCriterion{}) {
-            raise(e_General, "No sort croteria in sort method description");
+            raise(e_General, "No sort croteria in sort method");
         }
     })
 )
