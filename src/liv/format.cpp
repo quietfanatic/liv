@@ -43,6 +43,12 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             s = cat(move(s), round(zoom * 100));
             break;
         }
+        case FormatCommand::IfZoomed: {
+            if (book->view.get_layout().zoom != 1) {
+                for (auto& sub : sublist) sub.write(s, book);
+            }
+            break;
+        }
         default: never();
     }
 }
@@ -64,6 +70,14 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
             return Tree(TreeArray::make(Tree("page_abs")));
         case FormatCommand::ZoomPercent:
             return Tree(TreeArray::make(Tree("zoom_percent")));
+        case FormatCommand::IfZoomed: {
+            auto a = TreeArray(Capacity(1 + v.sublist.size()));
+            a.emplace_back_expect_capacity(Tree("if_zoomed"));
+            for (auto& token : v.sublist) {
+                a.emplace_back_expect_capacity(ayu::item_to_tree(&token));
+            }
+            return Tree(a);
+        }
         default: never();
     }
 }
@@ -73,7 +87,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
     expect(v.command == FormatCommand::None);
     if (t.form == Form::String) {
         v.command = FormatCommand::Literal;
-        v.literal = AnyString(t);
+        new (&v.literal) AnyString(t);
     }
     else if (t.form == Form::Array) {
         auto a = TreeArraySlice(t);
@@ -85,22 +99,38 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
         switch (uni::hash32(cmd)) {
             case uni::hash32("visible_range"): {
                 v.command = FormatCommand::VisibleRange;
-                break;
+                goto no_args;
             }
             case uni::hash32("page_count"): {
                 v.command = FormatCommand::PageCount;
-                break;
+                goto no_args;
             }
             case uni::hash32("page_abs"): {
                 v.command = FormatCommand::PageAbs;
-                break;
+                goto no_args;
             }
             case uni::hash32("zoom_percent"): {
                 v.command = FormatCommand::ZoomPercent;
-                break;
+                goto no_args;
+            }
+            case uni::hash32("if_zoomed"): {
+                v.command = FormatCommand::IfZoomed;
+                goto args;
             }
             default: raise(e_General, "Invalid format command");
         }
+        return;
+        no_args:
+        if (a.size() != 1) {
+            raise_LengthRejected(ayu::Type::CppType<FormatToken>(), 1, 1, a.size());
+        }
+        return;
+        args:
+        new (&v.sublist) UniqueArray<FormatToken>();
+        auto args = TreeArray(a.slice(1));
+        item_from_tree(
+            &v.sublist, ayu::Tree(move(args)), ayu::Location(), ayu::DELAY_SWIZZLE
+        );
     }
 }
 
@@ -121,6 +151,13 @@ AYU_DESCRIBE(liv::FormatList,
 static tap::TestSet tests ("liv/format", []{
     using namespace tap;
 
+    Str fmt_ayu =
+        "[\"[\" [visible_range] / [page_count] \"] \" "
+        "[page_abs] [if_zoomed \" (\" [zoom_percent] \"%)\"]]";
+    FormatList fmt;
+    ayu::item_from_string(&fmt, fmt_ayu);
+    is(ayu::item_to_string(&fmt), fmt_ayu, "FormatList AYU round-trip");
+
     App app;
     app.hidden = true;
     app.settings->WindowSettings::size = {120, 120};
@@ -133,11 +170,6 @@ static tap::TestSet tests ("liv/format", []{
         )
     );
 
-    Str fmt_ayu =
-        "[\"[\" [visible_range] / [page_count] \"] \" [page_abs] \" (\" [zoom_percent] \"%)\"]";
-    FormatList fmt;
-    ayu::item_from_string(&fmt, fmt_ayu);
-    is(ayu::item_to_string(&fmt), fmt_ayu, "FormatList AYU round-trip");
     UniqueString got;
     fmt.write(got, &book);
     auto expected = cat(
@@ -145,7 +177,18 @@ static tap::TestSet tests ("liv/format", []{
             IRI("res/liv/test/image.png", iri::program_location())
         ), " (1714%)"
     );
-    is(got, expected, "FormatList::write");
+    is(got, expected, "FormatList::write 1");
+
+    book.next();
+    book.auto_zoom_mode(AutoZoomMode::ORIGINAL);
+    got = "";
+    fmt.write(got, &book);
+    expected = cat(
+        "[2/2] ", iri::to_fs_path(
+            IRI("res/liv/test/image2.png", iri::program_location())
+        )
+    );
+    is(got, expected, "FormatList::write 2");
 
     done_testing();
 });

@@ -12,12 +12,14 @@ enum class FormatCommand {
     PageCount,
     PageAbs,
     ZoomPercent,
+    IfZoomed,
 };
 
 struct FormatToken {
     FormatCommand command;
     union {
         AnyString literal;
+        UniqueArray<FormatToken> sublist;
     };
 
     constexpr FormatToken () : command(FormatCommand::None) { }
@@ -29,6 +31,7 @@ struct FormatToken {
     constexpr ~FormatToken () {
         switch (command) {
             case FormatCommand::Literal: literal.~AnyString(); break;
+            case FormatCommand::IfZoomed: sublist.~UniqueArray<FormatToken>(); break;
             default: break;
         }
     }
