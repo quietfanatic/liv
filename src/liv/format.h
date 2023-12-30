@@ -48,6 +48,11 @@ struct FormatToken {
         command(FormatCommand::Literal),
         literal(lit)
     { }
+    FormatToken& operator= (FormatToken&& o) {
+        this->~FormatToken();
+        return *new (this) FormatToken(move(o));
+    }
+    
     FormatToken (FormatCommand cmd, FormatList&& sub = {}) :
         command(cmd)
     {

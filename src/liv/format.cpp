@@ -139,7 +139,7 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
 
 static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
     using namespace ayu;
-    expect(v.command == FormatCommand::None);
+    v = {};
     if (t.form == Form::String) {
         v.command = FormatCommand::Literal;
         new (&v.literal) AnyString(t);

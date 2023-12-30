@@ -9,10 +9,45 @@
 namespace liv {
 
 static
+void do_sort (IRI* begin, IRI* end, SortMethod method) {
+    std::stable_sort(begin, end, [method](const IRI& aa, const IRI& bb){
+        const IRI& a = !!(method.flags & SortFlags::Reverse)
+            ? bb : aa;
+        const IRI& b = !!(method.flags & SortFlags::Reverse)
+            ? aa : bb;
+        switch (method.criterion) {
+            case SortCriterion::Natural: {
+                return uni::natural_lessthan(a.path(), b.path());
+            }
+            case SortCriterion::Unicode: {
+                return a.path() < b.path();
+            }
+            case SortCriterion::LastModified: {
+                auto atime = fs::last_write_time(iri::to_fs_path(a));
+                auto btime = fs::last_write_time(iri::to_fs_path(b));
+                if (atime != btime) return atime < btime;
+                else return uni::natural_lessthan(a.path(), b.path());
+            }
+            case SortCriterion::FileSize: {
+                auto asize = fs::file_size(iri::to_fs_path(a));
+                auto bsize = fs::file_size(iri::to_fs_path(b));
+                if (asize != bsize) return asize < bsize;
+                else return uni::natural_lessthan(a.path(), b.path());
+            }
+            case SortCriterion::Unsorted: {
+                return false;
+            }
+            default: never();
+        }
+    });
+}
+
+static
 UniqueArray<IRI> expand_neighbors (
     const Settings* settings, const IRI& loc
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
+    auto sort = settings->get(&FilesSettings::sort);
     UniqueArray<IRI> r;
 
     IRI folder = loc.without_filename();
@@ -22,11 +57,7 @@ UniqueArray<IRI> expand_neighbors (
         if (!extensions.count(StaticString(ext))) continue;
         r.emplace_back(move(child));
     }
-    std::sort(r.begin(), r.end(),
-        [](const IRI& a, const IRI& b){
-            return uni::natural_lessthan(a.path(), b.path());
-        }
-    );
+    do_sort(r.begin(), r.end(), sort);
     return r;
 }
 
@@ -35,6 +66,7 @@ UniqueArray<IRI> expand_recursively (
     const Settings* settings, Slice<IRI> locs
 ) {
     auto& extensions = settings->get(&FilesSettings::supported_extensions);
+    auto sort = settings->get(&FilesSettings::sort);
     UniqueArray<IRI> r;
 
     for (auto& loc : locs) {
@@ -47,17 +79,18 @@ UniqueArray<IRI> expand_recursively (
                 if (!extensions.count(StaticString(ext))) continue;
                 r.emplace_back(move(child));
             }
-            std::sort(r.begin() + old_size, r.end(),
-                [](const IRI& a, const IRI& b){
-                    return uni::natural_lessthan(a.path(), b.path());
-                }
-            );
+            if (!!(sort.flags & SortFlags::NotArgs)) {
+                do_sort(r.begin() + old_size, r.end(), sort);
+            }
         }
         else {
              // Don't check the file extension for explicitly specified
              // files.
             r.emplace_back(loc);
         }
+    }
+    if (!(sort.flags & SortFlags::NotArgs)) {
+        do_sort(r.begin(), r.end(), sort);
     }
     return r;
 }

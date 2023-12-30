@@ -97,6 +97,17 @@ control: {
 
  -- Options dealing with files and filenames
 files: {
+     -- How to sort files.  Must contain one of:
+     --   natural: Like unicode but is smart about numbers
+     --   unicode: Sort according to Unicode order
+     --   last_modified: Older files first
+     --   file_size: Smaller files first
+     --   unsorted: No sorting, leave files in directory order
+     -- And may contain any of:
+     --   reverse: Reverse sort direction
+     --   not_args: Leave program arguments in the same order they were given;
+     --             only sort contents of folders in those arguments
+    sort: [natural not_args]
      -- When scanning a folder, only open files ending with these extensions.
     supported_extensions: [
         bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp

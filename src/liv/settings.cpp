@@ -2,6 +2,8 @@
 
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/resources/resource.h"
+#include "../dirt/ayu/traversal/from-tree.h"
+#include "../dirt/ayu/traversal/to-tree.h"
 
 namespace liv {
 
@@ -37,6 +39,7 @@ const Settings builtin_default_settings = {
         .drag_speed = 1,
     },
     FilesSettings{
+        .sort = SortMethod{SortCriterion::Natural, SortFlags::NotArgs},
         .supported_extensions = std::set<AnyString>{
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
             "png", "tif", "tiff", "xbm", "xpm", "webp",
@@ -98,6 +101,64 @@ AYU_DESCRIBE(liv::Direction,
     )
 )
 
+namespace liv {
+struct SortMethodToken : SortMethod { };
+bool operator== (SortMethodToken a, SortMethodToken b) {
+    return a.criterion == b.criterion && a.flags == b.flags;
+}
+} // liv
+
+AYU_DESCRIBE(liv::SortMethodToken,
+    values(
+        value("natural", {SortCriterion::Natural, SortFlags{}}),
+        value("unicode", {SortCriterion::Unicode, SortFlags{}}),
+        value("last_modified", {SortCriterion::LastModified, SortFlags{}}),
+        value("file_size", {SortCriterion::FileSize, SortFlags{}}),
+        value("unsorted", {SortCriterion::Unsorted, SortFlags{}}),
+        value("reverse", {SortCriterion{}, SortFlags::Reverse}),
+        value("not_args", {SortCriterion{}, SortFlags::NotArgs})
+    )
+)
+
+AYU_DESCRIBE(liv::SortMethod,
+    to_tree([](const SortMethod& v){
+        using namespace ayu;
+        TreeArray a;
+        SortMethodToken c = {v.criterion, SortFlags{}};
+        a.push_back(item_to_tree(&c));
+        for (auto flag = SortFlags::Reverse; flag <= SortFlags::NotArgs; flag <<= 1) {
+            if (!!(v.flags & flag)) {
+                SortMethodToken f = {SortCriterion{}, flag};
+                a.push_back(item_to_tree(&f));
+            }
+        }
+        return Tree(move(a));
+    }),
+    from_tree([](SortMethod& v, const ayu::Tree& t){
+        using namespace ayu;
+        v = {};
+        for (auto e : TreeArraySlice(t)) {
+            SortMethodToken token;
+            item_from_tree(&token, e);
+            if (token.criterion != SortCriterion{}) {
+                if (v.criterion != SortCriterion{}) {
+                    raise(e_General, "Too many sort criteria in sort method description.");
+                }
+                v.criterion = token.criterion;
+            }
+            else {
+                if (!!(v.flags & token.flags)) {
+                    raise(e_General, "Duplicate sort flag in sort method description.");
+                }
+                v.flags |= token.flags;
+            }
+        }
+        if (v.criterion == SortCriterion{}) {
+            raise(e_General, "No sort croteria in sort method description");
+        }
+    })
+)
+
 AYU_DESCRIBE(liv::TrimMode,
     values(
         value("none", TrimMode::None),
@@ -141,6 +202,7 @@ AYU_DESCRIBE(liv::WindowSettings,
 
 AYU_DESCRIBE(liv::FilesSettings,
     attrs(
+        attr("sort", &FilesSettings::sort, collapse_optional),
         attr("supported_extensions", &FilesSettings::supported_extensions, collapse_optional)
     )
 )

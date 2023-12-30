@@ -46,6 +46,24 @@ enum class InterpolationMode {
     SmartCubic
 };
 
+enum class SortCriterion {
+    Natural = 1,
+    Unicode,
+    LastModified,
+    FileSize,
+    Unsorted,
+};
+enum class SortFlags {
+    Reverse = 0x1,
+    NotArgs = 0x2,
+};
+DECLARE_ENUM_BITWISE_OPERATORS(SortFlags)
+
+struct SortMethod {
+    SortCriterion criterion;
+    SortFlags flags;
+};
+
 enum class TrimMode {
     None,
     PageCache
@@ -79,6 +97,7 @@ struct ControlSettings {
     std::optional<float> drag_speed;
 };
 struct FilesSettings {
+    std::optional<SortMethod> sort;
     std::optional<std::set<AnyString>> supported_extensions;
 };
 struct MemorySettings {
