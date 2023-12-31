@@ -28,12 +28,17 @@ void do_sort (IRI* begin, IRI* end, SortMethod method) {
         case SortCriterion::Unicode: {
             if (!!(method.flags & SortFlags::Reverse)) {
                 std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                    return b.path() < a.path();
+                     // Make sure we put UTF-8 bytes after ASCII bytes.
+                     // If we have to go this far, we should consider making
+                     // strings hold char8_t by default instead of char...
+                    return GenericStr<char8_t>(b.path()) <
+                           GenericStr<char8_t>(a.path());
                 });
             }
             else {
                 std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                    return a.path() < b.path();
+                    return GenericStr<char8_t>(a.path()) <
+                           GenericStr<char8_t>(b.path());
                 });
             }
             break;
