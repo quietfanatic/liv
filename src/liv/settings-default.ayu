@@ -28,6 +28,8 @@ window: {
      --   [page_pixel_bits] = Bits-per-pixel of current image (e.g. 24 for RGB8)
      --   [page_est_mem] = Estimated video memory usage of current page;
      --                    Width * height * pixel depth
+     --   [pages_rel_cwd_merged] = All page paths merged together like
+     --                            foo/bar{1,2}.png
      --   [zoom_percent] = Current zoom level times 100
      --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%)
      --   [for_visible_pages <more>] = Show <more> for each visible page instead
@@ -35,7 +37,7 @@ window: {
      -- These tokens are available in the title setting, as well as the say
      -- and message_box commands.
     title: [
-        [page_rel_cwd]
+        [pages_rel_cwd_merged]
         " [" [visible_range] / [page_count] "]"
         [if_zoomed " (" [zoom_percent] "%)"]
     ]

@@ -21,6 +21,7 @@ enum class FormatCommand {
     PagePixelHeight,
     PagePixelBits,
     PageEstMem,
+    PagesRelCwdMerged,
     ZoomPercent,
     IfZoomed,
     ForVisiblePages,

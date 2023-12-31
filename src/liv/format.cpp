@@ -109,6 +109,62 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, (book->block.get(page)->estimated_memory + 1023) / 1024, 'K');
             break;
         }
+        case FormatCommand::PagesRelCwdMerged: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) return;
+            if (size(visible) == 1) {
+                 // Only one page, don't bother merging
+                auto& loc = book->source->pages[page];
+                encat(s, loc.relative_to(iri::working_directory()));
+                return;
+            }
+             // Make paths relative
+            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
+                auto& loc = book->source->pages[visible[i]];
+                return loc.relative_to(iri::working_directory());
+            });
+             // Find longest common prefix and suffix
+            usize prefix = paths[0].size();
+            usize suffix = paths[0].size();
+            for (auto& path : paths.slice(1)) {
+                for (usize i = 0; i < prefix && i < path.size(); i++) {
+                    if (path[i] != paths[0][i]) {
+                        prefix = i;
+                        break;
+                    }
+                }
+                for (usize i = 0; i < suffix && i < path.size(); i++) {
+                    if (path[path.size() - i - 1] !=
+                        paths[0][paths[0].size() - i - 1]
+                    ) {
+                        suffix = i;
+                        break;
+                    }
+                }
+            }
+             // Oh but don't chop up numbers
+            while (prefix > 0 &&
+                paths[0][prefix - 1] >= '0' && paths[0][prefix - 1] <= '9'
+            ) prefix--;
+            while (suffix > 0 &&
+                paths[0][paths[0].size() - suffix] >= '0' &&
+                paths[0][paths[0].size() - suffix] <= '9'
+            ) suffix--;
+             // Now do it
+            encat(s,
+                paths[0].slice(0, prefix), '{',
+                paths[0].slice(prefix, paths[0].size() - suffix)
+            );
+            for (auto& path : paths.slice(1)) {
+                encat(s,
+                    ',', path.slice(prefix, path.size() - suffix)
+                );
+            }
+            encat(s,
+                '}', paths[0].slice(paths[0].size() - suffix)
+            );
+            break;
+        }
         case FormatCommand::ZoomPercent: {
             float zoom = book->view.get_layout().zoom;
             encat(s, round(zoom * 100));
@@ -121,7 +177,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::ForVisiblePages: {
-            for (auto& p : book->state.visible_range()) {
+            for (auto p : book->state.visible_range()) {
                 sublist.write(s, book, p);
             }
             break;
@@ -217,6 +273,7 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_pixel_height", FormatCommand::PagePixelHeight),
         value("page_pixel_bits", FormatCommand::PagePixelBits),
         value("page_est_mem", FormatCommand::PageEstMem),
+        value("pages_rel_cwd_merged", FormatCommand::PagesRelCwdMerged),
         value("zoom_percent", FormatCommand::ZoomPercent),
         value("if_zoomed", FormatCommand::IfZoomed),
         value("for_visible_pages", FormatCommand::ForVisiblePages)
@@ -238,9 +295,14 @@ AYU_DESCRIBE(liv::FormatList,
 static tap::TestSet tests ("liv/format", []{
     using namespace tap;
 
+    fs::current_path(iri::to_fs_path(iri::program_location().without_filename()));
+
     Str fmt_ayu =
-        "[\"[\" [visible_range] / [page_count] \"] \" "
-        "[page_abs] [if_zoomed \" (\" [zoom_percent] \"%)\"]]";
+        "["
+            "[pages_rel_cwd_merged] "
+            "\" [\" [visible_range] / [page_count] \"]\" "
+            "[if_zoomed \" (\" [zoom_percent] \"%)\"]"
+        "]";
     FormatList fmt;
     ayu::item_from_string(&fmt, fmt_ayu);
     is(ayu::item_to_string(&fmt), fmt_ayu, "FormatList AYU round-trip");
@@ -259,23 +321,22 @@ static tap::TestSet tests ("liv/format", []{
 
     UniqueString got;
     fmt.write(got, &book);
-    auto expected = cat(
-        "[1/2] ", iri::to_fs_path(
-            IRI("res/liv/test/image.png", iri::program_location())
-        ), " (1714%)"
-    );
+    StaticString expected = "res/liv/test/image.png [1/2] (1714%)";
     is(got, expected, "FormatList::write 1");
 
     book.next();
     book.auto_zoom_mode(AutoZoomMode::Original);
     got = "";
     fmt.write(got, &book);
-    expected = cat(
-        "[2/2] ", iri::to_fs_path(
-            IRI("res/liv/test/image2.png", iri::program_location())
-        )
-    );
+    expected = "res/liv/test/image2.png [2/2]";
     is(got, expected, "FormatList::write 2");
+
+    book.prev();
+    book.spread_count(2);
+    got = "";
+    fmt.write(got, &book);
+    expected = "res/liv/test/image{,2}.png [1,2/2]";
+    is(got, expected, "FormatList::write 3");
 
     done_testing();
 });
