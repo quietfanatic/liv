@@ -35,7 +35,8 @@ window: {
      -- These tokens are available in the title setting, as well as the say
      -- and message_box commands.
     title: [
-        "[" [visible_range] / [page_count] "] " [page_rel_cwd]
+        [page_rel_cwd]
+        " [" [visible_range] / [page_count] "]"
         [if_zoomed " (" [zoom_percent] "%)"]
     ]
 }
