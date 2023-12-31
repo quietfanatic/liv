@@ -2,7 +2,7 @@
 
 #include <filesystem>
 #include "../dirt/iri/path.h"
-#include "../dirt/uni/io.h"
+#include "list.h"
 #include "settings.h"
 #include "sort.h"
 
@@ -51,39 +51,6 @@ UniqueArray<IRI> expand_recursively (
              // Don't check the file extension for explicitly specified
              // files.
             r.emplace_back(loc);
-        }
-    }
-    return r;
-}
-
-static
-UniqueArray<IRI> read_list (const IRI& loc) {
-    UniqueArray<IRI> r;
-
-    UniqueString line;
-    if (loc == "liv:stdin") {
-         // TODO: Make string_from_file support filehandles
-        for (;;) {
-            int c = getchar();
-            if (c == EOF) break;
-            else if (c == '\n') {
-                if (line) {
-                    r.emplace_back(iri::from_fs_path(line));
-                    line = "";
-                }
-            }
-            else line.push_back(c);
-        }
-    }
-    else {
-        for (char c : string_from_file(iri::to_fs_path(loc))) {
-            if (c == '\n') {
-                if (line) {
-                    r.emplace_back(iri::from_fs_path(line, loc));
-                    line = "";
-                }
-            }
-            else line.push_back(c);
         }
     }
     return r;

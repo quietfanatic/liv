@@ -74,6 +74,7 @@ my @sources = (qw(
     liv/book.cpp
     liv/format.cpp
     liv/layout.cpp
+    liv/list.cpp
     liv/main.cpp
     liv/memory.cpp
     liv/page-block.cpp
