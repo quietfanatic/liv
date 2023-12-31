@@ -53,14 +53,13 @@ int main (int argc, char** argv) {
     }
     plog("parsed args");
 
-    App app;
     if (help) {
-        warn_utf8(
+        print_utf8(
 R"(liv <options> [--] <filenames>
     --help: Print this help message
     --list: Read a list of filenames, one per line.  Use - for stdin.
     --sort=<criterion>,<flags...>: Sort files.  <criterion> is one of:
-            natural unicode last_modified file_sort shuffle unsorted
+            natural unicode last_modified file_size shuffle unsorted
         and <flags...> is zero or more of:
             reverse not_args not_lists
         See res/liv/settings-default.ayu for more documentation.
@@ -68,6 +67,8 @@ R"(liv <options> [--] <filenames>
         );
         return 1;
     }
+
+    App app;
     if (list) {
         if (args.size() != 1) {
             raise(e_General,
