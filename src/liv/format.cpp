@@ -8,7 +8,8 @@
 
 namespace liv {
 
-void FormatToken::write (UniqueString& s, Book* book) const {
+NOINLINE
+void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
     switch (command) {
         case FormatCommand::None: break;
         case FormatCommand::Literal:
@@ -52,34 +53,30 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             break;
         }
         case FormatCommand::PageAbs: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto& loc = book->source->pages[visible.l];
+            if (page < 0) break;
+            auto& loc = book->source->pages[page];
             encat(s, iri::to_fs_path(loc));
             break;
         }
         case FormatCommand::PageRelCwd: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto& loc = book->source->pages[visible.l];
+            if (page < 0) break;
+            auto& loc = book->source->pages[page];
             auto rel = loc.relative_to(iri::working_directory());
             encat(s, iri::decode_path(rel));
             break;
         }
         case FormatCommand::PageRelBook: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto& loc = book->source->pages[visible.l];
+            if (page < 0) break;
+            auto& loc = book->source->pages[page];
             auto rel = loc.relative_to(book->source->location);
             encat(s, iri::decode_path(rel));
             break;
         }
         case FormatCommand::PageFileSize: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
+            if (page < 0) break;
             std::error_code code;
             auto size = fs::file_size(iri::to_fs_path(
-                book->source->pages[visible.l]
+                book->source->pages[page]
             ), code);
             if (size == decltype(size)(-1)) {
                 encat(s, "(unavailable)");
@@ -90,30 +87,26 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             break;
         }
         case FormatCommand::PagePixelWidth: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto size = book->block.get(visible.l)->size;
+            if (page < 0) break;
+            auto size = book->block.get(page)->size;
             encat(s, size.x);
             break;
         }
         case FormatCommand::PagePixelHeight: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto size = book->block.get(visible.l)->size;
+            if (page < 0) break;
+            auto size = book->block.get(page)->size;
             encat(s, size.y);
             break;
         }
         case FormatCommand::PagePixelBits: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            auto depth = book->block.get(visible.l)->texture->bpp();
+            if (page < 0) break;
+            auto depth = book->block.get(page)->texture->bpp();
             encat(s, depth);
             break;
         }
         case FormatCommand::PageEstMem: {
-            auto visible = book->state.visible_range();
-            if (!size(visible)) break;
-            encat(s, (book->block.get(visible.l)->estimated_memory + 1023) / 1024, 'K');
+            if (page < 0) break;
+            encat(s, (book->block.get(page)->estimated_memory + 1023) / 1024, 'K');
             break;
         }
         case FormatCommand::ZoomPercent: {
@@ -123,7 +116,13 @@ void FormatToken::write (UniqueString& s, Book* book) const {
         }
         case FormatCommand::IfZoomed: {
             if (book->view.get_layout().zoom != 1) {
-                sublist.write(s, book);
+                sublist.write(s, book, page);
+            }
+            break;
+        }
+        case FormatCommand::ForVisiblePages: {
+            for (auto& p : book->state.visible_range()) {
+                sublist.write(s, book, p);
             }
             break;
         }
@@ -131,8 +130,14 @@ void FormatToken::write (UniqueString& s, Book* book) const {
     }
 }
 
-void FormatList::write (UniqueString& r, Book* book) const {
-    for (auto& token : tokens) token.write(r, book);
+
+void FormatList::write (UniqueString& s, Book* book) const {
+    auto visible = book->state.visible_range();
+    write(s, book, size(visible) ? visible.l : -1);
+}
+NOINLINE
+void FormatList::write (UniqueString& r, Book* book, int32 page) const {
+    for (auto& token : tokens) token.write(r, book, page);
 }
 
 static ayu::Tree FormatToken_to_tree (const FormatToken& v){
@@ -143,6 +148,11 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
         case FormatCommand::IfZoomed: {
             auto a = TreeArray(item_to_tree(&v.sublist));
             a.insert(usize(0), Tree("if_zoomed"));
+            return Tree(move(a));
+        }
+        case FormatCommand::ForVisiblePages: {
+            auto a = TreeArray(item_to_tree(&v.sublist));
+            a.insert(usize(0), Tree("for_visible_pages"));
             return Tree(move(a));
         }
         default: {
@@ -166,7 +176,8 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
         }
         item_from_tree(&v.command, a[0]);
         switch (v.command) {
-            case FormatCommand::IfZoomed: {
+            case FormatCommand::IfZoomed:
+            case FormatCommand::ForVisiblePages: {
                 new (&v.sublist) FormatList();
                 auto args = TreeArray(a.slice(1));
                 item_from_tree(
@@ -207,7 +218,8 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_pixel_bits", FormatCommand::PagePixelBits),
         value("page_est_mem", FormatCommand::PageEstMem),
         value("zoom_percent", FormatCommand::ZoomPercent),
-        value("if_zoomed", FormatCommand::IfZoomed)
+        value("if_zoomed", FormatCommand::IfZoomed),
+        value("for_visible_pages", FormatCommand::ForVisiblePages)
     )
 )
 

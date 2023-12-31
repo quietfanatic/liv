@@ -30,6 +30,8 @@ window: {
      --                    Width * height * pixel depth
      --   [zoom_percent] = Current zoom level times 100
      --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%)
+     --   [for_visible_pages <more>] = Show <more> for each visible page instead
+     --                                of just the first.
      -- These tokens are available in the title setting, as well as the say
      -- and message_box commands.
     title: [
@@ -171,10 +173,12 @@ mappings: [
     [[enter] [say [[page_abs]]]]
      -- Show some information in a message box
     [[i] [message_box ["Page Info"], [
-        [page_abs] "\n"
-        [page_file_size] " -> "
-        [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits] "bpp -> "
-        [page_est_mem]
+        [for_visible_pages
+            [page_abs] "\n"
+            [page_file_size] " -> "
+            [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits] "bpp -> "
+            [page_est_mem] "\n\n"
+        ]
     ]]]
   ----- LAYOUT
      -- Toggle fullscreen mode

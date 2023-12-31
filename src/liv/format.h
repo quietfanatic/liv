@@ -23,6 +23,7 @@ enum class FormatCommand {
     PageEstMem,
     ZoomPercent,
     IfZoomed,
+    ForVisiblePages,
 };
 
 struct FormatList {
@@ -32,6 +33,7 @@ struct FormatList {
         UniqueArray<FormatToken>::make(std::forward<Args>(args)...)
     ) { }
     void write (UniqueString&, Book*) const;
+    void write (UniqueString&, Book*, int32 page) const;
 };
 
 struct FormatToken {
@@ -59,10 +61,10 @@ struct FormatToken {
         command(cmd)
     {
         switch (command) {
-            case FormatCommand::IfZoomed: {
+            case FormatCommand::IfZoomed:
+            case FormatCommand::ForVisiblePages:
                 new (&sublist) FormatList(move(sub));
                 break;
-            }
             default: require(!sub.tokens);
         }
     }
@@ -70,12 +72,15 @@ struct FormatToken {
     constexpr ~FormatToken () {
         switch (command) {
             case FormatCommand::Literal: literal.~AnyString(); break;
-            case FormatCommand::IfZoomed: sublist.~FormatList(); break;
+            case FormatCommand::IfZoomed:
+            case FormatCommand::ForVisiblePages:
+                sublist.~FormatList();
+                break;
             default: break;
         }
     }
 
-    void write (UniqueString&, Book*) const;
+    void write (UniqueString&, Book*, int32 page) const;
 };
 
 } // liv
