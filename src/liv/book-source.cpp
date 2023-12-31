@@ -174,6 +174,9 @@ BookSource::BookSource (
 ) :
     type(t), location()
 {
+    if (!sort) {
+        sort = settings->get(&FilesSettings::sort);
+    }
     require(type == BookType::Misc);
     if (!!(sort.flags & SortFlags::NotArgs)) {
         pages = expand_recursively(settings, args, sort);
