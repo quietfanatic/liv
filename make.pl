@@ -79,6 +79,7 @@ my @sources = (qw(
     liv/page-block.cpp
     liv/page.cpp
     liv/settings.cpp
+    liv/sort.cpp
     dirt/ayu/common.cpp
     dirt/ayu/data/parse.cpp
     dirt/ayu/data/print.cpp

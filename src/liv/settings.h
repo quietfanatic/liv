@@ -9,6 +9,7 @@
 #include "../dirt/uni/strings.h"
 #include "common.h"
 #include "format.h"
+#include "sort.h"
 
 namespace liv {
 
@@ -44,27 +45,6 @@ enum class InterpolationMode {
     Smoothed,
     Cubic,
     SmartCubic
-};
-
-enum class SortCriterion {
-    Natural = 1,
-    Unicode,
-    LastModified,
-    FileSize,
-    Shuffle,
-    Unsorted,
-};
-enum class SortFlags {
-    Reverse = 0x1,
-    NotArgs = 0x2,
-    NotLists = 0x4,
-};
-DECLARE_ENUM_BITWISE_OPERATORS(SortFlags)
-
-struct SortMethod {
-    SortCriterion criterion;
-    SortFlags flags;
-    explicit operator bool () const { return criterion != SortCriterion{}; }
 };
 
 enum class TrimMode {

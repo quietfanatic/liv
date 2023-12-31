@@ -1,53 +1,12 @@
 #include "book-source.h"
 
 #include <filesystem>
-#include <random>
 #include "../dirt/iri/path.h"
-#include "../dirt/uni/text.h"
 #include "../dirt/uni/io.h"
 #include "settings.h"
+#include "sort.h"
 
 namespace liv {
-
-static
-void do_sort (IRI* begin, IRI* end, SortMethod method) {
-    if (method.criterion == SortCriterion::Shuffle) {
-        static std::random_device rd;
-        static std::mt19937 g (rd());
-        std::shuffle(begin, end, g);
-        return;
-    }
-    std::stable_sort(begin, end, [method](const IRI& aa, const IRI& bb){
-        const IRI& a = !!(method.flags & SortFlags::Reverse)
-            ? bb : aa;
-        const IRI& b = !!(method.flags & SortFlags::Reverse)
-            ? aa : bb;
-        switch (method.criterion) {
-            case SortCriterion::Natural: {
-                return uni::natural_lessthan(a.path(), b.path());
-            }
-            case SortCriterion::Unicode: {
-                return a.path() < b.path();
-            }
-            case SortCriterion::LastModified: {
-                auto atime = fs::last_write_time(iri::to_fs_path(a));
-                auto btime = fs::last_write_time(iri::to_fs_path(b));
-                if (atime != btime) return atime < btime;
-                else return uni::natural_lessthan(a.path(), b.path());
-            }
-            case SortCriterion::FileSize: {
-                auto asize = fs::file_size(iri::to_fs_path(a));
-                auto bsize = fs::file_size(iri::to_fs_path(b));
-                if (asize != bsize) return asize < bsize;
-                else return uni::natural_lessthan(a.path(), b.path());
-            }
-            case SortCriterion::Unsorted: {
-                return false;
-            }
-            default: never();
-        }
-    });
-}
 
 static
 UniqueArray<IRI> expand_neighbors (
