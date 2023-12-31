@@ -221,6 +221,7 @@ mappings: [
   ----- EXECUTION
      -- Quitting
     [[escape] [leave_fullscreen_or_quit]]
+    [[q] [quit]]
     [[ctrl q] [quit]]
 ]
 
