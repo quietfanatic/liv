@@ -19,7 +19,10 @@ UniqueArray<IRI> expand_neighbors (
     for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
         auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
         Str ext = iri::path_extension(child.path());
-        if (!extensions.count(StaticString(ext))) continue;
+        if (!extensions.count(StaticString(ext))) {
+             // Don't skip if we explicitly requested this file
+            if (child != loc) continue;
+        }
         r.emplace_back(move(child));
     }
     do_sort(r.begin(), r.end(), sort);
