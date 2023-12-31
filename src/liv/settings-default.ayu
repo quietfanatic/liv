@@ -180,9 +180,6 @@ mappings: [
   ----- LAYOUT
      -- Toggle fullscreen mode
     [[f11] [fullscreen]]
-     -- Set background color
-    [[ctrl b] [window_background white]]
-    [[ctrl shift b] [window_background black]]
      -- Set auto zoom mode
     [[f] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
@@ -211,6 +208,12 @@ mappings: [
     [[ctrl 3] [interpolation_mode cubic]]
     [[ctrl 4] [interpolation_mode smart_cubic]]
     [[ctrl 9] [interpolation_mode smoothed]]
+     -- Set background color
+    [[ctrl b] [window_background white]]
+    [[ctrl shift b] [window_background black]]
+     -- Set transparency color
+    [[ctrl t] [transparency_background white]]
+    [[ctrl shift t] [transparency_background black]]
   ----- EXECUTION
      -- Quitting
     [[escape] [leave_fullscreen_or_quit]]

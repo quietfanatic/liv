@@ -123,4 +123,9 @@ static void window_background_ (Fill bg) {
 }
 Command window_background (window_background_, "window_background", "Change window background fill");
 
+static void transparency_background_ (Fill bg) {
+    if (current_book) current_book->transparency_background(bg);
+}
+Command transparency_background (transparency_background_, "transparency_background", "Change fill behind transparent images");
+
 } // namespace liv::commands

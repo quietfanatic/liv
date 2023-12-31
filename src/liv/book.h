@@ -120,6 +120,11 @@ struct Book {
         view.need_draw = true;
     }
 
+    void transparency_background (Fill bg) {
+        state.render_params.transparency_background = bg;
+        view.need_draw = true;
+    }
+
      // Not a command, but we need to figure out how to make this configurable.
     void drag (Vec amount) {
         state.drag(amount);
