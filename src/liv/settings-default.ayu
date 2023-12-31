@@ -29,7 +29,7 @@ window: {
      --   [page_est_mem] = Estimated video memory usage of current page;
      --                    Width * height * pixel depth
      --   [pages_rel_cwd_merged] = All page paths merged together like
-     --                            foo/bar{1,2}.png
+     --                            foo/bar{01,02}.png
      --   [zoom_percent] = Current zoom level times 100
      --   [if_zoomed <more>] = Show <more> if zoom level is not 1.0 (100%)
      --   [for_visible_pages <more>] = Show <more> for each visible page instead

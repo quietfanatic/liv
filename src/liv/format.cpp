@@ -115,13 +115,15 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             if (size(visible) == 1) {
                  // Only one page, don't bother merging
                 auto& loc = book->source->pages[page];
-                encat(s, loc.relative_to(iri::working_directory()));
+                auto rel = loc.relative_to(iri::working_directory());
+                encat(s, iri::decode_path(rel));
                 return;
             }
              // Make paths relative
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
                 auto& loc = book->source->pages[visible[i]];
-                return loc.relative_to(iri::working_directory());
+                auto rel = loc.relative_to(iri::working_directory());
+                return iri::decode_path(rel);
             });
              // Find longest common prefix and suffix
             usize prefix = paths[0].size();
