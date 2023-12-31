@@ -27,6 +27,7 @@ void main () {
 
 uniform sampler2DRect u_tex;
 uniform int u_interpolation_mode;
+uniform vec4 u_transparency_background;
 uniform float u_zoom;
 in vec2 v_tex_coords;
 out vec4 color;
@@ -146,6 +147,9 @@ void main () {
             break;
         }
     }
+     // Apply transparency background with alpha blending
+    float alpha = color.a;
+    color = color * alpha + u_transparency_background * (1.0 - alpha);
 }"
 
 [ayu::Document {

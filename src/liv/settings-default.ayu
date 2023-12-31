@@ -85,8 +85,11 @@ render: {
      -- it gradually transitions to smoothed to reduce aliasing.
     interpolation_mode: smart_cubic
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
-     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
+     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless for
+     -- the window background.
     window_background: black
+     -- Background to show behind transparent parts of images.
+    transparency_background: white
 }
 
  -- Options about control and input

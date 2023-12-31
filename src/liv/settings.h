@@ -95,6 +95,7 @@ struct LayoutSettings {
 struct RenderSettings {
     std::optional<InterpolationMode> interpolation_mode;
     std::optional<Fill> window_background;
+    std::optional<Fill> transparency_background;
 };
 struct ControlSettings {
     std::optional<float> drag_speed;

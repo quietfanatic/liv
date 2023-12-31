@@ -13,8 +13,9 @@ using namespace glow;
 namespace liv {
 
 RenderParams::RenderParams (const Settings* settings) :
+    interpolation_mode(settings->get(&RenderSettings::interpolation_mode)),
     window_background(settings->get(&RenderSettings::window_background)),
-    interpolation_mode(settings->get(&RenderSettings::interpolation_mode))
+    transparency_background(settings->get(&RenderSettings::transparency_background))
 { }
 
 Page::Page (const IRI& loc) :
@@ -50,6 +51,7 @@ struct PageProgram : Program {
     int u_screen_rect = -1;
     int u_tex_rect = -1;
     int u_interpolation_mode = -1;
+    int u_transparency_background = -1;
     int u_zoom = -1;
 
     void Program_after_link () override {
@@ -58,11 +60,13 @@ struct PageProgram : Program {
         int u_tex = glGetUniformLocation(id, "u_tex");
         glUniform1i(u_tex, 0);
         u_interpolation_mode = glGetUniformLocation(id, "u_interpolation_mode");
+        u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
         u_zoom = glGetUniformLocation(id, "u_zoom");
         expect(u_screen_rect != -1);
         expect(u_tex_rect != -1);
         expect(u_tex != -1);
         expect(u_interpolation_mode != -1);
+        expect(u_transparency_background != -1);
         expect(u_zoom != -1);
     }
 };
@@ -89,6 +93,10 @@ void Page::draw (
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
     glUniform1i(program->u_interpolation_mode, uint8(params.interpolation_mode));
+    auto bg = params.transparency_background;
+    glUniform4f(program->u_transparency_background,
+        bg.r, bg.g, bg.b, bg.a
+    );
     glUniform1f(program->u_zoom, zoom);
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

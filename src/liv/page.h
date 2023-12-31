@@ -15,8 +15,9 @@
 namespace liv {
 
 struct RenderParams {
-    Fill window_background;
     InterpolationMode interpolation_mode;
+    Fill window_background;
+    Fill transparency_background;
     RenderParams () = default;
     RenderParams (const RenderParams&) = default;
     RenderParams (const Settings*);

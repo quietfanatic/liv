@@ -34,6 +34,7 @@ const Settings builtin_default_settings = {
     RenderSettings{
         .interpolation_mode = InterpolationMode::SmartCubic,
         .window_background = Fill::Black,
+        .transparency_background = Fill::White,
     },
     ControlSettings{
         .drag_speed = 1,
@@ -197,7 +198,8 @@ AYU_DESCRIBE(liv::LayoutSettings,
 AYU_DESCRIBE(liv::RenderSettings,
     attrs(
         attr("interpolation_mode", &RenderSettings::interpolation_mode, collapse_optional),
-        attr("window_background", &RenderSettings::window_background, collapse_optional)
+        attr("window_background", &RenderSettings::window_background, collapse_optional),
+        attr("transparency_background", &RenderSettings::transparency_background, collapse_optional)
     )
 )
 
