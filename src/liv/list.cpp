@@ -20,6 +20,9 @@ UniqueArray<IRI> read_list (const IRI& loc) {
                     line = "";
                 }
             }
+            else if (c == '\r') {
+                 // Shouldn't get \r\n with stdin, but for consistency's sake
+            }
             else line.push_back(c);
         }
     }
@@ -31,6 +34,7 @@ UniqueArray<IRI> read_list (const IRI& loc) {
                     line = "";
                 }
             }
+            else if (c == '\r') { }
             else line.push_back(c);
         }
     }
