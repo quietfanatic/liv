@@ -95,7 +95,7 @@ void Page::draw (
     glUniform1i(program->u_interpolation_mode, uint8(params.interpolation_mode));
     auto bg = params.transparency_background;
     glUniform4f(program->u_transparency_background,
-        bg.r, bg.g, bg.b, bg.a
+        bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f
     );
     glUniform1f(program->u_zoom, zoom);
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);

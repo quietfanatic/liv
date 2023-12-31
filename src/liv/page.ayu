@@ -148,8 +148,7 @@ void main () {
         }
     }
      // Apply transparency background with alpha blending
-    float alpha = color.a;
-    color = color * alpha + u_transparency_background * (1.0 - alpha);
+    color = color * color.a + u_transparency_background * (1.0 - color.a);
 }"
 
 [ayu::Document {

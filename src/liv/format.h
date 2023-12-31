@@ -17,7 +17,9 @@ enum class FormatCommand {
     PageRelCwd,
     PageRelBook,
     PageFileSize,
-    PagePixelSize,
+    PagePixelWidth,
+    PagePixelHeight,
+    PagePixelBits,
     PageEstMem,
     ZoomPercent,
     IfZoomed,
@@ -52,7 +54,7 @@ struct FormatToken {
         this->~FormatToken();
         return *new (this) FormatToken(move(o));
     }
-    
+
     FormatToken (FormatCommand cmd, FormatList&& sub = {}) :
         command(cmd)
     {

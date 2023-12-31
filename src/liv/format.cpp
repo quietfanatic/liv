@@ -89,11 +89,25 @@ void FormatToken::write (UniqueString& s, Book* book) const {
             }
             break;
         }
-        case FormatCommand::PagePixelSize: {
+        case FormatCommand::PagePixelWidth: {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto size = book->block.get(visible.l)->size;
-            encat(s, size.x, 'x', size.y, "px");
+            encat(s, size.x);
+            break;
+        }
+        case FormatCommand::PagePixelHeight: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto size = book->block.get(visible.l)->size;
+            encat(s, size.y);
+            break;
+        }
+        case FormatCommand::PagePixelBits: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto depth = book->block.get(visible.l)->texture->bpp();
+            encat(s, depth);
             break;
         }
         case FormatCommand::PageEstMem: {
@@ -188,7 +202,9 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_rel_cwd", FormatCommand::PageRelCwd),
         value("page_rel_book", FormatCommand::PageRelBook),
         value("page_file_size", FormatCommand::PageFileSize),
-        value("page_pixel_size", FormatCommand::PagePixelSize),
+        value("page_pixel_width", FormatCommand::PagePixelWidth),
+        value("page_pixel_height", FormatCommand::PagePixelHeight),
+        value("page_pixel_bits", FormatCommand::PagePixelBits),
         value("page_est_mem", FormatCommand::PageEstMem),
         value("zoom_percent", FormatCommand::ZoomPercent),
         value("if_zoomed", FormatCommand::IfZoomed)

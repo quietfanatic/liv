@@ -55,10 +55,10 @@ bool BookView::draw_if_needed () {
      // Draw background
     auto bg = book->state.render_params.window_background;
     glClearColor(
-        bg.r / 255.0,
-        bg.g / 255.0,
-        bg.b / 255.0,
-        bg.a / 255.0 // Alpha is probably ignored
+        bg.r / 255.f,
+        bg.g / 255.f,
+        bg.b / 255.f,
+        bg.a / 255.f // Alpha is probably ignored
     );
     glClear(GL_COLOR_BUFFER_BIT);
      // Draw spread

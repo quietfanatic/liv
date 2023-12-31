@@ -23,7 +23,9 @@ window: {
      --                    directory
      --   [page_rel_book] = Path of current page relative to book path
      --   [page_file_size] = Filesize of current page on disk
-     --   [page_pixel_size] = Dimensions of current page in pixels
+     --   [page_pixel_width] = Width of current image in pixels
+     --   [page_pixel_height] = Height of current image in pixels
+     --   [page_pixel_bits] = Bits-per-pixel of current image (e.g. 24 for RGB8)
      --   [page_est_mem] = Estimated video memory usage of current page;
      --                    Width * height * pixel depth
      --   [zoom_percent] = Current zoom level times 100
@@ -171,7 +173,9 @@ mappings: [
     [[i] [message_box ["Page Info"], [
         "Book: " [book_abs] "\n\n"
         "Page: " [page_rel_book] "\n"
-        "Size: " [page_file_size] " -> " [page_pixel_size] " -> " [page_est_mem]
+        "Size: " [page_file_size]
+        " -> " [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits]
+        "bpp -> " [page_est_mem]
     ]]]
   ----- LAYOUT
      -- Toggle fullscreen mode
