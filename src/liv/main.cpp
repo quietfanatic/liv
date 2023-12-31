@@ -4,6 +4,7 @@
 #include "../dirt/ayu/resources/resource.h"
 #include "../dirt/ayu/resources/scheme.h"
 #include "../dirt/glow/common.h"
+#include "../dirt/iri/path.h"
 #include "../dirt/tap/tap.h"
 #include "../dirt/uni/common.h"
 #include "../dirt/uni/io.h"
@@ -28,6 +29,7 @@ int main (int argc, char** argv) {
     UniqueArray<AnyString> args;
     bool help = false;
     bool list = false;
+    bool chdir = false;
     bool done_flags = false;
     SortMethod sort {};
     for (int i = 1; i < argc; i++) {
@@ -41,6 +43,9 @@ int main (int argc, char** argv) {
             }
             else if (arg == "--list") {
                 list = true;
+            }
+            else if (arg == "--chdir") {
+                chdir = true;
             }
             else if (arg.slice(0, 7) == "--sort=") {
                 ayu::item_from_tree(&sort, ayu::tree_from_string(cat(
@@ -58,6 +63,8 @@ int main (int argc, char** argv) {
 R"(liv <options> [--] <filenames>
     --help: Print this help message
     --list: Read a list of filenames, one per line.  Use - for stdin.
+    --chdir: Change directory to that of the opened file (for invoking from a
+        file manager).
     --sort=<criterion>,<flags...>: Sort files.  <criterion> is one of:
             natural unicode last_modified file_size shuffle unsorted
         and <flags...> is zero or more of:
@@ -66,6 +73,10 @@ R"(liv <options> [--] <filenames>
 )"
         );
         return 1;
+    }
+
+    if (chdir && args.size() == 1) {
+        fs::current_path(iri::path_without_filename(args[0]));
     }
 
     App app;
