@@ -2,6 +2,7 @@
 
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/uni/hash.h"
+#include "../dirt/uni/io.h"
 #include "../dirt/uni/text.h"
 #include "../dirt/uni/time.h"
 #include "book.h"
@@ -35,14 +36,14 @@ void memorize_book (const Book* book) {
 
     MemoryOfBook mem;
     mem.location = memloc;
-    mem.current_range = book->state.spread_range;
+    mem.spread_range = book->state.spread_range;
      // TODO: read source, not block
     if (auto page = book->block.get(book->state.spread_range.l)) {
-        mem.current_page = page->location.relative_to(mem.location);
+        mem.page = page->location.relative_to(mem.location);
     }
-    else mem.current_page = "";
-    mem.layout_params = book->state.layout_params;
-    mem.page_params = book->state.page_params;
+    else mem.page = "";
+    mem.layout = book->state.layout_params;
+    mem.render = book->state.render_params;
     mem.updated_at = uni::now();
 
      // Doing it with the following line causes breakage because the
@@ -62,6 +63,17 @@ void remember_book (Book* book) {
 
     auto res = ayu::Resource(memory_store_location(memloc));
     if (!ayu::source_exists(res)) return;
+    try {
+        ayu::load(res);
+    }
+    catch (std::exception& e) {
+        uni::warn_utf8(cat(
+            "Error loading memory file ", ayu::resource_filename(res),
+            ": ", e.what(), "\n",
+            "Memory of this book will be ignored or overwritten.\n"
+        ));
+        return;
+    }
     const MemoryOfBook* mem = res.ref();
     if (mem->location != memloc) {
          // Different location with the same hash?
@@ -69,12 +81,12 @@ void remember_book (Book* book) {
         return;
     }
 
-    book->state.layout_params = mem->layout_params;
-    book->state.page_params = mem->page_params;
+    book->state.layout_params = mem->layout;
+    book->state.render_params = mem->render;
 
     int32 start_index = 0;
-    if (mem->current_page) {
-        auto start_loc = IRI(mem->current_page, memloc);
+    if (mem->page) {
+        auto start_loc = IRI(mem->page, memloc);
         for (usize i = 0; i < book->source->pages.size(); i++) {
             if (book->source->pages[i] == start_loc) {
                 start_index = i;
@@ -83,10 +95,10 @@ void remember_book (Book* book) {
         }
     }
     else {
-        start_index = mem->current_range.l;
+        start_index = mem->spread_range.l;
     }
     book->state.spread_range = {
-        start_index, start_index + size(mem->current_range)
+        start_index, start_index + size(mem->spread_range)
     };
     ayu::force_unload(res);
 }
@@ -97,10 +109,10 @@ AYU_DESCRIBE(liv::MemoryOfBook,
     attrs(
         attr("location", &MemoryOfBook::location),
         attr("updated_at", &MemoryOfBook::updated_at),
-        attr("current_range", &MemoryOfBook::current_range),
-        attr("current_page", &MemoryOfBook::current_page),
-        attr("layout_params", &MemoryOfBook::layout_params),
-        attr("page_params", &MemoryOfBook::page_params)
+        attr("spread_range", &MemoryOfBook::spread_range),
+        attr("page", &MemoryOfBook::page),
+        attr("layout", &MemoryOfBook::layout),
+        attr("render", &MemoryOfBook::render)
     )
 )
 

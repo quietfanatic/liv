@@ -10,14 +10,31 @@
 
 namespace liv::commands {
 
-///// APP COMMANDS
+///// APP AND WINDOW COMMANDS
 
 static void quit_ () {
     if (current_app) current_app->stop();
 }
 Command quit (quit_, "quit", "Quit application");
 
-///// BOOK COMMANDS
+static void fullscreen_ () {
+    if (current_book) current_book->fullscreen();
+}
+Command fullscreen (fullscreen_, "fullscreen", "Toggle fullscreen mode");
+
+static void leave_fullscreen_or_quit_ () {
+    if (current_book && current_book->view.is_fullscreen()) {
+        current_book->fullscreen();
+    }
+    else if (current_app) {
+        current_app->stop();
+    }
+}
+Command leave_fullscreen_or_quit (
+    leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
+);
+
+///// BOOK AND PAGE COMMANDS
 
 static void next_ () {
     if (current_book) current_book->next();
@@ -94,31 +111,12 @@ static void reset_layout_ () {
 }
 Command reset_layout (reset_layout_, "reset_layout", "Reset layout parameters to default");
 
-///// PAGE COMMANDS
+///// RENDER COMMANDS
 
 static void interpolation_mode_ (InterpolationMode mode) {
     if (current_book) current_book->interpolation_mode(mode);
 }
 Command interpolation_mode (interpolation_mode_, "interpolation_mode", "Set the pixel interpolation mode: nearest, linear, or cubic");
-
-///// WINDOW COMMANDS
-
-static void fullscreen_ () {
-    if (current_book) current_book->fullscreen();
-}
-Command fullscreen (fullscreen_, "fullscreen", "Toggle fullscreen mode");
-
-static void leave_fullscreen_or_quit_ () {
-    if (current_book && current_book->view.is_fullscreen()) {
-        current_book->fullscreen();
-    }
-    else if (current_app) {
-        current_app->stop();
-    }
-}
-Command leave_fullscreen_or_quit (
-    leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
-);
 
 static void window_background_ (Fill bg) {
     if (current_book) current_book->window_background(bg);

@@ -53,11 +53,12 @@ bool BookView::draw_if_needed () {
      // be better to share a context between all windows?
     SDL_GL_MakeCurrent(window, window.gl_context);
      // Draw background
+    auto bg = book->state.render_params.window_background;
     glClearColor(
-        book->state.window_background.r / 255.0,
-        book->state.window_background.g / 255.0,
-        book->state.window_background.b / 255.0,
-        book->state.window_background.a / 255.0 // Alpha is probably ignored
+        bg.r / 255.0,
+        bg.g / 255.0,
+        bg.b / 255.0,
+        bg.a / 255.0 // Alpha is probably ignored
     );
     glClear(GL_COLOR_BUFFER_BIT);
      // Draw spread
@@ -72,7 +73,7 @@ bool BookView::draw_if_needed () {
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = window_rect / window_size * float(2) - Vec(1, 1);
          // Draw
-        spread_page.page->draw(book->state.page_params, layout.zoom, screen_rect);
+        spread_page.page->draw(book->state.render_params, layout.zoom, screen_rect);
     }
      // Generate title
     AnyString title;

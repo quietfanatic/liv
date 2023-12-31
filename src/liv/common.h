@@ -23,7 +23,7 @@ struct LayoutParams;
 struct MemoryOfBook;
 struct Page;
 struct PageBlock;
-struct PageParams;
+struct RenderParams;
 struct Settings;
 
 } // namespace liv

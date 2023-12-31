@@ -11,7 +11,6 @@ const Settings builtin_default_settings = {
     WindowSettings{
         .size = geo::IVec{720, 720},
         .fullscreen = false,
-        .window_background = Fill::Black,
         .title = FormatList(
             FormatToken("["), FormatToken(FormatCommand::VisibleRange),
             FormatToken("/"), FormatToken(FormatCommand::PageCount),
@@ -32,8 +31,9 @@ const Settings builtin_default_settings = {
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
     },
-    PageSettings{
+    RenderSettings{
         .interpolation_mode = InterpolationMode::SmartCubic,
+        .window_background = Fill::Black,
     },
     ControlSettings{
         .drag_speed = 1,
@@ -194,9 +194,10 @@ AYU_DESCRIBE(liv::LayoutSettings,
         attr("large_align", &LayoutSettings::large_align, collapse_optional)
     )
 )
-AYU_DESCRIBE(liv::PageSettings,
+AYU_DESCRIBE(liv::RenderSettings,
     attrs(
-        attr("interpolation_mode", &PageSettings::interpolation_mode, collapse_optional)
+        attr("interpolation_mode", &RenderSettings::interpolation_mode, collapse_optional),
+        attr("window_background", &RenderSettings::window_background, collapse_optional)
     )
 )
 
@@ -204,7 +205,6 @@ AYU_DESCRIBE(liv::WindowSettings,
     attrs(
         attr("size", &WindowSettings::size, collapse_optional),
         attr("fullscreen", &WindowSettings::fullscreen, collapse_optional),
-        attr("window_background", &WindowSettings::window_background, collapse_optional),
         attr("title", &WindowSettings::title, collapse_optional)
     )
 )
@@ -235,7 +235,7 @@ AYU_DESCRIBE(liv::Settings,
     attrs(
         attr("window", base<WindowSettings>(), optional),
         attr("layout", base<LayoutSettings>(), optional),
-        attr("page", base<PageSettings>(), optional),
+        attr("render", base<RenderSettings>(), optional),
         attr("control", base<ControlSettings>(), optional),
         attr("files", base<FilesSettings>(), optional),
         attr("memory", base<MemorySettings>(), optional),

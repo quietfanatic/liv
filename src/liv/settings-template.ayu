@@ -11,8 +11,8 @@ window: {
 layout: {
 }
 
- -- Settings for how individual pages are displayed
-page: {
+ -- Settings for how things are displayed
+render: {
 }
 
  -- Options about control and input

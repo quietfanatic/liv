@@ -80,7 +80,6 @@ struct Mapping {
 struct WindowSettings {
     std::optional<geo::IVec> size;
     std::optional<bool> fullscreen;
-    std::optional<Fill> window_background;
     std::optional<FormatList> title;
 };
 struct LayoutSettings {
@@ -93,8 +92,9 @@ struct LayoutSettings {
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;
 };
-struct PageSettings {
+struct RenderSettings {
     std::optional<InterpolationMode> interpolation_mode;
+    std::optional<Fill> window_background;
 };
 struct ControlSettings {
     std::optional<float> drag_speed;
@@ -113,7 +113,7 @@ struct MemorySettings {
  // Using inheritance instead of containment because it makes using member
  // pointers much simpler.
 struct Settings :
-    WindowSettings, LayoutSettings, PageSettings,
+    WindowSettings, LayoutSettings, RenderSettings,
     ControlSettings, FilesSettings, MemorySettings
 {
     UniqueArray<Mapping> mappings;

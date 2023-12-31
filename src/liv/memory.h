@@ -13,11 +13,11 @@ namespace liv {
 
 struct MemoryOfBook {
     IRI location;  // location of either folder or list
-    AnyString current_page;  // location of current page (relative to book_filename)
-    LayoutParams layout_params;
-    PageParams page_params;
+    AnyString page;  // location of current page (relative to book_filename)
+    LayoutParams layout;
+    RenderParams render;
     double updated_at = 0;  // For eviction (which is NYI)
-    IRange current_range;
+    IRange spread_range;
 };
 
 void memorize_book (const Book*);

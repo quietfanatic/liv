@@ -19,9 +19,8 @@ struct BookState {
      // page_indexes clamped to valid page indexes.
     IRange visible_range () const;
      // View parameters
-    Fill window_background = Fill::Black;
     LayoutParams layout_params;
-    PageParams page_params;
+    RenderParams render_params;
 
     ///// Controls
      // Takes a 1-based page number.  page_indexes will be set to

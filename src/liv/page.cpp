@@ -12,8 +12,9 @@ using namespace glow;
 
 namespace liv {
 
-PageParams::PageParams (const Settings* settings) :
-    interpolation_mode(settings->get(&PageSettings::interpolation_mode))
+RenderParams::RenderParams (const Settings* settings) :
+    window_background(settings->get(&RenderSettings::window_background)),
+    interpolation_mode(settings->get(&RenderSettings::interpolation_mode))
 { }
 
 Page::Page (const IRI& loc) :
@@ -33,7 +34,7 @@ void Page::load () {
     }
     catch (std::exception& e) {
         ayu::warn_utf8(cat(
-            "Uncaught exception while loading ", filename,
+            "Error loading image file ", filename,
             ": ", e.what(), "\n"
         ));
         load_failed = true;
@@ -67,7 +68,7 @@ struct PageProgram : Program {
 };
 
 void Page::draw (
-    PageParams params,
+    RenderParams params,
     float zoom,
     const Rect& screen_rect,
     const Rect& tex_rect
@@ -95,9 +96,10 @@ void Page::draw (
 
 } using namespace liv;
 
-AYU_DESCRIBE(liv::PageParams,
+AYU_DESCRIBE(liv::RenderParams,
     attrs(
-        attr("interpolation_mode", &PageParams::interpolation_mode)
+        attr("interpolation_mode", &RenderParams::interpolation_mode),
+        attr("window_background", &RenderParams::window_background)
     )
 )
 
@@ -135,8 +137,9 @@ static tap::TestSet tests ("liv/page", []{
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    PageParams params;
+    RenderParams params;
     params.interpolation_mode = InterpolationMode::Linear;
+    params.window_background = Fill::Black;
 
     doesnt_throw([&]{
         page.draw(params, 1, Rect(-.5, -.5, .5, .5));

@@ -9,11 +9,8 @@ namespace liv {
 
 BookState::BookState (Book* b) :
     book(b),
-    window_background(
-        book->app->settings->get(&WindowSettings::window_background)
-    ),
     layout_params(book->app->settings),
-    page_params(book->app->settings)
+    render_params(book->app->settings)
 {
     int32 start = 0;
     if (book->source->type == BookType::FileWithNeighbors) {

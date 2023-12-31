@@ -10,9 +10,6 @@ window: {
     size: [720 720]
      -- Initial fullscreen state of the window
     fullscreen: false
-     -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
-     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
-    window_background: black
      -- Format for the window title.  Strings will be printed literally and
      -- special tokens are in square brackets.  Available tokens are:
      --   [visible_range] = Currently visible page numbers, in one of the forms
@@ -75,8 +72,8 @@ layout: {
     large_align: [0.5 0.5]
 }
 
- -- Settings for how individual pages are displayed
-page: {
+ -- Settings for how things are displayed
+render: {
      -- Pixel interpolation mode.  Options (in rough order of processing cost):
      --   nearest = 1-sample nearest-neighbor (lowest quality)
      --   linear = 4-sample bilinear interpolation
@@ -87,6 +84,9 @@ page: {
      -- prevent halo artifacts.  In addition, if the image is being downscaled,
      -- it gradually transitions to smoothed to reduce aliasing.
     interpolation_mode: smart_cubic
+     -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
+     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless.
+    window_background: black
 }
 
  -- Options about control and input

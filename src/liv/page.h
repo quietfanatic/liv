@@ -14,11 +14,12 @@
 
 namespace liv {
 
-struct PageParams {
+struct RenderParams {
+    Fill window_background;
     InterpolationMode interpolation_mode;
-    PageParams () = default;
-    PageParams (const PageParams&) = default;
-    PageParams (const Settings*);
+    RenderParams () = default;
+    RenderParams (const RenderParams&) = default;
+    RenderParams (const Settings*);
 };
 
 struct Page {
@@ -36,7 +37,7 @@ struct Page {
     void unload ();
 
     void draw (
-        PageParams params,
+        RenderParams params,
         float zoom,
         const geo::Rect& screen_rect,
         const geo::Rect& tex_rect = GNAN // defaults to whole page

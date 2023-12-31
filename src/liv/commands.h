@@ -6,12 +6,16 @@
 namespace liv::commands {
 using namespace control;
 
-///// APP COMMANDS
+///// APP AND WINDOW COMMANDS
 
  // () Quit app
 extern Command quit;
+ // () Enter or leave fullscreen mode
+extern Command fullscreen;
+ // () Leave fullscreen mode or quit if not fullscreen
+extern Command leave_fullscreen_or_quit;
 
-///// BOOK COMMANDS
+///// BOOK AND PAGE COMMANDS
 
  // () Go to next page(s)
 extern Command next;
@@ -50,17 +54,10 @@ extern Command zoom_multiply;
  // the LAYOUT COMMANDS section).
 extern Command reset_layout;
 
-///// PAGE COMMANDS
+///// RENDER COMMANDS
 
  // (InterpolationMode) Set interpolation mode for current book
 extern Command interpolation_mode;
-
-///// WINDOW COMMANDS
-
- // () Enter or leave fullscreen mode
-extern Command fullscreen;
- // () Leave fullscreen mode or quit if not fullscreen
-extern Command leave_fullscreen_or_quit;
  // (Fill) change window background fill
 extern Command window_background;
 

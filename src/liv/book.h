@@ -31,6 +31,12 @@ struct Book {
     ~Book () { }
 
      // Commands
+    void fullscreen () {
+        view.set_fullscreen(!view.is_fullscreen());
+        view.layout = {};
+        view.need_draw = true;
+    }
+
     void next () {
         seek(size(state.spread_range));
         need_memorize = true;
@@ -104,19 +110,13 @@ struct Book {
     }
 
     void interpolation_mode (InterpolationMode mode) {
-        state.page_params.interpolation_mode = mode;
+        state.render_params.interpolation_mode = mode;
         view.need_draw = true;
         need_memorize = true;
     }
 
-    void fullscreen () {
-        view.set_fullscreen(!view.is_fullscreen());
-        view.layout = {};
-        view.need_draw = true;
-    }
-
     void window_background (Fill bg) {
-        state.window_background = bg;
+        state.render_params.window_background = bg;
         view.need_draw = true;
     }
 
