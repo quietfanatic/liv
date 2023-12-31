@@ -14,13 +14,17 @@ BookView::BookView (Book* book) :
         book->app->settings->get(&WindowSettings::size)
     )
 {
+    plog("created window");
     SDL_SetWindowResizable(window, SDL_TRUE);
     expect(!SDL_GL_SetSwapInterval(1));
     if (book->app->settings->get(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
+    plog("set window props");
     glow::init();
+    plog("fetched gl functions");
     if (!book->app->hidden) SDL_ShowWindow(window);
+    plog("showed window");
 }
 
 BookView::~BookView () { }
@@ -90,8 +94,10 @@ bool BookView::draw_if_needed () {
         title = t;
     }
     SDL_SetWindowTitle(window, title.c_str());
+    plog("drew view");
      // vsync
     SDL_GL_SwapWindow(window);
+    plog("swapped window");
     return true;
 }
 

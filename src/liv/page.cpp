@@ -24,6 +24,7 @@ Page::Page (const IRI& loc) :
 Page::~Page () { }
 
 void Page::load () {
+    plog("Loading page");
     if (texture) return;
     auto filename = iri::to_fs_path(location);
     try {
@@ -40,6 +41,7 @@ void Page::load () {
         ));
         load_failed = true;
     }
+    plog("loaded page");
 }
 
 void Page::unload () {

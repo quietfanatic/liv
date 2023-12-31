@@ -131,6 +131,7 @@ App::App () {
         );
     }
     settings = settings_res.ref();
+    plog("loaded settings");
      // Set loop handlers
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };

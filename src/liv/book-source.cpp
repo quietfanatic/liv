@@ -108,8 +108,11 @@ BookSource::BookSource (
         pages = expand_recursively(settings, args, sort);
     }
     else {
+        plog("Before expand");
         pages = expand_recursively(settings, args, SortMethod{});
+        plog("expanded");
         do_sort(pages.begin(), pages.end(), sort);
+        plog("sorted");
     }
 }
 

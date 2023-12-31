@@ -24,6 +24,7 @@ BookState::BookState (Book* b) :
     spread_range = {
         start, start + book->app->settings->get(&LayoutSettings::spread_count)
     };
+    plog("set up state");
 }
 
 IRange BookState::visible_range () const {

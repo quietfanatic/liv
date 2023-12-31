@@ -14,12 +14,14 @@
 using namespace liv;
 
 int main (int argc, char** argv) {
+    plog("main");
     glow::require_sdl(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = glow::require_sdl(SDL_GetBasePath());
      // TODO: allow resource schemes to be readonly
     ayu::FileResourceScheme res_scheme ("res", uni::cat(base, + "res"));
     ayu::FileResourceScheme data_scheme ("data", UniqueString(base));
     free(base);
+    plog("set up");
 
     tap::allow_testing(argc, argv);
 
@@ -49,6 +51,7 @@ int main (int argc, char** argv) {
         }
         else args.emplace_back(arg);
     }
+    plog("parsed args");
 
     App app;
     if (help) {
@@ -76,6 +79,7 @@ R"(liv <options> [--] <filenames>
     else {
         app.open_args(move(args), sort);
     }
+    plog("opened args");
     app.run();
     return 0;
 }
