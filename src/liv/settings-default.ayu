@@ -171,11 +171,10 @@ mappings: [
     [[enter] [say [[page_abs]]]]
      -- Show some information in a message box
     [[i] [message_box ["Page Info"], [
-        "Book: " [book_abs] "\n\n"
-        "Page: " [page_rel_book] "\n"
-        "Size: " [page_file_size]
-        " -> " [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits]
-        "bpp -> " [page_est_mem]
+        [page_abs] "\n"
+        [page_file_size] " -> "
+        [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits] "bpp -> "
+        [page_est_mem]
     ]]]
   ----- LAYOUT
      -- Toggle fullscreen mode

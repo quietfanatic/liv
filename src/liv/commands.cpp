@@ -1,11 +1,13 @@
 #include "commands.h"
 
+#include <algorithm>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_messagebox.h>
 #include "../dirt/uni/io.h"
 #include "../dirt/uni/text.h"
 #include "app.h"
 #include "book.h"
+#include "list.h"
 #include "settings.h"
 
 namespace liv::commands {
@@ -83,6 +85,50 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
     }
 }
 Command message_box (message_box_, "message_box", "Show a message box with formatted title and content");
+
+static void add_to_list_ (const AnyString& list, SortMethod sort) {
+    if (!current_book) return;
+    auto visible = current_book->state.visible_range();
+    if (!size(visible)) return;
+    IRI entry = current_book->source->pages[visible.l];
+
+    auto loc = iri::from_fs_path(list);
+     // Read
+    UniqueArray<IRI> entries;
+    try {
+        entries = read_list(loc);
+    }
+    catch (Error& e) {
+        if (e.code == e_OpenFailed) {
+             // New file, create it implicitly
+        }
+        else throw;
+    }
+     // Add and sort
+    entries.push_back(current_book->source->pages[visible.l]);
+    do_sort(entries.begin(), entries.end(), sort);
+     // Remove duplicates
+    auto new_end = std::unique(entries.begin(), entries.end());
+    entries.resize(new_end - entries.begin());
+     // Write
+    write_list(loc, entries);
+}
+Command add_to_list (add_to_list_, "add_to_list", "Add current page filename to a list file and sort it");
+
+static void remove_from_list_ (const AnyString& list) {
+    if (!current_book) return;
+    auto visible = current_book->state.visible_range();
+    if (!size(visible)) return;
+    auto loc = iri::from_fs_path(list);
+    auto entries = read_list(loc);
+    auto new_end = std::remove(
+        entries.begin(), entries.end(),
+        current_book->source->pages[visible.l]
+    );
+    entries.unsafe_set_size(new_end - entries.begin());
+    write_list(loc, entries);
+}
+Command remove_from_list (remove_from_list_, "remove_from_list", "Remove current page from list file");
 
 ///// LAYOUT COMMANDS
 

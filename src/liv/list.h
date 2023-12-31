@@ -8,4 +8,6 @@ namespace liv {
 
 UniqueArray<IRI> read_list (const IRI& loc);
 
+void write_list (const IRI& loc, Slice<IRI> entries);
+
 } // liv

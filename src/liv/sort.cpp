@@ -1,5 +1,6 @@
 #include "sort.h"
 
+#include <algorithm>
 #include <random>
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/traversal/from-tree.h"
@@ -10,7 +11,10 @@
 namespace liv {
 
 void do_sort (IRI* begin, IRI* end, SortMethod method) {
-    if (method.criterion == SortCriterion::Shuffle) {
+    if (method.criterion == SortCriterion::Unsorted) {
+        return;
+    }
+    else if (method.criterion == SortCriterion::Shuffle) {
         static std::random_device rd;
         static std::mt19937 g (rd());
         std::shuffle(begin, end, g);
@@ -39,9 +43,6 @@ void do_sort (IRI* begin, IRI* end, SortMethod method) {
                 auto bsize = fs::file_size(iri::to_fs_path(b));
                 if (asize != bsize) return asize < bsize;
                 else return uni::natural_lessthan(a.path(), b.path());
-            }
-            case SortCriterion::Unsorted: {
-                return false;
             }
             default: never();
         }

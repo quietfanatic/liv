@@ -37,4 +37,12 @@ UniqueArray<IRI> read_list (const IRI& loc) {
     return r;
 }
 
+void write_list (const IRI& loc, Slice<IRI> entries) {
+    UniqueString s;
+    for (auto& e : entries) {
+        encat(s, iri::to_fs_path(e), '\n');
+    }
+    string_to_file(s, iri::to_fs_path(loc));
+}
+
 } // liv

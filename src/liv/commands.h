@@ -34,6 +34,13 @@ extern Command say;
  // first format list and the message by the second.
 extern Command message_box;
 
+ // (AnyString, SortMethod) Add current page to list file, sorting file by the
+ // given method.
+extern Command add_to_list;
+
+ // (AnyString) Remove current page from list file.
+extern Command remove_from_list;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously
