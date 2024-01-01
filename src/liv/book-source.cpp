@@ -130,6 +130,13 @@ const IRI& BookSource::location_for_memory () {
     }
 }
 
+int32 BookSource::find_page_offset (const IRI& page) {
+    for (usize i = 0; i < pages.size(); i++) {
+        if (pages[i] == page) return i;
+    }
+    return -1;
+}
+
 } // liv
 
 #ifndef TAP_DISABLE_TESTS

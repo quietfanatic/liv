@@ -32,6 +32,8 @@ struct BookSource {
     BookSource (const Settings*, BookType, Slice<IRI>, SortMethod sort = SortMethod{});
      // Empty if this book should not be remembered.
     const IRI& location_for_memory ();
+
+    int32 find_page_offset (const IRI& page);
 };
 
 } // liv

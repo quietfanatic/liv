@@ -139,6 +139,22 @@ static void clipboard_text_ (const FormatList& fmt) {
 }
 Command clipboard_text (clipboard_text_, "clipboard_text", "Set clipboard text with format list");
 
+static void remove_from_book_ () {
+    if (!current_book) return;
+    current_book->remove_current_page();
+}
+Command remove_from_book (remove_from_book_, "remove_from_book", "Remove current page from current book");
+
+static void move_to_folder_ (const AnyString& folder) {
+    if (!current_book) return;
+    auto visible = current_book->state.visible_range();
+    if (!size(visible)) return;
+    auto& loc = current_book->source->pages[visible.l];
+    auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
+    fs::rename(iri::to_fs_path(loc), new_path);
+}
+Command move_to_folder (move_to_folder_, "move_to_folder", "Move current page to a folder");
+
 ///// LAYOUT COMMANDS
 
 static void spread_count_ (int32 count) {

@@ -1,4 +1,3 @@
-#pragma once
 
 #include "../dirt/iri/path.h"
 #include "app.h"
@@ -56,11 +55,19 @@ struct Book {
         need_memorize = true;
     }
 
-    AnyString current_filename () {
+    void remove_current_page () {
         auto visible = state.visible_range();
-        if (empty(visible)) return "";
-        auto page = block.get(visible.l);
-        return iri::to_fs_path(page->location);
+        if (!size(visible)) return;
+        block.unload_page(block.get(visible.l));
+        block.pages.erase(visible.l);
+        source->pages.erase(visible.l);
+         // This will clamp the value so that there's still at least one visible
+         // page.
+        state.set_page_number(visible.l);
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        need_memorize = true;
     }
 
     void spread_count (int32 count) {
@@ -118,11 +125,13 @@ struct Book {
     void window_background (Fill bg) {
         state.render_params.window_background = bg;
         view.need_draw = true;
+        need_memorize = true;
     }
 
     void transparency_background (Fill bg) {
         state.render_params.transparency_background = bg;
         view.need_draw = true;
+        need_memorize = true;
     }
 
      // Not a command, but we need to figure out how to make this configurable.

@@ -44,6 +44,14 @@ extern Command remove_from_list;
  // (FormatList) Copy formatted info to the OS clipboard.
 extern Command clipboard_text;
 
+ // () Remove current page from current book; doesn't touch the file on disk.
+extern Command remove_from_book;
+
+ // (AnyString) Move current page file to the given folder.  Doesn't remove the
+ // page from the book.  To do both together use
+ //     [seq [[move_to_folder folder] [remove_from_book]]]
+extern Command move_to_folder;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously
