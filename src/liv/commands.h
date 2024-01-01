@@ -26,7 +26,7 @@ extern Command prev;
 extern Command seek;
 
  // (FormatList) Print the information in the format list to stdout, followed by
- // a newline.  See settings-default.ayu#+1/window/title for more info on format
+ // a newline.  See settings-default.ayu#/window/title for more info on format
  // lists.
 extern Command say;
 
@@ -60,7 +60,7 @@ extern Command spread_pages;
  // (AutoZoomMode) Set auto zoom mode for current book
 extern Command auto_zoom_mode;
 
- // (Vec Vec) Set alignment (small_align and large_align).  If a component of a
+ // (Vec, Vec) Set alignment (small_align and large_align).  If a component of a
  // Vec is NAN, that component of the existing *_align will not be changed (so
  // you can change only the horizontal or vertical align if you want).
 extern Command align;

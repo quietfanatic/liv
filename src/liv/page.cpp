@@ -108,8 +108,9 @@ void Page::draw (
 
 AYU_DESCRIBE(liv::RenderParams,
     attrs(
-        attr("interpolation_mode", &RenderParams::interpolation_mode),
-        attr("window_background", &RenderParams::window_background)
+        attr("interpolation_mode", &RenderParams::interpolation_mode, optional),
+        attr("window_background", &RenderParams::window_background, optional),
+        attr("transparency_background", &RenderParams::transparency_background, optional)
     )
 )
 

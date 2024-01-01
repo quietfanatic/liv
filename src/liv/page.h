@@ -15,9 +15,12 @@
 namespace liv {
 
 struct RenderParams {
-    InterpolationMode interpolation_mode;
-    Fill window_background;
-    Fill transparency_background;
+     // Set some default values.  We really should be getting these default
+     // values from the settings, but it's awkward with the way we're currently
+     // loading memories.
+    InterpolationMode interpolation_mode = InterpolationMode::SmartCubic;
+    Fill window_background = Fill::Black;
+    Fill transparency_background = Fill::White;
     RenderParams () = default;
     RenderParams (const RenderParams&) = default;
     RenderParams (const Settings*);
