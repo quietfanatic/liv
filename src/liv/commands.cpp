@@ -1,6 +1,7 @@
 #include "commands.h"
 
 #include <algorithm>
+#include <SDL2/SDL_clipboard.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_messagebox.h>
 #include "../dirt/uni/io.h"
@@ -129,6 +130,14 @@ static void remove_from_list_ (const AnyString& list) {
     write_list(loc, entries);
 }
 Command remove_from_list (remove_from_list_, "remove_from_list", "Remove current page from list file");
+
+static void clipboard_text_ (const FormatList& fmt) {
+    if (!current_book) return;
+    UniqueString text;
+    fmt.write(text, current_book);
+    SDL_SetClipboardText(text.c_str());
+}
+Command clipboard_text (clipboard_text_, "clipboard_text", "Set clipboard text with format list");
 
 ///// LAYOUT COMMANDS
 

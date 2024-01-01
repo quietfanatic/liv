@@ -183,6 +183,7 @@ mappings: [
             [page_est_mem] "\n\n"
         ]
     ]]]
+    [[ctrl c] [clipboard_text [[page_abs]]]]
   ----- LAYOUT
      -- Toggle fullscreen mode
     [[f11] [fullscreen]]

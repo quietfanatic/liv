@@ -41,6 +41,9 @@ extern Command add_to_list;
  // (AnyString) Remove current page from list file.
 extern Command remove_from_list;
 
+ // (FormatList) Copy formatted info to the OS clipboard.
+extern Command clipboard_text;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously
