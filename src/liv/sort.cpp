@@ -114,7 +114,7 @@ bool operator== (SortMethodToken a, SortMethodToken b) {
 
 ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     using namespace ayu;
-    TreeArray a;
+    UniqueArray<Tree> a;
     SortMethodToken c = {v.criterion, SortFlags{}};
     a.push_back(item_to_tree(&c));
     for (
@@ -133,7 +133,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
 void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
     using namespace ayu;
     v = {};
-    for (auto e : TreeArraySlice(t)) {
+    for (auto e : Slice<Tree>(t)) {
         SortMethodToken token;
         item_from_tree(&token, e);
         if (token.criterion != SortCriterion{}) {

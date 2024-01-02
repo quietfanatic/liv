@@ -201,20 +201,20 @@ void FormatList::write (UniqueString& r, Book* book, int32 page) const {
 static ayu::Tree FormatToken_to_tree (const FormatToken& v){
     using namespace ayu;
     switch (v.command) {
-        case FormatCommand::None: return Tree(TreeArray());
+        case FormatCommand::None: return Tree(AnyArray<Tree>());
         case FormatCommand::Literal: return Tree(v.literal);
         case FormatCommand::IfZoomed: {
-            auto a = TreeArray(item_to_tree(&v.sublist));
+            auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
             a.insert(usize(0), Tree("if_zoomed"));
             return Tree(move(a));
         }
         case FormatCommand::ForVisiblePages: {
-            auto a = TreeArray(item_to_tree(&v.sublist));
+            auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
             a.insert(usize(0), Tree("for_visible_pages"));
             return Tree(move(a));
         }
         default: {
-            return Tree(TreeArray::make(item_to_tree(&v.command)));
+            return Tree(UniqueArray<Tree>::make(item_to_tree(&v.command)));
         }
     }
 }
@@ -227,7 +227,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
         new (&v.literal) AnyString(t);
     }
     else if (t.form == Form::Array) {
-        auto a = TreeArraySlice(t);
+        auto a = Slice<Tree>(t);
         if (!a) {
             v.command = FormatCommand::None;
             return;
@@ -237,7 +237,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
             case FormatCommand::IfZoomed:
             case FormatCommand::ForVisiblePages: {
                 new (&v.sublist) FormatList();
-                auto args = TreeArray(a.slice(1));
+                auto args = AnyArray(a.slice(1));
                 item_from_tree(
                     &v.sublist, ayu::Tree(move(args)),
                     ayu::Location(), ayu::DELAY_SWIZZLE
