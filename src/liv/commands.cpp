@@ -126,7 +126,7 @@ static void remove_from_list_ (const AnyString& list) {
         entries.begin(), entries.end(),
         current_book->source->pages[visible.l]
     );
-    entries.unsafe_set_size(new_end - entries.begin());
+    entries.impl.size = new_end - entries.impl.data;
     write_list(loc, entries);
 }
 Command remove_from_list (remove_from_list_, "remove_from_list", "Remove current page from list file");
