@@ -25,6 +25,13 @@ static void fullscreen_ () {
 }
 Command fullscreen (fullscreen_, "fullscreen", "Toggle fullscreen mode");
 
+static void leave_fullscreen_ () {
+    if (current_book && current_book->view.is_fullscreen()) {
+        current_book->fullscreen();
+    }
+}
+Command leave_fullscreen (leave_fullscreen_, "leave_fullscreen", "Leave fullscreen mode");
+
 static void leave_fullscreen_or_quit_ () {
     if (current_book && current_book->view.is_fullscreen()) {
         current_book->fullscreen();

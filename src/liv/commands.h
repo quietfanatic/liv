@@ -12,6 +12,8 @@ using namespace control;
 extern Command quit;
  // () Enter or leave fullscreen mode
 extern Command fullscreen;
+ // () Leave fullscreen mode
+extern Command leave_fullscreen;
  // () Leave fullscreen mode or quit if not fullscreen
 extern Command leave_fullscreen_or_quit;
 

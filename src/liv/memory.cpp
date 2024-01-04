@@ -81,6 +81,7 @@ void remember_book (Book* book) {
         return;
     }
 
+     // TODO: don't save spread_direction
     book->state.layout_params = mem->layout;
     book->state.render_params = mem->render;
 
