@@ -178,3 +178,18 @@ AYU_DESCRIBE(liv::Settings,
         attr("mappings", &Settings::mappings, optional)
     )
 )
+
+#ifndef TAP_DISABLE_TESTS
+#include "../dirt/tap/tap.h"
+
+static tap::TestSet tests ("liv/settings", []{
+    using namespace tap;
+
+     // This is already covered by other tests here, but it's useful to isolate
+     // this for performance testing.
+    doesnt_throw([]{
+        ayu::load("res:/liv/settings-default.ayu");
+    }, "Can load default settings");
+    done_testing();
+});
+#endif

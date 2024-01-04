@@ -16,7 +16,7 @@ my @includes = ();
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -fstrict-aliasing -fstack-protector
-    -Wall -Wextra
+    -Wall -Wextra -Wno-unused-value
     -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
 my @link_opts = (qw(-lSDL2 -lSDL2_image));
@@ -43,8 +43,7 @@ my %configs = (
         opts => [qw(-DTAP_DISABLE_TESTS -ggdb), @O3_opts],
     },
     rel => {
-        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS), @O3_opts],
-        strip => 1,
+        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS -s), @O3_opts],
     },
     opt32 => {
         opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @O3_opts],
@@ -189,24 +188,15 @@ for my $cfg (keys %configs) {
     }
 
      # Link program
-    my $tmp_program = "tmp/$cfg/$program";
     my $out_program = "out/$cfg/$program";
-    my $link_target;
-    if ($configs{$cfg}{strip} // 0) {
-        $link_target = $tmp_program;
+    rule $out_program, [@objects], sub {
         ensure_path $out_program;
-        rule $out_program, $tmp_program, sub {
-            run 'strip', $tmp_program, '-o', $out_program;
-        }, {fork => 1};
-    }
-    else {
-        $link_target = $out_program;
-    }
-    rule $link_target, [@objects], sub {
-        ensure_path $link_target;
         run @linker, @objects,
             @link_opts, @{$configs{$cfg}{opts} // []},
-            '-o', $link_target;
+            '-o', $out_program;
+        if ($cfg eq 'rel') {
+            print "Final program size: ", -s $out_program, "\n";
+        }
     }, {fork => 1};
 
      # Copy resources
