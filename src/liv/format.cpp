@@ -201,7 +201,7 @@ void FormatList::write (UniqueString& r, Book* book, int32 page) const {
 static ayu::Tree FormatToken_to_tree (const FormatToken& v){
     using namespace ayu;
     switch (v.command) {
-        case FormatCommand::None: return Tree(AnyArray<Tree>());
+        case FormatCommand::None: return Tree::array();
         case FormatCommand::Literal: return Tree(v.literal);
         case FormatCommand::IfZoomed: {
             auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
