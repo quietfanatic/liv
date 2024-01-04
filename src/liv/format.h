@@ -16,15 +16,20 @@ enum class FormatCommand {
     PageAbs,
     PageRelCwd,
     PageRelBook,
+    PageRelBookParent,
     PageFileSize,
     PagePixelWidth,
     PagePixelHeight,
     PagePixelBits,
     PageEstMem,
-    PagesRelCwdMerged,
+    MergedPagesAbs,
+    MergedPagesRelCwd,
+    MergedPagesRelBook,
+    MergedPagesRelBookParent,
+    ForVisiblePages,
     ZoomPercent,
     IfZoomed,
-    ForVisiblePages,
+    Cwd,
 };
 
 struct FormatList {

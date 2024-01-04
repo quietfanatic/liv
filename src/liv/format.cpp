@@ -8,6 +8,55 @@
 
 namespace liv {
 
+static
+void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
+    if (!paths) return;
+    if (paths.size() == 1) {
+        encat(s, paths[0]);
+        return;
+    }
+     // Find longest common prefix and suffix
+    usize prefix = paths[0].size();
+    usize suffix = paths[0].size();
+    for (auto& path : paths.slice(1)) {
+        for (usize i = 0; i < prefix && i < path.size(); i++) {
+            if (path[i] != paths[0][i]) {
+                prefix = i;
+                break;
+            }
+        }
+        for (usize i = 0; i < suffix && i < path.size(); i++) {
+            if (path[path.size() - i - 1] !=
+                paths[0][paths[0].size() - i - 1]
+            ) {
+                suffix = i;
+                break;
+            }
+        }
+    }
+     // Oh but don't chop up numbers
+    while (prefix > 0 &&
+        paths[0][prefix - 1] >= '0' && paths[0][prefix - 1] <= '9'
+    ) prefix--;
+    while (suffix > 0 &&
+        paths[0][paths[0].size() - suffix] >= '0' &&
+        paths[0][paths[0].size() - suffix] <= '9'
+    ) suffix--;
+     // Now do it
+    encat(s,
+        paths[0].slice(0, prefix), '{',
+        paths[0].slice(prefix, paths[0].size() - suffix)
+    );
+    for (auto& path : paths.slice(1)) {
+        encat(s,
+            ',', path.slice(prefix, path.size() - suffix)
+        );
+    }
+    encat(s,
+        '}', paths[0].slice(paths[0].size() - suffix)
+    );
+}
+
 NOINLINE
 void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
     switch (command) {
@@ -72,6 +121,16 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, iri::decode_path(rel));
             break;
         }
+        case FormatCommand::PageRelBookParent: {
+            if (page < 0) break;
+            auto& loc = book->source->pages[page];
+            auto base = book->source->type == BookType::Folder
+                ? book->source->location.without_last_segment()
+                : book->source->location;
+            auto rel = loc.relative_to(base);
+            encat(s, iri::decode_path(rel));
+            break;
+        }
         case FormatCommand::PageFileSize: {
             if (page < 0) break;
             std::error_code code;
@@ -109,62 +168,60 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, (book->block.get(page)->estimated_memory + 1023) / 1024, 'K');
             break;
         }
-        case FormatCommand::PagesRelCwdMerged: {
+        case FormatCommand::MergedPagesAbs: {
             auto visible = book->state.visible_range();
-            if (!size(visible)) return;
-            if (size(visible) == 1) {
-                 // Only one page, don't bother merging
-                auto& loc = book->source->pages[page];
-                auto rel = loc.relative_to(iri::working_directory());
-                encat(s, iri::decode_path(rel));
-                return;
-            }
-             // Make paths relative
+            if (!size(visible)) break;
+            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
+                return iri::to_fs_path(book->source->pages[visible[i]]);
+            });
+            merge_paths(s, paths);
+            break;
+        }
+        case FormatCommand::MergedPagesRelCwd: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
                 auto& loc = book->source->pages[visible[i]];
                 auto rel = loc.relative_to(iri::working_directory());
                 return iri::decode_path(rel);
             });
-             // Find longest common prefix and suffix
-            usize prefix = paths[0].size();
-            usize suffix = paths[0].size();
-            for (auto& path : paths.slice(1)) {
-                for (usize i = 0; i < prefix && i < path.size(); i++) {
-                    if (path[i] != paths[0][i]) {
-                        prefix = i;
-                        break;
-                    }
-                }
-                for (usize i = 0; i < suffix && i < path.size(); i++) {
-                    if (path[path.size() - i - 1] !=
-                        paths[0][paths[0].size() - i - 1]
-                    ) {
-                        suffix = i;
-                        break;
-                    }
-                }
+            merge_paths(s, paths);
+            break;
+        }
+        case FormatCommand::MergedPagesRelBook: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
+                auto& loc = book->source->pages[visible[i]];
+                auto rel = loc.relative_to(book->source->location);
+                return iri::decode_path(rel);
+            });
+            merge_paths(s, paths);
+            break;
+        }
+        case FormatCommand::MergedPagesRelBookParent: {
+            auto visible = book->state.visible_range();
+            if (!size(visible)) break;
+            auto base = book->source->type == BookType::Folder
+                ? book->source->location.without_last_segment()
+                : book->source->location;
+            auto paths = UniqueArray<UniqueString>(
+                size(visible), [=, &base](usize i){
+                auto& loc = book->source->pages[visible[i]];
+                auto rel = loc.relative_to(base);
+                return iri::decode_path(rel);
+            });
+            merge_paths(s, paths);
+            break;
+        }
+        case FormatCommand::ForVisiblePages: {
+            for (auto p : book->state.visible_range()) {
+                sublist.write(s, book, p);
             }
-             // Oh but don't chop up numbers
-            while (prefix > 0 &&
-                paths[0][prefix - 1] >= '0' && paths[0][prefix - 1] <= '9'
-            ) prefix--;
-            while (suffix > 0 &&
-                paths[0][paths[0].size() - suffix] >= '0' &&
-                paths[0][paths[0].size() - suffix] <= '9'
-            ) suffix--;
-             // Now do it
-            encat(s,
-                paths[0].slice(0, prefix), '{',
-                paths[0].slice(prefix, paths[0].size() - suffix)
-            );
-            for (auto& path : paths.slice(1)) {
-                encat(s,
-                    ',', path.slice(prefix, path.size() - suffix)
-                );
-            }
-            encat(s,
-                '}', paths[0].slice(paths[0].size() - suffix)
-            );
+            break;
+        }
+        case FormatCommand::Cwd: {
+            encat(s, iri::to_fs_path(iri::working_directory()));
             break;
         }
         case FormatCommand::ZoomPercent: {
@@ -175,12 +232,6 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::IfZoomed: {
             if (book->view.get_layout().zoom != 1) {
                 sublist.write(s, book, page);
-            }
-            break;
-        }
-        case FormatCommand::ForVisiblePages: {
-            for (auto p : book->state.visible_range()) {
-                sublist.write(s, book, p);
             }
             break;
         }
@@ -270,15 +321,20 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_abs", FormatCommand::PageAbs),
         value("page_rel_cwd", FormatCommand::PageRelCwd),
         value("page_rel_book", FormatCommand::PageRelBook),
+        value("page_rel_book_parent", FormatCommand::PageRelBookParent),
         value("page_file_size", FormatCommand::PageFileSize),
         value("page_pixel_width", FormatCommand::PagePixelWidth),
         value("page_pixel_height", FormatCommand::PagePixelHeight),
         value("page_pixel_bits", FormatCommand::PagePixelBits),
         value("page_est_mem", FormatCommand::PageEstMem),
-        value("pages_rel_cwd_merged", FormatCommand::PagesRelCwdMerged),
+        value("merged_pages_abs", FormatCommand::MergedPagesAbs),
+        value("merged_pages_rel_cwd", FormatCommand::MergedPagesRelCwd),
+        value("merged_pages_rel_book", FormatCommand::MergedPagesRelBook),
+        value("merged_pages_rel_book_parent", FormatCommand::MergedPagesRelBookParent),
+        value("for_visible_pages", FormatCommand::ForVisiblePages),
+        value("cwd", FormatCommand::Cwd),
         value("zoom_percent", FormatCommand::ZoomPercent),
-        value("if_zoomed", FormatCommand::IfZoomed),
-        value("for_visible_pages", FormatCommand::ForVisiblePages)
+        value("if_zoomed", FormatCommand::IfZoomed)
     )
 )
 
@@ -301,7 +357,7 @@ static tap::TestSet tests ("liv/format", []{
 
     Str fmt_ayu =
         "["
-            "[pages_rel_cwd_merged] "
+            "[merged_pages_rel_cwd] "
             "\" [\" [visible_range] / [page_count] \"]\" "
             "[if_zoomed \" (\" [zoom_percent] \"%)\"]"
         "]";
