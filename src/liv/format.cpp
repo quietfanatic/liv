@@ -125,7 +125,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             if (page < 0) break;
             auto& loc = book->source->pages[page];
             auto base = book->source->type == BookType::Folder
-                ? book->source->location.without_last_segment()
+                ? book->source->location.chop_last_slash()
                 : book->source->location;
             auto rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
@@ -203,7 +203,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto base = book->source->type == BookType::Folder
-                ? book->source->location.without_last_segment()
+                ? book->source->location.chop_last_slash()
                 : book->source->location;
             auto paths = UniqueArray<UniqueString>(
                 size(visible), [=, &base](usize i){
@@ -353,7 +353,7 @@ AYU_DESCRIBE(liv::FormatList,
 static tap::TestSet tests ("liv/format", []{
     using namespace tap;
 
-    fs::current_path(iri::to_fs_path(iri::program_location().without_filename()));
+    fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
 
     Str fmt_ayu =
         "["

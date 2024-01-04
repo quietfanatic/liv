@@ -15,7 +15,7 @@ UniqueArray<IRI> expand_neighbors (
     auto& extensions = settings->get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
 
-    IRI folder = loc.without_filename();
+    IRI folder = loc.chop_filename();
     for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
         auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
         Str ext = iri::path_extension(child.path());

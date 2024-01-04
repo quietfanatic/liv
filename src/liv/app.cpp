@@ -232,7 +232,7 @@ Book* current_book = null;
 static tap::TestSet tests ("liv/app", []{
     using namespace tap;
 
-    fs::current_path(iri::to_fs_path(iri::program_location().without_filename()));
+    fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
 
     App app;
      // TODO: Figure out how to get headless rendering working on nvidia drivers
