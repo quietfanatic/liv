@@ -70,6 +70,7 @@ struct PageProgram : Program {
         expect(u_interpolation_mode != -1);
         expect(u_transparency_background != -1);
         expect(u_zoom != -1);
+        plog("linked gl program");
     }
 };
 
@@ -79,6 +80,7 @@ void Page::draw (
     const Rect& screen_rect,
     const Rect& tex_rect
 ) {
+    plog("drawing page");
     if (!texture) return;
     require(!!*texture);
     require(texture->target == GL_TEXTURE_RECTANGLE);
@@ -102,6 +104,7 @@ void Page::draw (
     glUniform1f(program->u_zoom, zoom);
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    plog("drew page");
 }
 
 } using namespace liv;
@@ -115,6 +118,11 @@ AYU_DESCRIBE(liv::RenderParams,
 )
 
 AYU_DESCRIBE(liv::PageProgram,
+#ifdef LIV_PROFILE
+    swizzle([](PageProgram&, const ayu::Tree&){
+        plog("loading program");
+    }),
+#endif
     delegate(base<Program>())
 )
 

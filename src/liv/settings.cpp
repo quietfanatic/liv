@@ -61,6 +61,7 @@ void init_settings () {
     if (!res_default_settings) {
         res_default_settings =
             ayu::Resource("res:/liv/settings-default.ayu").ref();
+        plog("loaded default settings");
     }
 }
 

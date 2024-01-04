@@ -1,8 +1,8 @@
 #pragma once
 
 #ifdef LIV_PROFILE
-#include "../dirt/uni/io.h"
-#include "../dirt/uni/time.h"
+#include <cstdio>
+#include <ctime> // Will be using POSIX functions though
 #include "../dirt/uni/arrays.h"
 #endif
 
@@ -34,9 +34,10 @@ struct Settings;
 struct SortMethod;
 
 #ifdef LIV_PROFILE
-inline void plog (Str s) {
-    static double start = uni::now();
-    warn_utf8(cat("[", uint64((uni::now() - start) * 1000000), "] ", s, "\n"));
+inline void plog (const char* s) {
+    struct timespec t;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    fprintf(stderr, "[%ld.%09ld] %s\n", long(t.tv_sec), long(t.tv_nsec), s);
 }
 #else
 template <class C> void plog (C&&) { }
