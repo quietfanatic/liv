@@ -83,16 +83,16 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, book->block.count());
             break;
         case FormatCommand::BookAbs: {
-            auto& loc = book->source->location_for_memory();
+            auto&& loc = book->source->location_for_memory();
             if (loc) {
                 encat(s, iri::to_fs_path(loc));
             }
             break;
         }
         case FormatCommand::BookRelCwd: {
-            auto& loc = book->source->location_for_memory();
+            auto&& loc = book->source->location_for_memory();
             if (loc) {
-                auto rel = loc.relative_to(iri::working_directory());
+                auto&& rel = loc.relative_to(iri::working_directory());
                 encat(s, iri::decode_path(rel));
             }
             break;
@@ -103,31 +103,30 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         }
         case FormatCommand::PageAbs: {
             if (page < 0) break;
-            auto& loc = book->source->pages[page];
+            auto&& loc = book->source->pages[page];
             encat(s, iri::to_fs_path(loc));
             break;
         }
         case FormatCommand::PageRelCwd: {
             if (page < 0) break;
-            auto& loc = book->source->pages[page];
-            auto rel = loc.relative_to(iri::working_directory());
+            auto&& loc = book->source->pages[page];
+            auto&& rel = loc.relative_to(iri::working_directory());
             encat(s, iri::decode_path(rel));
             break;
         }
         case FormatCommand::PageRelBook: {
             if (page < 0) break;
-            auto& loc = book->source->pages[page];
-            auto rel = loc.relative_to(book->source->location);
+            auto&& loc = book->source->pages[page];
+            auto&& base = book->source->base_for_page_rel_book();
+            auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
             break;
         }
         case FormatCommand::PageRelBookParent: {
             if (page < 0) break;
-            auto& loc = book->source->pages[page];
-            auto base = book->source->type == BookType::Folder
-                ? book->source->location.chop_last_slash()
-                : book->source->location;
-            auto rel = loc.relative_to(base);
+            auto&& loc = book->source->pages[page];
+            auto&& base = book->source->base_for_page_rel_book_parent();
+            auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
             break;
         }
@@ -181,8 +180,8 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
-                auto& loc = book->source->pages[visible[i]];
-                auto rel = loc.relative_to(iri::working_directory());
+                auto&& loc = book->source->pages[visible[i]];
+                auto&& rel = loc.relative_to(iri::working_directory());
                 return iri::decode_path(rel);
             });
             merge_paths(s, paths);
@@ -191,9 +190,12 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::MergedPagesRelBook: {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
-            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
-                auto& loc = book->source->pages[visible[i]];
-                auto rel = loc.relative_to(book->source->location);
+            auto&& base = book->source->base_for_page_rel_book();
+            auto paths = UniqueArray<UniqueString>(
+                size(visible), [=, &base](usize i)
+            {
+                auto&& loc = book->source->pages[visible[i]];
+                auto&& rel = loc.relative_to(base);
                 return iri::decode_path(rel);
             });
             merge_paths(s, paths);
@@ -202,13 +204,12 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::MergedPagesRelBookParent: {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
-            auto base = book->source->type == BookType::Folder
-                ? book->source->location.chop_last_slash()
-                : book->source->location;
+            auto&& base = book->source->base_for_page_rel_book_parent();
             auto paths = UniqueArray<UniqueString>(
-                size(visible), [=, &base](usize i){
-                auto& loc = book->source->pages[visible[i]];
-                auto rel = loc.relative_to(base);
+                size(visible), [=, &base](usize i)
+            {
+                auto&& loc = book->source->pages[visible[i]];
+                auto&& rel = loc.relative_to(base);
                 return iri::decode_path(rel);
             });
             merge_paths(s, paths);

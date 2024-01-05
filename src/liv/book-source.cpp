@@ -130,6 +130,47 @@ const IRI& BookSource::location_for_memory () {
     }
 }
 
+const IRI& BookSource::base_for_page_rel_book () {
+    switch (type) {
+        case BookType::Misc: return iri::working_directory();
+        case BookType::Folder: {
+            expect(location.path().back() == '/');
+            return location;
+        }
+        case BookType::List: {
+            expect(location.path().back() != '/');
+            if (location == "liv:stdin") return iri::working_directory();
+            else return location;
+        }
+        case BookType::FileWithNeighbors: {
+            expect(location.path().back() != '/');
+            return location;
+        }
+        default: never();
+    }
+}
+
+IRI BookSource::base_for_page_rel_book_parent () {
+    switch (type) {
+        case BookType::Misc: return iri::working_directory();
+        case BookType::Folder: {
+            expect(location.path().back() == '/');
+            if (location.path() == "/") return location;
+            else return location.chop_last_slash();
+        }
+        case BookType::List: {
+            expect(location.path().back() != '/');
+            if (location == "liv:stdin") return iri::working_directory();
+            else return location;
+        }
+        case BookType::FileWithNeighbors: {
+            expect(location.path().back() != '/');
+            return location;
+        }
+        default: never();
+    }
+}
+
 int32 BookSource::find_page_offset (const IRI& page) {
     for (usize i = 0; i < pages.size(); i++) {
         if (pages[i] == page) return i;

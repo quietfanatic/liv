@@ -32,6 +32,10 @@ struct BookSource {
     BookSource (const Settings*, BookType, Slice<IRI>, SortMethod sort = SortMethod{});
      // Empty if this book should not be remembered.
     const IRI& location_for_memory ();
+     // Current book or cwd if Misc
+    const IRI& base_for_page_rel_book ();
+     // Directory containing current book or cwd if Misc
+    IRI base_for_page_rel_book_parent ();
 
     int32 find_page_offset (const IRI& page);
 };

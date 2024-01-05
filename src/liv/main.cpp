@@ -44,9 +44,7 @@ int main (int argc, char** argv) {
                 list = true;
             }
             else if (arg.slice(0, 7) == "--sort=") {
-                ayu::item_from_tree(&sort, ayu::tree_from_string(cat(
-                    '[', arg.slice(7), ']'
-                )));
+                ayu::item_from_list_string(&sort, arg.slice(7));
             }
             else raise(e_General, cat("Unrecognized option ", arg));
         }
