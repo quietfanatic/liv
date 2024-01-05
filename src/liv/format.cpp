@@ -8,10 +8,12 @@
 
 namespace liv {
 
+ // Merge multiple paths together with a format like foo/bar-{01,02}.png
 static
 void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
     if (!paths) return;
     if (paths.size() == 1) {
+         // Only one path given so just print it.
         encat(s, paths[0]);
         return;
     }
@@ -42,6 +44,12 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
         paths[0][paths[0].size() - suffix] >= '0' &&
         paths[0][paths[0].size() - suffix] <= '9'
     ) suffix--;
+    if (prefix + suffix > paths[0].size()) {
+         // If the prefix and suffix overlap, we must have been given identical
+         // paths.  I don't know what to do with this situation!  For now we'll
+         // do something safish.
+        suffix = 0;
+    }
      // Now do it
     encat(s,
         paths[0].slice(0, prefix), '{',

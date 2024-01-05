@@ -69,7 +69,7 @@ BookSource::BookSource (
     if (!sort) {
         sort = settings->get(&FilesSettings::sort);
     }
-    require(loc);
+    require(loc.scheme() == "file" && loc.hierarchical());
     switch (type) {
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
@@ -151,24 +151,38 @@ const IRI& BookSource::base_for_page_rel_book () {
 }
 
 IRI BookSource::base_for_page_rel_book_parent () {
+    const IRI* r;
     switch (type) {
-        case BookType::Misc: return iri::working_directory();
+        case BookType::Misc: {
+            r = &iri::working_directory();
+            break;
+        }
         case BookType::Folder: {
             expect(location.path().back() == '/');
-            if (location.path() == "/") return location;
-            else return location.chop_last_slash();
+            expect(location && location.hierarchical());
+            if (auto parent = location.chop_last_slash()) {
+                return parent;
+            }
+            else {
+                expect(parent.error() == iri::Error::PathOutsideRoot);
+                r = &location;
+                break;
+            }
         }
         case BookType::List: {
             expect(location.path().back() != '/');
-            if (location == "liv:stdin") return iri::working_directory();
-            else return location;
+            if (location == "liv:stdin") r = &iri::working_directory();
+            else r = &location;
+            break;
         }
         case BookType::FileWithNeighbors: {
             expect(location.path().back() != '/');
-            return location;
+            r = &location;
+            break;
         }
         default: never();
     }
+    return *r;
 }
 
 int32 BookSource::find_page_offset (const IRI& page) {
