@@ -53,14 +53,9 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
      // Now do it
     encat(s,
         paths[0].slice(0, prefix), '{',
-        paths[0].slice(prefix, paths[0].size() - suffix)
-    );
-    for (auto& path : paths.slice(1)) {
-        encat(s,
-            ',', path.slice(prefix, path.size() - suffix)
-        );
-    }
-    encat(s,
+        Caterator(",", paths.size(), [&paths, prefix, suffix](usize i){
+            return paths[i].slice(prefix, paths[i].size() - suffix);
+        }),
         '}', paths[0].slice(paths[0].size() - suffix)
     );
 }
@@ -373,6 +368,12 @@ static tap::TestSet tests ("liv/format", []{
     FormatList fmt;
     ayu::item_from_string(&fmt, fmt_ayu);
     is(ayu::item_to_string(&fmt), fmt_ayu, "FormatList AYU round-trip");
+
+    UniqueString s;
+    merge_paths(s, Slice<UniqueString>{
+        "foobarbaz0123.jpeg", "foobarbaz0124.jpeg", "foobarbaz0125.jpeg"
+    });
+    is(s, "foobarbaz{0123,0124,0125}.jpeg", "merge_paths");
 
     App app;
     app.hidden = true;
