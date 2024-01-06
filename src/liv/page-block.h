@@ -20,6 +20,10 @@ struct PageBlock {
     PageBlock (const BookSource*);
     ~PageBlock ();
 
+     // If you change the sorting method or something like that, you need to
+     // call this.
+    void source_updated (const BookSource*);
+
      // Returns null if i is out of range
     Page* get (int32 i) const;
     int32 count () const { return int32(size(pages)); }

@@ -5,6 +5,7 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_messagebox.h>
 #include "../dirt/uni/io.h"
+#include "../dirt/uni/shell.h"
 #include "../dirt/uni/text.h"
 #include "app.h"
 #include "book.h"
@@ -44,6 +45,38 @@ Command leave_fullscreen_or_quit (
     leave_fullscreen_or_quit_, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
 );
 
+static void prompt_command_ () {
+    auto res = run({
+        "zenity", "--entry", cat("--title=Input command"),
+        cat("--text=See commands.h for available commands"),
+    });
+    if (res.ret != 0) {
+        if (res.command_not_found()) {
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_ERROR,
+                "Cannot run zenity",
+                "This action is only available if zenity is installed.",
+                current_book->view.window
+            );
+        }
+        return;
+    }
+    try {
+        Statement cmd;
+        ayu::item_from_list_string(&cmd, res.out);
+        cmd();
+    }
+    catch (std::exception& e) {
+        run({
+            "zenity", "--error", "--title=Command failed",
+            cat("--text=", "This command: ", res.out,
+                "\nthrew an exception: ", e.what()
+            )
+        });
+    }
+}
+Command prompt_command (prompt_command_, "prompt_command", "Prompt for a command with a dialog box");
+
 ///// BOOK AND PAGE COMMANDS
 
 static void next_ () {
@@ -76,14 +109,10 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
         title.write(t, current_book);
         UniqueString m;
         message.write(m, current_book);
-        static bool have_zenity = system("zenity --help > /dev/null") == 0;
-        if (have_zenity) {
-            if (system(cat(
-                "zenity --title='", escape_for_shell(t), "' ",
-                "--info --text='", escape_for_shell(m), "'\0"
-            ).data()) != 0) { }
-        }
-        else {
+        auto res = run({
+            "zenity", cat("--title=", t), "--info", cat("--text=", m)
+        });
+        if (res.command_not_found()) {
             SDL_ShowSimpleMessageBox(
                 SDL_MESSAGEBOX_INFORMATION,
                 t.c_str(), m.c_str(),

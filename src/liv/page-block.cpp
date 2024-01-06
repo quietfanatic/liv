@@ -8,11 +8,33 @@
 namespace liv {
 
 PageBlock::PageBlock (const BookSource* src) :
-    pages(src->pages.size(), [&](usize i){
+    pages(src->pages.size(), [src](usize i){
         return std::make_unique<Page>(src->pages[i]);
     })
 { }
 PageBlock::~PageBlock () { }
+
+void PageBlock::source_updated (const BookSource* src) {
+    std::unordered_map<Str, std::unique_ptr<Page>> by_iri;
+    pages.consume([&by_iri](auto&& page) {
+        by_iri.emplace(page->location.spec(), move(page));
+    });
+    pages = decltype(pages)(src->pages.size(), [src, &by_iri](usize i){
+        auto iter = by_iri.find(src->pages[i].spec());
+        if (iter != by_iri.end()) {
+            auto r = move(iter->second);
+            by_iri.erase(iter);
+            return r;
+        }
+        else return std::make_unique<Page>(src->pages[i]);
+    });
+     // We need to explicitly unload any images that are left over because we're
+     // keeping track of the estimated memory usage.
+    for (auto& [_, page] : by_iri) {
+        unload_page(&*page);
+        page = {};
+    }
+}
 
 Page* PageBlock::get (int32 i) const {
     if (i < 0 || i >= count()) return null;

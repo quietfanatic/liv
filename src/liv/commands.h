@@ -16,6 +16,8 @@ extern Command fullscreen;
 extern Command leave_fullscreen;
  // () Leave fullscreen mode or quit if not fullscreen
 extern Command leave_fullscreen_or_quit;
+ // () Show a dialog box prompting for a command.
+extern Command prompt_command;
 
 ///// BOOK AND PAGE COMMANDS
 

@@ -205,6 +205,7 @@ mappings: [
     [[escape] [leave_fullscreen]]
     [[q] [quit]]
     [[ctrl q] [quit]]
+    [["`"] [prompt_command]]
 ]
 
 }]

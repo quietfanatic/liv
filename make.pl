@@ -122,6 +122,7 @@ my @sources = (qw(
     dirt/uni/assertions.cpp
     dirt/uni/errors.cpp
     dirt/uni/io.cpp
+    dirt/uni/shell.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp
     dirt/whereami/whereami.c
