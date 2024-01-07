@@ -122,7 +122,7 @@ memory: {
     trim_when_minimized: page_cache
 }
 
- -- Key and mouse bindings.  See app/app-commands.h for a list of supported
+ -- Key and mouse bindings.  See help/commands.md for a list of supported
  -- commands.
 mappings: [
   ----- PAGES
@@ -182,7 +182,7 @@ mappings: [
      -- Zoom out by √2
     [["-"] [zoom_multiply 0.707106781186547]]
      -- Reset layout to default
-    [[r] [reset_layout]]
+    [[0] [reset_layout]]
   ----- DISPLAY
      -- Set interpolation mode
     [[ctrl 1] [interpolation_mode nearest]]
