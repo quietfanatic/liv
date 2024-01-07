@@ -136,6 +136,12 @@ my @resources = (qw(
     liv/page.ayu
     liv/settings-default.ayu
     liv/settings-template.ayu
+),
+    ["liv/help/commands.md" => "help/commands.md"],
+    ["liv/help/formats.md" => "help/formats.md"],
+    ["../README.md" => "README.md"],
+);
+my @test_resources = (qw(
     liv/test/*
     dirt/ayu/test/*.ayu
     dirt/ayu/test/*.json
@@ -201,33 +207,29 @@ for my $cfg (keys %configs) {
     }, {fork => 1};
 
      # Copy resources
-    my $testing_disabled = grep $_ eq '-DTAP_DISABLE_TESTS';
+    my $testing_disabled = grep $_ eq '-DTAP_DISABLE_TESTS', @{$configs{$cfg}{opts}};
+    my @res = @resources;
+    push @res, @test_resources unless $testing_disabled;
     my @out_resources;
-    for (@resources) {
+    for (@res) {
         my $name = ref $_ eq 'ARRAY' ? $_->[0] : $_;
-         # Skip test files when testing is disabled
-        next if $testing_disabled and $name =~ /\/test\//;
         my @files = glob "src/$name";
         @files or die "No resources matched $name\n";
         for my $from (@files) {
-            my $to = ref $_ eq 'ARRAY' ? $_->[1] : $from;
-            $to =~ s[^src/][out/$cfg/res/];
+            my $to;
+            if (ref $_ eq 'ARRAY') {
+                $to = "out/$cfg/$_->[1]";
+            }
+            else {
+                $to = $from;
+                $to =~ s[^src/][out/$cfg/res/];
+            }
             push @out_resources, $to;
             rule $to, $from, sub {
                 ensure_path($to);
                 copy($from, $to) or die "Copy failed: $!";
             }, {fork => 1};
         }
-    }
-     # Copy documentation
-    for my $help (glob("src/liv/help/*")) {
-        my $to = $help;
-        $to =~ s[^src/liv/][out/$cfg/];
-        push @out_resources, $to;
-        rule $to, $help, sub {
-            ensure_path($to);
-            copy($help, $to) or die "Copy failed: $!";
-        }, {fork => 1};
     }
 
      # Misc phonies
