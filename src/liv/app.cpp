@@ -278,7 +278,7 @@ static tap::TestSet tests ("liv/app", []{
     pass("App stopped on SDL_QUIT message");
 
     control::send_input_as_event(
-        {.type = control::KEY, .code = SDLK_RIGHT}, window_id
+        {.type = control::InputType::Key, .code = SDLK_RIGHT}, window_id
     );
     SDL_PushEvent(&quit_event);
     app.run();
@@ -286,7 +286,7 @@ static tap::TestSet tests ("liv/app", []{
     is(app.books[0]->state.spread_range.l, 1, "Pressing right goes to next page");
 
     control::send_input_as_event(
-        {.type = control::KEY, .code = SDLK_LEFT}, window_id
+        {.type = control::InputType::Key, .code = SDLK_LEFT}, window_id
     );
     SDL_PushEvent(&quit_event);
     app.run();
@@ -294,7 +294,7 @@ static tap::TestSet tests ("liv/app", []{
     is(app.books[0]->state.spread_range.l, 0, "Pressing left goes to previous page");
 
     control::send_input_as_event(
-        {.type = control::KEY, .ctrl = true, .code = SDLK_q}, window_id
+        {.type = control::InputType::Key, .flags = control::InputFlags::Ctrl, .code = SDLK_q}, window_id
     );
     app.run();
     pass("App stopped on Ctrl-Q");

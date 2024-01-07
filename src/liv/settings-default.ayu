@@ -127,17 +127,17 @@ memory: {
 mappings: [
   ----- PAGES
      -- Go to next page(s)
-    [[right] [next]]
+    [[repeatable right] [next]]
      -- Go to previous page(s)
-    [[left] [prev]]
+    [[repeatable left] [prev]]
      -- Go forward one page (even if viewing multiple pages)
-    [[shift right] [seek 1]]
+    [[repeatable shift right] [seek 1]]
      -- Go backward one page (even if viewing multiple pages)
-    [[shift left] [seek -1]]
+    [[repeatable shift left] [seek -1]]
      -- Skip ahead 20 pages
-    [[ctrl right] [seek 20]]
+    [[repeatable ctrl right] [seek 20]]
      -- Rewind 20 pages
-    [[ctrl left] [seek -20]]
+    [[repeatable ctrl left] [seek -20]]
      -- Go to the end of the book
     [[ctrl shift right] [seek 1000000000]]
      -- Go to the start of the book
@@ -198,10 +198,6 @@ mappings: [
     [[ctrl shift t] [transparency_background black]]
   ----- EXECUTION
      -- Quitting
-     -- Originally escape was mapped to leave_fullscreen_or_quit, but my system
-     -- seems to have a bug where if I press escape to close a different window
-     -- and that makes the SDL window gain focus, the SDL window receives an
-     -- escape keypress too.
     [[escape] [leave_fullscreen]]
     [[q] [quit]]
     [[ctrl q] [quit]]
