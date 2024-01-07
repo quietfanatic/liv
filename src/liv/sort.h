@@ -18,6 +18,7 @@ enum class SortFlags {
     Reverse = 0x1,
     NotArgs = 0x2,
     NotLists = 0x4,
+     // TODO: add FoldersFirst and FoldersLast
 };
 DECLARE_ENUM_BITWISE_OPERATORS(SortFlags)
 

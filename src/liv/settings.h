@@ -119,7 +119,10 @@ const T& Settings::get (
     else if (res_default_settings->*setting_generic) {
         return *(res_default_settings->*setting_generic);
     }
-    else return *(builtin_default_settings.*setting_generic);
+    else {
+        expect(builtin_default_settings.*setting_generic);
+        return *(builtin_default_settings.*setting_generic);
+    }
 }
 
 } // namespace liv

@@ -98,11 +98,10 @@ files: {
     sort: [natural not_args not_lists]
      -- When scanning a folder, only open files ending with these extensions.
      -- We'll always attempt to open explicit arguments and list entries
-     -- regardless of their extensions.
-     -- TODO: builtin case insensitivity
+     -- regardless of their extensions.  The file extension is case-insensitive
+     -- for ASCII characters only.
     page_extensions: [
         bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
-        BMP GIF JFIF JPE JPEG JPG PNG TIF TIFF XBM XPM WEBP
     ]
 }
 
