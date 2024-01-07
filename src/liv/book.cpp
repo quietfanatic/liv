@@ -32,31 +32,31 @@ static tap::TestSet tests ("liv/book", []{
     glow::Image img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.state.get_page_number(), 1, "Initial page is 1");
+    is(book.state.spread_range.l, 0, "Initial page is 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "First page is correct");
 
     book.next();
     book.view.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.state.get_page_number(), 2, "Next page is 2");
+    is(book.state.spread_range.l, 1, "Next page is 2");
     is(img[{60, 60}], glow::RGBA8(0x45942eff), "Second page is correct");
 
     book.next();
-    is(book.state.get_page_number(), 2, "Can't go past last page");
+    is(book.state.spread_range.l, 1, "Can't go past last page");
     book.seek(10000);
-    is(book.state.get_page_number(), 2, "Can't seek past last page");
+    is(book.state.spread_range.l, 1, "Can't seek past last page");
 
     book.prev();
     book.view.draw_if_needed();
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
-    is(book.state.get_page_number(), 1, "Go back to page 1");
+    is(book.state.spread_range.l, 0, "Go back to page 1");
     is(img[{60, 60}], glow::RGBA8(0x2674dbff), "Going back to first page works");
 
     book.prev();
     book.view.draw_if_needed();
-    is(book.state.get_page_number(), 1, "Can't go before page 1");
+    is(book.state.spread_range.l, 0, "Can't go before page 1");
 
     is(img[{0, 60}], glow::RGBA8(0x2674dbff), "Default to auto_zoom_mode = fit");
     book.auto_zoom_mode(AutoZoomMode::Original);
@@ -67,7 +67,7 @@ static tap::TestSet tests ("liv/book", []{
 
     book.auto_zoom_mode(AutoZoomMode::Fit);
     book.spread_count(2);
-    book.state.set_page_number(1);
+    book.state.set_page_offset(0);
     is(book.state.spread_range, IRange{0, 2}, "Viewing two pages");
     is(book.state.visible_range(), IRange{0, 2}, "Two visible pages");
     book.view.draw_if_needed();

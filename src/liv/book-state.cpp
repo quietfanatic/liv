@@ -31,12 +31,12 @@ IRange BookState::visible_range () const {
     return spread_range & IRange{0, book->source->pages.size()};
 }
 
-void BookState::set_page_number (int32 no) {
+void BookState::set_page_offset (int32 no) {
     auto settings = book->app->settings;
     auto source = &*book->source;
      // Clamp such that there is at least one visible page in the range
     int32 l = clamp(
-        no - 1,
+        no,
         1 - int32(size(spread_range)),
         int32(source->pages.size()) - 1
     );

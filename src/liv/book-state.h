@@ -23,11 +23,10 @@ struct BookState {
     RenderParams render_params;
 
     ///// Controls
-     // Takes a 1-based page number.  page_indexes will be set to
-     //     {no - 1, no + spread_count - 1}
+     // Takes a 0-based page number.  spread_range will be set to
+     //     {no, no + spread_count}
      // but clamped such that there is at least one visible page.
-    void set_page_number (int32 no);
-    int32 get_page_number () const { return spread_range.l + 1; }
+    void set_page_offset (int32 no);
 
      // Set number of pages to view simultaneously.  Clamps to 1..2048
      // TODO: clamp smaller wow

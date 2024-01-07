@@ -47,8 +47,8 @@ struct Book {
     }
 
     void seek (int32 offset) {
-        int64 no = state.get_page_number() + offset;
-        state.set_page_number(clamp(no, -2048, int32(GINF)));
+        int32 clamped = clamp(state.spread_range.l + offset, -2048, GINF);
+        state.set_page_offset(clamped);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -63,7 +63,7 @@ struct Book {
         source->pages.erase(visible.l);
          // This will clamp the value so that there's still at least one visible
          // page.
-        state.set_page_number(visible.l + 1);
+        state.set_page_offset(visible.l);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -79,7 +79,7 @@ struct Book {
         block.source_updated(&*source);
         if (current_location) {
             int32 new_offset = source->find_page_offset(current_location);
-            state.set_page_number(new_offset + 1);
+            state.set_page_offset(new_offset);
         }
         view.spread = {};
         view.layout = {};

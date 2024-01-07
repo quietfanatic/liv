@@ -245,7 +245,7 @@ static tap::TestSet tests ("liv/app", []{
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->view.window));
 
-    is(app.books[0]->state.get_page_number(), 1, "Book starts on page 1");
+    is(app.books[0]->state.spread_range.l, 0, "Book starts on page 1");
 
     SDL_Event quit_event;
     std::memset(&quit_event, 0, sizeof(quit_event));
@@ -260,7 +260,7 @@ static tap::TestSet tests ("liv/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->state.get_page_number(), 2, "Pressing right goes to next page");
+    is(app.books[0]->state.spread_range.l, 1, "Pressing right goes to next page");
 
     control::send_input_as_event(
         {.type = control::KEY, .code = SDLK_LEFT}, window_id
@@ -268,7 +268,7 @@ static tap::TestSet tests ("liv/app", []{
     SDL_PushEvent(&quit_event);
     app.run();
 
-    is(app.books[0]->state.get_page_number(), 1, "Pressing left goes to previous page");
+    is(app.books[0]->state.spread_range.l, 0, "Pressing left goes to previous page");
 
     control::send_input_as_event(
         {.type = control::KEY, .ctrl = true, .code = SDLK_q}, window_id
