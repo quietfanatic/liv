@@ -18,22 +18,28 @@ The program and all runtime files will be put into `out/rel`.
 
 ### USAGE
 
-Requires a video driver that supports OpenGL 3.1 or higher.  Anything made since
-2011 should work.
+Requires a video driver that supports OpenGL 3.1 or higher.  Any personal
+computer made since 2011 should work.
 
-You can configure the app by editing the file `settings.ayu` in the program
-directory (it may not exist until you run the program once).
+There are lots of settings you can configure by editing the file `settings.ayu`
+in the program directory (it may not exist until you run the program once).
 
-### ROADMAP
+There are comparatively few command-line arguments.  You can get info about them
+with `--help`.
+
+### FEATURES AND ROADMAP
 
 - [x] Dragging and zooming
 - [x] Nice filtering
 - [x] View two pages side-by-side
 - [x] Folder support
-- [x] Better settings management
+- [x] List support
+- [x] Sorting
+- [ ] Zoom around cursor
 - [ ] Customizable mouse controls
 - [ ] Support avif images (maybe switch to SAIL)
 - [ ] Official Windows (mingw) support
 - [ ] Off-thread image loading
+- [ ] Text rendering
 - [ ] Simple animation
 
