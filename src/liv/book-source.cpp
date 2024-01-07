@@ -25,7 +25,7 @@ UniqueArray<IRI> expand_neighbors (
         }
         r.emplace_back(move(child));
     }
-    do_sort(r.begin(), r.end(), sort);
+    sort_iris(r.begin(), r.end(), sort);
     return r;
 }
 
@@ -47,7 +47,7 @@ UniqueArray<IRI> expand_recursively (
                 r.emplace_back(move(child));
             }
             if (sort) {
-                do_sort(r.begin() + old_size, r.end(), sort);
+                sort_iris(r.begin() + old_size, r.end(), sort);
             }
         }
         else {
@@ -90,7 +90,7 @@ BookSource::BookSource (
             }
             else {
                 pages = expand_recursively(settings, entries, SortMethod{});
-                do_sort(pages.begin(), pages.end(), sort);
+                sort_iris(pages.begin(), pages.end(), sort);
             }
             break;
         }
@@ -114,7 +114,7 @@ BookSource::BookSource (
         plog("Before expand");
         pages = expand_recursively(settings, args, SortMethod{});
         plog("expanded");
-        do_sort(pages.begin(), pages.end(), sort);
+        sort_iris(pages.begin(), pages.end(), sort);
         plog("sorted");
     }
 }
@@ -190,6 +190,10 @@ int32 BookSource::find_page_offset (const IRI& page) {
         if (pages[i] == page) return i;
     }
     return -1;
+}
+
+void BookSource::change_sort_method (SortMethod sort) {
+    sort_iris(pages.begin(), pages.end(), sort);
 }
 
 } // liv

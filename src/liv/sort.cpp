@@ -10,7 +10,7 @@
 
 namespace liv {
 
-void do_sort (IRI* begin, IRI* end, SortMethod method) {
+void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     switch (method.criterion) {
         case SortCriterion::Natural: {
             if (!!(method.flags & SortFlags::Reverse)) {

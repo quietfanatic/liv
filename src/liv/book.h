@@ -63,7 +63,24 @@ struct Book {
         source->pages.erase(visible.l);
          // This will clamp the value so that there's still at least one visible
          // page.
-        state.set_page_number(visible.l);
+        state.set_page_number(visible.l + 1);
+        view.spread = {};
+        view.layout = {};
+        view.need_draw = true;
+        need_memorize = true;
+    }
+
+    void sort (SortMethod method) {
+        auto visible = state.visible_range();
+        IRI current_location = size(visible)
+            ? source->pages[visible.l]
+            : IRI();
+        source->change_sort_method(method);
+        block.source_updated(&*source);
+        if (current_location) {
+            int32 new_offset = source->find_page_offset(current_location);
+            state.set_page_number(new_offset + 1);
+        }
         view.spread = {};
         view.layout = {};
         view.need_draw = true;

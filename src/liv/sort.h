@@ -27,6 +27,6 @@ struct SortMethod {
     explicit operator bool () const { return criterion != SortCriterion{}; }
 };
 
-void do_sort (IRI* begin, IRI* end, SortMethod method);
+void sort_iris (IRI* begin, IRI* end, SortMethod method);
 
 } // liv

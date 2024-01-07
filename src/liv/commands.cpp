@@ -143,7 +143,7 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
     }
      // Add and sort
     entries.push_back(current_book->source->pages[visible.l]);
-    do_sort(entries.begin(), entries.end(), sort);
+    sort_iris(entries.begin(), entries.end(), sort);
      // Remove duplicates
     auto new_end = std::unique(entries.begin(), entries.end());
     entries.resize(new_end - entries.begin());
@@ -190,6 +190,12 @@ static void move_to_folder_ (const AnyString& folder) {
     fs::rename(iri::to_fs_path(loc), new_path);
 }
 Command move_to_folder (move_to_folder_, "move_to_folder", "Move current page to a folder");
+
+static void sort_ (SortMethod method) {
+    if (!current_book) return;
+    current_book->sort(method);
+}
+Command sort (sort_, "sort", "Change sort method of current book");
 
 ///// LAYOUT COMMANDS
 

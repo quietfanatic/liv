@@ -38,6 +38,9 @@ struct BookSource {
     IRI base_for_page_rel_book_parent ();
 
     int32 find_page_offset (const IRI& page);
+
+     // Call PageBlock::source_updated() after this.
+    void change_sort_method (SortMethod);
 };
 
 } // liv

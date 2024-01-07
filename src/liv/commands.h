@@ -56,6 +56,10 @@ extern Command remove_from_book;
  //     [seq [[move_to_folder folder] [remove_from_book]]]
 extern Command move_to_folder;
 
+ // (SortMethod) Change sort order of current book, preserving which page is
+ // currently being viewed.
+extern Command sort;
+
 ///// LAYOUT COMMANDS
 
  // (int32) Set the number of pages to view simultaneously
