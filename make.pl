@@ -201,9 +201,12 @@ for my $cfg (keys %configs) {
     }, {fork => 1};
 
      # Copy resources
+    my $testing_disabled = grep $_ eq '-DTAP_DISABLE_TESTS';
     my @out_resources;
     for (@resources) {
         my $name = ref $_ eq 'ARRAY' ? $_->[0] : $_;
+         # Skip test files when testing is disabled
+        next if $testing_disabled and $name =~ /\/test\//;
         my @files = glob "src/$name";
         @files or die "No resources matched $name\n";
         for my $from (@files) {
@@ -215,6 +218,16 @@ for my $cfg (keys %configs) {
                 copy($from, $to) or die "Copy failed: $!";
             }, {fork => 1};
         }
+    }
+     # Copy documentation
+    for my $help (glob("src/liv/help/*")) {
+        my $to = $help;
+        $to =~ s[^src/liv/][out/$cfg/];
+        push @out_resources, $to;
+        rule $to, $help, sub {
+            ensure_path($to);
+            copy($help, $to) or die "Copy failed: $!";
+        }, {fork => 1};
     }
 
      # Misc phonies
