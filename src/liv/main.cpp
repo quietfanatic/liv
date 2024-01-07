@@ -8,6 +8,7 @@
 #include "../dirt/tap/tap.h"
 #include "../dirt/uni/common.h"
 #include "../dirt/uni/io.h"
+#include "../dirt/uni/shell.h"
 #include "../dirt/uni/strings.h"
 #include "app.h"
 #include "common.h"
@@ -67,19 +68,36 @@ R"(liv <options> [--] <filenames>
         return 255;
     }
 
-    App app;
-    if (list) {
-        if (args.size() != 1) {
-            raise(e_General,
-                "Wrong number of arguments given with --list (must be 1)"
+    try {
+        App app;
+        if (list) {
+            if (args.size() != 1) {
+                raise(e_General,
+                    "Wrong number of arguments given with --list (must be 1)"
+                );
+            }
+            app.open_list(args[0], sort);
+        }
+        else {
+            app.open_args(move(args), sort);
+        }
+        plog("opened args");
+        app.run();
+    }
+    catch (std::exception& e) {
+        auto res = run({
+            "zenity", "--error", "--title=LIV Error",
+                cat("--text=Uncaught exception: ", e.what())
+        });
+        if (res.command_not_found()) {
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_ERROR,
+                "LIV Error",
+                cat("Uncaught exceptin: ", e.what(), '\0').data(),
+                null
             );
         }
-        app.open_list(args[0], sort);
+        throw;
     }
-    else {
-        app.open_args(move(args), sort);
-    }
-    plog("opened args");
-    app.run();
     return 0;
 }
