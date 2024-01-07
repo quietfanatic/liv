@@ -1,9 +1,8 @@
-#include "commands.h"
-
 #include <algorithm>
 #include <SDL2/SDL_clipboard.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_messagebox.h>
+#include "../dirt/control/command.h"
 #include "../dirt/uni/io.h"
 #include "../dirt/uni/shell.h"
 #include "../dirt/uni/text.h"
@@ -13,6 +12,7 @@
 #include "settings.h"
 
 namespace liv::commands {
+using namespace control;
 
 ///// APP AND WINDOW COMMANDS
 
@@ -77,23 +77,6 @@ static void prompt_command_ () {
 }
 Command prompt_command (prompt_command_, "prompt_command", "Prompt for a command with a dialog box");
 
-///// BOOK AND PAGE COMMANDS
-
-static void next_ () {
-    if (current_book) current_book->next();
-}
-Command next (next_, "next", "Go to next page or pages");
-
-static void prev_ () {
-    if (current_book) current_book->prev();
-}
-Command prev (prev_, "prev", "Go to previous page or pages");
-
-static void seek_ (int32 count) {
-    if (current_book) current_book->seek(count);
-}
-Command seek (seek_, "seek", "Add given amount to the current page number");
-
 static void say_ (const FormatList& fmt) {
     if (current_book) {
         UniqueString s;
@@ -123,6 +106,23 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
 }
 Command message_box (message_box_, "message_box", "Show a message box with formatted title and content");
 
+///// BOOK AND PAGE COMMANDS
+
+static void next_ () {
+    if (current_book) current_book->next();
+}
+Command next (next_, "next", "Go to next page or pages");
+
+static void prev_ () {
+    if (current_book) current_book->prev();
+}
+Command prev (prev_, "prev", "Go to previous page or pages");
+
+static void seek_ (int32 count) {
+    if (current_book) current_book->seek(count);
+}
+Command seek (seek_, "seek", "Add given amount to the current page number");
+
 static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
     auto visible = current_book->state.visible_range();
@@ -145,6 +145,7 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
     entries.push_back(current_book->source->pages[visible.l]);
     sort_iris(entries.begin(), entries.end(), sort);
      // Remove duplicates
+     // TODO: don't if [unsorted]
     auto new_end = std::unique(entries.begin(), entries.end());
     entries.resize(new_end - entries.begin());
      // Write

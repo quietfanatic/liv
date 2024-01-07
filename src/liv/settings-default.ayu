@@ -10,7 +10,7 @@ window: {
     size: [720 720]
      -- Initial fullscreen state of the window
     fullscreen: false
-     -- Format for the window title.  See help/format.md for more information.
+     -- Format for the window title.  See help/formats.md for more information.
     title: [
         [merged_pages_rel_book_parent]
         " [" [visible_range] "/" [page_count] "]"
@@ -149,7 +149,7 @@ mappings: [
     [[4] [spread_count 4]]
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
-     -- Show some information in a message box.  See help/format.md
+     -- Show some information in a message box.  See help/formats.md
     [[i] [message_box ["Page Info"], [
         [for_visible_pages
             [page_abs] "\n"
