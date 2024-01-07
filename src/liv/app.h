@@ -46,8 +46,16 @@ struct App {
      // The main loop.  Need to store this here to call stop() on it.
     wind::PassiveLoop loop;
 
+     // To work around a bug where gaining focus from another window closing due
+     // to a keystroke makes our window receive the keystroke that closed the
+     // other window.
+    uint32 last_focused = 0;
+
      // For testing
     bool hidden = false;
+     // The above workaround interferes with automated input for testing, so set
+     // this to true to disable the workaround.
+    bool automated_input = false;
 };
 
  // Temporal state for commands

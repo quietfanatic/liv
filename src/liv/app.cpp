@@ -10,6 +10,9 @@
 #include "memory.h"
 #include "settings.h"
 
+//TEMP
+#include "../dirt/uni/io.h"
+
 namespace liv {
 
 static Book* book_with_window_id (App& self, uint32 id) {
@@ -41,10 +44,29 @@ static void on_event (App& self, SDL_Event* event) {
                     current_book = null;
                     break;
                 }
+                case SDL_WINDOWEVENT_FOCUS_GAINED: {
+                    self.last_focused = event->window.timestamp;
+                    break;
+                }
             }
             break;
         }
-        case SDL_KEYDOWN:
+        case SDL_KEYDOWN: {
+             // There's a bug where if we gain focus by another window being
+             // closed with a keystroke, the keystroke gets sent to us.  I don't
+             // know if this is a bug in SDL or the window manager, but the
+             // workaround is pretty simple: disable keyboard input right after
+             // gaining focus.  In my testing, the difference is always either 0
+             // or 1 ms, so we'll go up to 3 in case the computer is slow for
+             // some reason.  This is still faster than 1 video frame and faster
+             // than the typical input device polling rate (10ms).
+            if (!self.automated_input &&
+                event->key.timestamp - self.last_focused <= 3
+            ) {
+                return;
+            }
+            else [[fallthrough]];
+        }
         case SDL_KEYUP:
             SDL_ShowCursor(SDL_DISABLE);
             current_book = book_with_window_id(self, event->key.windowID);
@@ -237,6 +259,7 @@ static tap::TestSet tests ("liv/app", []{
     App app;
      // TODO: Figure out how to get headless rendering working on nvidia drivers
     //app.hidden = true;
+    app.automated_input = true;
     doesnt_throw([&]{
         app.open_files({
             "/res/liv/test/image.png",
