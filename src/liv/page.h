@@ -14,18 +14,6 @@
 
 namespace liv {
 
-struct RenderParams {
-     // Set some default values.  We really should be getting these default
-     // values from the settings, but it's awkward with the way we're currently
-     // loading memories.
-    InterpolationMode interpolation_mode = InterpolationMode::SmartCubic;
-    Fill window_background = Fill::Black;
-    Fill transparency_background = Fill::White;
-    RenderParams () = default;
-    RenderParams (const RenderParams&) = default;
-    RenderParams (const Settings*);
-};
-
 struct Page {
     IRI location;
     std::unique_ptr<glow::FileTexture> texture;
@@ -41,7 +29,7 @@ struct Page {
     void unload ();
 
     void draw (
-        RenderParams params,
+        const Settings& settings,
         float zoom,
         const geo::Rect& screen_rect,
         const geo::Rect& tex_rect = GNAN // defaults to whole page

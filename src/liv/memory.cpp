@@ -43,7 +43,6 @@ void memorize_book (const Book* book) {
     }
     else mem.page = "";
     mem.layout = book->state.layout_params;
-    mem.render = book->state.render_params;
     mem.updated_at = uni::now();
 
      // Doing it with the following line causes breakage because the
@@ -81,9 +80,8 @@ void remember_book (Book* book) {
         return;
     }
 
-     // TODO: don't save spread_direction
+     // TODO: don't save layout_params
     book->state.layout_params = mem->layout;
-    book->state.render_params = mem->render;
 
     int32 start_index = 0;
     if (mem->page) {
@@ -112,8 +110,7 @@ AYU_DESCRIBE(liv::MemoryOfBook,
         attr("updated_at", &MemoryOfBook::updated_at),
         attr("spread_range", &MemoryOfBook::spread_range),
         attr("page", &MemoryOfBook::page),
-        attr("layout", &MemoryOfBook::layout),
-        attr("render", &MemoryOfBook::render)
+        attr("layout", &MemoryOfBook::layout)
     )
 )
 
@@ -126,14 +123,17 @@ tap::TestSet tests ("liv/memory", []{
 
     App app;
     app.hidden = true;
-    app.settings->WindowSettings::size = {120, 120};
 
     auto make_book = [&]{
+        auto settings = std::make_unique<Settings>();
+        settings->WindowSettings::size = {{120, 120}};
+        settings->parent = app_settings();
+        auto src = std::make_unique<BookSource>(
+            *settings, BookType::Folder,
+            IRI("res/liv/test/", iri::program_location())
+        );
         return std::make_unique<Book>(
-            &app, std::make_unique<BookSource>(
-                app.settings, BookType::Folder,
-                IRI("res/liv/test/", iri::program_location())
-            )
+            &app, move(src), move(settings)
         );
     };
 

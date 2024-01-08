@@ -12,12 +12,6 @@ using namespace glow;
 
 namespace liv {
 
-RenderParams::RenderParams (const Settings* settings) :
-    interpolation_mode(settings->get(&RenderSettings::interpolation_mode)),
-    window_background(settings->get(&RenderSettings::window_background)),
-    transparency_background(settings->get(&RenderSettings::transparency_background))
-{ }
-
 Page::Page (const IRI& loc) :
     location(loc)
 { }
@@ -75,7 +69,7 @@ struct PageProgram : Program {
 };
 
 void Page::draw (
-    RenderParams params,
+    const Settings& settings,
     float zoom,
     const Rect& screen_rect,
     const Rect& tex_rect
@@ -96,8 +90,9 @@ void Page::draw (
         auto whole_page = Rect(Vec{0, 0}, size);
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
-    glUniform1i(program->u_interpolation_mode, uint8(params.interpolation_mode));
-    auto bg = params.transparency_background;
+    auto interp = settings.get(&RenderSettings::interpolation_mode);
+    glUniform1i(program->u_interpolation_mode, uint8(interp));
+    auto bg = settings.get(&RenderSettings::transparency_background);
     glUniform4f(program->u_transparency_background,
         bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f
     );
@@ -108,14 +103,6 @@ void Page::draw (
 }
 
 } using namespace liv;
-
-AYU_DESCRIBE(liv::RenderParams,
-    attrs(
-        attr("interpolation_mode", &RenderParams::interpolation_mode, optional),
-        attr("window_background", &RenderParams::window_background, optional),
-        attr("transparency_background", &RenderParams::transparency_background, optional)
-    )
-)
 
 AYU_DESCRIBE(liv::PageProgram,
 #ifdef LIV_PROFILE
@@ -156,12 +143,12 @@ static tap::TestSet tests ("liv/page", []{
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    RenderParams params;
-    params.interpolation_mode = InterpolationMode::Linear;
-    params.window_background = Fill::Black;
+    Settings settings;
+    settings.interpolation_mode = InterpolationMode::Linear;
+    settings.window_background = Fill::Black;
 
     doesnt_throw([&]{
-        page.draw(params, 1, Rect(-.5, -.5, .5, .5));
+        page.draw(settings, 1, Rect(-.5, -.5, .5, .5));
     }, "Page::draw");
 
     Image expected (test_size);

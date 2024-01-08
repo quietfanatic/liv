@@ -23,7 +23,7 @@ struct LayoutParams {
     Vec manual_offset = GNAN;
     LayoutParams () = default;
     LayoutParams (const LayoutParams&) = default;
-    LayoutParams (const Settings*);
+    LayoutParams (const Settings&);
 };
 
 // Everything in Spread* uses spread coordinates, with pixels the same size as
@@ -40,7 +40,7 @@ struct Spread {
      // be sent load_page messages.
     Spread (PageBlock&, IRange viewing_pages, const LayoutParams&);
      // Uses max_zoom and min_page_size
-    float clamp_zoom (const Settings*, float) const;
+    float clamp_zoom (const Settings&, float) const;
 };
 
 // This determines how a Spread is shown in the window.
@@ -50,7 +50,7 @@ struct Layout {
      // Offset is applied after zoom
     Vec offset;
     Layout (
-        const Settings*, const Spread&, const LayoutParams&, Vec window_size
+        const Settings&, const Spread&, const LayoutParams&, Vec window_size
     );
 };
 

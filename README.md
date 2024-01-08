@@ -38,6 +38,7 @@ with `--help`.
 - [ ] Zoom around cursor
 - [ ] Customizable mouse controls
 - [ ] Support avif images (maybe switch to SAIL)
+- [ ] Archive file support
 - [ ] Official Windows (mingw) support
 - [ ] Off-thread image loading
 - [ ] Text rendering

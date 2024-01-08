@@ -19,11 +19,12 @@ struct Book {
 
     explicit Book (
         App* app,
-        std::unique_ptr<BookSource>&& src
+        std::unique_ptr<BookSource> src,
+        std::unique_ptr<Settings> settings
     ) :
         app(app),
         source(move(src)),
-        state(this),
+        state(this, move(settings)),
         view(this),
         block(&*source)
     { }
@@ -126,7 +127,7 @@ struct Book {
     }
 
     void reset_layout () {
-        state.layout_params = LayoutParams(app->settings);
+        state.layout_params = LayoutParams(*state.settings);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -134,19 +135,19 @@ struct Book {
     }
 
     void interpolation_mode (InterpolationMode mode) {
-        state.render_params.interpolation_mode = mode;
+        state.settings->RenderSettings::interpolation_mode = mode;
         view.need_draw = true;
         need_memorize = true;
     }
 
     void window_background (Fill bg) {
-        state.render_params.window_background = bg;
+        state.settings->RenderSettings::window_background = bg;
         view.need_draw = true;
         need_memorize = true;
     }
 
     void transparency_background (Fill bg) {
-        state.render_params.transparency_background = bg;
+        state.settings->RenderSettings::transparency_background = bg;
         view.need_draw = true;
         need_memorize = true;
     }

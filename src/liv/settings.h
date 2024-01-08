@@ -93,6 +93,8 @@ struct MemorySettings {
 
 extern const Settings builtin_default_settings;
 
+const Settings* app_settings ();
+
  // Using inheritance instead of containment because it makes using member
  // pointers much simpler.
 struct Settings :

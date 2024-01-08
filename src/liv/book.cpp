@@ -16,17 +16,18 @@ static tap::TestSet tests ("liv/book", []{
 
     IVec size = {120, 120};
 
+    auto settings = std::make_unique<Settings>();
+    settings->WindowSettings::size = {size};
+    settings->parent = app_settings();
     App app;
     //app.hidden = true;
-    app.settings->WindowSettings::size = size;
-    Book book (
-        &app, std::make_unique<BookSource>(
-            app.settings, BookType::Misc, Slice<IRI>{
-                IRI("res/liv/test/image.png", iri::program_location()),
-                IRI("res/liv/test/image2.png", iri::program_location())
-            }
-        )
+    auto src = std::make_unique<BookSource>(
+        *settings, BookType::Misc, Slice<IRI>{
+            IRI("res/liv/test/image.png", iri::program_location()),
+            IRI("res/liv/test/image2.png", iri::program_location())
+        }
     );
+    Book book (&app, move(src), move(settings));
 
     book.view.draw_if_needed();
     glow::Image img (size);

@@ -11,9 +11,10 @@ namespace liv {
 
 static
 UniqueArray<IRI> expand_neighbors (
-    const Settings* settings, const IRI& loc, SortMethod sort
+    const Settings& settings, const IRI& loc
 ) {
-    auto& extensions = settings->get(&FilesSettings::page_extensions);
+    auto sort = settings.get(&FilesSettings::sort);
+    auto& extensions = settings.get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
 
     IRI folder = loc.chop_filename();
@@ -32,10 +33,28 @@ UniqueArray<IRI> expand_neighbors (
 
 static
 UniqueArray<IRI> expand_recursively (
-    const Settings* settings, Slice<IRI> locs, SortMethod sort
+    const Settings& settings, Slice<IRI> locs, BookType type
 ) {
-    auto& extensions = settings->get(&FilesSettings::page_extensions);
+    auto sort = settings.get(&FilesSettings::sort);
+    auto& extensions = settings.get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
+
+    bool sort_everything;
+    switch (type) {
+        case BookType::Misc: {
+            sort_everything = !(sort.flags & SortFlags::NotArgs);
+            break;
+        }
+        case BookType::Folder: {
+            sort_everything = true;
+            break;
+        }
+        case BookType::List: {
+            sort_everything = !(sort.flags & SortFlags::NotLists);
+            break;
+        }
+        default: never();
+    }
 
     for (auto& loc : locs) {
         auto fs_path = iri::to_fs_path(loc);
@@ -47,7 +66,7 @@ UniqueArray<IRI> expand_recursively (
                 if (!extensions.count(StaticString(ext))) continue;
                 r.emplace_back(move(child));
             }
-            if (sort) {
+            if (!sort_everything) {
                 sort_iris(r.begin() + old_size, r.end(), sort);
             }
         }
@@ -57,42 +76,35 @@ UniqueArray<IRI> expand_recursively (
             r.emplace_back(loc);
         }
     }
+    if (sort_everything) {
+        sort_iris(r.begin(), r.end(), sort);
+    }
     return r;
 }
 
 BookSource::BookSource (
-    const Settings* settings,
-    BookType t, const IRI& loc,
-    SortMethod sort
+    const Settings& settings,
+    BookType t, const IRI& loc
 ) :
     type(t), location(loc)
 {
-    if (!sort) {
-        sort = settings->get(&FilesSettings::sort);
-    }
     require(loc.scheme() == "file" && loc.hierarchical());
     switch (type) {
         case BookType::Misc: require(false); never();
         case BookType::Folder: {
             require(location.path().back() == '/');
-            pages = expand_recursively(settings, {location}, sort);
+            pages = expand_recursively(settings, {location}, type);
             break;
         }
         case BookType::FileWithNeighbors: {
             require(location.path().back() != '/');
-            pages = expand_neighbors(settings, location, sort);
+            pages = expand_neighbors(settings, location);
             break;
         }
         case BookType::List: {
             require(location.path().back() != '/');
             auto entries = read_list(location);
-            if (!!(sort.flags & SortFlags::NotLists)) {
-                pages = expand_recursively(settings, entries, sort);
-            }
-            else {
-                pages = expand_recursively(settings, entries, SortMethod{});
-                sort_iris(pages.begin(), pages.end(), sort);
-            }
+            pages = expand_recursively(settings, entries, type);
             break;
         }
         default: never();
@@ -100,24 +112,14 @@ BookSource::BookSource (
 }
 
 BookSource::BookSource (
-    const Settings* settings, BookType t, Slice<IRI> args, SortMethod sort
+    const Settings& settings, BookType t, Slice<IRI> args
 ) :
     type(t), location()
 {
-    if (!sort) {
-        sort = settings->get(&FilesSettings::sort);
-    }
     require(type == BookType::Misc);
-    if (!!(sort.flags & SortFlags::NotArgs)) {
-        pages = expand_recursively(settings, args, sort);
-    }
-    else {
-        plog("Before expand");
-        pages = expand_recursively(settings, args, SortMethod{});
-        plog("expanded");
-        sort_iris(pages.begin(), pages.end(), sort);
-        plog("sorted");
-    }
+    plog("Before expand");
+    pages = expand_recursively(settings, args, type);
+    plog("expanded");
 }
 
 const IRI& BookSource::location_for_memory () {
@@ -212,7 +214,7 @@ static tap::TestSet tests ("liv/book-source", []{
 
     auto here = IRI("res/liv/", iri::program_location());
 
-    BookSource misc_src (settings, BookType::Misc, Slice<IRI>{
+    BookSource misc_src (*settings, BookType::Misc, Slice<IRI>{
         iri::from_fs_path("test/image.png", here),
         iri::from_fs_path("test/image2.png", here),
         iri::from_fs_path("test/non-image.txt", here),
@@ -226,19 +228,19 @@ static tap::TestSet tests ("liv/book-source", []{
     is(misc_src.pages[4].relative_to(here), "test/image2.png", "BookType::Misc 4");
     is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
 
-    BookSource folder_src (settings, BookType::Folder, iri::from_fs_path("test/", here));
+    BookSource folder_src (*settings, BookType::Folder, iri::from_fs_path("test/", here));
     is(folder_src.pages.size(), 2u, "BookType::Folder");
     is(folder_src.pages[0].relative_to(here), "test/image.png", "BookType::Folder 0");
     is(folder_src.pages[1].relative_to(here), "test/image2.png", "BookType::Folder 1");
     is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
 
-    BookSource file_src (settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png", here));
+    BookSource file_src (*settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png", here));
     is(file_src.pages.size(), 2u, "BookType::FileWithNeighbors");
     is(file_src.pages[0].relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
     is(file_src.pages[1].relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
     is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
 
-    BookSource list_src (settings, BookType::List, iri::from_fs_path("test/list.lst", here));
+    BookSource list_src (*settings, BookType::List, iri::from_fs_path("test/list.lst", here));
     is(list_src.pages.size(), 2u, "BookType::List");
      // Intentionally backwards
     is(list_src.pages[0].relative_to(here), "test/image2.png", "BookType::List 0");

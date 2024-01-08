@@ -22,6 +22,7 @@ static Book* book_with_window_id (App& self, uint32 id) {
 }
 
 static void on_event (App& self, SDL_Event* event) {
+     // TODO: Move book-specific stuff to Book
     current_app = &self;
     switch (event->type) {
         case SDL_QUIT: self.stop(); break;
@@ -84,11 +85,10 @@ static void on_event (App& self, SDL_Event* event) {
                     self, event->motion.windowID
                 );
                 if (current_book) {
-                     // TODO: move the settings check to book.h or state.h
                     current_book->drag(geo::Vec(
                         event->motion.xrel,
                         event->motion.yrel
-                    ) * self.settings->get(&ControlSettings::drag_speed));
+                    ) * current_book->state.settings->get(&ControlSettings::drag_speed));
                 }
             }
             break;
@@ -96,8 +96,9 @@ static void on_event (App& self, SDL_Event* event) {
          // TODO: Support wheel
         default: break;
     }
-    if (auto action = self.settings->map_event(event)) {
-        if (*action) (*action)();
+    if (current_book) {
+        auto action = current_book->state.settings->map_event(event);
+        if (action && *action) (*action)();
     }
     current_book = null;
     current_app = null;
@@ -114,7 +115,9 @@ static bool on_idle (App& self) {
          // happens in response to user input, and the user is
          // probably only interacting with one book.  And currently
          // we only have one book per process anyway.
-        if (book->block.idle_processing(&*book, self.settings)) return true;
+        if (book->block.idle_processing(&*book, *book->state.settings)) {
+            return true;
+        }
         if (book->need_memorize) {
             memorize_book(&*book);
             book->need_memorize = false;
@@ -125,18 +128,6 @@ static bool on_idle (App& self) {
 }
 
 App::App () {
-     // Load settings.
-     // This doesn't really need to use AYU's resource system, but I need an app
-     // to test it while I'm not developing games.
-    settings_res = ayu::Resource("data:/settings.ayu");
-    if (!ayu::source_exists(settings_res)) {
-        fs::copy(
-            ayu::resource_filename("res:/liv/settings-template.ayu"),
-            ayu::resource_filename(settings_res)
-        );
-    }
-    settings = settings_res.ref();
-    plog("loaded settings");
      // Set loop handlers
     loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
     loop.on_idle = [this](){ return on_idle(*this); };
@@ -144,9 +135,12 @@ App::App () {
 
 App::~App () { }
 
-static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
+static void add_book (
+    App& self, std::unique_ptr<BookSource> src,
+    std::unique_ptr<Settings> settings
+) {
     auto& book = self.books.emplace_back(
-        std::make_unique<Book>(&self, move(src))
+        std::make_unique<Book>(&self, move(src), move(settings))
     );
     remember_book(&*book);
 
@@ -156,49 +150,59 @@ static void add_book (App& self, std::unique_ptr<BookSource>&& src) {
     );
 }
 
-void App::open_args (Slice<AnyString> args, SortMethod sort) {
+void App::open_args (
+    Slice<AnyString> args, std::unique_ptr<Settings> settings
+) {
     if (args.size() == 1) {
         if (fs::is_directory(args[0])) {
-            open_folder(args[0], sort);
+            open_folder(args[0], move(settings));
         }
-        else open_file(args[0], sort);
+        else open_file(args[0], move(settings));
     }
-    else open_files(args, sort);
+    else open_files(args, move(settings));
 }
 
-void App::open_files (Slice<AnyString> filenames, SortMethod sort) {
+void App::open_files (
+    Slice<AnyString> filenames, std::unique_ptr<Settings> settings
+) {
     auto iris = UniqueArray<IRI>(filenames.size(), [=](usize i){
         return iri::from_fs_path(filenames[i]);
     });
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Misc, iris, sort
+        *settings, BookType::Misc, iris
     );
-    add_book(*this, move(src));
+    add_book(*this, move(src), move(settings));
 }
 
-void App::open_file (const AnyString& file, SortMethod sort) {
+void App::open_file (
+    const AnyString& file, std::unique_ptr<Settings> settings
+) {
     auto loc = iri::from_fs_path(file);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::FileWithNeighbors, loc, sort
+        *settings, BookType::FileWithNeighbors, loc
     );
-    add_book(*this, move(src));
+    add_book(*this, move(src), move(settings));
 }
 
-void App::open_folder (const AnyString& folder, SortMethod sort) {
+void App::open_folder (
+    const AnyString& folder, std::unique_ptr<Settings> settings
+) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = std::make_unique<BookSource>(
-        settings, BookType::Folder, loc, sort
+        *settings, BookType::Folder, loc
     );
-    add_book(*this, move(src));
+    add_book(*this, move(src), move(settings));
 }
 
-void App::open_list (const AnyString& list_path, SortMethod sort) {
+void App::open_list (
+    const AnyString& list_path, std::unique_ptr<Settings> settings
+) {
     constexpr IRI stdin_loc ("liv:stdin");
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = std::make_unique<BookSource>(
-        settings, BookType::List, loc, sort
+        *settings, BookType::List, loc
     );
-    add_book(*this, move(src));
+    add_book(*this, move(src), move(settings));
 }
 
 void App::close_book (Book* book) {
@@ -239,6 +243,9 @@ static tap::TestSet tests ("liv/app", []{
 
     fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
 
+    auto settings = std::make_unique<Settings>();
+    settings->WindowSettings::size = {{120, 120}};
+    settings->parent = app_settings();
     App app;
      // TODO: Figure out how to get headless rendering working on nvidia drivers
     //app.hidden = true;
@@ -247,7 +254,7 @@ static tap::TestSet tests ("liv/app", []{
         app.open_files({
             "/res/liv/test/image.png",
             "/res/liv/test/image2.png"
-        });
+        }, move(settings));
     }, "App::open_files");
     auto window_id = glow::require_sdl(SDL_GetWindowID(app.books[0]->view.window));
 

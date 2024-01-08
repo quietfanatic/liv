@@ -7,11 +7,11 @@
 
 namespace liv {
 
-LayoutParams::LayoutParams (const Settings* settings) :
-    spread_direction(settings->get(&LayoutSettings::spread_direction)),
-    auto_zoom_mode(settings->get(&LayoutSettings::auto_zoom_mode)),
-    small_align(settings->get(&LayoutSettings::small_align)),
-    large_align(settings->get(&LayoutSettings::large_align))
+LayoutParams::LayoutParams (const Settings& settings) :
+    spread_direction(settings.get(&LayoutSettings::spread_direction)),
+    auto_zoom_mode(settings.get(&LayoutSettings::auto_zoom_mode)),
+    small_align(settings.get(&LayoutSettings::small_align)),
+    large_align(settings.get(&LayoutSettings::large_align))
 { }
 
 Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
@@ -76,7 +76,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
     }
 };
 
-float Spread::clamp_zoom (const Settings* settings, float zoom) const {
+float Spread::clamp_zoom (const Settings& settings, float zoom) const {
     if (!defined(zoom)) return 1;
      // Slightly snap to half integers
     auto rounded = geo::round(zoom * 2) / 2;
@@ -84,8 +84,8 @@ float Spread::clamp_zoom (const Settings* settings, float zoom) const {
         zoom = rounded;
     }
      // Now clamp
-    auto max_zoom = settings->get(&LayoutSettings::max_zoom);
-    auto min_size = settings->get(&LayoutSettings::min_zoomed_size);
+    auto max_zoom = settings.get(&LayoutSettings::max_zoom);
+    auto min_size = settings.get(&LayoutSettings::min_zoomed_size);
     if (size) {
         float min_zoom = min(1.f, min(
             min_size / size.x,
@@ -99,7 +99,7 @@ float Spread::clamp_zoom (const Settings* settings, float zoom) const {
 }
 
 Layout::Layout (
-    const Settings* settings,
+    const Settings& settings,
     const Spread& spread,
     const LayoutParams& params,
     Vec window_size

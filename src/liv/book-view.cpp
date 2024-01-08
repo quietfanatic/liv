@@ -11,13 +11,13 @@ BookView::BookView (Book* book) :
     book(book),
     window(
         "Little Image Viewer",
-        book->app->settings->get(&WindowSettings::size)
+        book->state.settings->get(&WindowSettings::size)
     )
 {
     plog("created window");
     SDL_SetWindowResizable(window, SDL_TRUE);
     expect(!SDL_GL_SetSwapInterval(1));
-    if (book->app->settings->get(&WindowSettings::fullscreen)) {
+    if (book->state.settings->get(&WindowSettings::fullscreen)) {
         set_fullscreen(true);
     }
     plog("set window props");
@@ -41,7 +41,7 @@ const Spread& BookView::get_spread () {
 const Layout& BookView::get_layout () {
     if (!layout) {
         layout.emplace(
-            book->app->settings, get_spread(),
+            *book->state.settings, get_spread(),
             book->state.layout_params, get_window_size()
         );
     }
@@ -57,7 +57,7 @@ bool BookView::draw_if_needed () {
      // be better to share a context between all windows?
     SDL_GL_MakeCurrent(window, window.gl_context);
      // Draw background
-    auto bg = book->state.render_params.window_background;
+    auto bg = book->state.settings->get(&RenderSettings::window_background);
     glClearColor(
         bg.r / 255.f,
         bg.g / 255.f,
@@ -77,7 +77,7 @@ bool BookView::draw_if_needed () {
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect screen_rect = window_rect / window_size * float(2) - Vec(1, 1);
          // Draw
-        spread_page.page->draw(book->state.render_params, layout.zoom, screen_rect);
+        spread_page.page->draw(*book->state.settings, layout.zoom, screen_rect);
     }
      // Generate title
     AnyString title;
@@ -90,7 +90,7 @@ bool BookView::draw_if_needed () {
     }
     else {
         UniqueString t;
-        book->app->settings->get(&WindowSettings::title).write(t, book);
+        book->state.settings->get(&WindowSettings::title).write(t, book);
         title = t;
     }
     SDL_SetWindowTitle(window, title.c_str());

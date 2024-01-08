@@ -12,6 +12,7 @@
 #include "../dirt/uni/strings.h"
 #include "app.h"
 #include "common.h"
+#include "settings.h"
 
 using namespace liv;
 
@@ -31,7 +32,7 @@ int main (int argc, char** argv) {
     bool help = false;
     bool list = false;
     bool done_flags = false;
-    SortMethod sort {};
+    std::optional<SortMethod> sort;
     for (int i = 1; i < argc; i++) {
         auto arg = StaticString(argv[i]);
         if (!done_flags && arg && arg[0] == '-' && arg != "-") {
@@ -45,7 +46,8 @@ int main (int argc, char** argv) {
                 list = true;
             }
             else if (arg.slice(0, 7) == "--sort=") {
-                ayu::item_from_list_string(&sort, arg.slice(7));
+                sort.emplace();
+                ayu::item_from_list_string(&*sort, arg.slice(7));
             }
             else raise(e_General, cat("Unrecognized option ", arg));
         }
@@ -69,6 +71,10 @@ R"(liv <options> [--] <filenames>
     }
 
     try {
+        auto settings = std::make_unique<Settings>();
+        settings->FilesSettings::sort = sort;
+        settings->parent = app_settings();
+        plog("Loaded settings");
         App app;
         if (list) {
             if (args.size() != 1) {
@@ -76,10 +82,10 @@ R"(liv <options> [--] <filenames>
                     "Wrong number of arguments given with --list (must be 1)"
                 );
             }
-            app.open_list(args[0], sort);
+            app.open_list(args[0], move(settings));
         }
         else {
-            app.open_args(move(args), sort);
+            app.open_args(move(args), move(settings));
         }
         plog("opened args");
         app.run();

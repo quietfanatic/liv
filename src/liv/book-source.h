@@ -8,7 +8,7 @@
 namespace liv {
 
 enum class BookType {
-    Misc,
+    Misc, // TODO: rename to Args
     Folder,
     List,
     FileWithNeighbors,
@@ -26,10 +26,10 @@ struct BookSource {
      //   FileWithNeighbors: The non-recursive contents of the folder containing
      //     the given filename.
      //   Misc: Not allowed
-    BookSource (const Settings*, BookType, const IRI&, SortMethod sort = SortMethod{});
+    BookSource (const Settings&, BookType, const IRI&);
 
      // Type must be Misc.  Folders and lists will be recursively expanded.
-    BookSource (const Settings*, BookType, Slice<IRI>, SortMethod sort = SortMethod{});
+    BookSource (const Settings&, BookType, Slice<IRI>);
      // Empty if this book should not be remembered.
     const IRI& location_for_memory ();
      // Current book or cwd if Misc

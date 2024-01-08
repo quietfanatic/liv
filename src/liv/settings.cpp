@@ -56,6 +56,11 @@ const Settings builtin_default_settings = {
     null // parent
 };
 
+const Settings* app_settings () {
+    static auto res = ayu::Resource("data:/settings.ayu");
+    return res.ref();
+}
+
 const control::Statement* Settings::map_event (SDL_Event* event) const {
     for (auto& [input, action] : mappings) {
         if (input_matches_event(input, event)) {

@@ -10,17 +10,18 @@
 namespace liv {
 
 struct BookState {
-    explicit BookState (Book* book);
+    explicit BookState (Book*, std::unique_ptr<Settings>);
 
-     // Object parent.  This has a link to Settings and BookSource.
+     // Object parent.  This has a link to BookSource.
     Book* book;
+     // Book-specific settings.  Has the app settings as its parent.
+    std::unique_ptr<Settings> settings;
      // Indexes of pages being currently viewed.
     IRange spread_range;
-     // page_indexes clamped to valid page indexes.
+     // spread_range clamped to valid page indexes.
     IRange visible_range () const;
      // View parameters
     LayoutParams layout_params;
-    RenderParams render_params;
 
     ///// Controls
      // Takes a 0-based page number.  spread_range will be set to
@@ -32,10 +33,8 @@ struct BookState {
      // TODO: clamp smaller wow
     void set_spread_count (int32 count);
 
-    void set_window_background (Fill);
     void set_auto_zoom_mode (AutoZoomMode);
     void set_align (geo::Vec small, geo::Vec large);
-    void set_interpolation_mode (InterpolationMode);
      // Adds amount to view.offset
     void drag (geo::Vec amount);
 

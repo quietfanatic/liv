@@ -29,7 +29,6 @@ struct LayoutParams;
 struct MemoryOfBook;
 struct Page;
 struct PageBlock;
-struct RenderParams;
 struct Settings;
 struct SortMethod;
 

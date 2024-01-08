@@ -56,12 +56,12 @@ void PageBlock::unload_page (Page* page) {
     }
 }
 
-bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
+bool PageBlock::idle_processing (const Book* book, const Settings& settings) {
     auto viewing = book->state.spread_range;
 
      // Unload a cached page if we're minimized
     if (book->view.is_minimized()) {
-        switch (settings->get(&MemorySettings::trim_when_minimized)) {
+        switch (settings.get(&MemorySettings::trim_when_minimized)) {
             case TrimMode::None: break;
             case TrimMode::PageCache: {
                 for (int32 i = 0; i < viewing.l; ++i) {
@@ -84,9 +84,9 @@ bool PageBlock::idle_processing (const Book* book, const Settings* settings) {
     }
      // Otherwise continue as normal...
 
-    int32 preload_ahead = settings->get(&MemorySettings::preload_ahead);
-    int32 preload_behind = settings->get(&MemorySettings::preload_behind);
-    int32 page_cache_mb = settings->get(&MemorySettings::page_cache_mb);
+    int32 preload_ahead = settings.get(&MemorySettings::preload_ahead);
+    int32 preload_behind = settings.get(&MemorySettings::preload_behind);
+    int32 page_cache_mb = settings.get(&MemorySettings::page_cache_mb);
 
     auto preload_range = IRange(
         viewing.l - preload_behind,

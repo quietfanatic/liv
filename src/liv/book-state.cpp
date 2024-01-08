@@ -7,10 +7,10 @@
 
 namespace liv {
 
-BookState::BookState (Book* b) :
+BookState::BookState (Book* b, std::unique_ptr<Settings> s) :
     book(b),
-    layout_params(book->app->settings),
-    render_params(book->app->settings)
+    settings(move(s)),
+    layout_params(*settings)
 {
     int32 start = 0;
     if (book->source->type == BookType::FileWithNeighbors) {
@@ -22,7 +22,7 @@ BookState::BookState (Book* b) :
         }
     }
     spread_range = {
-        start, start + book->app->settings->get(&LayoutSettings::spread_count)
+        start, start + settings->get(&LayoutSettings::spread_count)
     };
     plog("set up state");
 }
@@ -32,7 +32,6 @@ IRange BookState::visible_range () const {
 }
 
 void BookState::set_page_offset (int32 no) {
-    auto settings = book->app->settings;
     auto source = &*book->source;
      // Clamp such that there is at least one visible page in the range
     int32 l = clamp(
@@ -86,7 +85,7 @@ void BookState::zoom_multiply (float factor) {
     auto& layout = book->view.get_layout();
      // Set manual zoom
     layout_params.manual_zoom = spread.clamp_zoom(
-        book->app->settings, layout.zoom * factor
+        *settings, layout.zoom * factor
     );
     if (defined(layout_params.manual_offset)) {
          // Hacky way to zoom from center
@@ -97,7 +96,7 @@ void BookState::zoom_multiply (float factor) {
 }
 
 void BookState::reset_layout () {
-    layout_params = LayoutParams(book->app->settings);
+    layout_params = LayoutParams(*settings);
 }
 
 } // namespace liv
