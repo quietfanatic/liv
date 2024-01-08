@@ -9,71 +9,74 @@ namespace liv {
 
 BookState::BookState (Book* b, std::unique_ptr<Settings> s) :
     book(b),
-    settings(move(s)),
-    layout_params(*settings)
+    settings(move(s))
 {
-    int32 start = 0;
     if (book->source->type == BookType::FileWithNeighbors) {
         for (usize i = 0; i < book->source->pages.size(); i++) {
             if (book->source->pages[i] == book->source->location) {
-                start = i;
+                page_offset = i;
                 break;
             }
         }
     }
-    spread_range = {
-        start, start + settings->get(&LayoutSettings::spread_count)
-    };
     plog("set up state");
 }
 
 IRange BookState::visible_range () const {
-    return spread_range & IRange{0, book->source->pages.size()};
+    auto spread_count = settings->get(&LayoutSettings::spread_count);
+    auto viewing = IRange{page_offset, page_offset + spread_count};
+    auto valid = IRange{0, book->source->pages.size()};
+    return viewing & valid;
 }
 
-void BookState::set_page_offset (int32 no) {
+void BookState::set_page_offset (int32 off) {
     auto source = &*book->source;
+    auto spread_count = settings->get(&LayoutSettings::spread_count);
      // Clamp such that there is at least one visible page in the range
-    int32 l = clamp(
-        no,
-        1 - int32(size(spread_range)),
+    page_offset = clamp(
+        off,
+        1 - int32(spread_count),
         int32(source->pages.size()) - 1
     );
-    spread_range = {l, l + size(spread_range)};
     expect(size(visible_range()) >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
-        layout_params.manual_zoom = GNAN;
-        layout_params.manual_offset = GNAN;
+        manual_zoom = GNAN;
+        manual_offset = GNAN;
     }
 }
 
 void BookState::set_spread_count (int32 count) {
-     // TODO: clamp spread_range.l too
-    spread_range.r = spread_range.l + clamp(count, 1, 2048);
+    settings->LayoutSettings::spread_count = {clamp(count, 1, 2048)};
+     // Reclamp page_offset
+    set_page_offset(page_offset);
 }
 
 void BookState::set_auto_zoom_mode (AutoZoomMode mode) {
-    layout_params.auto_zoom_mode = mode;
-    layout_params.manual_zoom = GNAN;
-    layout_params.manual_offset = GNAN;
+    settings->LayoutSettings::auto_zoom_mode = {mode};
+    manual_zoom = GNAN;
+    manual_offset = GNAN;
 }
 
 void BookState::set_align (geo::Vec small, geo::Vec large) {
-    if (defined(small.x)) layout_params.small_align.x = small.x;
-    if (defined(small.y)) layout_params.small_align.y = small.y;
-    if (defined(large.x)) layout_params.large_align.x = large.x;
-    if (defined(large.y)) layout_params.large_align.y = large.y;
-    layout_params.manual_offset = GNAN;
+    auto small_align = settings->get(&LayoutSettings::small_align);
+    auto large_align = settings->get(&LayoutSettings::large_align);
+    if (defined(small.x)) small_align.x = small.x;
+    if (defined(small.y)) small_align.y = small.y;
+    if (defined(large.x)) large_align.x = large.x;
+    if (defined(large.y)) large_align.y = large.y;
+    settings->LayoutSettings::small_align = {small_align};
+    settings->LayoutSettings::large_align = {large_align};
+    manual_offset = GNAN;
 }
 
 void BookState::drag (geo::Vec amount) {
-    if (!defined(layout_params.manual_offset)) {
+    if (!defined(manual_offset)) {
          // TODO: do get_layout() in Book
         auto& layout = book->view.get_layout();
-        layout_params.manual_offset = layout.offset;
-        layout_params.manual_zoom = layout.zoom;
+        manual_offset = layout.offset;
+        manual_zoom = layout.zoom;
     }
-    layout_params.manual_offset += amount;
+    manual_offset += amount;
 }
 
 void BookState::zoom_multiply (float factor) {
@@ -84,19 +87,23 @@ void BookState::zoom_multiply (float factor) {
      // Actually we also need the layout to multiply the zoom
     auto& layout = book->view.get_layout();
      // Set manual zoom
-    layout_params.manual_zoom = spread.clamp_zoom(
+    manual_zoom = spread.clamp_zoom(
         *settings, layout.zoom * factor
     );
-    if (defined(layout_params.manual_offset)) {
+    if (defined(manual_offset)) {
          // Hacky way to zoom from center
-         // TODO: zoom to preserve current alignment
-        layout_params.manual_offset +=
-            spread.size * (layout.zoom - layout_params.manual_zoom) / 2;
+         // TODO: zoom to preserve current alignment instead
+        manual_offset +=
+            spread.size * (layout.zoom - manual_zoom) / 2;
     }
 }
 
 void BookState::reset_layout () {
-    layout_params = LayoutParams(*settings);
+    auto spread_count = settings->LayoutSettings::spread_count;
+    static_cast<LayoutSettings&>(*settings) = LayoutSettings();
+    settings->LayoutSettings::spread_count = {spread_count};
+    manual_zoom = GNAN;
+    manual_offset = GNAN;
 }
 
 } // namespace liv

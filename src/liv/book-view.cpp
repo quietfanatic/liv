@@ -31,19 +31,14 @@ BookView::~BookView () { }
 
 const Spread& BookView::get_spread () {
     if (!spread) {
-        spread.emplace(
-            book->block, book->state.spread_range, book->state.layout_params
-        );
+        spread.emplace(book->state, book->block);
     }
     return *spread;
 }
 
 const Layout& BookView::get_layout () {
     if (!layout) {
-        layout.emplace(
-            *book->state.settings, get_spread(),
-            book->state.layout_params, get_window_size()
-        );
+        layout.emplace(book->state, get_spread(), get_window_size());
     }
     return *layout;
 }

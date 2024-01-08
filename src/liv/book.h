@@ -38,18 +38,17 @@ struct Book {
     }
 
     void next () {
-        seek(size(state.spread_range));
+        seek(state.settings->get(&LayoutSettings::spread_count));
         need_memorize = true;
     }
 
     void prev () {
-        seek(-size(state.spread_range));
+        seek(-state.settings->get(&LayoutSettings::spread_count));
         need_memorize = true;
     }
 
     void seek (int32 offset) {
-        int32 clamped = clamp(state.spread_range.l + offset, -2048, GINF);
-        state.set_page_offset(clamped);
+        state.set_page_offset(state.page_offset + offset);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -97,7 +96,7 @@ struct Book {
     }
 
     void spread_direction (Direction dir) {
-        state.layout_params.spread_direction = dir;
+        state.settings->LayoutSettings::spread_direction = {dir};
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -127,7 +126,7 @@ struct Book {
     }
 
     void reset_layout () {
-        state.layout_params = LayoutParams(*state.settings);
+        state.reset_layout();
         view.spread = {};
         view.layout = {};
         view.need_draw = true;

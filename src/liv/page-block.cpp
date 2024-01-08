@@ -57,7 +57,10 @@ void PageBlock::unload_page (Page* page) {
 }
 
 bool PageBlock::idle_processing (const Book* book, const Settings& settings) {
-    auto viewing = book->state.spread_range;
+    auto viewing = IRange{
+        book->state.page_offset,
+        book->state.page_offset + settings.get(&LayoutSettings::spread_count)
+    };
 
      // Unload a cached page if we're minimized
     if (book->view.is_minimized()) {

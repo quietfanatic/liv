@@ -36,13 +36,16 @@ void memorize_book (const Book* book) {
 
     MemoryOfBook mem;
     mem.location = memloc;
-    mem.spread_range = book->state.spread_range;
+    mem.spread_range = {
+        book->state.page_offset,
+        book->state.page_offset +
+            book->state.settings->get(&LayoutSettings::spread_count)
+    };
      // TODO: read source, not block
-    if (auto page = book->block.get(book->state.spread_range.l)) {
+    if (auto page = book->block.get(book->state.page_offset)) {
         mem.page = page->location.relative_to(mem.location);
     }
     else mem.page = "";
-    mem.layout = book->state.layout_params;
     mem.updated_at = uni::now();
 
      // Doing it with the following line causes breakage because the
@@ -80,25 +83,20 @@ void remember_book (Book* book) {
         return;
     }
 
-     // TODO: don't save layout_params
-    book->state.layout_params = mem->layout;
-
-    int32 start_index = 0;
     if (mem->page) {
         auto start_loc = IRI(mem->page, memloc);
         for (usize i = 0; i < book->source->pages.size(); i++) {
             if (book->source->pages[i] == start_loc) {
-                start_index = i;
+                book->state.page_offset = i;
                 break;
             }
         }
     }
     else {
-        start_index = mem->spread_range.l;
+        book->state.page_offset = mem->spread_range.l;
     }
-    book->state.spread_range = {
-        start_index, start_index + size(mem->spread_range)
-    };
+    book->state.settings->LayoutSettings::spread_count = {size(mem->spread_range)};
+     // Don't need to keep this around
     ayu::force_unload(res);
 }
 
@@ -110,7 +108,7 @@ AYU_DESCRIBE(liv::MemoryOfBook,
         attr("updated_at", &MemoryOfBook::updated_at),
         attr("spread_range", &MemoryOfBook::spread_range),
         attr("page", &MemoryOfBook::page),
-        attr("layout", &MemoryOfBook::layout),
+        attr("layout", constant(null), invisible|ignore),
         attr("render", constant(null), invisible|ignore)
     )
 )
@@ -139,15 +137,15 @@ tap::TestSet tests ("liv/memory", []{
     };
 
     auto book = make_book();
-    is(book->state.spread_range.l, 0);
+    is(book->state.page_offset, 0);
     book->next();
-    is(book->state.spread_range.l, 1);
+    is(book->state.page_offset, 1);
     memorize_book(&*book);
 
     book = make_book();
-    is(book->state.spread_range.l, 0);
+    is(book->state.page_offset, 0);
     remember_book(&*book);
-    is(book->state.spread_range.l, 1);
+    is(book->state.page_offset, 1);
 
     done_testing();
 });

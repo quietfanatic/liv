@@ -25,7 +25,6 @@ struct BookView;
 struct FormatList;
 struct FormatToken;
 struct Layout;
-struct LayoutParams;
 struct MemoryOfBook;
 struct Page;
 struct PageBlock;

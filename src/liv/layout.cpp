@@ -7,23 +7,17 @@
 
 namespace liv {
 
-LayoutParams::LayoutParams (const Settings& settings) :
-    spread_direction(settings.get(&LayoutSettings::spread_direction)),
-    auto_zoom_mode(settings.get(&LayoutSettings::auto_zoom_mode)),
-    small_align(settings.get(&LayoutSettings::small_align)),
-    large_align(settings.get(&LayoutSettings::large_align))
-{ }
-
-Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
+Spread::Spread (const BookState& state, PageBlock& block) {
+    Vec small_align = state.settings->get(&LayoutSettings::small_align);
      // Collect visible pages
-    for (int32 i = viewing.l; i < viewing.r; i++) {
+    for (int32 i : state.visible_range()) {
         if (Page* page = block.get(i)) {
             block.load_page(page);
             pages.emplace_back(block.get(i));
         }
     }
     size = {0, 0};
-    switch (params.spread_direction) {
+    switch (state.settings->get(&LayoutSettings::spread_direction)) {
         case Direction::Right: {
              // Set height to height of tallest page
             for (auto& p : pages) {
@@ -34,7 +28,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
                 p.offset.x = size.x;
                 size.x += p.page->size.x;
                  // Align vertically
-                p.offset.y = (size.y - p.page->size.y) * params.small_align.y;
+                p.offset.y = (size.y - p.page->size.y) * small_align.y;
             }
             break;
         }
@@ -46,7 +40,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
                 auto& p = *it;
                 p.offset.x = size.x;
                 size.x += p.page->size.x;
-                p.offset.y = (size.y - p.page->size.y) * params.small_align.y;
+                p.offset.y = (size.y - p.page->size.y) * small_align.y;
             }
             break;
         }
@@ -57,7 +51,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
             for (auto& p : pages) {
                 p.offset.y = size.y;
                 size.y += p.page->size.y;
-                p.offset.x = (size.x - p.page->size.x) * params.small_align.x;
+                p.offset.x = (size.x - p.page->size.x) * small_align.x;
             }
             break;
         }
@@ -69,7 +63,7 @@ Spread::Spread (PageBlock& block, IRange viewing, const LayoutParams& params) {
                 auto& p = *it;
                 p.offset.y = size.y;
                 size.y += p.page->size.y;
-                p.offset.x = (size.x - p.page->size.x) * params.small_align.x;
+                p.offset.x = (size.x - p.page->size.x) * small_align.x;
             }
             break;
         }
@@ -99,25 +93,24 @@ float Spread::clamp_zoom (const Settings& settings, float zoom) const {
 }
 
 Layout::Layout (
-    const Settings& settings,
+    const BookState& state,
     const Spread& spread,
-    const LayoutParams& params,
     Vec window_size
 ) {
-    if (defined(params.manual_offset)) {
-        offset = params.manual_offset;
+    if (defined(state.manual_offset)) {
+        offset = state.manual_offset;
          // If offset is defined zoom should be too.
-        zoom = params.manual_zoom;
+        zoom = state.manual_zoom;
     }
     else {
-        if (defined(params.manual_zoom)) {
-            zoom = params.manual_zoom;
+        if (defined(state.manual_zoom)) {
+            zoom = state.manual_zoom;
         }
         else if (!area(spread.size)) {
             zoom = 1;
         }
         else {
-            switch (params.auto_zoom_mode) {
+            switch (state.settings->get(&LayoutSettings::auto_zoom_mode)) {
                 case AutoZoomMode::Fit: {
                      // slope = 1 / aspect ratio
                     if (slope(spread.size) > slope(window_size)) {
@@ -126,15 +119,17 @@ Layout::Layout (
                     else {
                         zoom = window_size.x / spread.size.x;
                     }
-                    zoom = spread.clamp_zoom(settings, zoom);
+                    zoom = spread.clamp_zoom(*state.settings, zoom);
                     break;
                 }
                 case AutoZoomMode::FitWidth: {
-                    zoom = spread.clamp_zoom(settings, window_size.x / spread.size.x);
+                    zoom = window_size.x / spread.size.x;
+                    zoom = spread.clamp_zoom(*state.settings, zoom);
                     break;
                 }
                 case AutoZoomMode::FitHeight: {
-                    zoom = spread.clamp_zoom(settings, window_size.y / spread.size.y);
+                    zoom = window_size.y / spread.size.y;
+                    zoom = spread.clamp_zoom(*state.settings, zoom);
                     break;
                 }
                 case AutoZoomMode::Original: {
@@ -144,25 +139,15 @@ Layout::Layout (
             }
         }
          // Auto align
+        Vec small_align = state.settings->get(&LayoutSettings::small_align);
+        Vec large_align = state.settings->get(&LayoutSettings::large_align);
         Vec range = window_size - (spread.size * zoom); // Can be negative
         Vec align = {
-            range.x > 0 ? params.small_align.x : params.large_align.x,
-            range.y > 0 ? params.small_align.y : params.large_align.y
+            range.x > 0 ? small_align.x : large_align.x,
+            range.y > 0 ? small_align.y : large_align.y
         };
         offset = range * align;
     }
 }
 
 } using namespace liv;
-
-AYU_DESCRIBE(liv::LayoutParams,
-    attrs(
-        attr("spread_direction", &LayoutParams::spread_direction),
-        attr("auto_zoom_mode", &LayoutParams::auto_zoom_mode),
-        attr("small_align", &LayoutParams::small_align),
-        attr("large_align", &LayoutParams::large_align),
-        attr("manual_zoom", &LayoutParams::manual_zoom),
-        attr("manual_offset", &LayoutParams::manual_offset)
-    )
-)
-
