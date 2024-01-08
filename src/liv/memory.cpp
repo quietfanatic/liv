@@ -110,7 +110,8 @@ AYU_DESCRIBE(liv::MemoryOfBook,
         attr("updated_at", &MemoryOfBook::updated_at),
         attr("spread_range", &MemoryOfBook::spread_range),
         attr("page", &MemoryOfBook::page),
-        attr("layout", &MemoryOfBook::layout)
+        attr("layout", &MemoryOfBook::layout),
+        attr("render", constant(null), invisible|ignore)
     )
 )
 
