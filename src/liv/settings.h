@@ -91,6 +91,8 @@ struct MemorySettings {
     std::optional<TrimMode> trim_when_minimized;
 };
 
+extern const Settings builtin_default_settings;
+
  // Using inheritance instead of containment because it makes using member
  // pointers much simpler.
 struct Settings :
@@ -98,31 +100,23 @@ struct Settings :
     ControlSettings, FilesSettings, MemorySettings
 {
     UniqueArray<Mapping> mappings;
+    const Settings* parent = &builtin_default_settings;
+
     template <class T, class Category>
     const T& get (std::optional<T> Category::*) const;
+
+    const control::Statement* map_event (SDL_Event*) const;
 };
-
-extern const Settings builtin_default_settings;
-extern const Settings* res_default_settings;
-
-void init_settings ();
 
 template <class T, class Category>
 const T& Settings::get (
     std::optional<T> Category::* setting
 ) const {
-    init_settings();
-    auto setting_generic = static_cast<std::optional<T> Settings::*>(setting);
-    if (this->*setting_generic) {
-        return *(this->*setting_generic);
+    auto generic = static_cast<std::optional<T> Settings::*>(setting);
+    if (this->*generic) {
+        return *(this->*generic);
     }
-    else if (res_default_settings->*setting_generic) {
-        return *(res_default_settings->*setting_generic);
-    }
-    else {
-        expect(builtin_default_settings.*setting_generic);
-        return *(builtin_default_settings.*setting_generic);
-    }
+    else return parent->get(setting);
 }
 
 } // namespace liv

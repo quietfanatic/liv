@@ -96,26 +96,9 @@ static void on_event (App& self, SDL_Event* event) {
          // TODO: Support wheel
         default: break;
     }
-     // TODO: Move this waterfall to settings.h somehow
-    for (auto& [input, action] : self.settings->mappings) {
-        if (input_matches_event(input, event)) {
-            if (action) action();
-            goto done_mapping;
-        }
+    if (auto action = self.settings->map_event(event)) {
+        if (*action) (*action)();
     }
-    for (auto& [input, action] : res_default_settings->mappings) {
-        if (input_matches_event(input, event)) {
-            if (action) action();
-            goto done_mapping;
-        }
-    }
-    for (auto& [input, action] : builtin_default_settings.mappings) {
-        if (input_matches_event(input, event)) {
-            if (action) action();
-            goto done_mapping;
-        }
-    }
-    done_mapping:
     current_book = null;
     current_app = null;
 }

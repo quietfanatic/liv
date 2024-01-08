@@ -7,7 +7,6 @@
 
 namespace liv {
 
- // TODO: put spread count in this
 struct LayoutParams {
     Direction spread_direction;
     AutoZoomMode auto_zoom_mode;

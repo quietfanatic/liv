@@ -27,9 +27,13 @@ files: {
 memory: {
 }
 
- -- Key and mouse bindings.  These will be added to the default bindings.  To
- -- disable a default binding, map that binding to an action of []
+ -- Key and mouse bindings.  Mappings here take priority over the default ones.
+ -- To disable a key or button that has a default mapping, map it to [].
 mappings: [
 ]
+
+ -- Refer to this file for any settings not set here.  You probably don't want
+ -- to change this.
+parent: "res:/liv/settings-default.ayu#"
 
 }]

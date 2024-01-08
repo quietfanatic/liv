@@ -52,17 +52,18 @@ const Settings builtin_default_settings = {
         .page_cache_mb = 200,
         .trim_when_minimized = TrimMode::PageCache,
     },
-    { }
+    { }, // mappings
+    null // parent
 };
 
-const Settings* res_default_settings;
-
-void init_settings () {
-    if (!res_default_settings) {
-        res_default_settings =
-            ayu::Resource("res:/liv/settings-default.ayu").ref();
-        plog("loaded default settings");
+const control::Statement* Settings::map_event (SDL_Event* event) const {
+    for (auto& [input, action] : mappings) {
+        if (input_matches_event(input, event)) {
+            return &action;
+        }
     }
+    if (parent) return parent->map_event(event);
+    else return null;
 }
 
 } using namespace liv;
@@ -176,7 +177,8 @@ AYU_DESCRIBE(liv::Settings,
         attr("control", base<ControlSettings>(), optional),
         attr("files", base<FilesSettings>(), optional),
         attr("memory", base<MemorySettings>(), optional),
-        attr("mappings", &Settings::mappings, optional)
+        attr("mappings", &Settings::mappings, optional),
+        attr("parent", &Settings::parent, optional)
     )
 )
 
@@ -188,9 +190,18 @@ static tap::TestSet tests ("liv/settings", []{
 
      // This is already covered by other tests here, but it's useful to isolate
      // this for performance testing.
-    doesnt_throw([]{
-        ayu::load("res:/liv/settings-default.ayu");
-    }, "Can load default settings");
+    auto default_res = ayu::Resource("res:/liv/settings-default.ayu");
+    auto settings_res = ayu::Resource("res:/liv/settings-template.ayu");
+    is(default_res.state(), ayu::UNLOADED, "Default settings not loaded yet");
+    doesnt_throw([&]{ ayu::load(settings_res); }, "Can load initial settings");
+    is(default_res.state(), ayu::LOADED,
+        "Loading initial settings loads default settings"
+    );
+    const Settings* default_settings = default_res.ref();
+    const Settings* settings = settings_res.ref();
+    is(settings->parent, default_settings,
+        "Settings linked properly to default settings"
+    );
     done_testing();
 });
 #endif
