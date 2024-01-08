@@ -376,7 +376,7 @@ static tap::TestSet tests ("liv/format", []{
     is(s, "foobarbaz{0123,0124,0125}.jpeg", "merge_paths");
 
     auto settings = std::make_unique<Settings>();
-    settings->WindowSettings::size = {120, 120};
+    settings->window.size = {120, 120};
     settings->parent = app_settings();
     App app;
     app.hidden = true;

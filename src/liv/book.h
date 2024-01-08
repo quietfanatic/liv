@@ -96,7 +96,7 @@ struct Book {
     }
 
     void spread_direction (Direction dir) {
-        state.settings->LayoutSettings::spread_direction = {dir};
+        state.settings->layout.spread_direction = {dir};
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -134,19 +134,19 @@ struct Book {
     }
 
     void interpolation_mode (InterpolationMode mode) {
-        state.settings->RenderSettings::interpolation_mode = mode;
+        state.settings->render.interpolation_mode = mode;
         view.need_draw = true;
         need_memorize = true;
     }
 
     void window_background (Fill bg) {
-        state.settings->RenderSettings::window_background = bg;
+        state.settings->render.window_background = bg;
         view.need_draw = true;
         need_memorize = true;
     }
 
     void transparency_background (Fill bg) {
-        state.settings->RenderSettings::transparency_background = bg;
+        state.settings->render.transparency_background = bg;
         view.need_draw = true;
         need_memorize = true;
     }

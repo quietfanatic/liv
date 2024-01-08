@@ -46,13 +46,13 @@ void BookState::set_page_offset (int32 off) {
 }
 
 void BookState::set_spread_count (int32 count) {
-    settings->LayoutSettings::spread_count = {clamp(count, 1, 2048)};
+    settings->layout.spread_count = {clamp(count, 1, 2048)};
      // Reclamp page_offset
     set_page_offset(page_offset);
 }
 
 void BookState::set_auto_zoom_mode (AutoZoomMode mode) {
-    settings->LayoutSettings::auto_zoom_mode = {mode};
+    settings->layout.auto_zoom_mode = {mode};
     manual_zoom = GNAN;
     manual_offset = GNAN;
 }
@@ -64,8 +64,8 @@ void BookState::set_align (geo::Vec small, geo::Vec large) {
     if (defined(small.y)) small_align.y = small.y;
     if (defined(large.x)) large_align.x = large.x;
     if (defined(large.y)) large_align.y = large.y;
-    settings->LayoutSettings::small_align = {small_align};
-    settings->LayoutSettings::large_align = {large_align};
+    settings->layout.small_align = {small_align};
+    settings->layout.large_align = {large_align};
     manual_offset = GNAN;
 }
 
@@ -99,9 +99,8 @@ void BookState::zoom_multiply (float factor) {
 }
 
 void BookState::reset_layout () {
-    auto spread_count = settings->LayoutSettings::spread_count;
-    static_cast<LayoutSettings&>(*settings) = LayoutSettings();
-    settings->LayoutSettings::spread_count = {spread_count};
+     // Reset everything but spread_count
+    settings->layout = { .spread_count = settings->layout.spread_count };
     manual_zoom = GNAN;
     manual_offset = GNAN;
 }

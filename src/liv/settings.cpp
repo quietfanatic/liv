@@ -6,7 +6,7 @@
 namespace liv {
 
 const Settings builtin_default_settings = {
-    WindowSettings{
+    .window = {
         .size = geo::IVec{720, 720},
         .fullscreen = false,
         .title = FormatList(
@@ -19,7 +19,7 @@ const Settings builtin_default_settings = {
             ))
         ),
     },
-    LayoutSettings{
+    .layout = {
         .spread_count = 1,
         .spread_direction = Direction::Right,
         .auto_zoom_mode = AutoZoomMode::Fit,
@@ -29,15 +29,15 @@ const Settings builtin_default_settings = {
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
     },
-    RenderSettings{
+    .render = {
         .interpolation_mode = InterpolationMode::SmartCubic,
         .window_background = Fill::Black,
         .transparency_background = Fill::White,
     },
-    ControlSettings{
+    .control = {
         .drag_speed = 1,
     },
-    FilesSettings{
+    .files = {
         .sort = SortMethod{
             SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
         },
@@ -46,14 +46,14 @@ const Settings builtin_default_settings = {
             "png", "tif", "tiff", "xbm", "xpm", "webp",
         },
     },
-    MemorySettings{
+    .memory = {
         .preload_ahead = 1,
         .preload_behind = 1,
         .page_cache_mb = 200,
         .trim_when_minimized = TrimMode::PageCache,
     },
-    { }, // mappings
-    null // parent
+    .mappings = { },
+    .parent = null,
 };
 
 const Settings* app_settings () {
@@ -176,12 +176,12 @@ AYU_DESCRIBE(liv::MemorySettings,
 
 AYU_DESCRIBE(liv::Settings,
     attrs(
-        attr("window", base<WindowSettings>(), optional),
-        attr("layout", base<LayoutSettings>(), optional),
-        attr("render", base<RenderSettings>(), optional),
-        attr("control", base<ControlSettings>(), optional),
-        attr("files", base<FilesSettings>(), optional),
-        attr("memory", base<MemorySettings>(), optional),
+        attr("window", &Settings::window, optional),
+        attr("layout", &Settings::layout, optional),
+        attr("render", &Settings::render, optional),
+        attr("control", &Settings::control, optional),
+        attr("files", &Settings::files, optional),
+        attr("memory", &Settings::memory, optional),
         attr("mappings", &Settings::mappings, optional),
         attr("parent", &Settings::parent, optional)
     )

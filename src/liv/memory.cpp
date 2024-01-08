@@ -95,7 +95,7 @@ void remember_book (Book* book) {
     else {
         book->state.page_offset = mem->spread_range.l;
     }
-    book->state.settings->LayoutSettings::spread_count = {size(mem->spread_range)};
+    book->state.settings->layout.spread_count = {size(mem->spread_range)};
      // Don't need to keep this around
     ayu::force_unload(res);
 }
@@ -125,7 +125,7 @@ tap::TestSet tests ("liv/memory", []{
 
     auto make_book = [&]{
         auto settings = std::make_unique<Settings>();
-        settings->WindowSettings::size = {{120, 120}};
+        settings->window.size = {{120, 120}};
         settings->parent = app_settings();
         auto src = std::make_unique<BookSource>(
             *settings, BookType::Folder,

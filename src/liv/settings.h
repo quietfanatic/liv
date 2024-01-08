@@ -95,12 +95,13 @@ extern const Settings builtin_default_settings;
 
 const Settings* app_settings ();
 
- // Using inheritance instead of containment because it makes using member
- // pointers much simpler.
-struct Settings :
-    WindowSettings, LayoutSettings, RenderSettings,
-    ControlSettings, FilesSettings, MemorySettings
-{
+struct Settings {
+    WindowSettings window;
+    LayoutSettings layout;
+    RenderSettings render;
+    ControlSettings control;
+    FilesSettings files;
+    MemorySettings memory;
     UniqueArray<Mapping> mappings;
     const Settings* parent = &builtin_default_settings;
 
@@ -114,11 +115,26 @@ template <class T, class Category>
 const T& Settings::get (
     std::optional<T> Category::* setting
 ) const {
-    auto generic = static_cast<std::optional<T> Settings::*>(setting);
-    if (this->*generic) {
-        return *(this->*generic);
+    if constexpr (requires { window.*setting; }) {
+        if (window.*setting) return *(window.*setting);
     }
-    else return parent->get(setting);
+    else if constexpr (requires { layout.*setting; }) {
+        if (layout.*setting) return *(layout.*setting);
+    }
+    else if constexpr (requires { render.*setting; }) {
+        if (render.*setting) return *(render.*setting);
+    }
+    else if constexpr (requires { control.*setting; }) {
+        if (control.*setting) return *(control.*setting);
+    }
+    else if constexpr (requires { files.*setting; }) {
+        if (files.*setting) return *(files.*setting);
+    }
+    else if constexpr (requires { memory.*setting; }) {
+        if (memory.*setting) return *(memory.*setting);
+    }
+    else static_assert((Category*)null, "Incompatible member pointer passed to Settings::get");
+    return parent->get(setting);
 }
 
 } // namespace liv

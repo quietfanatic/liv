@@ -144,8 +144,8 @@ static tap::TestSet tests ("liv/page", []{
     glClear(GL_COLOR_BUFFER_BIT);
 
     Settings settings;
-    settings.interpolation_mode = InterpolationMode::Linear;
-    settings.window_background = Fill::Black;
+    settings.render.interpolation_mode = InterpolationMode::Linear;
+    settings.render.window_background = Fill::Black;
 
     doesnt_throw([&]{
         page.draw(settings, 1, Rect(-.5, -.5, .5, .5));

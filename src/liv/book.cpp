@@ -14,10 +14,10 @@ namespace liv {
 static tap::TestSet tests ("liv/book", []{
     using namespace tap;
 
-    IVec size = {120, 120};
+    auto size = IVec{120, 120};
 
     auto settings = std::make_unique<Settings>();
-    settings->WindowSettings::size = {size};
+    settings->window.size = {size};
     settings->parent = app_settings();
     App app;
     //app.hidden = true;

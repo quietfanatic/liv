@@ -244,7 +244,7 @@ static tap::TestSet tests ("liv/app", []{
     fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
 
     auto settings = std::make_unique<Settings>();
-    settings->WindowSettings::size = {{120, 120}};
+    settings->window.size = {{120, 120}};
     settings->parent = app_settings();
     App app;
      // TODO: Figure out how to get headless rendering working on nvidia drivers
