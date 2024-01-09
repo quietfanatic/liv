@@ -56,6 +56,7 @@ struct Book {
     void align (Vec small, Vec large);
     void zoom_multiply (float);
     void reset_layout ();
+    void reset_settings ();
     void interpolation_mode (InterpolationMode);
     void window_background (Fill);
     void transparency_background (Fill);

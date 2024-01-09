@@ -26,6 +26,7 @@ struct SortMethod {
     SortCriterion criterion;
     SortFlags flags;
     explicit operator bool () const { return criterion != SortCriterion{}; }
+    friend bool operator== (SortMethod a, SortMethod b) = default;
 };
 
 void sort_iris (IRI* begin, IRI* end, SortMethod method);

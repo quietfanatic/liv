@@ -191,6 +191,22 @@ void Book::reset_layout () {
     need_memorize = true;
 }
 
+void Book::reset_settings () {
+     // Preserve the parent
+    auto old_sort = state.settings->get(&FilesSettings::sort);
+    auto parent = state.settings->parent;
+    *state.settings = {};
+    state.settings->parent = parent;
+    state.manual_zoom = GNAN;
+    state.manual_offset = GNAN;
+    auto new_sort = state.settings->get(&FilesSettings::sort);
+    if (new_sort != old_sort) block.resort(new_sort);
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
 void Book::interpolation_mode (InterpolationMode mode) {
     state.settings->render.interpolation_mode = mode;
     view.need_draw = true;

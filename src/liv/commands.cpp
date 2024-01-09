@@ -226,6 +226,11 @@ static void reset_layout_ () {
 }
 Command reset_layout (reset_layout_, "reset_layout", "Reset layout parameters to default");
 
+static void reset_settings_ () {
+    if (current_book) current_book->reset_settings();
+}
+Command reset_settings (reset_settings_, "reset_settings", "Reset all temporary settings to default");
+
 ///// RENDER COMMANDS
 
 static void interpolation_mode_ (InterpolationMode mode) {

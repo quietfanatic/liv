@@ -31,10 +31,7 @@ struct BookSource {
     const IRI& base_for_page_rel_book () const;
      // Directory containing current book or cwd if Misc
     IRI base_for_page_rel_book_parent () const;
+    friend bool operator== (const BookSource& a, const BookSource& b) = default;
 };
-
-inline bool operator== (const BookSource& a, const BookSource& b) {
-    return a.type == b.type && a.locations == b.locations;
-}
 
 } // liv

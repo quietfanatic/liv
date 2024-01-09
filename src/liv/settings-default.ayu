@@ -181,7 +181,9 @@ mappings: [
      -- Zoom out by √2
     [["-"] [zoom_multiply 0.707106781186547]]
      -- Reset layout to default
-    [[0] [reset_layout]]
+    [[r] [reset_layout]]
+     -- Reset all temporary setting overrides.
+    [[ctrl r] [reset_settings]]
   ----- DISPLAY
      -- Set interpolation mode
     [[ctrl 1] [interpolation_mode nearest]]
