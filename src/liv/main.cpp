@@ -73,7 +73,6 @@ R"(liv <options> [--] <filenames>
     try {
         auto settings = std::make_unique<Settings>();
         settings->files.sort = sort;
-        settings->parent = app_settings();
         plog("Loaded settings");
         App app;
         if (list) {

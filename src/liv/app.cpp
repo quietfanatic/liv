@@ -97,9 +97,18 @@ static void add_book (
 ) {
     BookState state;
     auto memory = load_memory(*src);
-     // TODO: merge settings
-    if (memory) state = move(*memory);
-    else state = BookState(move(settings));
+    if (memory) {
+        state = move(*memory);
+        expect(state.settings->parent != &builtin_default_settings);
+        state.settings->merge(move(*settings));
+        settings = {};
+    }
+    else {
+        if (settings->parent == &builtin_default_settings) {
+            settings->parent = app_settings();
+        }
+        state = BookState(move(settings));
+    }
 
     auto& book = self.books.emplace_back(
         std::make_unique<Book>(move(src), move(state))

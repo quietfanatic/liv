@@ -116,6 +116,10 @@ struct Settings {
     template <class T, class Category>
     const T& get (std::optional<T> Category::*) const;
 
+     // Anything set on the other settings will transferred to this one.  The
+     // parent will also be transferred unless it is &builtin_default_settings.
+    void merge (Settings&&);
+
     const control::Statement* map_event (SDL_Event*) const;
 };
 

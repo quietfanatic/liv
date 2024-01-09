@@ -89,8 +89,8 @@ void save_memory (const BookSource& source, BookState& state) {
     auto store = memory_store_location(mem.source.locations[0]);
     auto res = ayu::Resource(store, move(mem));
     try {
-         // Most if not all memory files will have the settings/parent set to
-         // the app settings.
+         // Most if not all memory files will have settings/parent set to the
+         // app settings.
         static auto app_settings_loc =
             ayu::location_from_iri(app_settings_location);
         ayu::PushLikelyReference plr (

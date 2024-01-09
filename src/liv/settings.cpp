@@ -72,6 +72,39 @@ const Settings* app_settings () {
     return res.ref();
 }
 
+void Settings::merge (Settings&& o) {
+#define LIV_MERGE(p) if (o.p) p = move(o.p);
+    LIV_MERGE(window.size)
+    LIV_MERGE(window.fullscreen)
+    LIV_MERGE(window.title)
+    LIV_MERGE(window.hidden)
+    LIV_MERGE(window.automated_input)
+    LIV_MERGE(layout.spread_count)
+    LIV_MERGE(layout.spread_direction)
+    LIV_MERGE(layout.auto_zoom_mode)
+    LIV_MERGE(layout.max_zoom)
+    LIV_MERGE(layout.min_zoomed_size)
+    LIV_MERGE(layout.reset_zoom_on_page_turn)
+    LIV_MERGE(layout.small_align)
+    LIV_MERGE(layout.large_align)
+    LIV_MERGE(render.interpolation_mode)
+    LIV_MERGE(render.window_background)
+    LIV_MERGE(render.transparency_background)
+    LIV_MERGE(control.drag_speed)
+    LIV_MERGE(files.sort)
+    LIV_MERGE(files.page_extensions)
+    LIV_MERGE(memory.preload_ahead)
+    LIV_MERGE(memory.preload_behind)
+    LIV_MERGE(memory.page_cache_mb)
+    LIV_MERGE(memory.trim_when_minimized)
+#undef LIV_MERGE
+    mappings.reserve(mappings.size() + o.mappings.size());
+    o.mappings.consume([this](Mapping&& m){
+        mappings.emplace_back_expect_capacity(move(m));
+    });
+    if (o.parent != &builtin_default_settings) parent = o.parent;
+}
+
 const control::Statement* Settings::map_event (SDL_Event* event) const {
     for (auto& [input, action] : mappings) {
         if (input_matches_event(input, event)) {
