@@ -22,7 +22,7 @@ static tap::TestSet tests ("liv/book", []{
     App app;
     //app.hidden = true;
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::Misc, Slice<IRI>{
+        BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),
             IRI("res/liv/test/image2.png", iri::program_location())
         }

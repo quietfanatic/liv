@@ -85,8 +85,8 @@ void remember_book (Book* book) {
 
     if (mem->page) {
         auto start_loc = IRI(mem->page, memloc);
-        for (usize i = 0; i < book->source->pages.size(); i++) {
-            if (book->source->pages[i] == start_loc) {
+        for (usize i = 0; i < book->block.pages.size(); i++) {
+            if (book->block.pages[i]->location == start_loc) {
                 book->state.page_offset = i;
                 break;
             }
@@ -128,8 +128,8 @@ tap::TestSet tests ("liv/memory", []{
         settings->window.size = {{120, 120}};
         settings->parent = app_settings();
         auto src = std::make_unique<BookSource>(
-            *settings, BookType::Folder,
-            IRI("res/liv/test/", iri::program_location())
+            BookType::Folder,
+            Slice<IRI>{IRI("res/liv/test/", iri::program_location())}
         );
         return std::make_unique<Book>(
             &app, move(src), move(settings)

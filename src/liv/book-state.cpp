@@ -10,33 +10,22 @@ namespace liv {
 BookState::BookState (Book* b, std::unique_ptr<Settings> s) :
     book(b),
     settings(move(s))
-{
-    if (book->source->type == BookType::FileWithNeighbors) {
-        for (usize i = 0; i < book->source->pages.size(); i++) {
-            if (book->source->pages[i] == book->source->location) {
-                page_offset = i;
-                break;
-            }
-        }
-    }
-    plog("set up state");
-}
+{ }
 
 IRange BookState::visible_range () const {
     auto spread_count = settings->get(&LayoutSettings::spread_count);
     auto viewing = IRange{page_offset, page_offset + spread_count};
-    auto valid = IRange{0, book->source->pages.size()};
+    auto valid = IRange{0, book->block.pages.size()};
     return viewing & valid;
 }
 
 void BookState::set_page_offset (int32 off) {
-    auto source = &*book->source;
     auto spread_count = settings->get(&LayoutSettings::spread_count);
      // Clamp such that there is at least one visible page in the range
     page_offset = clamp(
         off,
         1 - int32(spread_count),
-        int32(source->pages.size()) - 1
+        int32(book->block.pages.size()) - 1
     );
     expect(size(visible_range()) >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
@@ -99,8 +88,9 @@ void BookState::zoom_multiply (float factor) {
 }
 
 void BookState::reset_layout () {
-     // Reset everything but spread_count
-    settings->layout = { .spread_count = settings->layout.spread_count };
+    auto sc = settings->layout.spread_count;
+    settings->layout = {};
+    settings->layout.spread_count = sc;
     manual_zoom = GNAN;
     manual_offset = GNAN;
 }

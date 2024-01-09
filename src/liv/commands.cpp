@@ -127,7 +127,6 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
     auto visible = current_book->state.visible_range();
     if (!size(visible)) return;
-    IRI entry = current_book->source->pages[visible.l];
 
     auto loc = iri::from_fs_path(list);
      // Read
@@ -142,7 +141,9 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
         else throw;
     }
      // Add and sort
-    entries.push_back(current_book->source->pages[visible.l]);
+    entries.push_back(
+        current_book->block.pages[visible.l]->location
+    );
     sort_iris(entries.begin(), entries.end(), sort);
      // Remove duplicates
      // TODO: don't if [unsorted]
@@ -161,7 +162,7 @@ static void remove_from_list_ (const AnyString& list) {
     auto entries = read_list(loc);
     auto new_end = std::remove(
         entries.begin(), entries.end(),
-        current_book->source->pages[visible.l]
+        current_book->block.pages[visible.l]->location
     );
     entries.impl.size = new_end - entries.impl.data;
     write_list(loc, entries);
@@ -186,7 +187,7 @@ static void move_to_folder_ (const AnyString& folder) {
     if (!current_book) return;
     auto visible = current_book->state.visible_range();
     if (!size(visible)) return;
-    auto& loc = current_book->source->pages[visible.l];
+    auto& loc = current_book->block.pages[visible.l]->location;
     auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
     fs::rename(iri::to_fs_path(loc), new_path);
 }

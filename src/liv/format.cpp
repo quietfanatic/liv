@@ -6,6 +6,9 @@
 #include "../dirt/uni/hash.h"
 #include "book.h"
 
+//TEMP
+#include "../dirt/uni/io.h"
+
 namespace liv {
 
  // Merge multiple paths together with a format like foo/bar-{01,02}.png
@@ -106,20 +109,20 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         }
         case FormatCommand::PageAbs: {
             if (page < 0) break;
-            auto&& loc = book->source->pages[page];
+            auto&& loc = book->block.pages[page]->location;
             encat(s, iri::to_fs_path(loc));
             break;
         }
         case FormatCommand::PageRelCwd: {
             if (page < 0) break;
-            auto&& loc = book->source->pages[page];
+            auto&& loc = book->block.pages[page]->location;
             auto&& rel = loc.relative_to(iri::working_directory());
             encat(s, iri::decode_path(rel));
             break;
         }
         case FormatCommand::PageRelBook: {
             if (page < 0) break;
-            auto&& loc = book->source->pages[page];
+            auto&& loc = book->block.pages[page]->location;
             auto&& base = book->source->base_for_page_rel_book();
             auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
@@ -127,7 +130,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         }
         case FormatCommand::PageRelBookParent: {
             if (page < 0) break;
-            auto&& loc = book->source->pages[page];
+            auto&& loc = book->block.pages[page]->location;
             auto&& base = book->source->base_for_page_rel_book_parent();
             auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
@@ -136,9 +139,8 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::PageFileSize: {
             if (page < 0) break;
             std::error_code code;
-            auto size = fs::file_size(iri::to_fs_path(
-                book->source->pages[page]
-            ), code);
+            auto&& loc = book->block.pages[page]->location;
+            auto size = fs::file_size(iri::to_fs_path(loc), code);
             if (size == decltype(size)(-1)) {
                 encat(s, "(unavailable)");
             }
@@ -174,7 +176,8 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
-                return iri::to_fs_path(book->source->pages[visible[i]]);
+                auto&& loc = book->block.pages[visible[i]]->location;
+                return iri::to_fs_path(loc);
             });
             merge_paths(s, paths);
             break;
@@ -183,7 +186,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto visible = book->state.visible_range();
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
-                auto&& loc = book->source->pages[visible[i]];
+                auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(iri::working_directory());
                 return iri::decode_path(rel);
             });
@@ -197,7 +200,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto paths = UniqueArray<UniqueString>(
                 size(visible), [=, &base](usize i)
             {
-                auto&& loc = book->source->pages[visible[i]];
+                auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(base);
                 return iri::decode_path(rel);
             });
@@ -211,7 +214,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             auto paths = UniqueArray<UniqueString>(
                 size(visible), [=, &base](usize i)
             {
-                auto&& loc = book->source->pages[visible[i]];
+                auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(base);
                 return iri::decode_path(rel);
             });
@@ -381,7 +384,7 @@ static tap::TestSet tests ("liv/format", []{
     App app;
     app.hidden = true;
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::Misc, Slice<IRI>{
+        BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),
             IRI("res/liv/test/image2.png", iri::program_location())
         }

@@ -9,6 +9,7 @@
 
 namespace liv {
 
+ // Collect all the different parts necessary to implement a book
 struct Book {
     App* app;
     std::unique_ptr<BookSource> source;
@@ -26,9 +27,11 @@ struct Book {
         source(move(src)),
         state(this, move(settings)),
         view(this),
-        block(&*source)
+        block(*state.settings, *source)
     { }
     ~Book () { }
+
+     // TODO: move these to .cpp file
 
      // Commands
     void fullscreen () {
@@ -60,10 +63,8 @@ struct Book {
         if (!size(visible)) return;
         block.unload_page(block.get(visible.l));
         block.pages.erase(visible.l);
-        source->pages.erase(visible.l);
-         // This will clamp the value so that there's still at least one visible
-         // page.
-        state.set_page_offset(visible.l);
+         // Reclamp page offset
+        state.set_page_offset(state.page_offset);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -73,13 +74,16 @@ struct Book {
     void sort (SortMethod method) {
         auto visible = state.visible_range();
         IRI current_location = size(visible)
-            ? source->pages[visible.l]
+            ? block.pages[visible.l]->location
             : IRI();
-        source->change_sort_method(method);
-        block.source_updated(&*source);
+        block.resort(method);
         if (current_location) {
-            int32 new_offset = source->find_page_offset(current_location);
-            state.set_page_offset(new_offset);
+            for (usize i = 0; i < size(block.pages); i++) {
+                if (block.pages[i]->location == current_location) {
+                    state.set_page_offset(i);
+                    break;
+                }
+            }
         }
         view.spread = {};
         view.layout = {};

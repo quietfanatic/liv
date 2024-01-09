@@ -17,12 +17,10 @@ struct PageBlock {
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;
 
-    PageBlock (const BookSource*);
+    PageBlock (const Settings&, const BookSource&);
     ~PageBlock ();
 
-     // If you change the sorting method or something like that, you need to
-     // call this.
-    void source_updated (const BookSource*);
+    void resort (SortMethod);
 
      // Returns null if i is out of range
     Page* get (int32 i) const;

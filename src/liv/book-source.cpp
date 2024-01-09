@@ -1,133 +1,66 @@
 #include "book-source.h"
 
-#include <filesystem>
 #include "../dirt/iri/path.h"
-#include "../dirt/uni/text.h"
-#include "list.h"
+#include "../dirt/uni/errors.h"
 #include "settings.h"
-#include "sort.h"
 
 namespace liv {
 
-static
-UniqueArray<IRI> expand_neighbors (
-    const Settings& settings, const IRI& loc
-) {
-    auto sort = settings.get(&FilesSettings::sort);
-    auto& extensions = settings.get(&FilesSettings::page_extensions);
-    UniqueArray<IRI> r;
-
-    IRI folder = loc.chop_filename();
-    for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
-        auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
-        auto ext = ascii_to_lower(iri::path_extension(child.path()));
-        if (!extensions.count(StaticString(ext))) {
-             // Don't skip if we explicitly requested this file
-            if (child != loc) continue;
-        }
-        r.emplace_back(move(child));
+static void validate_location (const IRI& loc) {
+    if (loc.scheme() != "file" || !loc.hierarchical()) {
+        raise(e_General, "IRI given to BookSource is not a proper file IRI");
     }
-    sort_iris(r.begin(), r.end(), sort);
-    return r;
 }
 
-static
-UniqueArray<IRI> expand_recursively (
-    const Settings& settings, Slice<IRI> locs, BookType type
-) {
-    auto sort = settings.get(&FilesSettings::sort);
-    auto& extensions = settings.get(&FilesSettings::page_extensions);
-    UniqueArray<IRI> r;
-
-    bool sort_everything;
+void BookSource::validate () {
     switch (type) {
         case BookType::Misc: {
-            sort_everything = !(sort.flags & SortFlags::NotArgs);
+            for (auto& arg : locations) validate_location(arg);
             break;
         }
         case BookType::Folder: {
-            sort_everything = true;
-            break;
-        }
-        case BookType::List: {
-            sort_everything = !(sort.flags & SortFlags::NotLists);
-            break;
-        }
-        default: never();
-    }
-
-    for (auto& loc : locs) {
-        auto fs_path = iri::to_fs_path(loc);
-        if (fs::is_directory(fs_path)) {
-            usize old_size = r.size();
-            for (auto& entry : fs::recursive_directory_iterator(fs_path)) {
-                auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
-                auto ext = ascii_to_lower(iri::path_extension(child.path()));
-                if (!extensions.count(StaticString(ext))) continue;
-                r.emplace_back(move(child));
+            if (locations.size() != 1) {
+                raise(e_General, "BookType::Folder cannot have multiple locations");
             }
-            if (!sort_everything) {
-                sort_iris(r.begin() + old_size, r.end(), sort);
+            validate_location(locations[0]);
+            if (locations[0].path().back() != '/') {
+                raise(e_General, "Location for BookType::Folder must end with /");
             }
-        }
-        else {
-             // Don't check the file extension for explicitly specified
-             // files.
-            r.emplace_back(loc);
-        }
-    }
-    if (sort_everything) {
-        sort_iris(r.begin(), r.end(), sort);
-    }
-    return r;
-}
-
-BookSource::BookSource (
-    const Settings& settings,
-    BookType t, const IRI& loc
-) :
-    type(t), location(loc)
-{
-    require(loc.scheme() == "file" && loc.hierarchical());
-    switch (type) {
-        case BookType::Misc: require(false); never();
-        case BookType::Folder: {
-            require(location.path().back() == '/');
-            pages = expand_recursively(settings, {location}, type);
             break;
         }
         case BookType::FileWithNeighbors: {
-            require(location.path().back() != '/');
-            pages = expand_neighbors(settings, location);
+            if (locations.size() != 1) {
+                raise(e_General, "BookType::FileWithNeighbors cannot have multiple locations");
+            }
+            validate_location(locations[0]);
+            if (locations[0].path().back() == '/') {
+                raise(e_General, "Location for BookType::FileWithNeighbors must not end with /");
+            }
             break;
         }
         case BookType::List: {
-            require(location.path().back() != '/');
-            auto entries = read_list(location);
-            pages = expand_recursively(settings, entries, type);
+            if (locations.size() != 1) {
+                raise(e_General, "BookType::List cannot have multiple locations");
+            }
+            validate_location(locations[0]);
+            if (locations[0].path().back() == '/') {
+                raise(e_General, "Location for BookType::List must not end with /");
+            }
             break;
         }
         default: never();
     }
-}
-
-BookSource::BookSource (
-    const Settings& settings, BookType t, Slice<IRI> args
-) :
-    type(t), location()
-{
-    require(type == BookType::Misc);
-    plog("Before expand");
-    pages = expand_recursively(settings, args, type);
-    plog("expanded");
 }
 
 const IRI& BookSource::location_for_memory () {
     static constexpr IRI empty;
     switch (type) {
         case BookType::Misc: return empty;
-        case BookType::Folder: return location;
-        case BookType::List: return location == "liv:stdin" ? empty : location;
+        case BookType::Folder: return locations[0];
+        case BookType::List: {
+            if (locations[0] == "liv:stdin") return empty;
+            else return locations[0];
+        }
         case BookType::FileWithNeighbors: return empty;
         default: never();
     }
@@ -136,19 +69,12 @@ const IRI& BookSource::location_for_memory () {
 const IRI& BookSource::base_for_page_rel_book () {
     switch (type) {
         case BookType::Misc: return iri::working_directory();
-        case BookType::Folder: {
-            expect(location.path().back() == '/');
-            return location;
-        }
+        case BookType::Folder: return locations[0];
         case BookType::List: {
-            expect(location.path().back() != '/');
-            if (location == "liv:stdin") return iri::working_directory();
-            else return location;
+            if (locations[0] == "liv:stdin") return iri::working_directory();
+            else return locations[0];
         }
-        case BookType::FileWithNeighbors: {
-            expect(location.path().back() != '/');
-            return location;
-        }
+        case BookType::FileWithNeighbors: return locations[0];
         default: never();
     }
 }
@@ -161,26 +87,25 @@ IRI BookSource::base_for_page_rel_book_parent () {
             break;
         }
         case BookType::Folder: {
-            expect(location.path().back() == '/');
-            expect(location && location.hierarchical());
-            if (auto parent = location.chop_last_slash()) {
+            expect(locations[0].path().back() == '/');
+            expect(locations[0] && locations[0].hierarchical());
+            if (auto parent = locations[0].chop_last_slash()) {
                 return parent;
             }
             else {
                 expect(parent.error() == iri::Error::PathOutsideRoot);
-                r = &location;
+                r = &locations[0];
                 break;
             }
         }
         case BookType::List: {
-            expect(location.path().back() != '/');
-            if (location == "liv:stdin") r = &iri::working_directory();
-            else r = &location;
+            if (locations[0] == "liv:stdin") r = &iri::working_directory();
+            else r = &locations[0];
             break;
         }
         case BookType::FileWithNeighbors: {
-            expect(location.path().back() != '/');
-            r = &location;
+            expect(locations[0].path().back() != '/');
+            r = &locations[0];
             break;
         }
         default: never();
@@ -188,66 +113,4 @@ IRI BookSource::base_for_page_rel_book_parent () {
     return *r;
 }
 
-int32 BookSource::find_page_offset (const IRI& page) {
-    for (usize i = 0; i < pages.size(); i++) {
-        if (pages[i] == page) return i;
-    }
-    return -1;
-}
-
-void BookSource::change_sort_method (SortMethod sort) {
-    sort_iris(pages.begin(), pages.end(), sort);
-}
-
 } // liv
-
-#ifndef TAP_DISABLE_TESTS
-#include <filesystem>
-#include <SDL2/SDL.h>
-#include "../dirt/tap/tap.h"
-
-static tap::TestSet tests ("liv/book-source", []{
-    using namespace tap;
-    using namespace liv;
-
-    auto settings = &builtin_default_settings;
-
-    auto here = IRI("res/liv/", iri::program_location());
-
-    BookSource misc_src (*settings, BookType::Misc, Slice<IRI>{
-        iri::from_fs_path("test/image.png", here),
-        iri::from_fs_path("test/image2.png", here),
-        iri::from_fs_path("test/non-image.txt", here),
-        iri::from_fs_path("test/", here)
-    });
-    is(misc_src.pages.size(), 5u, "BookType::Misc");
-    is(misc_src.pages[0].relative_to(here), "test/image.png", "BookType::Misc 0");
-    is(misc_src.pages[1].relative_to(here), "test/image2.png", "BookType::Misc 1");
-    is(misc_src.pages[2].relative_to(here), "test/non-image.txt", "BookType::Misc 2");
-    is(misc_src.pages[3].relative_to(here), "test/image.png", "BookType::Misc 3");
-    is(misc_src.pages[4].relative_to(here), "test/image2.png", "BookType::Misc 4");
-    is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
-
-    BookSource folder_src (*settings, BookType::Folder, iri::from_fs_path("test/", here));
-    is(folder_src.pages.size(), 2u, "BookType::Folder");
-    is(folder_src.pages[0].relative_to(here), "test/image.png", "BookType::Folder 0");
-    is(folder_src.pages[1].relative_to(here), "test/image2.png", "BookType::Folder 1");
-    is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
-
-    BookSource file_src (*settings, BookType::FileWithNeighbors, iri::from_fs_path("test/image2.png", here));
-    is(file_src.pages.size(), 2u, "BookType::FileWithNeighbors");
-    is(file_src.pages[0].relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
-    is(file_src.pages[1].relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
-    is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
-
-    BookSource list_src (*settings, BookType::List, iri::from_fs_path("test/list.lst", here));
-    is(list_src.pages.size(), 2u, "BookType::List");
-     // Intentionally backwards
-    is(list_src.pages[0].relative_to(here), "test/image2.png", "BookType::List 0");
-    is(list_src.pages[1].relative_to(here), "test/image.png", "BookType::List 1");
-    is(list_src.location_for_memory().relative_to(here), "test/list.lst", "BookType::List name for memory");
-
-    done_testing();
-});
-#endif
-

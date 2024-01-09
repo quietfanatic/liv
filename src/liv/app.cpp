@@ -169,7 +169,7 @@ void App::open_files (
         return iri::from_fs_path(filenames[i]);
     });
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::Misc, iris
+        BookType::Misc, iris
     );
     add_book(*this, move(src), move(settings));
 }
@@ -179,7 +179,7 @@ void App::open_file (
 ) {
     auto loc = iri::from_fs_path(file);
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::FileWithNeighbors, loc
+        BookType::FileWithNeighbors, Slice<IRI>{loc}
     );
     add_book(*this, move(src), move(settings));
 }
@@ -189,7 +189,7 @@ void App::open_folder (
 ) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::Folder, loc
+        BookType::Folder, Slice<IRI>{loc}
     );
     add_book(*this, move(src), move(settings));
 }
@@ -200,7 +200,7 @@ void App::open_list (
     constexpr IRI stdin_loc ("liv:stdin");
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = std::make_unique<BookSource>(
-        *settings, BookType::List, loc
+        BookType::List, Slice<IRI>{loc}
     );
     add_book(*this, move(src), move(settings));
 }
