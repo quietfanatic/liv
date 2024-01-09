@@ -57,7 +57,16 @@ const Settings builtin_default_settings = {
 };
 
 const Settings* app_settings () {
-    static auto res = ayu::Resource("data:/settings.ayu");
+    static auto res = []{
+        auto r = ayu::Resource("data:/settings.ayu");
+        if (!ayu::source_exists(r)) {
+            fs::copy_file(
+                ayu::resource_filename("res:/liv/settings-template.ayu"),
+                ayu::resource_filename(r)
+            );
+        }
+        return r;
+    }();
     return res.ref();
 }
 
