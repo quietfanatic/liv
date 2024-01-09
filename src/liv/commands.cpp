@@ -125,7 +125,7 @@ Command seek (seek_, "seek", "Add given amount to the current page number");
 
 static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
-    auto visible = current_book->state.visible_range();
+    auto visible = current_book->visible_range();
     if (!size(visible)) return;
 
     auto loc = iri::from_fs_path(list);
@@ -156,7 +156,7 @@ Command add_to_list (add_to_list_, "add_to_list", "Add current page filename to 
 
 static void remove_from_list_ (const AnyString& list) {
     if (!current_book) return;
-    auto visible = current_book->state.visible_range();
+    auto visible = current_book->visible_range();
     if (!size(visible)) return;
     auto loc = iri::from_fs_path(list);
     auto entries = read_list(loc);
@@ -185,7 +185,7 @@ Command remove_from_book (remove_from_book_, "remove_from_book", "Remove current
 
 static void move_to_folder_ (const AnyString& folder) {
     if (!current_book) return;
-    auto visible = current_book->state.visible_range();
+    auto visible = current_book->visible_range();
     if (!size(visible)) return;
     auto& loc = current_book->block.pages[visible.l]->location;
     auto new_path = cat(folder, '/', iri::path_filename(loc.path()));

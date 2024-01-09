@@ -31,7 +31,7 @@ BookView::~BookView () { }
 
 const Spread& BookView::get_spread () {
     if (!spread) {
-        spread.emplace(book->state, book->block);
+        spread.emplace(*book);
     }
     return *spread;
 }
@@ -76,7 +76,7 @@ bool BookView::draw_if_needed () {
     }
      // Generate title
     AnyString title;
-    IRange visible = book->state.visible_range();
+    IRange visible = book->visible_range();
     if (book->block.count() == 0) {
         title = "Little Image Viewer (nothing loaded)";
     }

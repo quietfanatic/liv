@@ -7,37 +7,33 @@
 
 namespace liv {
 
-BookState::BookState (Book* b, std::unique_ptr<Settings> s) :
-    book(b),
+BookState::BookState (std::unique_ptr<Settings> s) :
     settings(move(s))
 { }
 
-IRange BookState::visible_range () const {
+IRange BookState::viewing_range () const {
     auto spread_count = settings->get(&LayoutSettings::spread_count);
-    auto viewing = IRange{page_offset, page_offset + spread_count};
-    auto valid = IRange{0, book->block.pages.size()};
-    return viewing & valid;
+    return IRange{page_offset, page_offset + spread_count};
 }
 
-void BookState::set_page_offset (int32 off) {
+void BookState::set_page_offset (int32 off, const PageBlock& block) {
     auto spread_count = settings->get(&LayoutSettings::spread_count);
      // Clamp such that there is at least one visible page in the range
     page_offset = clamp(
         off,
         1 - int32(spread_count),
-        int32(book->block.pages.size()) - 1
+        int32(block.pages.size()) - 1
     );
-    expect(size(visible_range()) >= 1);
     if (settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         manual_zoom = GNAN;
         manual_offset = GNAN;
     }
 }
 
-void BookState::set_spread_count (int32 count) {
+void BookState::set_spread_count (int32 count, const PageBlock& block) {
     settings->layout.spread_count = {clamp(count, 1, 2048)};
      // Reclamp page_offset
-    set_page_offset(page_offset);
+    set_page_offset(page_offset, block);
 }
 
 void BookState::set_auto_zoom_mode (AutoZoomMode mode) {
@@ -58,23 +54,22 @@ void BookState::set_align (geo::Vec small, geo::Vec large) {
     manual_offset = GNAN;
 }
 
-void BookState::drag (geo::Vec amount) {
+void BookState::drag (geo::Vec amount, BookView& view) {
     if (!defined(manual_offset)) {
-         // TODO: do get_layout() in Book
-        auto& layout = book->view.get_layout();
+        auto& layout = view.get_layout();
         manual_offset = layout.offset;
         manual_zoom = layout.zoom;
     }
     manual_offset += amount;
 }
 
-void BookState::zoom_multiply (float factor) {
+void BookState::zoom_multiply (float factor, BookView& view) {
      // TODO: do the decision-making that depends on BookView in Book instead of
      // here, so that state doesn't depend on view.
      // Need spread to clamp the zoom
-    auto& spread = book->view.get_spread();
+    auto& spread = view.get_spread();
      // Actually we also need the layout to multiply the zoom
-    auto& layout = book->view.get_layout();
+    auto& layout = view.get_layout();
      // Set manual zoom
     manual_zoom = spread.clamp_zoom(
         *settings, layout.zoom * factor

@@ -17,9 +17,9 @@ struct SpreadPage {
 struct Spread {
     UniqueArray<SpreadPage> pages;
     Vec size;
-     // Uses small_align and large_align.  PageBlock is not const because it'll
-     // be sent load_page messages.
-    Spread (const BookState&, PageBlock&);
+     // Uses small_align and large_align.  Book is not const because we'll load
+     // pages on demand.
+    Spread (Book&);
      // Uses max_zoom and min_page_size
     float clamp_zoom (const Settings&, float) const;
 };

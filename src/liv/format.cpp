@@ -71,7 +71,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, literal);
             break;
         case FormatCommand::VisibleRange: {
-            auto visible = book->state.visible_range();
+            auto visible = book->visible_range();
             if (size(visible) == 0) {
                  // Dunno what to do here
                 encat(s, 0);
@@ -173,7 +173,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::MergedPagesAbs: {
-            auto visible = book->state.visible_range();
+            auto visible = book->visible_range();
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
                 auto&& loc = book->block.pages[visible[i]]->location;
@@ -183,7 +183,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::MergedPagesRelCwd: {
-            auto visible = book->state.visible_range();
+            auto visible = book->visible_range();
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
                 auto&& loc = book->block.pages[visible[i]]->location;
@@ -194,7 +194,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::MergedPagesRelBook: {
-            auto visible = book->state.visible_range();
+            auto visible = book->visible_range();
             if (!size(visible)) break;
             auto&& base = book->source->base_for_page_rel_book();
             auto paths = UniqueArray<UniqueString>(
@@ -208,7 +208,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::MergedPagesRelBookParent: {
-            auto visible = book->state.visible_range();
+            auto visible = book->visible_range();
             if (!size(visible)) break;
             auto&& base = book->source->base_for_page_rel_book_parent();
             auto paths = UniqueArray<UniqueString>(
@@ -222,7 +222,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             break;
         }
         case FormatCommand::ForVisiblePages: {
-            for (auto p : book->state.visible_range()) {
+            for (auto p : book->visible_range()) {
                 sublist.write(s, book, p);
             }
             break;
@@ -248,7 +248,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
 
 
 void FormatList::write (UniqueString& s, Book* book) const {
-    auto visible = book->state.visible_range();
+    auto visible = book->visible_range();
     write(s, book, size(visible) ? visible.l : -1);
 }
 NOINLINE

@@ -7,17 +7,17 @@
 
 namespace liv {
 
-Spread::Spread (const BookState& state, PageBlock& block) {
-    Vec small_align = state.settings->get(&LayoutSettings::small_align);
+Spread::Spread (Book& book) {
+    Vec small_align = book.state.settings->get(&LayoutSettings::small_align);
      // Collect visible pages
-    for (int32 i : state.visible_range()) {
-        if (Page* page = block.get(i)) {
-            block.load_page(page);
-            pages.emplace_back(block.get(i));
+    for (int32 i : book.visible_range()) {
+        if (Page* page = book.block.get(i)) {
+            book.block.load_page(page);
+            pages.emplace_back(book.block.get(i));
         }
     }
     size = {0, 0};
-    switch (state.settings->get(&LayoutSettings::spread_direction)) {
+    switch (book.state.settings->get(&LayoutSettings::spread_direction)) {
         case Direction::Right: {
              // Set height to height of tallest page
             for (auto& p : pages) {

@@ -68,8 +68,8 @@ static tap::TestSet tests ("liv/book", []{
 
     book.auto_zoom_mode(AutoZoomMode::Fit);
     book.spread_count(2);
-    book.state.set_page_offset(0);
-    is(book.state.visible_range(), IRange{0, 2}, "Two visible pages");
+    book.state.set_page_offset(0, book.block);
+    is(book.visible_range(), IRange{0, 2}, "Two visible pages");
     book.view.draw_if_needed();
     is(book.view.spread->pages.size(), usize(2), "Spread has two pages");
     is(book.view.spread->pages[1].offset.x, 7, "Spread second page has correct offset");
@@ -88,7 +88,7 @@ static tap::TestSet tests ("liv/book", []{
     is(img[{20, 30}], glow::RGBA8(0x000000ff), "Spread doesn't fill too much area");
 
     book.next();
-    is(book.state.visible_range(), IRange{1, 2}, "visible_range cannot go off the end");
+    is(book.visible_range(), IRange{1, 2}, "visible_range cannot go off the end");
 
     done_testing();
 });

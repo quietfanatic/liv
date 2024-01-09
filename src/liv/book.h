@@ -25,13 +25,17 @@ struct Book {
     ) :
         app(app),
         source(move(src)),
-        state(this, move(settings)),
+        state(move(settings)),
         view(this),
         block(*state.settings, *source)
     { }
     ~Book () { }
 
      // TODO: move these to .cpp file
+
+    IRange visible_range () {
+        return state.viewing_range() & IRange{0, block.pages.size()};
+    }
 
      // Commands
     void fullscreen () {
@@ -51,7 +55,7 @@ struct Book {
     }
 
     void seek (int32 offset) {
-        state.set_page_offset(state.page_offset + offset);
+        state.set_page_offset(state.page_offset + offset, block);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -59,12 +63,12 @@ struct Book {
     }
 
     void remove_current_page () {
-        auto visible = state.visible_range();
+        auto visible = visible_range();
         if (!size(visible)) return;
         block.unload_page(block.get(visible.l));
         block.pages.erase(visible.l);
          // Reclamp page offset
-        state.set_page_offset(state.page_offset);
+        state.set_page_offset(state.page_offset, block);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -72,7 +76,7 @@ struct Book {
     }
 
     void sort (SortMethod method) {
-        auto visible = state.visible_range();
+        auto visible = visible_range();
         IRI current_location = size(visible)
             ? block.pages[visible.l]->location
             : IRI();
@@ -80,7 +84,7 @@ struct Book {
         if (current_location) {
             for (usize i = 0; i < size(block.pages); i++) {
                 if (block.pages[i]->location == current_location) {
-                    state.set_page_offset(i);
+                    state.set_page_offset(i, block);
                     break;
                 }
             }
@@ -92,7 +96,7 @@ struct Book {
     }
 
     void spread_count (int32 count) {
-        state.set_spread_count(count);
+        state.set_spread_count(count, block);
         view.spread = {};
         view.layout = {};
         view.need_draw = true;
@@ -123,7 +127,7 @@ struct Book {
     }
 
     void zoom_multiply (float factor) {
-        state.zoom_multiply(factor);
+        state.zoom_multiply(factor, view);
         view.layout = {};
         view.need_draw = true;
         need_memorize = true;
@@ -157,7 +161,7 @@ struct Book {
 
      // Not a command, but we need to figure out how to make this configurable.
     void drag (Vec amount) {
-        state.drag(amount);
+        state.drag(amount, view);
         view.layout = {};
         view.need_draw = true;
         need_memorize = true;
