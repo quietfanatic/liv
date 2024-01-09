@@ -176,13 +176,13 @@ AYU_DESCRIBE(liv::MemorySettings,
 
 AYU_DESCRIBE(liv::Settings,
     attrs(
-        attr("window", &Settings::window, optional),
-        attr("layout", &Settings::layout, optional),
-        attr("render", &Settings::render, optional),
-        attr("control", &Settings::control, optional),
-        attr("files", &Settings::files, optional),
-        attr("memory", &Settings::memory, optional),
-        attr("mappings", &Settings::mappings, optional),
+        attr("window", &Settings::window, collapse_empty),
+        attr("layout", &Settings::layout, collapse_empty),
+        attr("render", &Settings::render, collapse_empty),
+        attr("control", &Settings::control, collapse_empty),
+        attr("files", &Settings::files, collapse_empty),
+        attr("memory", &Settings::memory, collapse_empty),
+        attr("mappings", &Settings::mappings, collapse_empty),
         attr("parent", &Settings::parent, optional)
     )
 )
