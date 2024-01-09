@@ -89,7 +89,10 @@ void save_memory (const BookSource& source, BookState& state) {
     auto store = memory_store_location(mem.source.locations[0]);
     auto res = ayu::Resource(store, move(mem));
     try {
-        static auto app_settings_loc = ayu::location_from_iri(app_settings_location);
+         // Most if not all memory files will have the settings/parent set to
+         // the app settings.
+        static auto app_settings_loc =
+            ayu::location_from_iri(app_settings_location);
         ayu::PushLikelyReference plr (
             app_settings(), app_settings_loc
         );
@@ -148,6 +151,13 @@ tap::TestSet tests ("liv/memory", []{
     }, "load_memory");
     is(to_load.page_offset, 1);
     is(to_load.settings->layout.auto_zoom_mode, AutoZoomMode::FitWidth);
+
+     // And save it again differently to make sure that we aren't reading the
+     // memory file from the previous run.
+    to_save.page_offset = 2;
+    save_memory(*src, to_save);
+    to_load = *load_memory(*src);
+    is(to_load.page_offset, 2);
 
     done_testing();
 });
