@@ -27,23 +27,10 @@ struct BookState {
      // Pages currently being viewed, clamped to valid page indexes.
     IRange viewing_range () const;
 
-     // Takes a 0-based page number.  spread_range will be set to
-     //     {no, no + spread_count}
-     // but clamped such that there is at least one visible page.
-    void set_page_offset (int32, const PageBlock&);
-
-     // Set number of pages to view simultaneously.  Clamps to 1..2048
-     // TODO: clamp smaller wow
-    void set_spread_count (int32 count, const PageBlock&);
-
     void set_auto_zoom_mode (AutoZoomMode);
     void set_align (geo::Vec small, geo::Vec large);
-     // Adds amount to view.offset
-    void drag (geo::Vec amount, BookView&);
 
-    void zoom_multiply (float factor, BookView&);
-
-     // Reset all layout parameters
+     // Reset all layout parameters except spread_count
     void reset_layout ();
 };
 

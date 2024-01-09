@@ -4,6 +4,169 @@
 
 namespace liv {
 
+ // Commands
+void Book::fullscreen () {
+    view.set_fullscreen(!view.is_fullscreen());
+    view.layout = {};
+    view.need_draw = true;
+}
+
+void Book::set_page_offset (int32 off) {
+    auto spread_count = state.settings->get(&LayoutSettings::spread_count);
+     // Clamp such that there is at least one visible page in the range
+    state.page_offset = clamp(
+        off,
+        1 - int32(spread_count),
+        int32(block.pages.size()) - 1
+    );
+    if (state.settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
+        state.manual_zoom = GNAN;
+        state.manual_offset = GNAN;
+    }
+}
+
+void Book::next () {
+    seek(state.settings->get(&LayoutSettings::spread_count));
+    need_memorize = true;
+}
+
+void Book::prev () {
+    seek(-state.settings->get(&LayoutSettings::spread_count));
+    need_memorize = true;
+}
+
+void Book::seek (int32 offset) {
+    set_page_offset(state.page_offset + offset);
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::remove_current_page () {
+    auto visible = visible_range();
+    if (!size(visible)) return;
+    block.unload_page(block.get(visible.l));
+    block.pages.erase(visible.l);
+     // Reclamp page offset
+    set_page_offset(state.page_offset);
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::sort (SortMethod method) {
+    auto visible = visible_range();
+    IRI current_location = size(visible)
+        ? block.pages[visible.l]->location
+        : IRI();
+    block.resort(method);
+    if (current_location) {
+        for (usize i = 0; i < size(block.pages); i++) {
+            if (block.pages[i]->location == current_location) {
+                set_page_offset(i);
+                break;
+            }
+        }
+    }
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::spread_count (int32 count) {
+    state.settings->layout.spread_count = {clamp(count, 1, 2048)};
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::spread_direction (Direction dir) {
+    state.settings->layout.spread_direction = {dir};
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::auto_zoom_mode (AutoZoomMode mode) {
+    state.set_auto_zoom_mode(mode);
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::align (Vec small, Vec large) {
+    state.set_align(small, large);
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::zoom_multiply (float factor) {
+     // Need spread to clamp the zoom
+    auto& spread = view.get_spread();
+     // Actually we also need the layout to multiply the zoom
+    auto& layout = view.get_layout();
+     // Set manual zoom
+    state.manual_zoom = spread.clamp_zoom(
+        *state.settings, layout.zoom * factor
+    );
+    if (defined(state.manual_offset)) {
+         // Hacky way to zoom from center
+         // TODO: zoom to preserve current alignment instead
+        state.manual_offset +=
+            spread.size * (layout.zoom - state.manual_zoom) / 2;
+    }
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::reset_layout () {
+    state.reset_layout();
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::interpolation_mode (InterpolationMode mode) {
+    state.settings->render.interpolation_mode = mode;
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::window_background (Fill bg) {
+    state.settings->render.window_background = bg;
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+void Book::transparency_background (Fill bg) {
+    state.settings->render.transparency_background = bg;
+    view.need_draw = true;
+    need_memorize = true;
+}
+
+ // Not a command, but we need to figure out how to make this configurable.
+void Book::drag (Vec amount) {
+    if (!defined(state.manual_offset)) {
+         // Transition from automatic to manual
+        auto& layout = view.get_layout();
+        state.manual_offset = layout.offset;
+        state.manual_zoom = layout.zoom;
+    }
+    state.manual_offset += amount;
+    view.layout = {};
+    view.need_draw = true;
+    need_memorize = true;
+}
+
 } using namespace liv;
 
 #ifndef TAP_DISABLE_TESTS
@@ -68,7 +231,7 @@ static tap::TestSet tests ("liv/book", []{
 
     book.auto_zoom_mode(AutoZoomMode::Fit);
     book.spread_count(2);
-    book.state.set_page_offset(0, book.block);
+    book.set_page_offset(0);
     is(book.visible_range(), IRange{0, 2}, "Two visible pages");
     book.view.draw_if_needed();
     is(book.view.spread->pages.size(), usize(2), "Spread has two pages");
