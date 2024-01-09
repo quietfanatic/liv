@@ -380,9 +380,9 @@ static tap::TestSet tests ("liv/format", []{
 
     auto settings = std::make_unique<Settings>();
     settings->window.size = {120, 120};
+    settings->window.hidden = true;
     settings->parent = app_settings();
     App app;
-    app.hidden = true;
     auto src = std::make_unique<BookSource>(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),

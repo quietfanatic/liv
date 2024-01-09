@@ -127,11 +127,7 @@ tap::TestSet tests ("liv/memory", []{
     using namespace tap;
     using namespace liv;
 
-    App app;
-    app.hidden = true;
-
     auto settings = std::make_unique<Settings>();
-    settings->window.size = {{120, 120}};
     settings->parent = app_settings();
     auto src = std::make_unique<BookSource>(
         BookType::Folder,

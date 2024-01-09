@@ -20,8 +20,29 @@ void Book::on_event (SDL_Event* e) {
                     view.need_draw = true;
                     break;
                 }
+                case SDL_WINDOWEVENT_FOCUS_GAINED: {
+                    if (!state.settings->get(
+                        &WindowSettings::automated_input
+                    )) {
+                        last_focused = e->window.timestamp;
+                    }
+                    break;
+                }
             }
             break;
+        }
+        case SDL_KEYDOWN:
+        case SDL_KEYUP: {
+             // There's a bug where if we gain focus by another window being
+             // closed with a keystroke, the keystroke gets sent to us.  I don't
+             // know if this is a bug in SDL or the window manager, but the
+             // workaround is pretty simple: disable keyboard input right after
+             // gaining focus.  In my testing, the difference is always either 0
+             // or 1 ms, so we'll go up to 3 in case the computer is slow for
+             // some reason.  This is still faster than 1 video frame and faster
+             // than the typical input device polling rate (10ms).
+            if (e->key.timestamp - last_focused <= 3) return;
+            else break;
         }
         case SDL_MOUSEMOTION: {
             if (e->motion.state & SDL_BUTTON_RMASK) {
@@ -218,7 +239,6 @@ static tap::TestSet tests ("liv/book", []{
     settings->window.size = {size};
     settings->parent = app_settings();
     App app;
-    //app.hidden = true;
     auto src = std::make_unique<BookSource>(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),

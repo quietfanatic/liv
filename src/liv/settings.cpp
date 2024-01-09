@@ -18,6 +18,8 @@ const Settings builtin_default_settings = {
                 FormatToken("%)")
             ))
         ),
+        .hidden = false,
+        .automated_input = false,
     },
     .layout = {
         .spread_count = 1,

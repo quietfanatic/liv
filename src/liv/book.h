@@ -19,6 +19,12 @@ struct Book {
     PageBlock block;
     BookState state;
     BookView view;
+
+     // To work around a bug where gaining focus from another window closing due
+     // to a keystroke makes our window receive the keystroke that closed the
+     // other window.
+    uint32 last_focused = 0;
+
     bool need_memorize = false;
 
     explicit Book (

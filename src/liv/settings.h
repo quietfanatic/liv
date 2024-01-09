@@ -62,6 +62,12 @@ struct WindowSettings {
     std::optional<geo::IVec> size;
     std::optional<bool> fullscreen;
     std::optional<FormatList> title;
+     // For testing.  Don't show window.  Note that some graphics drivers will
+     // refuse to draw on hidden windows, so you can't test drawing when the
+     // window is hidden.
+    std::optional<bool> hidden;
+     // For testing.  Disable workaround for false keypress on window focus.
+    std::optional<bool> automated_input;
 };
 struct LayoutSettings {
     std::optional<int32> spread_count;

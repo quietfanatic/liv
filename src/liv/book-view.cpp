@@ -23,7 +23,9 @@ BookView::BookView (Book* book) :
     plog("set window props");
     glow::init();
     plog("fetched gl functions");
-    if (!book->app->hidden) SDL_ShowWindow(window);
+    if (!book->state.settings->get(&WindowSettings::hidden)) {
+        SDL_ShowWindow(window);
+    }
     plog("showed window");
 }
 
