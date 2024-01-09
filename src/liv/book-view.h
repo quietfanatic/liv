@@ -7,6 +7,7 @@
 
 namespace liv {
 
+ // Responsible for window management and drawing.
 struct BookView {
     explicit BookView (Book* book);
     ~BookView ();

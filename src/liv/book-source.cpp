@@ -1,5 +1,6 @@
 #include "book-source.h"
 
+#include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/iri/path.h"
 #include "../dirt/uni/errors.h"
 #include "settings.h"
@@ -12,7 +13,7 @@ static void validate_location (const IRI& loc) {
     }
 }
 
-void BookSource::validate () {
+void BookSource::validate () const {
     switch (type) {
         case BookType::Misc: {
             for (auto& arg : locations) validate_location(arg);
@@ -52,7 +53,7 @@ void BookSource::validate () {
     }
 }
 
-const IRI& BookSource::location_for_memory () {
+const IRI& BookSource::location_for_memory () const {
     static constexpr IRI empty;
     switch (type) {
         case BookType::Misc: return empty;
@@ -66,7 +67,7 @@ const IRI& BookSource::location_for_memory () {
     }
 }
 
-const IRI& BookSource::base_for_page_rel_book () {
+const IRI& BookSource::base_for_page_rel_book () const {
     switch (type) {
         case BookType::Misc: return iri::working_directory();
         case BookType::Folder: return locations[0];
@@ -79,7 +80,7 @@ const IRI& BookSource::base_for_page_rel_book () {
     }
 }
 
-IRI BookSource::base_for_page_rel_book_parent () {
+IRI BookSource::base_for_page_rel_book_parent () const {
     const IRI* r;
     switch (type) {
         case BookType::Misc: {
@@ -113,4 +114,20 @@ IRI BookSource::base_for_page_rel_book_parent () {
     return *r;
 }
 
-} // liv
+} using namespace liv;
+
+AYU_DESCRIBE(liv::BookType,
+    values(
+        value("args", BookType::Misc),
+        value("folder", BookType::Folder),
+        value("list", BookType::List),
+        value("file_with_neighbors", BookType::FileWithNeighbors)
+    )
+)
+
+AYU_DESCRIBE(liv::BookSource,
+    elems(
+        elem(&BookSource::type),
+        elem(&BookSource::locations)
+    )
+)

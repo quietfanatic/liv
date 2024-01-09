@@ -2,32 +2,35 @@
 #include "../dirt/iri/path.h"
 #include "app.h"
 #include "common.h"
+#include "book-source.h"
 #include "book-state.h"
 #include "book-view.h"
-#include "book-source.h"
 #include "page-block.h"
 
 namespace liv {
 
- // Collect all the different parts necessary to implement a book
+ // This collects all the different parts needed to manage a book, and fills the
+ // role of a controller.
 struct Book {
+     // TODO: is this still necessary?
     App* app;
+     // Data roughly flows downward
     std::unique_ptr<BookSource> source;
+    PageBlock block;
     BookState state;
     BookView view;
-    PageBlock block;
     bool need_memorize = false;
 
     explicit Book (
         App* app,
         std::unique_ptr<BookSource> src,
-        std::unique_ptr<Settings> settings
+        BookState st
     ) :
         app(app),
         source(move(src)),
-        state(move(settings)),
-        view(this),
-        block(*state.settings, *source)
+        block(*st.settings, *source),
+        state(move(st)),
+        view(this)
     { }
     ~Book () { }
 

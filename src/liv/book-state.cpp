@@ -1,5 +1,6 @@
 #include "book-state.h"
 
+#include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/uni/time.h"
 #include "book.h"
 #include "memory.h"
@@ -90,4 +91,14 @@ void BookState::reset_layout () {
     manual_offset = GNAN;
 }
 
-} // namespace liv
+} using namespace liv;
+
+AYU_DESCRIBE(liv::BookState,
+    attrs(
+        attr("settings", &BookState::settings, collapse_optional),
+        attr("page_offset", &BookState::page_offset),
+        attr("manual_zoom", &BookState::manual_zoom),
+        attr("manual_offset", &BookState::manual_offset)
+    )
+)
+

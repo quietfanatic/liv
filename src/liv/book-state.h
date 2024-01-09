@@ -9,7 +9,11 @@
 
 namespace liv {
 
+ // Holds all the mutable state associated with a book.
 struct BookState {
+    BookState () = default;
+    BookState (BookState&&) = default;
+    BookState& operator= (BookState&&) = default;
     explicit BookState (std::unique_ptr<Settings>);
 
      // Book-specific settings.  Has the app settings as its parent.

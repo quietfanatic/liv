@@ -13,23 +13,28 @@ enum class BookType {
     FileWithNeighbors,
 };
 
- // Defines and identifies what a book is.
+ // Defines and identifies a book.
 struct BookSource {
     BookType type;
     UniqueArray<IRI> locations;
 
-    void validate ();
+    void validate () const;
+    BookSource () = default;
     BookSource (BookType t, UniqueArray<IRI> l) :
         type(t), locations(move(l))
     { validate(); }
 
      // Empty if this book should not be remembered.
      // TODO: use const IRI*
-    const IRI& location_for_memory ();
+    const IRI& location_for_memory () const;
      // Current book or cwd if Misc
-    const IRI& base_for_page_rel_book ();
+    const IRI& base_for_page_rel_book () const;
      // Directory containing current book or cwd if Misc
-    IRI base_for_page_rel_book_parent ();
+    IRI base_for_page_rel_book_parent () const;
 };
+
+inline bool operator== (const BookSource& a, const BookSource& b) {
+    return a.type == b.type && a.locations == b.locations;
+}
 
 } // liv

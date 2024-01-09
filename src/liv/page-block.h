@@ -1,8 +1,3 @@
-// Implements a collection of Pages.  State includes whether those Pages are
-// loaded or not (actually, the Pages themselves include that), and the total
-// estimated video memory of all pages.  Does not include the current page or
-// any view parameters.  Pages are indexed by 0.
-
 #pragma once
 
 #include <vector>
@@ -13,6 +8,9 @@
 
 namespace liv {
 
+// Implements a collection of Pages.  Responsible for gathering filenames from
+// folders, keeping track of which pages are loaded, estimating memory usage of
+// loaded pages.
 struct PageBlock {
     UniqueArray<std::unique_ptr<Page>> pages;
     int64 estimated_page_memory = 0;

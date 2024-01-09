@@ -119,7 +119,7 @@ static bool on_idle (App& self) {
             return true;
         }
         if (book->need_memorize) {
-            memorize_book(&*book);
+            save_memory(*book->source, book->state);
             book->need_memorize = false;
             return true;
         }
@@ -139,11 +139,15 @@ static void add_book (
     App& self, std::unique_ptr<BookSource> src,
     std::unique_ptr<Settings> settings
 ) {
-    auto& book = self.books.emplace_back(
-        std::make_unique<Book>(&self, move(src), move(settings))
-    );
-    remember_book(&*book);
+    BookState state;
+    auto memory = load_memory(*src);
+     // TODO: merge settings
+    if (memory) state = move(*memory);
+    else state = BookState(move(settings));
 
+    auto& book = self.books.emplace_back(
+        std::make_unique<Book>(&self, move(src), move(state))
+    );
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),
         &*book

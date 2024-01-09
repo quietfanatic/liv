@@ -389,7 +389,7 @@ static tap::TestSet tests ("liv/format", []{
             IRI("res/liv/test/image2.png", iri::program_location())
         }
     );
-    Book book (&app, move(src), move(settings));
+    Book book (&app, move(src), BookState(move(settings)));
 
     UniqueString got;
     fmt.write(got, &book);
