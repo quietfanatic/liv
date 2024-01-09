@@ -38,6 +38,8 @@ struct Book {
         return state.viewing_range() & IRange{0, block.pages.size()};
     }
 
+    void on_event (SDL_Event*);
+
      // Commands
     void fullscreen ();
     void set_page_offset (int32);

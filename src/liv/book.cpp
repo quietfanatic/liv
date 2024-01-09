@@ -1,8 +1,43 @@
 #include "book.h"
 
+#include <SDL2/SDL_events.h>
 #include "memory.h"
 
 namespace liv {
+
+void Book::on_event (SDL_Event* e) {
+    switch (e->type) {
+        case SDL_WINDOWEVENT: {
+            switch (e->window.event) {
+                case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                    view.window_size_changed({
+                        e->window.data1,
+                        e->window.data2
+                    });
+                    break;
+                }
+                case SDL_WINDOWEVENT_EXPOSED: {
+                    view.need_draw = true;
+                    break;
+                }
+            }
+            break;
+        }
+        case SDL_MOUSEMOTION: {
+            if (e->motion.state & SDL_BUTTON_RMASK) {
+                drag(geo::Vec(
+                    e->motion.xrel,
+                    e->motion.yrel
+                ) * state.settings->get(&ControlSettings::drag_speed));
+            }
+            break;
+        }
+         // TODO: Support wheel
+        default: break;
+    }
+    auto action = state.settings->map_event(e);
+    if (action && *action) (*action)();
+}
 
  // Commands
 void Book::fullscreen () {

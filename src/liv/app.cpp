@@ -21,32 +21,20 @@ static Book* book_with_window_id (App& self, uint32 id) {
     return &*iter->second;
 }
 
-static void on_event (App& self, SDL_Event* event) {
-     // TODO: Move book-specific stuff to Book
+static void on_event (App& self, SDL_Event* e) {
     current_app = &self;
-    switch (event->type) {
+    switch (e->type) {
         case SDL_QUIT: self.stop(); break;
         case SDL_WINDOWEVENT: {
-            current_book = book_with_window_id(self, event->window.windowID);
-            switch (event->window.event) {
-                case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                    current_book->view.window_size_changed({
-                        event->window.data1,
-                        event->window.data2
-                    });
-                    break;
-                }
-                case SDL_WINDOWEVENT_EXPOSED: {
-                    current_book->view.need_draw = true;
-                    break;
-                }
+            current_book = book_with_window_id(self, e->window.windowID);
+            switch (e->window.event) {
                 case SDL_WINDOWEVENT_CLOSE: {
                     self.close_book(current_book);
                     current_book = null;
                     break;
                 }
                 case SDL_WINDOWEVENT_FOCUS_GAINED: {
-                    self.last_focused = event->window.timestamp;
+                    self.last_focused = e->window.timestamp;
                     break;
                 }
             }
@@ -62,7 +50,7 @@ static void on_event (App& self, SDL_Event* event) {
              // some reason.  This is still faster than 1 video frame and faster
              // than the typical input device polling rate (10ms).
             if (!self.automated_input &&
-                event->key.timestamp - self.last_focused <= 3
+                e->key.timestamp - self.last_focused <= 3
             ) {
                 return;
             }
@@ -70,36 +58,23 @@ static void on_event (App& self, SDL_Event* event) {
         }
         case SDL_KEYUP:
             SDL_ShowCursor(SDL_DISABLE);
-            current_book = book_with_window_id(self, event->key.windowID);
+            current_book = book_with_window_id(self, e->key.windowID);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP: {
             SDL_ShowCursor(SDL_ENABLE);
-            current_book = book_with_window_id(self, event->button.windowID);
+            current_book = book_with_window_id(self, e->button.windowID);
             break;
         }
         case SDL_MOUSEMOTION: {
             SDL_ShowCursor(SDL_ENABLE);
-            if (event->motion.state & SDL_BUTTON_RMASK) {
-                current_book = book_with_window_id(
-                    self, event->motion.windowID
-                );
-                if (current_book) {
-                    current_book->drag(geo::Vec(
-                        event->motion.xrel,
-                        event->motion.yrel
-                    ) * current_book->state.settings->get(&ControlSettings::drag_speed));
-                }
-            }
+            current_book = book_with_window_id(self, e->motion.windowID);
             break;
         }
          // TODO: Support wheel
         default: break;
     }
-    if (current_book) {
-        auto action = current_book->state.settings->map_event(event);
-        if (action && *action) (*action)();
-    }
+    if (current_book) current_book->on_event(e);
     current_book = null;
     current_app = null;
 }
