@@ -97,45 +97,46 @@ Layout::Layout (
     const Spread& spread,
     Vec window_size
 ) {
-    if (defined(state.manual_offset)) {
-        offset = state.manual_offset;
-         // If offset is defined zoom should be too.
-        zoom = state.manual_zoom;
+    if (state.manual_offset) {
+        expect(defined(*state.manual_offset));
+        offset = *state.manual_offset;
+        expect(state.manual_zoom);
+        expect(defined(*state.manual_zoom));
+        zoom = *state.manual_zoom;
     }
     else {
-        if (defined(state.manual_zoom)) {
-            zoom = state.manual_zoom;
+        if (state.manual_zoom) {
+            expect(defined(*state.manual_zoom));
+            zoom = *state.manual_zoom;
         }
         else if (!area(spread.size)) {
             zoom = 1;
         }
-        else {
-            switch (state.settings->get(&LayoutSettings::auto_zoom_mode)) {
-                case AutoZoomMode::Fit: {
-                     // slope = 1 / aspect ratio
-                    if (slope(spread.size) > slope(window_size)) {
-                        zoom = window_size.y / spread.size.y;
-                    }
-                    else {
-                        zoom = window_size.x / spread.size.x;
-                    }
-                    zoom = spread.clamp_zoom(*state.settings, zoom);
-                    break;
-                }
-                case AutoZoomMode::FitWidth: {
-                    zoom = window_size.x / spread.size.x;
-                    zoom = spread.clamp_zoom(*state.settings, zoom);
-                    break;
-                }
-                case AutoZoomMode::FitHeight: {
+        else switch (state.settings->get(&LayoutSettings::auto_zoom_mode)) {
+            case AutoZoomMode::Fit: {
+                 // slope = 1 / aspect ratio
+                if (slope(spread.size) > slope(window_size)) {
                     zoom = window_size.y / spread.size.y;
-                    zoom = spread.clamp_zoom(*state.settings, zoom);
-                    break;
                 }
-                case AutoZoomMode::Original: {
-                    zoom = 1;
-                    break;
+                else {
+                    zoom = window_size.x / spread.size.x;
                 }
+                zoom = spread.clamp_zoom(*state.settings, zoom);
+                break;
+            }
+            case AutoZoomMode::FitWidth: {
+                zoom = window_size.x / spread.size.x;
+                zoom = spread.clamp_zoom(*state.settings, zoom);
+                break;
+            }
+            case AutoZoomMode::FitHeight: {
+                zoom = window_size.y / spread.size.y;
+                zoom = spread.clamp_zoom(*state.settings, zoom);
+                break;
+            }
+            case AutoZoomMode::Original: {
+                zoom = 1;
+                break;
             }
         }
          // Auto align

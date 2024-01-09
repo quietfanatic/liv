@@ -76,8 +76,8 @@ void Book::set_page_offset (int32 off) {
         int32(block.pages.size()) - 1
     );
     if (state.settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
-        state.manual_zoom = GNAN;
-        state.manual_offset = GNAN;
+        state.manual_zoom = {};
+        state.manual_offset = {};
     }
 }
 
@@ -172,11 +172,11 @@ void Book::zoom_multiply (float factor) {
     state.manual_zoom = spread.clamp_zoom(
         *state.settings, layout.zoom * factor
     );
-    if (defined(state.manual_offset)) {
+    if (state.manual_offset) {
          // Hacky way to zoom from center
          // TODO: zoom to preserve current alignment instead
-        state.manual_offset +=
-            spread.size * (layout.zoom - state.manual_zoom) / 2;
+        *state.manual_offset +=
+            spread.size * (layout.zoom - *state.manual_zoom) / 2;
     }
     view.layout = {};
     view.need_draw = true;
@@ -192,13 +192,14 @@ void Book::reset_layout () {
 }
 
 void Book::reset_settings () {
-     // Preserve the parent
     auto old_sort = state.settings->get(&FilesSettings::sort);
+     // Preserve the parent
     auto parent = state.settings->parent;
     *state.settings = {};
     state.settings->parent = parent;
-    state.manual_zoom = GNAN;
-    state.manual_offset = GNAN;
+    state.manual_zoom = {};
+    state.manual_offset = {};
+     // Resort if sort has changed
     auto new_sort = state.settings->get(&FilesSettings::sort);
     if (new_sort != old_sort) block.resort(new_sort);
     view.spread = {};
@@ -227,13 +228,13 @@ void Book::transparency_background (Fill bg) {
 
  // Not a command, but we need to figure out how to make this configurable.
 void Book::drag (Vec amount) {
-    if (!defined(state.manual_offset)) {
+    if (!state.manual_offset) {
          // Transition from automatic to manual
         auto& layout = view.get_layout();
-        state.manual_offset = layout.offset;
-        state.manual_zoom = layout.zoom;
+        state.manual_offset = {layout.offset};
+        state.manual_zoom = {layout.zoom};
     }
-    state.manual_offset += amount;
+    *state.manual_offset += amount;
     view.layout = {};
     view.need_draw = true;
     need_memorize = true;

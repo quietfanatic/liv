@@ -20,9 +20,9 @@ struct BookState {
     std::unique_ptr<Settings> settings;
      // Index of first page currently being viewed.
     int32 page_offset = 0;
-     // NAN means no manual zoom/offset, is applied, so use auto_zoom.
-    float manual_zoom = GNAN;
-    Vec manual_offset = GNAN;
+     // If not defined, use the auto zoom mode.
+    std::optional<float> manual_zoom;
+    std::optional<Vec> manual_offset;
 
      // Pages currently being viewed, clamped to valid page indexes.
     IRange viewing_range () const;

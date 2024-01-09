@@ -19,8 +19,8 @@ IRange BookState::viewing_range () const {
 
 void BookState::set_auto_zoom_mode (AutoZoomMode mode) {
     settings->layout.auto_zoom_mode = {mode};
-    manual_zoom = GNAN;
-    manual_offset = GNAN;
+    manual_zoom = {};
+    manual_offset = {};
 }
 
 void BookState::set_align (geo::Vec small, geo::Vec large) {
@@ -32,15 +32,15 @@ void BookState::set_align (geo::Vec small, geo::Vec large) {
     if (defined(large.y)) large_align.y = large.y;
     settings->layout.small_align = {small_align};
     settings->layout.large_align = {large_align};
-    manual_offset = GNAN;
+    manual_offset = {};
 }
 
 void BookState::reset_layout () {
     auto sc = settings->layout.spread_count;
     settings->layout = {};
     settings->layout.spread_count = sc;
-    manual_zoom = GNAN;
-    manual_offset = GNAN;
+    manual_zoom = {};
+    manual_offset = {};
 }
 
 } using namespace liv;
@@ -49,8 +49,8 @@ AYU_DESCRIBE(liv::BookState,
     attrs(
         attr("settings", &BookState::settings, collapse_optional),
         attr("page_offset", &BookState::page_offset),
-        attr("manual_zoom", &BookState::manual_zoom),
-        attr("manual_offset", &BookState::manual_offset)
+        attr("manual_zoom", &BookState::manual_zoom, collapse_optional),
+        attr("manual_offset", &BookState::manual_offset, collapse_optional)
     )
 )
 
