@@ -238,14 +238,13 @@ static tap::TestSet tests ("liv/book", []{
     auto settings = std::make_unique<Settings>();
     settings->window.size = {size};
     settings->parent = app_settings();
-    App app;
     auto src = std::make_unique<BookSource>(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),
             IRI("res/liv/test/image2.png", iri::program_location())
         }
     );
-    Book book (&app, move(src), BookState(move(settings)));
+    Book book (move(src), BookState(move(settings)));
 
     book.view.draw_if_needed();
     glow::Image img (size);

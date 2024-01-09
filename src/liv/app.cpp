@@ -102,7 +102,7 @@ static void add_book (
     else state = BookState(move(settings));
 
     auto& book = self.books.emplace_back(
-        std::make_unique<Book>(&self, move(src), move(state))
+        std::make_unique<Book>(move(src), move(state))
     );
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),

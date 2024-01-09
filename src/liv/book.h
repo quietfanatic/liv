@@ -12,8 +12,6 @@ namespace liv {
  // This collects all the different parts needed to manage a book, and fills the
  // role of a controller.
 struct Book {
-     // TODO: is this still necessary?
-    App* app;
      // Data roughly flows downward
     std::unique_ptr<BookSource> source;
     PageBlock block;
@@ -28,11 +26,9 @@ struct Book {
     bool need_memorize = false;
 
     explicit Book (
-        App* app,
         std::unique_ptr<BookSource> src,
         BookState st
     ) :
-        app(app),
         source(move(src)),
         block(*st.settings, *source),
         state(move(st)),
