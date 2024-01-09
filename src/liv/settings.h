@@ -5,6 +5,7 @@
 #include "../dirt/control/input.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/glow/colors.h"
+#include "../dirt/iri/iri.h"
 #include "../dirt/uni/common.h"
 #include "../dirt/uni/strings.h"
 #include "common.h"
@@ -93,6 +94,7 @@ struct MemorySettings {
 
 extern const Settings builtin_default_settings;
 
+static constexpr IRI app_settings_location = IRI("data:/settings.ayu");
 const Settings* app_settings ();
 
 struct Settings {
