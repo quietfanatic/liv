@@ -115,8 +115,8 @@ void save_memory (const BookSource& source, BookState& state) {
 AYU_DESCRIBE(liv::MemoryOfBook,
     attrs(
         attr("source", &MemoryOfBook::source),
-        attr("state", &MemoryOfBook::state),
-        attr("updated_at", &MemoryOfBook::updated_at)
+        attr("state", &MemoryOfBook::state, include),
+        attr("updated_at", &MemoryOfBook::updated_at, optional)
     )
 )
 
