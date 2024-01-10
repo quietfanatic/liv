@@ -20,7 +20,7 @@ window: {
 
  -- Settings for how pages are laid out in the window
 layout: {
-     -- Default number of pages to view simultaneously.  The maximum is 2048.
+     -- Default number of pages to view simultaneously.  The maximum is 16.
     spread_count: 1
      -- Direction to lay out multiple pages.  Options: right left down up
     spread_direction: right
@@ -142,32 +142,32 @@ mappings: [
      -- Go to the start of the book
     [[ctrl shift x] [seek -1000000000]]
      -- Move in a direction, depending on spread_direction
-    [[repeatable left] [go_next left]]
     [[repeatable right] [go_next right]]
-    [[repeatable up] [go_next up]]
+    [[repeatable left] [go_next left]]
     [[repeatable down] [go_next down]]
-    [[repeatable shift left] [go left 1]]
+    [[repeatable up] [go_next up]]
     [[repeatable shift right] [go right 1]]
-    [[repeatable shift up] [go up 1]]
+    [[repeatable shift left] [go left 1]]
     [[repeatable shift down] [go down 1]]
-    [[repeatable ctrl left] [go left 20]]
+    [[repeatable shift up] [go up 1]]
     [[repeatable ctrl right] [go right 20]]
-    [[repeatable ctrl up] [go up 20]]
+    [[repeatable ctrl left] [go left 20]]
     [[repeatable ctrl down] [go down 20]]
-    [[repeatable ctrl shift left] [go left 1000000000]]
+    [[repeatable ctrl up] [go up 20]]
     [[repeatable ctrl shift right] [go right 1000000000]]
-    [[repeatable ctrl shift up] [go up 1000000000]]
+    [[repeatable ctrl shift left] [go left 1000000000]]
     [[repeatable ctrl shift down] [go down 1000000000]]
+    [[repeatable ctrl shift up] [go up 1000000000]]
      -- Set simultaneous viewed pages
     [[1] [spread_count 1]]
     [[2] [spread_count 2]]
     [[3] [spread_count 3]]
     [[4] [spread_count 4]]
      -- Set spread direction
-    [[alt a] [spread_direction left]]
-    [[alt d] [spread_direction right]]
-    [[alt w] [spread_direction up]]
-    [[alt s] [spread_direction down]]
+    [[alt right] [spread_direction right]]
+    [[alt left] [spread_direction left]]
+    [[alt down] [spread_direction down]]
+    [[alt up] [spread_direction up]]
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
      -- Show some information in a message box.  See help/formats.md
@@ -179,6 +179,7 @@ mappings: [
             [page_est_mem] "\n\n"
         ]
     ]]]
+     -- Put filename on OS clipboard
     [[ctrl c] [clipboard_text [[page_abs]]]]
   ----- LAYOUT
      -- Toggle fullscreen mode

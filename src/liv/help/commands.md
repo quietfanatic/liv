@@ -41,7 +41,7 @@ Book and Page Commands
 - `[go <Direction> <int32>]` = If the direction matches or is opposite the
     current spread direction, seek by that much in that direction.
 - `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
-    current maximum is 2048 but that will probably fry your computer.
+    current maximum is 16.
 - `[add_to_list <String> <SortMethod>]` = Add given page to a list file at the
     given path (a file containing filenames, one per line), and then sort the
     file with the given sort method.  Duplicates will be removed unless the sort

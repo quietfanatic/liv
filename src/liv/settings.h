@@ -74,6 +74,7 @@ struct WindowSettings {
 };
 struct LayoutSettings {
     std::optional<int32> spread_count;
+    static constexpr int32 max_spread_count = 16;
     std::optional<Direction> spread_direction;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;

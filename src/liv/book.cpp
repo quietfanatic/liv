@@ -148,7 +148,9 @@ void Book::sort (SortMethod method) {
 }
 
 void Book::spread_count (int32 count) {
-    state.settings->layout.spread_count = {clamp(count, 1, 2048)};
+    state.settings->layout.spread_count = {
+        clamp(count, 1, LayoutSettings::max_spread_count)
+    };
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
