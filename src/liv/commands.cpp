@@ -123,6 +123,16 @@ static void seek_ (int32 count) {
 }
 Command seek (seek_, "seek", "Add given amount to the current page number");
 
+static void go_next_ (Direction dir) {
+    if (current_book) current_book->go_next(dir);
+}
+Command go_next (go_next_, "go_next", "Move one spread count in the given direction");
+
+static void go_ (Direction dir, int32 count) {
+    if (current_book) current_book->go(dir, count);
+}
+Command go (go_, "go", "Move in the given direction by the given number of pages");
+
 static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
     auto visible = current_book->visible_range();
@@ -205,6 +215,11 @@ static void spread_count_ (int32 count) {
     if (current_book) current_book->spread_count(count);
 }
 Command spread_count (spread_count_, "spread_count", "Change number of pages to view at once");
+
+static void spread_direction_ (Direction dir) {
+    if (current_book) current_book->spread_direction(dir);
+}
+Command spread_direction (spread_direction_, "spread_direction", "Change direction to read book in");
 
 static void auto_zoom_mode_ (AutoZoomMode mode) {
     if (current_book) current_book->auto_zoom_mode(mode);

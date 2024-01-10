@@ -126,26 +126,48 @@ memory: {
 mappings: [
   ----- PAGES
      -- Go to next page(s)
-    [[repeatable right] [next]]
+    [[repeatable z] [next]]
      -- Go to previous page(s)
-    [[repeatable left] [prev]]
+    [[repeatable x] [prev]]
      -- Go forward one page (even if viewing multiple pages)
-    [[repeatable shift right] [seek 1]]
+    [[repeatable shift z] [seek 1]]
      -- Go backward one page (even if viewing multiple pages)
-    [[repeatable shift left] [seek -1]]
+    [[repeatable shift x] [seek -1]]
      -- Skip ahead 20 pages
-    [[repeatable ctrl right] [seek 20]]
+    [[repeatable ctrl z] [seek 20]]
      -- Rewind 20 pages
-    [[repeatable ctrl left] [seek -20]]
+    [[repeatable ctrl x] [seek -20]]
      -- Go to the end of the book
-    [[ctrl shift right] [seek 1000000000]]
+    [[ctrl shift z] [seek 1000000000]]
      -- Go to the start of the book
-    [[ctrl shift left] [seek -1000000000]]
+    [[ctrl shift x] [seek -1000000000]]
+     -- Move in a direction, depending on spread_direction
+    [[repeatable left] [go_next left]]
+    [[repeatable right] [go_next right]]
+    [[repeatable up] [go_next up]]
+    [[repeatable down] [go_next down]]
+    [[repeatable shift left] [go left 1]]
+    [[repeatable shift right] [go right 1]]
+    [[repeatable shift up] [go up 1]]
+    [[repeatable shift down] [go down 1]]
+    [[repeatable ctrl left] [go left 20]]
+    [[repeatable ctrl right] [go right 20]]
+    [[repeatable ctrl up] [go up 20]]
+    [[repeatable ctrl down] [go down 20]]
+    [[repeatable ctrl shift left] [go left 1000000000]]
+    [[repeatable ctrl shift right] [go right 1000000000]]
+    [[repeatable ctrl shift up] [go up 1000000000]]
+    [[repeatable ctrl shift down] [go down 1000000000]]
      -- Set simultaneous viewed pages
     [[1] [spread_count 1]]
     [[2] [spread_count 2]]
     [[3] [spread_count 3]]
     [[4] [spread_count 4]]
+     -- Set spread direction
+    [[alt a] [spread_direction left]]
+    [[alt d] [spread_direction right]]
+    [[alt w] [spread_direction up]]
+    [[alt s] [spread_direction down]]
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
      -- Show some information in a message box.  See help/formats.md

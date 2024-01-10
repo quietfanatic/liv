@@ -73,6 +73,7 @@ const Settings* app_settings () {
 }
 
 void Settings::merge (Settings&& o) {
+     // Is there a better solution than this?
 #define LIV_MERGE(p) if (o.p) p = move(o.p);
     LIV_MERGE(window.size)
     LIV_MERGE(window.fullscreen)
@@ -105,13 +106,13 @@ void Settings::merge (Settings&& o) {
     if (o.parent != &builtin_default_settings) parent = o.parent;
 }
 
-const control::Statement* Settings::map_event (SDL_Event* event) const {
-    for (auto& [input, action] : mappings) {
-        if (input_matches_event(input, event)) {
+const control::Statement* Settings::map_input (control::Input input) const {
+    for (auto& [binding, action] : mappings) {
+        if (input_matches_binding(input, binding)) {
             return &action;
         }
     }
-    if (parent) return parent->map_event(event);
+    if (parent) return parent->map_input(input);
     else return null;
 }
 

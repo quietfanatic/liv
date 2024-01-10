@@ -1,6 +1,7 @@
 #include "book.h"
 
 #include <SDL2/SDL_events.h>
+#include "../dirt/control/input.h"
 #include "memory.h"
 
 namespace liv {
@@ -56,8 +57,10 @@ void Book::on_event (SDL_Event* e) {
          // TODO: Support wheel
         default: break;
     }
-    auto action = state.settings->map_event(e);
-    if (action && *action) (*action)();
+    if (auto input = control::input_from_event(e)) {
+        auto action = state.settings->map_input(input);
+        if (action && *action) (*action)();
+    }
 }
 
  // Commands
@@ -97,6 +100,18 @@ void Book::seek (int32 offset) {
     view.layout = {};
     view.need_draw = true;
     need_memorize = true;
+}
+
+void Book::go_next (Direction dir) {
+    auto spread_dir = state.settings->get(&LayoutSettings::spread_direction);
+    if (dir == spread_dir) next();
+    else if (dir == -spread_dir) prev();
+}
+
+void Book::go (Direction dir, int32 offset) {
+    auto spread_dir = state.settings->get(&LayoutSettings::spread_direction);
+    if (dir == spread_dir) seek(offset);
+    else if (dir == -spread_dir) seek(-offset);
 }
 
 void Book::remove_current_page () {

@@ -35,6 +35,11 @@ Book and Page Commands
 - `[seek <int32>]` = Add to or subtract from current page number, ignoring
     current spread count.  The resulting page number will be clamped such that
     there is always at least one visible page in the spread.
+- `[go_next <Direction>]` = If the direction matches the current spread
+    direction, go forward by one spread count.  If it's the opposite, go
+    backwards.
+- `[go <Direction> <int32>]` = If the direction matches or is opposite the
+    current spread direction, seek by that much in that direction.
 - `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
     current maximum is 2048 but that will probably fry your computer.
 - `[add_to_list <String> <SortMethod>]` = Add given page to a list file at the
@@ -62,6 +67,9 @@ Book and Page Commands
 
 Layout Commands
 ---------------
+- `[spread_count <int32>]` = Set the number of pages to simultaneously view.
+- `[spread_direction <Direction>]` = Set the direction to view simultaneous
+    pages in.  Also affects the `[move]` and `[move_next]` commands.
 - `[auto_zoom_mode <AutoZoomMode>]` = Set the auto zoom mode for the current
     book.  See res/liv/settings-default.ayu for documentation on auto zoom
     modes.
@@ -76,6 +84,8 @@ Layout Commands
     settings.
 - `[reset_layout]` = Reset all layout parameters that have been altered by
     commands to their default (specified in the settings files).
+- `[reset_settings]` = Reset all temporary settings that have been altered by
+    commands.
 
 Render Commands
 ---------------

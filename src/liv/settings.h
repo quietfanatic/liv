@@ -31,6 +31,9 @@ enum class Direction {
     Down,
     Up
 };
+constexpr Direction operator- (Direction dir) {
+    return Direction{int(dir) ^ 1};
+}
 
 enum class AutoZoomMode {
     Fit,
@@ -120,7 +123,7 @@ struct Settings {
      // parent will also be transferred unless it is &builtin_default_settings.
     void merge (Settings&&);
 
-    const control::Statement* map_event (SDL_Event*) const;
+    const control::Statement* map_input (control::Input) const;
 };
 
 template <class T, class Category>

@@ -48,6 +48,8 @@ struct Book {
     void next ();
     void prev ();
     void seek (int32);
+    void go_next (Direction);
+    void go (Direction, int32);
     void remove_current_page ();
     void sort (SortMethod);
     void spread_count (int32);
