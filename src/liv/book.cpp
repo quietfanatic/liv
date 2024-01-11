@@ -2,9 +2,28 @@
 
 #include <SDL2/SDL_events.h>
 #include "../dirt/control/input.h"
-#include "memory.h"
 
 namespace liv {
+Book::Book (
+    std::unique_ptr<BookSource> src,
+    PageBlock bl,
+    BookState st
+) :
+    source(move(src)),
+    block(move(bl)),
+    state(move(st)),
+    view(this)
+{ }
+
+Book::Book (
+    std::unique_ptr<BookSource> src,
+    std::unique_ptr<Settings> settings
+) :
+    source(move(src)),
+    block(*source, *settings),
+    state(move(settings)),
+    view(this)
+{ }
 
 void Book::on_event (SDL_Event* e) {
     switch (e->type) {
@@ -86,12 +105,12 @@ void Book::set_page_offset (int32 off) {
 
 void Book::next () {
     seek(state.settings->get(&LayoutSettings::spread_count));
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::prev () {
     seek(-state.settings->get(&LayoutSettings::spread_count));
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::seek (int32 offset) {
@@ -99,7 +118,7 @@ void Book::seek (int32 offset) {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::go_next (Direction dir) {
@@ -124,7 +143,7 @@ void Book::remove_current_page () {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::sort (SortMethod method) {
@@ -144,7 +163,7 @@ void Book::sort (SortMethod method) {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::spread_count (int32 count) {
@@ -154,7 +173,7 @@ void Book::spread_count (int32 count) {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::spread_direction (Direction dir) {
@@ -162,14 +181,14 @@ void Book::spread_direction (Direction dir) {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::auto_zoom_mode (AutoZoomMode mode) {
     state.set_auto_zoom_mode(mode);
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::align (Vec small, Vec large) {
@@ -177,7 +196,7 @@ void Book::align (Vec small, Vec large) {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::zoom_multiply (float factor) {
@@ -197,7 +216,7 @@ void Book::zoom_multiply (float factor) {
     }
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::reset_layout () {
@@ -205,7 +224,7 @@ void Book::reset_layout () {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::reset_settings () {
@@ -222,25 +241,25 @@ void Book::reset_settings () {
     view.spread = {};
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::interpolation_mode (InterpolationMode mode) {
     state.settings->render.interpolation_mode = mode;
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::window_background (Fill bg) {
     state.settings->render.window_background = bg;
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 void Book::transparency_background (Fill bg) {
     state.settings->render.transparency_background = bg;
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
  // Not a command, but we need to figure out how to make this configurable.
@@ -254,7 +273,7 @@ void Book::drag (Vec amount) {
     *state.manual_offset += amount;
     view.layout = {};
     view.need_draw = true;
-    need_memorize = true;
+    need_mark = true;
 }
 
 } using namespace liv;
@@ -278,7 +297,7 @@ static tap::TestSet tests ("liv/book", []{
             IRI("res/liv/test/image2.png", iri::program_location())
         }
     );
-    Book book (move(src), BookState(move(settings)));
+    Book book (move(src), move(settings));
 
     book.view.draw_if_needed();
     glow::Image img (size);

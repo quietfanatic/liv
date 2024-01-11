@@ -7,7 +7,7 @@
 #include "../dirt/ayu/resources/resource.h"
 #include "book-source.h"
 #include "book.h"
-#include "memory.h"
+#include "mark.h"
 #include "settings.h"
 
 //TEMP
@@ -74,9 +74,9 @@ static bool on_idle (App& self) {
         if (book->block.idle_processing(&*book, *book->state.settings)) {
             return true;
         }
-        if (book->need_memorize) {
-            save_memory(*book->source, book->state);
-            book->need_memorize = false;
+        if (book->need_mark) {
+            book->need_mark = false;
+            save_mark(*book);
             return true;
         }
     }
@@ -95,28 +95,20 @@ static void add_book (
     App& self, std::unique_ptr<BookSource> src,
     std::unique_ptr<Settings> settings
 ) {
-    BookState state;
-    auto memory = load_memory(*src);
-    if (memory) {
-        state = move(*memory);
-        expect(state.settings->parent != &builtin_default_settings);
-        state.settings->merge(move(*settings));
-        settings = {};
-    }
-    else {
+    auto book = load_mark(*src, *settings);
+    if (!book) {
+         // By default parent the settings to the app settings.  We need a
+         // better way of making this happen.
         if (settings->parent == &builtin_default_settings) {
             settings->parent = app_settings();
         }
-        state = BookState(move(settings));
+        book = std::make_unique<Book>(move(src), move(settings));
     }
-
-    auto& book = self.books.emplace_back(
-        std::make_unique<Book>(move(src), move(state))
-    );
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),
         &*book
     );
+    self.books.emplace_back(move(book));
 }
 
 void App::open_args (

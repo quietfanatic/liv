@@ -13,7 +13,7 @@ static void validate_location (const IRI& loc) {
     }
 }
 
-void BookSource::validate () const {
+void BookSource::validate () {
     switch (type) {
         case BookType::Misc: {
             for (auto& arg : locations) validate_location(arg);
@@ -53,7 +53,7 @@ void BookSource::validate () const {
     }
 }
 
-const IRI& BookSource::location_for_memory () const {
+const IRI& BookSource::location_for_mark () const {
     static constexpr IRI empty;
     switch (type) {
         case BookType::Misc: return empty;
@@ -129,5 +129,6 @@ AYU_DESCRIBE(liv::BookSource,
     elems(
         elem(&BookSource::type),
         elem(&BookSource::locations)
-    )
+    ),
+    init<&BookSource::validate>()
 )

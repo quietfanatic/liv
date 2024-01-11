@@ -82,7 +82,7 @@ UniqueArray<IRI> expand_recursively (
     return r;
 }
 
-PageBlock::PageBlock (const Settings& settings, const BookSource& src) {
+PageBlock::PageBlock (const BookSource& src, const Settings& settings) {
     UniqueArray<IRI> locs;
     switch (src.type) {
         case BookType::Misc: {
@@ -144,6 +144,14 @@ void PageBlock::resort (SortMethod method) {
 Page* PageBlock::get (int32 i) const {
     if (i < 0 || i >= count()) return null;
     else return &*pages[i];
+}
+
+int32 PageBlock::find (const IRI& loc) const {
+    if (!loc) return -1;
+    for (int32 i = 0; i < int32(pages.size()); i++) {
+        if (pages[i]->location == loc) return i;
+    }
+    return -1;
 }
 
 void PageBlock::load_page (Page* page) {
@@ -265,36 +273,36 @@ static tap::TestSet tests ("liv/book-source", []{
         iri::from_fs_path("test/non-image.txt", here),
         iri::from_fs_path("test/", here)
     }};
-    PageBlock misc_block {*settings, misc_src};
+    PageBlock misc_block {misc_src, *settings};
     is(misc_block.pages.size(), 5u, "BookType::Misc");
     is(misc_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::Misc 0");
     is(misc_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::Misc 1");
     is(misc_block.pages[2]->location.relative_to(here), "test/non-image.txt", "BookType::Misc 2");
     is(misc_block.pages[3]->location.relative_to(here), "test/image.png", "BookType::Misc 3");
     is(misc_block.pages[4]->location.relative_to(here), "test/image2.png", "BookType::Misc 4");
-    is(misc_src.location_for_memory(), "", "BookType::Misc shouldn't be remembered");
+    is(misc_src.location_for_mark(), "", "BookType::Misc shouldn't be remembered");
 
     BookSource folder_src {BookType::Folder, {iri::from_fs_path("test/", here)}};
-    PageBlock folder_block {*settings, folder_src};
+    PageBlock folder_block {folder_src, *settings};
     is(folder_block.pages.size(), 2u, "BookType::Folder");
     is(folder_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::Folder 0");
     is(folder_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::Folder 1");
-    is(folder_src.location_for_memory().relative_to(here), "test/", "BookType::Folder name for memory");
+    is(folder_src.location_for_mark().relative_to(here), "test/", "BookType::Folder name for mark");
 
     BookSource file_src {BookType::FileWithNeighbors, {iri::from_fs_path("test/image2.png", here)}};
-    PageBlock file_block {*settings, file_src};
+    PageBlock file_block {file_src, *settings};
     is(file_block.pages.size(), 2u, "BookType::FileWithNeighbors");
     is(file_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
     is(file_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
-    is(file_src.location_for_memory(), "", "BookType::FileWithNeighbors shouldn't be remembered");
+    is(file_src.location_for_mark(), "", "BookType::FileWithNeighbors shouldn't be remembered");
 
     BookSource list_src {BookType::List, {iri::from_fs_path("test/list.lst", here)}};
-    PageBlock list_block {*settings, list_src};
+    PageBlock list_block {list_src, *settings};
     is(list_block.pages.size(), 2u, "BookType::List");
      // Intentionally backwards
     is(list_block.pages[0]->location.relative_to(here), "test/image2.png", "BookType::List 0");
     is(list_block.pages[1]->location.relative_to(here), "test/image.png", "BookType::List 1");
-    is(list_src.location_for_memory().relative_to(here), "test/list.lst", "BookType::List name for memory");
+    is(list_src.location_for_mark().relative_to(here), "test/list.lst", "BookType::List name for mark");
 
     done_testing();
 });

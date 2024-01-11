@@ -13,6 +13,7 @@ namespace liv {
  // role of a controller.
 struct Book {
      // Data roughly flows downward
+     // TODO: don't make this a unique_ptr
     std::unique_ptr<BookSource> source;
     PageBlock block;
     BookState state;
@@ -23,17 +24,14 @@ struct Book {
      // other window.
     uint32 last_focused = 0;
 
-    bool need_memorize = false;
+    bool need_mark = false;
 
     explicit Book (
-        std::unique_ptr<BookSource> src,
-        BookState st
-    ) :
-        source(move(src)),
-        block(*st.settings, *source),
-        state(move(st)),
-        view(this)
-    { }
+        std::unique_ptr<BookSource>, PageBlock, BookState
+    );
+    explicit Book (
+        std::unique_ptr<BookSource>, std::unique_ptr<Settings>
+    );
     ~Book () { }
 
     IRange visible_range () {

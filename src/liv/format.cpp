@@ -89,14 +89,14 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, book->block.count());
             break;
         case FormatCommand::BookAbs: {
-            auto&& loc = book->source->location_for_memory();
+            auto&& loc = book->source->location_for_mark();
             if (loc) {
                 encat(s, iri::to_fs_path(loc));
             }
             break;
         }
         case FormatCommand::BookRelCwd: {
-            auto&& loc = book->source->location_for_memory();
+            auto&& loc = book->source->location_for_mark();
             if (loc) {
                 auto&& rel = loc.relative_to(iri::working_directory());
                 encat(s, iri::decode_path(rel));
@@ -387,7 +387,7 @@ static tap::TestSet tests ("liv/format", []{
             IRI("res/liv/test/image2.png", iri::program_location())
         }
     );
-    Book book (move(src), BookState(move(settings)));
+    Book book (move(src), move(settings));
 
     UniqueString got;
     fmt.write(got, &book);

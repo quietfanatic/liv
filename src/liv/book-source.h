@@ -18,7 +18,7 @@ struct BookSource {
     BookType type;
     UniqueArray<IRI> locations;
 
-    void validate () const;
+    void validate ();
     BookSource () = default;
     BookSource (BookType t, UniqueArray<IRI> l) :
         type(t), locations(move(l))
@@ -26,7 +26,7 @@ struct BookSource {
 
      // Empty if this book should not be remembered.
      // TODO: use const IRI*
-    const IRI& location_for_memory () const;
+    const IRI& location_for_mark () const;
      // Current book or cwd if Misc
     const IRI& base_for_page_rel_book () const;
      // Directory containing current book or cwd if Misc
