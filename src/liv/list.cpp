@@ -2,6 +2,7 @@
 
 #include "../dirt/iri/path.h"
 #include "../dirt/uni/io.h"
+#include "sort.h"
 
 namespace liv {
 
@@ -47,6 +48,37 @@ void write_list (const IRI& loc, Slice<IRI> entries) {
         encat(s, iri::to_fs_path(e), '\n');
     }
     string_to_file(s, iri::to_fs_path(loc));
+}
+
+void add_to_list (const IRI& list, const IRI& entry, SortMethod sort) {
+     // Read
+    UniqueArray<IRI> entries;
+    try {
+        entries = read_list(list);
+    }
+    catch (Error& e) {
+        if (e.code == e_OpenFailed) {
+             // New file, create it implicitly
+        }
+        else throw;
+    }
+     // Add
+    entries.push_back(entry);
+     // Sort and remove duplicates
+    if (sort.criterion != SortCriterion::Unsorted) {
+        sort_iris(entries.begin(), entries.end(), sort);
+        auto new_end = std::unique(entries.begin(), entries.end());
+        entries.impl.size = new_end - entries.impl.data;
+    }
+     // Write
+    write_list(list, entries);
+}
+
+void remove_from_list (const IRI& list, const IRI& entry) {
+    auto entries = read_list(list);
+    auto new_end = std::remove(entries.begin(), entries.end(), entry);
+    entries.impl.size = new_end - entries.impl.data;
+    write_list(list, entries);
 }
 
 } // liv

@@ -139,28 +139,8 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!size(visible)) return;
 
     auto loc = iri::from_fs_path(list);
-     // Read
-    UniqueArray<IRI> entries;
-    try {
-        entries = read_list(loc);
-    }
-    catch (Error& e) {
-        if (e.code == e_OpenFailed) {
-             // New file, create it implicitly
-        }
-        else throw;
-    }
-     // Add and sort
-    entries.push_back(
-        current_book->block.pages[visible.l]->location
-    );
-    sort_iris(entries.begin(), entries.end(), sort);
-     // Remove duplicates
-     // TODO: don't if [unsorted]
-    auto new_end = std::unique(entries.begin(), entries.end());
-    entries.resize(new_end - entries.begin());
-     // Write
-    write_list(loc, entries);
+    const IRI& entry = current_book->block.pages[visible.l]->location;
+    add_to_list(loc, entry, sort);
 }
 Command add_to_list (add_to_list_, "add_to_list", "Add current page filename to a list file and sort it");
 
@@ -169,13 +149,8 @@ static void remove_from_list_ (const AnyString& list) {
     auto visible = current_book->visible_range();
     if (!size(visible)) return;
     auto loc = iri::from_fs_path(list);
-    auto entries = read_list(loc);
-    auto new_end = std::remove(
-        entries.begin(), entries.end(),
-        current_book->block.pages[visible.l]->location
-    );
-    entries.impl.size = new_end - entries.impl.data;
-    write_list(loc, entries);
+    const IRI& entry = current_book->block.pages[visible.l]->location;
+    remove_from_list(loc, entry);
 }
 Command remove_from_list (remove_from_list_, "remove_from_list", "Remove current page from list file");
 
