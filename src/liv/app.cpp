@@ -102,7 +102,14 @@ static void add_book (
         if (settings->parent == &builtin_default_settings) {
             settings->parent = app_settings();
         }
-        book = std::make_unique<Book>(move(src), move(settings));
+        PageBlock block (*src, *settings);
+        BookState state (move(settings));
+        if (src->type == BookType::FileWithNeighbors) {
+            expect(src->locations.size() == 1);
+            int32 start = block.find(src->locations[0]);
+            if (start >= 0) state.page_offset = start;
+        }
+        book = std::make_unique<Book>(move(src), move(block), move(state));
     }
     self.books_by_window_id.emplace(
         glow::require_sdl(SDL_GetWindowID(book->view.window)),
