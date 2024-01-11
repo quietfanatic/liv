@@ -13,8 +13,7 @@ constexpr IRI marks_folder = IRI("data:/marks/");
  // Returns null if this book is not remembered.  If returns non-null, the
  // passed-in Settings will be moved from.
 std::unique_ptr<Book> load_mark (const BookSource&, Settings&);
- // Not const Book& because we need to borrow state.settings.  We'll give it
- // back though.
+ // Not const Book& because we need to borrow some stuff.  We'll give it back.
 void save_mark (Book&);
 
 } // namespace liv

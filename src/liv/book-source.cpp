@@ -132,3 +132,6 @@ AYU_DESCRIBE(liv::BookSource,
     ),
     init<&BookSource::validate>()
 )
+
+// TESTS
+// There is some testing of BookSource in PageBlock.cpp

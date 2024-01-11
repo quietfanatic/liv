@@ -92,21 +92,21 @@ App::App () {
 App::~App () { }
 
 static void add_book (
-    App& self, std::unique_ptr<BookSource> src,
+    App& self, BookSource&& src,
     std::unique_ptr<Settings> settings
 ) {
-    auto book = load_mark(*src, *settings);
+    auto book = load_mark(src, *settings);
     if (!book) {
          // By default parent the settings to the app settings.  We need a
          // better way of making this happen.
         if (settings->parent == &builtin_default_settings) {
             settings->parent = app_settings();
         }
-        PageBlock block (*src, *settings);
+        PageBlock block (src, *settings);
         BookState state (move(settings));
-        if (src->type == BookType::FileWithNeighbors) {
-            expect(src->locations.size() == 1);
-            int32 start = block.find(src->locations[0]);
+        if (src.type == BookType::FileWithNeighbors) {
+            expect(src.locations.size() == 1);
+            int32 start = block.find(src.locations[0]);
             if (start >= 0) state.page_offset = start;
         }
         book = std::make_unique<Book>(move(src), move(block), move(state));
@@ -136,9 +136,7 @@ void App::open_files (
     auto iris = UniqueArray<IRI>(filenames.size(), [=](usize i){
         return iri::from_fs_path(filenames[i]);
     });
-    auto src = std::make_unique<BookSource>(
-        BookType::Misc, iris
-    );
+    auto src = BookSource(BookType::Misc, iris);
     add_book(*this, move(src), move(settings));
 }
 
@@ -146,9 +144,7 @@ void App::open_file (
     const AnyString& file, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(file);
-    auto src = std::make_unique<BookSource>(
-        BookType::FileWithNeighbors, Slice<IRI>{loc}
-    );
+    auto src = BookSource(BookType::FileWithNeighbors, Slice<IRI>{loc});
     add_book(*this, move(src), move(settings));
 }
 
@@ -156,9 +152,7 @@ void App::open_folder (
     const AnyString& folder, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
-    auto src = std::make_unique<BookSource>(
-        BookType::Folder, Slice<IRI>{loc}
-    );
+    auto src = BookSource(BookType::Folder, Slice<IRI>{loc});
     add_book(*this, move(src), move(settings));
 }
 
@@ -167,9 +161,7 @@ void App::open_list (
 ) {
     constexpr IRI stdin_loc ("liv:stdin");
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
-    auto src = std::make_unique<BookSource>(
-        BookType::List, Slice<IRI>{loc}
-    );
+    auto src = BookSource(BookType::List, Slice<IRI>{loc});
     add_book(*this, move(src), move(settings));
 }
 

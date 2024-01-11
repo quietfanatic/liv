@@ -5,9 +5,9 @@
 
 namespace liv {
 Book::Book (
-    std::unique_ptr<BookSource> src,
-    PageBlock bl,
-    BookState st
+    BookSource&& src,
+    PageBlock&& bl,
+    BookState&& st
 ) :
     source(move(src)),
     block(move(bl)),
@@ -16,11 +16,11 @@ Book::Book (
 { }
 
 Book::Book (
-    std::unique_ptr<BookSource> src,
+    BookSource&& src,
     std::unique_ptr<Settings> settings
 ) :
     source(move(src)),
-    block(*source, *settings),
+    block(source, *settings),
     state(move(settings)),
     view(this)
 { }
@@ -291,13 +291,15 @@ static tap::TestSet tests ("liv/book", []{
     auto settings = std::make_unique<Settings>();
     settings->window.size = {size};
     settings->parent = app_settings();
-    auto src = std::make_unique<BookSource>(
+    auto src = BookSource(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),
             IRI("res/liv/test/image2.png", iri::program_location())
         }
     );
-    Book book (move(src), move(settings));
+    PageBlock block (src, *settings);
+    BookState state (move(settings));
+    Book book (move(src), move(block), move(state));
 
     book.view.draw_if_needed();
     glow::Image img (size);

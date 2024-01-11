@@ -71,7 +71,7 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     if (index >= 0) mark->state.page_offset = index;
      // Assemble the book
     auto r = std::make_unique<Book>(
-        std::make_unique<BookSource>(move(mark->source)),
+        move(mark->source),
         move(block),
         move(mark->state)
     );
@@ -81,7 +81,7 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
 }
 
 void save_mark (Book& book) {
-    auto& loc = book.source->location_for_mark();
+    auto& loc = book.source.location_for_mark();
     if (!loc) return;
 
     IRI page_loc;
@@ -92,7 +92,7 @@ void save_mark (Book& book) {
     auto res = ayu::Resource(
         get_mark_location(loc),
         ayu::Dynamic::make<Mark>(
-            *book.source, move(book.state), move(page_loc), now()
+            move(book.source), move(book.state), move(page_loc), now()
         )
     );
 
@@ -113,8 +113,9 @@ void save_mark (Book& book) {
         ));
     }
 
-     // Give the state back
+     // Give book it's insides back
     Mark* mark = res.ref();
+    book.source = move(mark->source);
     book.state = move(mark->state);
      // Don't keep resource loaded
     ayu::force_unload(res);
@@ -147,7 +148,7 @@ tap::TestSet tests ("liv/mark", []{
     using namespace tap;
     using namespace liv;
 
-    auto src = std::make_unique<BookSource>(
+    auto src = BookSource(
         BookType::Folder,
         Slice<IRI>{IRI("res/liv/test/", iri::program_location())}
     );
@@ -166,8 +167,9 @@ tap::TestSet tests ("liv/mark", []{
     auto sort = SortMethod{SortCriterion::Natural, SortFlags::Reverse};
     overrides->files.sort = sort;
 
-    std::unique_ptr<Book> loaded = load_mark(*to_save.source, *overrides);
+    std::unique_ptr<Book> loaded = load_mark(to_save.source, *overrides);
     ok(!!loaded, "load_mark");
+    is(loaded->source, to_save.source, "Source is same");
     is(loaded->state.page_offset, 1, "Kept page even when sort order was changed");
     is(loaded->state.settings->files.sort, sort, "Setting override is applied");
     is(loaded->state.settings->layout.auto_zoom_mode, AutoZoomMode::FitWidth,
@@ -181,7 +183,7 @@ tap::TestSet tests ("liv/mark", []{
     to_save.state.page_offset = -1;
     save_mark(to_save);
      // Reusing overrides which has been moved from but we don't care
-    loaded = load_mark(*to_save.source, *overrides);
+    loaded = load_mark(to_save.source, *overrides);
     is(loaded->state.page_offset, -1);
 
     done_testing();

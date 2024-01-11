@@ -89,14 +89,14 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             encat(s, book->block.count());
             break;
         case FormatCommand::BookAbs: {
-            auto&& loc = book->source->location_for_mark();
+            auto&& loc = book->source.location_for_mark();
             if (loc) {
                 encat(s, iri::to_fs_path(loc));
             }
             break;
         }
         case FormatCommand::BookRelCwd: {
-            auto&& loc = book->source->location_for_mark();
+            auto&& loc = book->source.location_for_mark();
             if (loc) {
                 auto&& rel = loc.relative_to(iri::working_directory());
                 encat(s, iri::decode_path(rel));
@@ -123,7 +123,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::PageRelBook: {
             if (page < 0) break;
             auto&& loc = book->block.pages[page]->location;
-            auto&& base = book->source->base_for_page_rel_book();
+            auto&& base = book->source.base_for_page_rel_book();
             auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
             break;
@@ -131,7 +131,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::PageRelBookParent: {
             if (page < 0) break;
             auto&& loc = book->block.pages[page]->location;
-            auto&& base = book->source->base_for_page_rel_book_parent();
+            auto&& base = book->source.base_for_page_rel_book_parent();
             auto&& rel = loc.relative_to(base);
             encat(s, iri::decode_path(rel));
             break;
@@ -196,7 +196,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::MergedPagesRelBook: {
             auto visible = book->visible_range();
             if (!size(visible)) break;
-            auto&& base = book->source->base_for_page_rel_book();
+            auto&& base = book->source.base_for_page_rel_book();
             auto paths = UniqueArray<UniqueString>(
                 size(visible), [=, &base](usize i)
             {
@@ -210,7 +210,7 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::MergedPagesRelBookParent: {
             auto visible = book->visible_range();
             if (!size(visible)) break;
-            auto&& base = book->source->base_for_page_rel_book_parent();
+            auto&& base = book->source.base_for_page_rel_book_parent();
             auto paths = UniqueArray<UniqueString>(
                 size(visible), [=, &base](usize i)
             {
@@ -381,7 +381,7 @@ static tap::TestSet tests ("liv/format", []{
     auto settings = std::make_unique<Settings>();
     settings->window.size = {120, 120};
     settings->window.hidden = true;
-    auto src = std::make_unique<BookSource>(
+    auto src = BookSource(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),
             IRI("res/liv/test/image2.png", iri::program_location())

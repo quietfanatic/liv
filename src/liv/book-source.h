@@ -18,12 +18,12 @@ struct BookSource {
     BookType type;
     UniqueArray<IRI> locations;
 
-    void validate ();
     BookSource () = default;
     BookSource (BookType t, UniqueArray<IRI> l) :
         type(t), locations(move(l))
     { validate(); }
 
+    void validate ();
      // Empty if this book should not be remembered.
      // TODO: use const IRI*
     const IRI& location_for_mark () const;
