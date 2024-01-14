@@ -10,37 +10,58 @@
 
 namespace liv {
 
+bool natural_lt (const IRI& a, const IRI& b) {
+    return uni::natural_lessthan(a.path(), b.path());
+}
+bool natural_gt (const IRI& a, const IRI& b) {
+    return uni::natural_lessthan(b.path(), a.path());
+}
+bool unicode_lt (const IRI& a, const IRI& b) {
+     // Make sure we put UTF-8 bytes after ASCII bytes.  If we have to go this
+     // far, we should consider making strings hold char8_t by default instead
+     // of char...
+    return GenericStr<char8_t>(a.path()) < GenericStr<char8_t>(b.path());
+}
+bool unicode_gt (const IRI& a, const IRI& b) {
+    return GenericStr<char8_t>(b.path()) < GenericStr<char8_t>(a.path());
+}
+
+using Time = decltype(fs::last_write_time(fs::path()));
+
+bool last_modified_lt (
+    const std::pair<Time, IRI>& a, const std::pair<Time, IRI>& b
+) {
+    return a.first < b.first;
+}
+bool last_modified_gt (
+    const std::pair<Time, IRI>& a, const std::pair<Time, IRI>& b
+) {
+    return a.first < b.first;
+}
+
+bool file_size_lt (
+    const std::pair<usize, IRI>& a, const std::pair<usize, IRI>& b
+) {
+    return a.first < b.first;
+}
+bool file_size_gt (
+    const std::pair<usize, IRI>& a, const std::pair<usize, IRI>& b
+) {
+    return a.first < b.first;
+}
+
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     switch (method.criterion) {
         case SortCriterion::Natural: {
-            if (!!(method.flags & SortFlags::Reverse)) {
-                std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                    return uni::natural_lessthan(b.path(), a.path());
-                });
-            }
-            else {
-                std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                    return uni::natural_lessthan(a.path(), b.path());
-                });
-            }
+            std::stable_sort(begin, end, !!(method.flags & SortFlags::Reverse)
+                ? natural_gt : natural_lt
+            );
             break;
         }
         case SortCriterion::Unicode: {
-            if (!!(method.flags & SortFlags::Reverse)) {
-                std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                     // Make sure we put UTF-8 bytes after ASCII bytes.
-                     // If we have to go this far, we should consider making
-                     // strings hold char8_t by default instead of char...
-                    return GenericStr<char8_t>(b.path()) <
-                           GenericStr<char8_t>(a.path());
-                });
-            }
-            else {
-                std::stable_sort(begin, end, [](const IRI& a, const IRI& b){
-                    return GenericStr<char8_t>(a.path()) <
-                           GenericStr<char8_t>(b.path());
-                });
-            }
+            std::stable_sort(begin, end, !!(method.flags & SortFlags::Reverse)
+                ? unicode_gt : unicode_lt
+            );
             break;
         }
         case SortCriterion::LastModified: {
@@ -56,16 +77,10 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 }
             );
              // Do the sort
-            if (!!(method.flags & SortFlags::Reverse)) {
-                std::stable_sort(proj.begin(), proj.end(), [](const auto& a, const auto& b){
-                    return b.first < a.first;
-                });
-            }
-            else {
-                std::stable_sort(proj.begin(), proj.end(), [](const auto& a, const auto& b){
-                    return a.first < b.first;
-                });
-            }
+            std::stable_sort(proj.begin(), proj.end(),
+                !!(method.flags & SortFlags::Reverse)
+                    ? last_modified_gt : last_modified_lt
+            );
              // Undo the projection
             proj.consume([begin, b{proj.begin()}](const auto& p){
                 new (&begin[&p - b]) IRI(move(p.second));
@@ -81,16 +96,10 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                     };
                 }
             );
-            if (!!(method.flags & SortFlags::Reverse)) {
-                std::stable_sort(proj.begin(), proj.end(), [](const auto& a, const auto& b){
-                    return b.first < a.first;
-                });
-            }
-            else {
-                std::stable_sort(proj.begin(), proj.end(), [](const auto& a, const auto& b){
-                    return a.first < b.first;
-                });
-            }
+            std::stable_sort(proj.begin(), proj.end(),
+                !!(method.flags & SortFlags::Reverse)
+                    ? file_size_gt : file_size_lt
+            );
             proj.consume([begin, b{proj.begin()}](const auto& p){
                 new (&begin[&p - b]) IRI(move(p.second));
             });
