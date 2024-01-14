@@ -88,6 +88,11 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         case FormatCommand::PageCount:
             encat(s, book->block.count());
             break;
+        case FormatCommand::BookIri: {
+            auto&& loc = book->source.location_for_mark();
+            encat(s, loc.spec());
+            break;
+        }
         case FormatCommand::BookAbs: {
             auto&& loc = book->source.location_for_mark();
             if (loc) {
@@ -105,6 +110,12 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         }
         case FormatCommand::BookEstMem: {
             encat(s, (book->block.estimated_page_memory + 1023) / 1024, 'K');
+            break;
+        }
+        case FormatCommand::PageIri: {
+            if (page < 0) break;
+            auto&& loc = book->block.pages[page]->location;
+            encat(s, loc.spec());
             break;
         }
         case FormatCommand::PageAbs: {
@@ -163,8 +174,10 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
         }
         case FormatCommand::PagePixelBits: {
             if (page < 0) break;
-            auto depth = book->block.get(page)->texture->bpp();
-            encat(s, depth);
+            if (auto& texture = book->block.get(page)->texture) {
+                encat(s, texture->bpp());
+            }
+            else encat(s, "(unavailable)");
             break;
         }
         case FormatCommand::PageEstMem: {
@@ -322,9 +335,11 @@ AYU_DESCRIBE(liv::FormatCommand,
          // Leaving out None and Literal
         value("visible_range", FormatCommand::VisibleRange),
         value("page_count", FormatCommand::PageCount),
+        value("book_iri", FormatCommand::BookIri),
         value("book_abs", FormatCommand::BookAbs),
         value("book_rel_cwd", FormatCommand::BookRelCwd),
         value("book_est_mem", FormatCommand::BookEstMem),
+        value("page_iri", FormatCommand::PageIri),
         value("page_abs", FormatCommand::PageAbs),
         value("page_rel_cwd", FormatCommand::PageRelCwd),
         value("page_rel_book", FormatCommand::PageRelBook),

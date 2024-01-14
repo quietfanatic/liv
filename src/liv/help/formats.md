@@ -5,6 +5,7 @@ The window title and certain commands accept a FormatList.  This is an array
 containing strings and special tokens surrounded in `[` and `]`.  Strings will
 be printed exactly and the special tokens mean the following:
   `[book_abs]` = Path of book in absolute form.
+  `[book_iri]` = Path of book in IRI format (file:/...)
   `[book_rel_cwd]` = Path of book relative to current working directory.
   `[book_est_mem]` = Estimated video memory for all cached pages.
   `[visible_range]` =
@@ -12,6 +13,7 @@ be printed exactly and the special tokens mean the following:
       or "1-3".
   `[page_count]` = Total number of pages in the current book.
   `[page_abs]` = Path of (lowest-numbered) current page in absolute form.
+  `[page_iri]` = Path of current page in IRI format (file:/...)
   `[page_rel_cwd]` = Path of current page relative to current working directory.
   `[page_rel_book]` = Path of current page relative to book path.
   `[page_rel_book_parent]` =
