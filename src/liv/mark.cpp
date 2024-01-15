@@ -115,8 +115,10 @@ void save_mark (Book& book) {
 
      // Give book it's insides back
     Mark* mark = res.ref();
-    book.source = move(mark->source);
-    book.state = move(mark->state);
+    expect(!book.source.locations);
+    new (&book.source) BookSource(move(mark->source));
+    expect(!book.state.settings);
+    new (&book.state) BookState(move(mark->state));
      // Don't keep resource loaded
     ayu::force_unload(res);
 }

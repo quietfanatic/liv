@@ -51,6 +51,8 @@ bool file_size_gt (
 }
 
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
+     // TODO: Sort an integer array as a proxy.  std::sort get really bloaty if
+     // you use it on multiple different element types.
     switch (method.criterion) {
         case SortCriterion::Natural: {
             std::stable_sort(begin, end, !!(method.flags & SortFlags::Reverse)
