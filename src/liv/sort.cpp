@@ -17,9 +17,8 @@ using ModTime = decltype(fs::last_write_time(fs::path()));
  // copies of std::stable_sort as possible.
 NOINLINE static
 void sort_with_buffers (
-    IRI* begin, IRI* end, SortMethod method, uint32* indexes, void* props
+    IRI* iris, uint32 len, SortMethod method, uint32* indexes, void* props
 ) {
-    auto len = uint32(end - begin);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
     }
@@ -29,14 +28,14 @@ void sort_with_buffers (
         }
         switch (method.criterion) {
             case SortCriterion::Natural: {
-                return uni::natural_lessthan(begin[a].path(), begin[b].path());
+                return uni::natural_lessthan(iris[a].path(), iris[b].path());
             }
             case SortCriterion::Unicode: {
                  // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
                  // have to go this far, we should consider making strings hold
                  // char8_t by default instead of char...
-                return GenericStr<char8_t>(begin[a].path()) <
-                       GenericStr<char8_t>(begin[b].path());
+                return GenericStr<char8_t>(iris[a].path()) <
+                       GenericStr<char8_t>(iris[b].path());
             }
             case SortCriterion::LastModified: {
                 auto modtimes = (ModTime*)props;
@@ -57,7 +56,7 @@ void sort_with_buffers (
          // have to do N-1 swaps, so stop following the loop just before we
          // would finish it.
         while (indexes[indexes[i]] != indexes[i]) {
-            swap(begin[i], begin[indexes[i]]);
+            swap(iris[i], iris[indexes[i]]);
             swap(indexes[i], i);
         }
          // Finish the loop but don't do the Nth swap.
@@ -67,62 +66,62 @@ void sort_with_buffers (
 
 NOINLINE static
 void sort_by_modtime (
-    IRI* begin, IRI* end, SortMethod method, uint32* indexes, ModTime* modtimes
+    IRI* iris, uint32 len, SortMethod method, uint32* indexes, ModTime* modtimes
 ) {
-    for (usize i = 0; i < uint32(end - begin); i++) {
-        modtimes[i] = fs::last_write_time(iri::to_fs_path(begin[i]));
+    for (uint32 i = 0; i < len; i++) {
+        modtimes[i] = fs::last_write_time(iri::to_fs_path(iris[i]));
     }
-    sort_with_buffers(begin, end, method, indexes, modtimes);
+    sort_with_buffers(iris, len, method, indexes, modtimes);
 }
 
 NOINLINE static
 void sort_by_size (
-    IRI* begin, IRI* end, SortMethod method, uint32* indexes, usize* sizes
+    IRI* iris, uint32 len, SortMethod method, uint32* indexes, usize* sizes
 ) {
-    for (usize i = 0; i < uint32(end - begin); i++) {
-        sizes[i] = fs::file_size(iri::to_fs_path(begin[i]));
+    for (uint32 i = 0; i < len; i++) {
+        sizes[i] = fs::file_size(iri::to_fs_path(iris[i]));
     }
-    sort_with_buffers(begin, end, method, indexes, sizes);
+    sort_with_buffers(iris, len, method, indexes, sizes);
 }
 
-NOINLINE static
-void sort_by_path_on_stack (IRI* begin, IRI* end, SortMethod method) {
-    uint32 indexes [end - begin];
-    sort_with_buffers(begin, end, method, indexes, null);
+static
+void sort_by_path_on_stack (IRI* iris, uint32 len, SortMethod method) {
+    uint32 indexes [len];
+    sort_with_buffers(iris, len, method, indexes, null);
 }
 
-NOINLINE static
-void sort_by_path_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
-    sort_with_buffers(begin, end, method, &indexes[0], null);
+static
+void sort_by_path_on_heap (IRI* iris, uint32 len, SortMethod method) {
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
+    sort_with_buffers(iris, len, method, &indexes[0], null);
 }
 
-NOINLINE static
-void sort_by_modtime_on_stack (IRI* begin, IRI* end, SortMethod method) {
-    uint32 indexes [end - begin];
-    ModTime modtimes [end - begin];
-    sort_by_modtime(begin, end, method, indexes, modtimes);
+static
+void sort_by_modtime_on_stack (IRI* iris, uint32 len, SortMethod method) {
+    uint32 indexes [len];
+    ModTime modtimes [len];
+    sort_by_modtime(iris, len, method, indexes, modtimes);
 }
 
-NOINLINE static
-void sort_by_modtime_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
-    auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[end - begin]);
-    sort_by_modtime(begin, end, method, &indexes[0], &modtimes[0]);
+static
+void sort_by_modtime_on_heap (IRI* iris, uint32 len, SortMethod method) {
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
+    auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
+    sort_by_modtime(iris, len, method, &indexes[0], &modtimes[0]);
 }
 
-NOINLINE static
-void sort_by_size_on_stack (IRI* begin, IRI* end, SortMethod method) {
-    uint32 indexes [end - begin];
-    usize sizes [end - begin];
-    sort_by_size(begin, end, method, indexes, sizes);
+static
+void sort_by_size_on_stack (IRI* iris, uint32 len, SortMethod method) {
+    uint32 indexes [len];
+    usize sizes [len];
+    sort_by_size(iris, len, method, indexes, sizes);
 }
 
-NOINLINE static
-void sort_by_size_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
-    auto sizes = std::unique_ptr<usize[]>(new usize[end - begin]);
-    sort_by_size(begin, end, method, &indexes[0], &sizes[0]);
+static
+void sort_by_size_on_heap (IRI* iris, uint32 len, SortMethod method) {
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
+    auto sizes = std::unique_ptr<usize[]>(new usize[len]);
+    sort_by_size(iris, len, method, &indexes[0], &sizes[0]);
 }
 
 static constexpr usize stack_threshold =
@@ -136,35 +135,36 @@ static constexpr usize stack_threshold =
 NOINLINE
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     plog("starting sort");
+    usize len = end - begin;
     switch (method.criterion) {
         case SortCriterion::Natural:
         case SortCriterion::Unicode: {
-            auto bytes = (end - begin) * sizeof(uint32);
+            auto bytes = len * sizeof(uint32);
             if (bytes <= stack_threshold) {
-                sort_by_path_on_stack(begin, end, method);
+                sort_by_path_on_stack(begin, len, method);
             }
             else {
-                sort_by_path_on_heap(begin, end, method);
+                sort_by_path_on_heap(begin, len, method);
             }
             break;
         }
         case SortCriterion::LastModified: {
-            auto bytes = (end - begin) * (sizeof(uint32) + sizeof(ModTime));
+            auto bytes = len * (sizeof(uint32) + sizeof(ModTime));
             if (bytes <= stack_threshold) {
-                sort_by_modtime_on_stack(begin, end, method);
+                sort_by_modtime_on_stack(begin, len, method);
             }
             else {
-                sort_by_modtime_on_heap(begin, end, method);
+                sort_by_modtime_on_heap(begin, len, method);
             }
             break;
         }
         case SortCriterion::FileSize: {
-            auto bytes = (end - begin) * (sizeof(uint32) + sizeof(usize));
+            auto bytes = len * (sizeof(uint32) + sizeof(usize));
             if (bytes <= stack_threshold) {
-                sort_by_size_on_stack(begin, end, method);
+                sort_by_size_on_stack(begin, len, method);
             }
             else {
-                sort_by_size_on_heap(begin, end, method);
+                sort_by_size_on_heap(begin, len, method);
             }
             break;
         }
@@ -224,7 +224,7 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
         }
     }
     if (v.criterion == SortCriterion{}) {
-        raise(e_General, "No sort croteria in sort method");
+        raise(e_General, "No sort criterion in sort method");
     }
 }
 
@@ -248,3 +248,32 @@ AYU_DESCRIBE(liv::SortMethod,
     to_tree(&SortMethod_to_tree),
     from_tree(&SortMethod_from_tree)
 )
+
+#ifndef TAP_DISABLE_TESTS
+#include "../dirt/tap/tap.h"
+
+static tap::TestSet tests ("liv/sort", []{
+    using namespace tap;
+
+    std::mt19937 gen (0);
+    std::uniform_int_distribution dist(0, 99999);
+
+    IRI base ("file:/");
+
+    auto iris = UniqueArray<IRI>(4000, [&](usize){
+        return IRI(cat(dist(gen)), base);
+    });
+
+    sort_iris(
+        iris.begin(), iris.end(),
+        SortMethod{SortCriterion::Natural, SortFlags{}}
+    );
+    bool sorted = true;
+    for (usize i = 0; i < iris.size() - 1; i++) {
+        sorted &= !uni::natural_lessthan(iris[i+1].path(), iris[i].path());
+    }
+    ok(sorted);
+
+    done_testing();
+});
+#endif

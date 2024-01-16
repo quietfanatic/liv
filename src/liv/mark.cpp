@@ -146,7 +146,7 @@ AYU_DESCRIBE(liv::Mark,
 #ifndef TAP_DISABLE_TESTS
 #include "../dirt/tap/tap.h"
 
-tap::TestSet tests ("liv/mark", []{
+static tap::TestSet tests ("liv/mark", []{
     using namespace tap;
     using namespace liv;
 
