@@ -119,8 +119,9 @@ void sort_with_props (
 
 NOINLINE
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
-    plog("starting sort");
     usize len = end - begin;
+    if (len <= 1) return;
+    plog("starting sort");
     switch (method.criterion) {
         case C::Natural: {
             auto cmp = !(method.flags & F::Reverse)
