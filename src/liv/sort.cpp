@@ -49,18 +49,36 @@ void sort_with_buffers (
         }
     });
      // Now reorder the input according to the sorted indexes.  This algorithm
-     // looks wild but it works and is O(n).
+     // looks wild but it works and is O(n).  Basically, we're finding closed
+     // loops of indexes, and rotating the items backwards along that loop.
     for (uint32 i = 0; i < len; i++) {
-        using std::swap;
-         // Follow a closed loop of indexes.  For a loop of N items, we actually
-         // have to do N-1 swaps, so stop following the loop just before we
-         // would finish it.
-        while (indexes[indexes[i]] != indexes[i]) {
-            swap(iris[i], iris[indexes[i]]);
-            swap(indexes[i], i);
+         // Don't need to do this one or already did it.
+        if (indexes[i] == i) continue;
+         // Start the loop by picking up the first item.  We won't put it back
+         // down until we reach the end of the loop.
+        IRI tmp;
+        std::memcpy((void*)&tmp, &iris[i], sizeof(IRI));
+        for (;;) {
+            uint32 next = indexes[i];
+             // Move the item from the next slot into this slot.
+            std::memcpy((void*)&iris[i], &iris[next], sizeof(IRI));
+             // This slot is now correct
+            indexes[i] = i;
+             // Now switch to the next slot
+            i = next;
+            next = indexes[i];
+             // Stop if we're on the last slot (by checking if the next slot has
+             // already been solved).
+            if (indexes[next] == next) break;
         }
-         // Finish the loop but don't do the Nth swap.
-        swap(indexes[i], i);
+         // Finally drop the first item into the last slot
+        std::memcpy((void*)&iris[i], &tmp, sizeof(IRI));
+        std::memset((void*)&tmp, 0, sizeof(IRI));
+         // Mark the slot as done
+        uint32 next = indexes[i];
+        indexes[i] = i;
+         // Return to the beginning
+        i = next;
     }
 }
 
@@ -255,6 +273,7 @@ AYU_DESCRIBE(liv::SortMethod,
 static tap::TestSet tests ("liv/sort", []{
     using namespace tap;
 
+     // Deterministic seed for performance testing
     std::mt19937 gen (0);
     std::uniform_int_distribution dist(0, 99999);
 
