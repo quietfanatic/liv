@@ -69,6 +69,15 @@ NOINLINE static
 void sort_with_props (
     IRI* iris, uint32 len, Comparator::Cmp* cmp, void* props
 ) {
+     // Sort an array of indexes as a proxy for the actual array of IRIs.  We
+     // need to do this because std::stable_sort doesn't give the comparing
+     // function a way to see the current indexes of the items it's comparing
+     // (and you can't compare the addresses of the passed-in references,
+     // because they may be in a temporary buffer or already moved).  However,
+     // since moving 4-byte integers is much cheaper than 24-byte IRIs, this
+     // ends up being slightly faster than sorting the IRI array, at least for
+     // large sets (and it's much faster than sorting an array of std::pair<IRI,
+     // ModTime> or such).
     auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
@@ -154,9 +163,11 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
             break;
         }
         case C::Shuffle: {
-            static std::random_device rd;
-            static std::mt19937 g (rd());
-            std::shuffle(begin, end, g);
+             // We don't need that high-quality of randomness.
+            static std::minstd_rand gen (
+                std::chrono::system_clock::now().time_since_epoch().count()
+            );
+            std::shuffle(begin, end, gen);
             break;
         }
         case C::Unsorted: break;
