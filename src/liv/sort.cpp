@@ -32,8 +32,8 @@ void sort_with_buffers (
                 return uni::natural_lessthan(begin[a].path(), begin[b].path());
             }
             case SortCriterion::Unicode: {
-                 // Make sure we put UTF-8 bytes after ASCII bytes.  If we have
-                 // to go this far, we should consider making strings hold
+                 // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
+                 // have to go this far, we should consider making strings hold
                  // char8_t by default instead of char...
                 return GenericStr<char8_t>(begin[a].path()) <
                        GenericStr<char8_t>(begin[b].path());
@@ -52,15 +52,16 @@ void sort_with_buffers (
      // Now reorder the input according to the sorted indexes.  This algorithm
      // looks wild but it works and is O(n).
     for (uint32 i = 0; i < len; i++) {
+        using std::swap;
          // Follow a closed loop of indexes.  For a loop of N items, we actually
          // have to do N-1 swaps, so stop following the loop just before we
          // would finish it.
         while (indexes[indexes[i]] != indexes[i]) {
-            std::swap(begin[i], begin[indexes[i]]);
-            std::swap(indexes[i], i);
+            swap(begin[i], begin[indexes[i]]);
+            swap(indexes[i], i);
         }
          // Finish the loop but don't do the Nth swap.
-        std::swap(indexes[i], i);
+        swap(indexes[i], i);
     }
 }
 
@@ -92,7 +93,7 @@ void sort_by_path_on_stack (IRI* begin, IRI* end, SortMethod method) {
 
 NOINLINE static
 void sort_by_path_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::make_unique<uint32[]>(end - begin);
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
     sort_with_buffers(begin, end, method, &indexes[0], null);
 }
 
@@ -105,8 +106,8 @@ void sort_by_modtime_on_stack (IRI* begin, IRI* end, SortMethod method) {
 
 NOINLINE static
 void sort_by_modtime_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::make_unique<uint32[]>(end - begin);
-    auto modtimes = std::make_unique<ModTime[]>(end - begin);
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
+    auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[end - begin]);
     sort_by_modtime(begin, end, method, &indexes[0], &modtimes[0]);
 }
 
@@ -119,12 +120,12 @@ void sort_by_size_on_stack (IRI* begin, IRI* end, SortMethod method) {
 
 NOINLINE static
 void sort_by_size_on_heap (IRI* begin, IRI* end, SortMethod method) {
-    auto indexes = std::make_unique<uint32[]>(end - begin);
-    auto sizes = std::make_unique<usize[]>(end - begin);
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[end - begin]);
+    auto sizes = std::unique_ptr<usize[]>(new usize[end - begin]);
     sort_by_size(begin, end, method, &indexes[0], &sizes[0]);
 }
 
-static constexpr usize stack_threshold = 
+static constexpr usize stack_threshold =
 #ifdef __linux__
     1024*1024
 #else
@@ -186,9 +187,10 @@ bool operator== (SortMethodToken a, SortMethodToken b) {
 
 ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     using namespace ayu;
-    UniqueArray<Tree> a;
+    auto cap = 1 + std::popcount(uint8(v.flags));
+    auto a = UniqueArray<Tree>(Capacity(cap));
     SortMethodToken c = {v.criterion, SortFlags{}};
-    a.push_back(item_to_tree(&c));
+    a.push_back_expect_capacity(item_to_tree(&c));
     for (
         auto flag = SortFlags::Reverse;
         flag <= SortFlags::NotLists;
@@ -196,7 +198,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     ) {
         if (!!(v.flags & flag)) {
             SortMethodToken f = {SortCriterion{}, flag};
-            a.push_back(item_to_tree(&f));
+            a.push_back_expect_capacity(item_to_tree(&f));
         }
     }
     return Tree(move(a));
@@ -205,7 +207,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
 void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
     using namespace ayu;
     v = {};
-    for (auto e : Slice<Tree>(t)) {
+    for (auto& e : Slice<Tree>(t)) {
         SortMethodToken token;
         item_from_tree(&token, e);
         if (token.criterion != SortCriterion{}) {
