@@ -33,17 +33,21 @@ struct Comparator {
         auto iris = self.iris;
         auto modtimes = (ModTime*)self.props;
         auto sizes = (usize*)self.props;
-        if (!!(method.flags & F::Reverse)) {
+        if constexpr (!!(method.flags & F::Reverse)) {
             uint32 t = a; a = b; b = t;
         }
         switch (method.criterion) {
             case C::Natural: {
+                expect(iris[a].has_path());
+                expect(iris[b].has_path());
                 return uni::natural_lessthan(
                     iris[a].path(),
                     iris[b].path()
                 );
             }
             case C::Unicode: {
+                expect(iris[a].has_path());
+                expect(iris[b].has_path());
                  // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
                  // have to go this far, we should consider making strings hold
                  // char8_t by default instead of char...
