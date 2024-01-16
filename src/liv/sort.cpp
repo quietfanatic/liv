@@ -12,43 +12,48 @@
 namespace liv {
 
 using ModTime = decltype(fs::last_write_time(fs::path()));
+using C = SortCriterion;
+using F = SortFlags;
 
  // Go through a bit of work to only instantiate a single copy of
  // std::stable_sort
 struct Comparator {
-    using F = bool (const Comparator&, uint32, uint32) noexcept;
+    using Cmp = bool (const Comparator&, uint32, uint32) noexcept;
+
     IRI* iris;
     void* props;
-    F* f;
+    Cmp* f; // Should point to an instantiation of cmp
+
     bool operator() (uint32 a, uint32 b) const noexcept {
         return (*f)(*this, a, b);
     }
+
     template <SortMethod method>
     static bool cmp (const Comparator& self, uint32 a, uint32 b) noexcept {
         auto iris = self.iris;
         auto modtimes = (ModTime*)self.props;
         auto sizes = (usize*)self.props;
-        if (!!(method.flags & SortFlags::Reverse)) {
+        if (!!(method.flags & F::Reverse)) {
             uint32 t = a; a = b; b = t;
         }
         switch (method.criterion) {
-            case SortCriterion::Natural: {
+            case C::Natural: {
                 return uni::natural_lessthan(
                     iris[a].path(),
                     iris[b].path()
                 );
             }
-            case SortCriterion::Unicode: {
+            case C::Unicode: {
                  // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
                  // have to go this far, we should consider making strings hold
                  // char8_t by default instead of char...
                 return GenericStr<char8_t>(iris[a].path()) <
                        GenericStr<char8_t>(iris[b].path());
             }
-            case SortCriterion::LastModified: {
+            case C::LastModified: {
                 return modtimes[a] < modtimes[b];
             }
-            case SortCriterion::FileSize: {
+            case C::FileSize: {
                 return sizes[a] < sizes[b];
             }
             default: never();
@@ -58,13 +63,13 @@ struct Comparator {
 
 NOINLINE static
 void sort_with_props (
-    IRI* iris, uint32 len, Comparator::F* comp, void* props
+    IRI* iris, uint32 len, Comparator::Cmp* cmp, void* props
 ) {
     auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
     }
-    std::stable_sort(&indexes[0], &indexes[0] + len, Comparator(iris, props, comp));
+    std::stable_sort(&indexes[0], &indexes[0] + len, Comparator(iris, props, cmp));
      // Now reorder the input according to the sorted indexes.  This algorithm
      // looks wild but it works and is O(n).  Basically, we're finding closed
      // loops of indexes, and rotating the items backwards along that loop.
@@ -103,56 +108,54 @@ NOINLINE
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     plog("starting sort");
     usize len = end - begin;
-    using enum SortCriterion;
-    using enum SortFlags;
     switch (method.criterion) {
-        case Natural: {
-            auto comp = !(method.flags & Reverse)
-                ? &Comparator::cmp<SortMethod{Natural, SortFlags{}}>
-                : &Comparator::cmp<SortMethod{Natural, Reverse}>;
+        case C::Natural: {
+            auto cmp = !(method.flags & F::Reverse)
+                ? &Comparator::cmp<SortMethod{C::Natural, F::None}>
+                : &Comparator::cmp<SortMethod{C::Natural, F::Reverse}>;
 
-            sort_with_props(begin, len, comp, null);
+            sort_with_props(begin, len, cmp, null);
             break;
         }
-        case Unicode: {
-            auto comp = !(method.flags & Reverse)
-                ? &Comparator::cmp<SortMethod{Unicode, SortFlags{}}>
-                : &Comparator::cmp<SortMethod{Unicode, Reverse}>;
+        case C::Unicode: {
+            auto cmp = !(method.flags & F::Reverse)
+                ? &Comparator::cmp<SortMethod{C::Unicode, F::None}>
+                : &Comparator::cmp<SortMethod{C::Unicode, F::Reverse}>;
 
-            sort_with_props(begin, len, comp, null);
+            sort_with_props(begin, len, cmp, null);
             break;
         }
-        case LastModified: {
-            auto comp = !(method.flags & Reverse)
-                ? &Comparator::cmp<SortMethod{LastModified, SortFlags{}}>
-                : &Comparator::cmp<SortMethod{LastModified, Reverse}>;
+        case C::LastModified: {
+            auto cmp = !(method.flags & F::Reverse)
+                ? &Comparator::cmp<SortMethod{C::LastModified, F::None}>
+                : &Comparator::cmp<SortMethod{C::LastModified, F::Reverse}>;
 
             auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
             for (uint32 i = 0; i < len; i++) {
                 modtimes[i] = fs::last_write_time(iri::to_fs_path(begin[i]));
             }
-            sort_with_props(begin, len, comp, &modtimes[0]);
+            sort_with_props(begin, len, cmp, &modtimes[0]);
             break;
         }
-        case FileSize: {
-            auto comp = !(method.flags & Reverse)
-                ? &Comparator::cmp<SortMethod{FileSize, SortFlags{}}>
-                : &Comparator::cmp<SortMethod{FileSize, Reverse}>;
+        case C::FileSize: {
+            auto cmp = !(method.flags & F::Reverse)
+                ? &Comparator::cmp<SortMethod{C::FileSize, F::None}>
+                : &Comparator::cmp<SortMethod{C::FileSize, F::Reverse}>;
 
             auto sizes = std::unique_ptr<usize[]>(new usize[len]);
             for (uint32 i = 0; i < len; i++) {
                 sizes[i] = fs::file_size(iri::to_fs_path(begin[i]));
             }
-            sort_with_props(begin, len, comp, &sizes[0]);
+            sort_with_props(begin, len, cmp, &sizes[0]);
             break;
         }
-        case Shuffle: {
+        case C::Shuffle: {
             static std::random_device rd;
             static std::mt19937 g (rd());
             std::shuffle(begin, end, g);
             break;
         }
-        case Unsorted: break;
+        case C::Unsorted: break;
         default: never();
     }
     plog("sorted");
@@ -167,15 +170,15 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     using namespace ayu;
     auto cap = 1 + std::popcount(uint8(v.flags));
     auto a = UniqueArray<Tree>(Capacity(cap));
-    SortMethodToken c = {v.criterion, SortFlags{}};
+    SortMethodToken c = {v.criterion, F::None};
     a.push_back_expect_capacity(item_to_tree(&c));
     for (
-        auto flag = SortFlags::Reverse;
-        flag <= SortFlags::NotLists;
+        auto flag = F::Reverse;
+        flag <= F::NotLists;
         flag <<= 1
     ) {
         if (!!(v.flags & flag)) {
-            SortMethodToken f = {SortCriterion{}, flag};
+            SortMethodToken f = {C::None, flag};
             a.push_back_expect_capacity(item_to_tree(&f));
         }
     }
@@ -188,8 +191,8 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
     for (auto& e : Slice<Tree>(t)) {
         SortMethodToken token;
         item_from_tree(&token, e);
-        if (token.criterion != SortCriterion{}) {
-            if (v.criterion != SortCriterion{}) {
+        if (token.criterion != C::None) {
+            if (v.criterion != C::None) {
                 raise(e_General, "Too many sort criteria in sort method.");
             }
             v.criterion = token.criterion;
@@ -201,7 +204,7 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
             v.flags |= token.flags;
         }
     }
-    if (v.criterion == SortCriterion{}) {
+    if (v.criterion == C::None) {
         raise(e_General, "No sort criterion in sort method");
     }
 }
@@ -210,15 +213,15 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
 
 AYU_DESCRIBE(liv::SortMethodToken,
     values(
-        value("natural", {SortCriterion::Natural, SortFlags{}}),
-        value("unicode", {SortCriterion::Unicode, SortFlags{}}),
-        value("last_modified", {SortCriterion::LastModified, SortFlags{}}),
-        value("file_size", {SortCriterion::FileSize, SortFlags{}}),
-        value("shuffle", {SortCriterion::Shuffle, SortFlags{}}),
-        value("unsorted", {SortCriterion::Unsorted, SortFlags{}}),
-        value("reverse", {SortCriterion{}, SortFlags::Reverse}),
-        value("not_args", {SortCriterion{}, SortFlags::NotArgs}),
-        value("not_lists", {SortCriterion{}, SortFlags::NotLists})
+        value("natural", {C::Natural, F::None}),
+        value("unicode", {C::Unicode, F::None}),
+        value("last_modified", {C::LastModified, F::None}),
+        value("file_size", {C::FileSize, F::None}),
+        value("shuffle", {C::Shuffle, F::None}),
+        value("unsorted", {C::Unsorted, F::None}),
+        value("reverse", {C::None, F::Reverse}),
+        value("not_args", {C::None, F::NotArgs}),
+        value("not_lists", {C::None, F::NotLists})
     )
 )
 
@@ -245,7 +248,7 @@ static tap::TestSet tests ("liv/sort", []{
 
     sort_iris(
         iris.begin(), iris.end(),
-        SortMethod{SortCriterion::Natural, SortFlags{}}
+        SortMethod{C::Natural, F::None}
     );
     bool sorted = true;
     for (usize i = 0; i < iris.size() - 1; i++) {

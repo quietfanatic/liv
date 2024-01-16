@@ -6,7 +6,8 @@
 namespace liv {
 
 enum class SortCriterion {
-    Natural = 1,
+    None = 0,
+    Natural,
     Unicode,
     LastModified,
     FileSize,
@@ -15,6 +16,7 @@ enum class SortCriterion {
 };
 
 enum class SortFlags {
+    None = 0,
     Reverse = 0x1,
     NotArgs = 0x2,
     NotLists = 0x4,
