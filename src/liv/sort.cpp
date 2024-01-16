@@ -57,13 +57,14 @@ struct Comparator {
 };
 
 NOINLINE static
-void sort_with_buffers (
-    IRI* iris, uint32 len, Comparator::F* comp, uint32* indexes, void* props
+void sort_with_props (
+    IRI* iris, uint32 len, Comparator::F* comp, void* props
 ) {
+    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
     }
-    std::stable_sort(indexes, indexes + len, Comparator(iris, props, comp));
+    std::stable_sort(&indexes[0], &indexes[0] + len, Comparator(iris, props, comp));
      // Now reorder the input according to the sorted indexes.  This algorithm
      // looks wild but it works and is O(n).  Basically, we're finding closed
      // loops of indexes, and rotating the items backwards along that loop.
@@ -98,74 +99,6 @@ void sort_with_buffers (
     }
 }
 
-NOINLINE static
-void sort_by_modtime (
-    IRI* iris, uint32 len, Comparator::F* comp, uint32* indexes, ModTime* modtimes
-) {
-    for (uint32 i = 0; i < len; i++) {
-        modtimes[i] = fs::last_write_time(iri::to_fs_path(iris[i]));
-    }
-    sort_with_buffers(iris, len, comp, indexes, modtimes);
-}
-
-NOINLINE static
-void sort_by_size (
-    IRI* iris, uint32 len, Comparator::F* comp, uint32* indexes, usize* sizes
-) {
-    for (uint32 i = 0; i < len; i++) {
-        sizes[i] = fs::file_size(iri::to_fs_path(iris[i]));
-    }
-    sort_with_buffers(iris, len, comp, indexes, sizes);
-}
-
-static
-void sort_by_path_on_stack (IRI* iris, uint32 len, Comparator::F* comp) {
-    uint32 indexes [len];
-    sort_with_buffers(iris, len, comp, indexes, null);
-}
-
-static
-void sort_by_path_on_heap (IRI* iris, uint32 len, Comparator::F* comp) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
-    sort_with_buffers(iris, len, comp, &indexes[0], null);
-}
-
-static
-void sort_by_modtime_on_stack (IRI* iris, uint32 len, Comparator::F* comp) {
-    uint32 indexes [len];
-    ModTime modtimes [len];
-    sort_by_modtime(iris, len, comp, indexes, modtimes);
-}
-
-static
-void sort_by_modtime_on_heap (IRI* iris, uint32 len, Comparator::F* comp) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
-    auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
-    sort_by_modtime(iris, len, comp, &indexes[0], &modtimes[0]);
-}
-
-static
-void sort_by_size_on_stack (IRI* iris, uint32 len, Comparator::F* comp) {
-    uint32 indexes [len];
-    usize sizes [len];
-    sort_by_size(iris, len, comp, indexes, sizes);
-}
-
-static
-void sort_by_size_on_heap (IRI* iris, uint32 len, Comparator::F* comp) {
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
-    auto sizes = std::unique_ptr<usize[]>(new usize[len]);
-    sort_by_size(iris, len, comp, &indexes[0], &sizes[0]);
-}
-
-static constexpr usize stack_threshold =
-#ifdef __linux__
-    1024*1024
-#else
-    128*1024
-#endif
-;
-
 NOINLINE
 void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     plog("starting sort");
@@ -178,13 +111,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 ? &Comparator::cmp<SortMethod{Natural, SortFlags{}}>
                 : &Comparator::cmp<SortMethod{Natural, Reverse}>;
 
-            auto bytes = len * sizeof(uint32);
-            if (bytes <= stack_threshold) {
-                sort_by_path_on_stack(begin, len, comp);
-            }
-            else {
-                sort_by_path_on_heap(begin, len, comp);
-            }
+            sort_with_props(begin, len, comp, null);
             break;
         }
         case Unicode: {
@@ -192,13 +119,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 ? &Comparator::cmp<SortMethod{Unicode, SortFlags{}}>
                 : &Comparator::cmp<SortMethod{Unicode, Reverse}>;
 
-            auto bytes = len * sizeof(uint32);
-            if (bytes <= stack_threshold) {
-                sort_by_path_on_stack(begin, len, comp);
-            }
-            else {
-                sort_by_path_on_heap(begin, len, comp);
-            }
+            sort_with_props(begin, len, comp, null);
             break;
         }
         case LastModified: {
@@ -206,13 +127,11 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 ? &Comparator::cmp<SortMethod{LastModified, SortFlags{}}>
                 : &Comparator::cmp<SortMethod{LastModified, Reverse}>;
 
-            auto bytes = len * (sizeof(uint32) + sizeof(ModTime));
-            if (bytes <= stack_threshold) {
-                sort_by_modtime_on_stack(begin, len, comp);
+            auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
+            for (uint32 i = 0; i < len; i++) {
+                modtimes[i] = fs::last_write_time(iri::to_fs_path(begin[i]));
             }
-            else {
-                sort_by_modtime_on_heap(begin, len, comp);
-            }
+            sort_with_props(begin, len, comp, &modtimes[0]);
             break;
         }
         case FileSize: {
@@ -220,13 +139,11 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 ? &Comparator::cmp<SortMethod{FileSize, SortFlags{}}>
                 : &Comparator::cmp<SortMethod{FileSize, Reverse}>;
 
-            auto bytes = len * (sizeof(uint32) + sizeof(usize));
-            if (bytes <= stack_threshold) {
-                sort_by_size_on_stack(begin, len, comp);
+            auto sizes = std::unique_ptr<usize[]>(new usize[len]);
+            for (uint32 i = 0; i < len; i++) {
+                sizes[i] = fs::file_size(iri::to_fs_path(begin[i]));
             }
-            else {
-                sort_by_size_on_heap(begin, len, comp);
-            }
+            sort_with_props(begin, len, comp, &sizes[0]);
             break;
         }
         case Shuffle: {
