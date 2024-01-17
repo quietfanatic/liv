@@ -6,6 +6,11 @@
 
 namespace liv {
 
+static AnyString extensions [12] = {
+    "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
+    "png", "tif", "tiff", "xbm", "xpm", "webp",
+};
+
 const Settings builtin_default_settings = {
     .window = {
         .size = geo::IVec{720, 720},
@@ -44,10 +49,9 @@ const Settings builtin_default_settings = {
         .sort = SortMethod{
             SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
         },
-        .page_extensions = (AnyString[]){
-            "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
-            "png", "tif", "tiff", "xbm", "xpm", "webp",
-        },
+        .page_extensions = StaticArray<AnyString>(
+            extensions, sizeof(extensions)/sizeof(extensions[0])
+        ),
     },
     .memory = {
         .preload_ahead = 1,
@@ -84,13 +88,10 @@ void Settings::canonicalize () {
         }
         goto dont_canonicalize_extensions;
         canonicalize_extensions:
-        for (auto it = files.page_extensions->mut_begin();
-            it != files.page_extensions->end();
-            it++
-        ) {
-            for (auto& c : *it) {
+        for (auto& e : files.page_extensions->mut_slice()) {
+            for (auto& c : e) {
                 if (c >= 'A' && c <= 'Z') {
-                    *it = ascii_to_lower(*it);
+                    e = ascii_to_lower(e);
                     break;
                 }
             }

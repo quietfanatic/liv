@@ -269,7 +269,7 @@ bool PageBlock::idle_processing (const Book* book, const Settings& settings) {
 #include <SDL2/SDL.h>
 #include "../dirt/tap/tap.h"
 
-static tap::TestSet tests ("liv/book-source", []{
+static tap::TestSet tests ("liv/page-block", []{
     using namespace tap;
     using namespace liv;
 
