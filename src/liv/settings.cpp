@@ -2,6 +2,7 @@
 
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/resources/resource.h"
+#include "../dirt/uni/text.h"
 
 namespace liv {
 
@@ -43,7 +44,7 @@ const Settings builtin_default_settings = {
         .sort = SortMethod{
             SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
         },
-        .page_extensions = std::set<AnyString>{
+        .page_extensions = (AnyString[]){
             "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
             "png", "tif", "tiff", "xbm", "xpm", "webp",
         },
@@ -70,6 +71,32 @@ const Settings* app_settings () {
         return r;
     }();
     return res.ref();
+}
+
+void Settings::canonicalize () {
+    if (files.page_extensions) {
+        for (auto& e : *files.page_extensions) {
+            for (auto& c : e) {
+                if (c >= 'A' && c <= 'Z') {
+                    goto canonicalize_extensions;
+                }
+            }
+        }
+        goto dont_canonicalize_extensions;
+        canonicalize_extensions:
+        for (auto it = files.page_extensions->mut_begin();
+            it != files.page_extensions->end();
+            it++
+        ) {
+            for (auto& c : *it) {
+                if (c >= 'A' && c <= 'Z') {
+                    *it = ascii_to_lower(*it);
+                    break;
+                }
+            }
+        }
+        dont_canonicalize_extensions:;
+    }
 }
 
 void Settings::merge (Settings&& o) {
@@ -229,7 +256,8 @@ AYU_DESCRIBE(liv::Settings,
         attr("memory", &Settings::memory, collapse_empty),
         attr("mappings", &Settings::mappings, collapse_empty),
         attr("parent", &Settings::parent, optional)
-    )
+    ),
+    init<&Settings::canonicalize>()
 )
 
 #ifndef TAP_DISABLE_TESTS

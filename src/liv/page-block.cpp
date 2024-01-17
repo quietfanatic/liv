@@ -21,10 +21,14 @@ UniqueArray<IRI> expand_neighbors (
     for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
         auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
         expect(child);
-        auto ext = ascii_to_lower(iri::path_extension(child.path()));
-        if (!extensions.count(StaticString(ext))) {
-             // Don't skip if we explicitly requested this file
-            if (child != loc) continue;
+         // Don't skip if we explicitly requested this file
+        if (child != loc) {
+            auto ext = ascii_to_lower(iri::path_extension(child.path()));
+            for (auto& e : extensions) {
+                if (e == ext) goto found;
+            }
+            continue;
+            found:;
         }
         r.emplace_back(move(child));
     }
@@ -65,7 +69,11 @@ UniqueArray<IRI> expand_recursively (
                 auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
                 expect(child);
                 auto ext = ascii_to_lower(iri::path_extension(child.path()));
-                if (!extensions.count(StaticString(ext))) continue;
+                for (auto& e : extensions) {
+                    if (e == ext) goto found;
+                }
+                continue;
+                found:;
                 r.emplace_back(move(child));
             }
             if (!sort_everything) {

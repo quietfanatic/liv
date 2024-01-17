@@ -65,7 +65,7 @@ struct WindowSettings {
     std::optional<geo::IVec> size;
     std::optional<bool> fullscreen;
     std::optional<FormatList> title;
-     // For testing.  Don't show window.  Note that some graphics drivers will
+     // For testing.  Don't show windows.  Note that some graphics drivers will
      // refuse to draw on hidden windows, so you can't test drawing when the
      // window is hidden.
     std::optional<bool> hidden;
@@ -93,7 +93,8 @@ struct ControlSettings {
 };
 struct FilesSettings {
     std::optional<SortMethod> sort;
-    std::optional<std::set<AnyString>> page_extensions;
+     // Keep these in order
+    std::optional<AnyArray<AnyString>> page_extensions;
 };
 struct MemorySettings {
     std::optional<uint32> preload_ahead;
@@ -116,6 +117,8 @@ struct Settings {
     MemorySettings memory;
     UniqueArray<Mapping> mappings;
     const Settings* parent = &builtin_default_settings;
+
+    void canonicalize ();
 
     template <class T, class Category>
     const T& get (std::optional<T> Category::*) const;
