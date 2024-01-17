@@ -83,11 +83,10 @@ static bool on_idle (App& self) {
     return false;
 }
 
-App::App () {
-     // Set loop handlers
-    loop.on_event = [this](SDL_Event* event){ on_event(*this, event); };
-    loop.on_idle = [this](){ return on_idle(*this); };
-}
+App::App () : loop{
+    .on_event = [this](SDL_Event* event){ on_event(*this, event); },
+    .on_idle = [this](){ return on_idle(*this); },
+} { }
 
 App::~App () { }
 
