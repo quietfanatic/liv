@@ -26,6 +26,7 @@ const Settings builtin_default_settings = {
         ),
         .hidden = false,
         .automated_input = false,
+        .last_prompt_command = "",
     },
     .layout = {
         .spread_count = 1,
@@ -108,6 +109,7 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(window.title)
     LIV_MERGE(window.hidden)
     LIV_MERGE(window.automated_input)
+    LIV_MERGE(window.last_prompt_command)
     LIV_MERGE(layout.spread_count)
     LIV_MERGE(layout.spread_direction)
     LIV_MERGE(layout.auto_zoom_mode)
@@ -197,6 +199,15 @@ AYU_DESCRIBE(liv::Mapping,
     )
 )
 
+AYU_DESCRIBE(liv::WindowSettings,
+    attrs(
+        attr("size", &WindowSettings::size, collapse_optional),
+        attr("fullscreen", &WindowSettings::fullscreen, collapse_optional),
+        attr("title", &WindowSettings::title, collapse_optional),
+        attr("last_prompt_command", &WindowSettings::last_prompt_command, collapse_optional)
+    )
+)
+
 AYU_DESCRIBE(liv::LayoutSettings,
     attrs(
         attr("spread_count", &LayoutSettings::spread_count, collapse_optional),
@@ -217,11 +228,9 @@ AYU_DESCRIBE(liv::RenderSettings,
     )
 )
 
-AYU_DESCRIBE(liv::WindowSettings,
+AYU_DESCRIBE(liv::ControlSettings,
     attrs(
-        attr("size", &WindowSettings::size, collapse_optional),
-        attr("fullscreen", &WindowSettings::fullscreen, collapse_optional),
-        attr("title", &WindowSettings::title, collapse_optional)
+        attr("drag_speed", &ControlSettings::drag_speed, collapse_optional)
     )
 )
 
@@ -229,12 +238,6 @@ AYU_DESCRIBE(liv::FilesSettings,
     attrs(
         attr("sort", &FilesSettings::sort, collapse_optional),
         attr("page_extensions", &FilesSettings::page_extensions, collapse_optional)
-    )
-)
-
-AYU_DESCRIBE(liv::ControlSettings,
-    attrs(
-        attr("drag_speed", &ControlSettings::drag_speed, collapse_optional)
     )
 )
 

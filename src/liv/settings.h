@@ -71,6 +71,8 @@ struct WindowSettings {
     std::optional<bool> hidden;
      // For testing.  Disable workaround for false keypress on window focus.
     std::optional<bool> automated_input;
+     // Not sure where to put this but here it is
+    std::optional<AnyString> last_prompt_command;
 };
 struct LayoutSettings {
     std::optional<int32> spread_count;

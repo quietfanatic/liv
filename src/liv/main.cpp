@@ -91,7 +91,7 @@ R"(liv <options> [--] <filenames>
     }
     catch (std::exception& e) {
         auto res = run({
-            "zenity", "--error", "--title=LIV Error",
+            "zenity", "--error", "--title=LIV Error", "--no-markup",
                 cat("--text=Uncaught exception: ", e.what())
         });
         if (res.command_not_found()) {

@@ -46,9 +46,15 @@ Command leave_fullscreen_or_quit (
 );
 
 static void prompt_command_ () {
+    if (!current_book) return;
+    auto last = current_book->state.settings->get(
+        &WindowSettings::last_prompt_command
+    );
+
     auto res = run({
         "zenity", "--entry", cat("--title=Input command"),
-        cat("--text=See commands.h for available commands"),
+        "--text=See commands.h for available commands",
+        cat("--entry-text=", last)
     });
     if (res.ret != 0) {
         if (res.command_not_found()) {
@@ -61,15 +67,19 @@ static void prompt_command_ () {
         }
         return;
     }
+    AnyString text = move(res.out);
+    if (text && text.back() == '\n') text.pop_back();
+    current_book->state.settings->window.last_prompt_command = text;
+    current_book->need_mark = true;
     try {
         Statement cmd;
-        ayu::item_from_list_string(&cmd, res.out);
+        ayu::item_from_list_string(&cmd, text);
         cmd();
     }
     catch (std::exception& e) {
         run({
             "zenity", "--error", "--title=Command failed", "--no-markup",
-            cat("--text=", "This command: ", res.out,
+            cat("--text=", "This command: ", text,
                 "\nthrew an exception: ", e.what()
             )
         });
