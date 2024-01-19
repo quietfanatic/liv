@@ -36,14 +36,33 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
             }
         }
     }
-     // Oh but don't chop up numbers
-    while (prefix > 0 &&
-        paths[0][prefix - 1] >= '0' && paths[0][prefix - 1] <= '9'
-    ) prefix--;
-    while (suffix > 0 &&
-        paths[0][paths[0].size() - suffix] >= '0' &&
-        paths[0][paths[0].size() - suffix] <= '9'
-    ) suffix--;
+     // Oh but don't chop up numbers or multibyte sequences.
+    Str p = paths[0];
+     // p[prefix-1] = left char (in prefix)
+     // p[prefix] = right char (out of prefix)
+    if (prefix && prefix < p.size()) {
+         // Rewind while there's a continuation byte on the right
+        if (is_continuation_byte(p[prefix])) {
+            while (prefix && is_continuation_byte(p[prefix])) prefix--;
+        }
+         // Rewind while there are digits on both sides
+        else if (std::isdigit(p[prefix])) {
+            while (prefix && std::isdigit(p[prefix-1])) prefix--;
+        }
+    }
+    auto r = paths[0].rbegin();
+     // r[suffix] = left char (out of suffix)
+     // r[suffix-1] = right char (in suffix)
+    if (suffix && suffix < p.size()) {
+         // Rewind while there's a continuation byte on the right
+        if (is_continuation_byte(r[suffix-1])) {
+            while (suffix && is_continuation_byte(r[suffix-1])) suffix--;
+        }
+         // Rewind while there are digits on both sides
+        else if (std::isdigit(r[suffix])) {
+            while (suffix && std::isdigit(r[suffix-1])) suffix--;
+        }
+    }
     if (prefix + suffix > paths[0].size()) {
          // If the prefix and suffix overlap, we must have been given identical
          // paths.  I don't know what to do with this situation!  For now we'll
