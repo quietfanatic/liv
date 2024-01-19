@@ -64,20 +64,6 @@ const Settings builtin_default_settings = {
     .parent = null,
 };
 
-const Settings* app_settings () {
-    static auto res = []{
-        auto r = ayu::Resource(app_settings_location);
-        if (!ayu::source_exists(r)) {
-            fs::copy_file(
-                ayu::resource_filename("res:/liv/settings-template.ayu"),
-                ayu::resource_filename(r)
-            );
-        }
-        return r;
-    }();
-    return res.ref();
-}
-
 void Settings::canonicalize () {
     if (files.page_extensions) {
         for (auto& e : *files.page_extensions) {

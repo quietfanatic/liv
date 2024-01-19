@@ -288,9 +288,11 @@ static tap::TestSet tests ("liv/book", []{
 
     auto size = IVec{120, 120};
 
+    App app;
+
     auto settings = std::make_unique<Settings>();
     settings->window.size = {size};
-    settings->parent = app_settings();
+    settings->parent = app.app_settings;
     auto src = BookSource(
         BookType::Misc, Slice<IRI>{
             IRI("res/liv/test/image.png", iri::program_location()),

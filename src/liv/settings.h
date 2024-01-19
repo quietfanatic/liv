@@ -107,9 +107,6 @@ struct MemorySettings {
 
 extern const Settings builtin_default_settings;
 
-static constexpr IRI app_settings_location = IRI("data:/settings.ayu");
-const Settings* app_settings ();
-
 struct Settings {
     WindowSettings window;
     LayoutSettings layout;

@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include "../dirt/ayu/resources/resource.h"
+#include "../dirt/ayu/resources/purpose.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/uni/strings.h"
 #include "../dirt/wind/passive_loop.h"
@@ -11,13 +11,15 @@
 
 namespace liv {
 
+constexpr iri::IRI app_settings_location ("data:/settings.ayu");
+
 struct App {
     App();
     ~App();
 
      // Select between open_files, open_file, and open_folder.
     void open_args (Slice<AnyString> args, std::unique_ptr<Settings>);
-     // Open all files and folders (recursively) in a temprary book.
+     // Open all files and folders (recursively) in a temporary book.
     void open_files (Slice<AnyString> filenames, std::unique_ptr<Settings>);
      // Open one file as the current page, including all other files in the same
      // folder (non-recursively) as pages in a temporary book.
@@ -40,6 +42,13 @@ struct App {
 
      // The main loop.  Need to store this here to call stop() on it.
     wind::PassiveLoop loop;
+
+     // The main app settings.
+    const Settings* app_settings;
+
+     // For managing resources that the app uses.  Currently, this only acquires
+     // the global app settings and the default settings.
+    ayu::Purpose purpose;
 };
 
  // Temporal state for commands

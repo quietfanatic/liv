@@ -80,7 +80,7 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     return r;
 }
 
-void save_mark (Book& book) {
+void save_mark (const App& app, Book& book) {
     auto& loc = book.source.location_for_mark();
     if (!loc) return;
 
@@ -102,7 +102,7 @@ void save_mark (Book& book) {
         static auto app_settings_loc =
             ayu::location_from_iri(app_settings_location);
         ayu::PushLikelyReference plr (
-            app_settings(), app_settings_loc
+            app.app_settings, app_settings_loc
         );
         ayu::save(res);
     }
@@ -155,14 +155,16 @@ static tap::TestSet tests ("liv/mark", []{
         Slice<IRI>{IRI("res/liv/test/", iri::program_location())}
     );
 
+    App app;
+
     auto settings = std::make_unique<Settings>();
     settings->window.hidden = true;
     settings->layout.auto_zoom_mode = AutoZoomMode::FitWidth;
-    settings->parent = app_settings();
+    settings->parent = app.app_settings;
 
     Book to_save (move(src), move(settings));
     to_save.state.page_offset = 0;
-    save_mark(to_save);
+    save_mark(app, to_save);
     pass("save_mark");
 
     auto overrides = std::make_unique<Settings>();
@@ -183,7 +185,7 @@ static tap::TestSet tests ("liv/mark", []{
      // of range, so it should be preserved instead of overwritten with the
      // index of the page with the same location.
     to_save.state.page_offset = -1;
-    save_mark(to_save);
+    save_mark(app, to_save);
      // Reusing overrides which has been moved from but we don't care
     loaded = load_mark(to_save.source, *overrides);
     is(loaded->state.page_offset, -1);

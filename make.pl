@@ -7,7 +7,7 @@ use File::Copy;
 ##### COMMAND LINE CONFIGURATION
 
 my %compilers = (
-    'cpp' => [qw(g++-12 -std=c++20 -fno-threadsafe-statics -fconcepts-diagnostics-depth=4)],
+    'cpp' => [qw(g++-12 -std=c++20 -fno-threadsafe-statics -ftemplate-backtrace-limit=0 -fconcepts-diagnostics-depth=4)],
     'c' => ['gcc-12']
 );
 my @linker = 'g++-12';
@@ -93,6 +93,7 @@ my @sources = (qw(
     dirt/ayu/reflection/reference.cpp
     dirt/ayu/reflection/type.cpp
     dirt/ayu/resources/document.cpp
+    dirt/ayu/resources/purpose.cpp
     dirt/ayu/resources/resource.cpp
     dirt/ayu/resources/scheme.cpp
     dirt/ayu/traversal/compound.cpp
@@ -139,6 +140,7 @@ my @resources = (qw(
 ),
     ["liv/help/commands.md" => "help/commands.md"],
     ["liv/help/formats.md" => "help/formats.md"],
+    ["../LICENSE" => "LICENSE"],
     ["../README.md" => "README.md"],
 );
 my @test_resources = (qw(

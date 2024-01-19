@@ -14,6 +14,6 @@ constexpr IRI marks_folder = IRI("data:/marks/");
  // passed-in Settings will be moved from.
 std::unique_ptr<Book> load_mark (const BookSource&, Settings&);
  // Not const Book& because we need to borrow some stuff.  We'll give it back.
-void save_mark (Book&);
+void save_mark (const App&, Book&);
 
 } // namespace liv

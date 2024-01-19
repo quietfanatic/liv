@@ -76,7 +76,7 @@ static bool on_idle (App& self) {
         }
         if (book->need_mark) {
             book->need_mark = false;
-            save_mark(*book);
+            save_mark(self, *book);
             return true;
         }
     }
@@ -86,7 +86,17 @@ static bool on_idle (App& self) {
 App::App () : loop{
     .on_event = [this](SDL_Event* event){ on_event(*this, event); },
     .on_idle = [this](){ return on_idle(*this); },
-} { }
+} {
+    auto settings_res = ayu::Resource(app_settings_location);
+    if (!ayu::source_exists(settings_res)) {
+        fs::copy_file(
+            ayu::resource_filename("res:/liv/settings-template.ayu"),
+            ayu::resource_filename(settings_res)
+        );
+    }
+    purpose.acquire(settings_res);
+    app_settings = settings_res.ref();
+}
 
 App::~App () { }
 
@@ -99,7 +109,7 @@ static void add_book (
          // By default parent the settings to the app settings.  We need a
          // better way of making this happen.
         if (settings->parent == &builtin_default_settings) {
-            settings->parent = app_settings();
+            settings->parent = self.app_settings;
         }
         PageBlock block (src, *settings);
         BookState state (move(settings));
@@ -184,6 +194,20 @@ void App::run () {
 
 void App::stop () {
     loop.stop();
+}
+
+Settings* app_settings () {
+    static auto res = []{
+        auto r = ayu::Resource(app_settings_location);
+        if (!ayu::source_exists(r)) {
+            fs::copy_file(
+                ayu::resource_filename("res:/liv/settings-template.ayu"),
+                ayu::resource_filename(r)
+            );
+        }
+        return r;
+    }();
+    return res.ref();
 }
 
 App* current_app = null;
