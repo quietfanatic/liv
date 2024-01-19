@@ -32,10 +32,13 @@ enum class FormatCommand {
     ZoomPercent,
     IfZoomed,
     Cwd,
+    AppSettingsAbs,
 };
 
 struct FormatList {
     UniqueArray<FormatToken> tokens;
+    FormatList (FormatList&&) = default;
+    FormatList& operator= (FormatList&&) = default;
     template <class... Args>
     constexpr FormatList (Args&&... args) : tokens(
         UniqueArray<FormatToken>::make(std::forward<Args>(args)...)

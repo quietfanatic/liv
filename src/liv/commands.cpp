@@ -68,7 +68,7 @@ static void prompt_command_ () {
     }
     catch (std::exception& e) {
         run({
-            "zenity", "--error", "--title=Command failed",
+            "zenity", "--error", "--title=Command failed", "--no-markup",
             cat("--text=", "This command: ", res.out,
                 "\nthrew an exception: ", e.what()
             )
@@ -93,7 +93,7 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
         UniqueString m;
         message.write(m, current_book);
         auto res = run({
-            "zenity", cat("--title=", t), "--info", cat("--text=", m)
+            "zenity", "--no-markup", cat("--title=", t), "--info", cat("--text=", m)
         });
         if (res.command_not_found()) {
             SDL_ShowSimpleMessageBox(
@@ -105,6 +105,39 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
     }
 }
 Command message_box (message_box_, "message_box", "Show a message box with formatted title and content");
+
+static void clipboard_text_ (const FormatList& fmt) {
+    if (!current_book) return;
+    UniqueString text;
+    fmt.write(text, current_book);
+    SDL_SetClipboardText(text.c_str());
+}
+Command clipboard_text (clipboard_text_, "clipboard_text", "Set clipboard text with format list");
+
+static void shell_ (const FormatList& fmt) {
+    if (!current_book) return;
+    UniqueString cmd;
+    fmt.write(cmd, current_book);
+    shell(cmd.c_str());
+}
+Command shell (shell_, "shell", "Create a system shell command with a format list and run it.");
+
+ // Not AnyArray because FormatList is not copyable
+static void run_ (const UniqueArray<FormatList>& fmts) {
+    if (!current_book) return;
+    auto args = UniqueArray<UniqueString>(
+        fmts.size(), [&fmts](usize i)
+    {
+        UniqueString s;
+        fmts[i].write(s, current_book);
+        return s;
+    });
+    auto strs = UniqueArray<Str>(args.size(), [&args](usize i){
+        return Str(args[i]);
+    });
+    run(strs);
+}
+Command run (run_, "run", "Run a system command with the command name and each argument from format lists.");
 
 ///// BOOK AND PAGE COMMANDS
 
@@ -153,14 +186,6 @@ static void remove_from_list_ (const AnyString& list) {
     remove_from_list(loc, entry);
 }
 Command remove_from_list (remove_from_list_, "remove_from_list", "Remove current page from list file");
-
-static void clipboard_text_ (const FormatList& fmt) {
-    if (!current_book) return;
-    UniqueString text;
-    fmt.write(text, current_book);
-    SDL_SetClipboardText(text.c_str());
-}
-Command clipboard_text (clipboard_text_, "clipboard_text", "Set clipboard text with format list");
 
 static void remove_from_book_ () {
     if (!current_book) return;

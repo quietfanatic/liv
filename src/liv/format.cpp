@@ -256,10 +256,6 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             }
             break;
         }
-        case FormatCommand::Cwd: {
-            encat(s, iri::to_fs_path(iri::working_directory()));
-            break;
-        }
         case FormatCommand::ZoomPercent: {
             float zoom = book->view.get_layout().zoom;
             encat(s, round(zoom * 100));
@@ -269,6 +265,14 @@ void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
             if (book->view.get_layout().zoom != 1) {
                 sublist.write(s, book, page);
             }
+            break;
+        }
+        case FormatCommand::Cwd: {
+            encat(s, iri::to_fs_path(iri::working_directory()));
+            break;
+        }
+        case FormatCommand::AppSettingsAbs: {
+            encat(s, ayu::resource_filename(app_settings_location));
             break;
         }
         default: never();
@@ -370,9 +374,10 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("merged_pages_rel_book", FormatCommand::MergedPagesRelBook),
         value("merged_pages_rel_book_parent", FormatCommand::MergedPagesRelBookParent),
         value("for_visible_pages", FormatCommand::ForVisiblePages),
-        value("cwd", FormatCommand::Cwd),
         value("zoom_percent", FormatCommand::ZoomPercent),
-        value("if_zoomed", FormatCommand::IfZoomed)
+        value("if_zoomed", FormatCommand::IfZoomed),
+        value("cwd", FormatCommand::Cwd),
+        value("app_settings_abs", FormatCommand::AppSettingsAbs)
     )
 )
 

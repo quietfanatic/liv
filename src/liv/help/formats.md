@@ -36,3 +36,4 @@ be printed exactly and the special tokens mean the following:
   `[zoom_percent]` = Current zoom level times 100.
   `[if_zoomed <more>...]` = Show <more> if zoom level is not 1.0 (100%).
   `[cwd]` = Current working directory.
+  `[app_settings_abs]` = Path to global application settings file.

@@ -26,6 +26,11 @@ Application Commands
     from the first format list and the content from the second.  Uses either
     zenity or SDL's builtin message box.
 - `[clipboard_text <FormatList>]` = Copy formatted text to the OS clipboard.
+- `[shell <FormatList>]` = Run a system shell command with a string generated
+    from the given format list.  Don't forget to include spaces.
+- `[run [<FormatList>...]]` = Run a system command with a separate command name
+    and argument strings created from format lists.  There will be a lot of
+    square brackets.  Example: `[run [[gvim] [[app_settings_abs]]]]`
 
 Book and Page Commands
 ----------------------
