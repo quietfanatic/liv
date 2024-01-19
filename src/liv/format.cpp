@@ -6,9 +6,6 @@
 #include "../dirt/uni/hash.h"
 #include "book.h"
 
-//TEMP
-#include "../dirt/uni/io.h"
-
 namespace liv {
 
  // Merge multiple paths together with a format like foo/bar-{01,02}.png
@@ -311,7 +308,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
                 auto args = AnyArray(a.slice(1));
                 item_from_tree(
                     &v.sublist, ayu::Tree(move(args)),
-                    ayu::Location(), ayu::DELAY_SWIZZLE
+                    ayu::Location(), ayu::FromTreeOptions::DelaySwizzle
                 );
                 break;
             }
