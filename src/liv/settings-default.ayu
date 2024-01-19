@@ -183,9 +183,10 @@ mappings: [
     [[ctrl c] [clipboard_text [[page_abs]]]]
   ----- LAYOUT
      -- Toggle fullscreen mode
+    [[f] [fullscreen]]
     [[f11] [fullscreen]]
      -- Set auto zoom mode
-    [[f] [auto_zoom_mode fit]]
+    [[0] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
     [[v] [auto_zoom_mode fit_height]]
     [[o] [auto_zoom_mode original]]
