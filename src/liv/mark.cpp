@@ -3,6 +3,7 @@
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/traversal/scan.h"
 #include "../dirt/ayu/traversal/to-tree.h"
+#include "../dirt/iri/iri.h"
 #include "../dirt/uni/hash.h"
 #include "../dirt/uni/io.h"
 #include "../dirt/uni/text.h"
@@ -38,24 +39,25 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     if (!loc) return null;
 
      // Load resource from disk
-    auto res = ayu::Resource(get_mark_location(loc));
-    if (!ayu::source_exists(res)) return null;
+    auto res = ayu::SharedResource(get_mark_location(loc));
+    if (!ayu::source_exists(res->name())) return null;
+    ayu::Purpose purpose;
     try {
-        ayu::load(res);
+        purpose.acquire(res);
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(
-            "Error loading mark file ", ayu::resource_filename(res),
+            "Error loading mark file ", ayu::resource_filename(res->name()),
             ": ", e.what(), "\n",
             "Mark file for this book will be ignored or overwritten.\n"
         ));
         return null;
     }
-    Mark* mark = res.ref();
+    Mark* mark = res->ref();
      // Check for hash collision
     if (mark->source != src) [[unlikely]] {
         uni::warn_utf8(cat(
-            "Hash collision in mark file ", ayu::resource_filename(res),
+            "Hash collision in mark file ", ayu::resource_filename(res->name()),
             ".\nOld source: ", ayu::item_to_string(&mark->source),
             "\nNew source: ", ayu::item_to_string(&src),
             "\nOld mark will be overwritten with new mark.\n"
@@ -89,7 +91,7 @@ void save_mark (const App& app, Book& book) {
         page_loc = page->location;
     }
 
-    auto res = ayu::Resource(
+    auto res = ayu::SharedResource(
         get_mark_location(loc),
         ayu::Dynamic::make<Mark>(
             move(book.source), move(book.state), move(page_loc), now()
@@ -108,13 +110,13 @@ void save_mark (const App& app, Book& book) {
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(
-            "Failed to save save file ", ayu::resource_filename(res),
+            "Failed to save save file ", ayu::resource_filename(res->name()),
             ": ", e.what(), "\nSave file for this book will not be saved.\n"
         ));
     }
 
      // Give book it's insides back
-    Mark* mark = res.ref();
+    Mark* mark = res->ref();
     expect(!book.source.locations);
     new (&book.source) BookSource(move(mark->source));
     expect(!book.state.settings);

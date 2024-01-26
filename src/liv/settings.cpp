@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include "../dirt/ayu/reflection/describe.h"
-#include "../dirt/ayu/resources/resource.h"
 #include "../dirt/uni/text.h"
 
 namespace liv {
@@ -251,6 +250,8 @@ AYU_DESCRIBE(liv::Settings,
 )
 
 #ifndef TAP_DISABLE_TESTS
+#include "../dirt/ayu/resources/resource.h"
+#include "../dirt/iri/iri.h"
 #include "../dirt/tap/tap.h"
 
 static tap::TestSet tests ("liv/settings", []{
@@ -258,15 +259,15 @@ static tap::TestSet tests ("liv/settings", []{
 
      // This is already covered by other tests here, but it's useful to isolate
      // this for performance testing.
-    auto default_res = ayu::Resource("res:/liv/settings-default.ayu");
-    auto settings_res = ayu::Resource("res:/liv/settings-template.ayu");
-    is(default_res.state(), ayu::UNLOADED, "Default settings not loaded yet");
+    auto default_res = ayu::SharedResource(iri::IRI("res:/liv/settings-default.ayu"));
+    auto settings_res = ayu::SharedResource(iri::IRI("res:/liv/settings-template.ayu"));
+    is(default_res->state(), ayu::RS::Unloaded, "Default settings not loaded yet");
     doesnt_throw([&]{ ayu::load(settings_res); }, "Can load initial settings");
-    is(default_res.state(), ayu::LOADED,
+    is(default_res->state(), ayu::RS::Loaded,
         "Loading initial settings loads default settings"
     );
-    const Settings* default_settings = default_res.ref();
-    const Settings* settings = settings_res.ref();
+    const Settings* default_settings = default_res->ref();
+    const Settings* settings = settings_res->ref();
     is(settings->parent, default_settings,
         "Settings linked properly to default settings"
     );

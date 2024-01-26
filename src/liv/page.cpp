@@ -79,7 +79,8 @@ void Page::draw (
     require(!!*texture);
     require(texture->target == GL_TEXTURE_RECTANGLE);
 
-    static PageProgram* program = ayu::Resource("res:/liv/page.ayu")["program"][1];
+    static constexpr IRI program_location = IRI("res:/liv/page.ayu");
+    static PageProgram* program = ayu::ResourceRef(program_location)["program"][1];
     program->use();
 
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);

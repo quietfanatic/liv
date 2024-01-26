@@ -10,9 +10,6 @@
 #include "mark.h"
 #include "settings.h"
 
-//TEMP
-#include "../dirt/uni/io.h"
-
 namespace liv {
 
 static Book* book_with_window_id (App& self, uint32 id) {
@@ -87,15 +84,16 @@ App::App () : loop{
     .on_event = [this](SDL_Event* event){ on_event(*this, event); },
     .on_idle = [this](){ return on_idle(*this); },
 } {
-    auto settings_res = ayu::Resource(app_settings_location);
-    if (!ayu::source_exists(settings_res)) {
+    auto settings_res = ayu::SharedResource(app_settings_location);
+    if (!ayu::source_exists(settings_res->name())) {
+        static constexpr IRI template_loc = IRI("res:/liv/settings-template.ayu");
         fs::copy_file(
-            ayu::resource_filename("res:/liv/settings-template.ayu"),
-            ayu::resource_filename(settings_res)
+            ayu::resource_filename(template_loc),
+            ayu::resource_filename(settings_res->name())
         );
     }
     purpose.acquire(settings_res);
-    app_settings = settings_res.ref();
+    app_settings = settings_res->ref();
 }
 
 App::~App () { }
@@ -196,20 +194,6 @@ void App::stop () {
     loop.stop();
 }
 
-Settings* app_settings () {
-    static auto res = []{
-        auto r = ayu::Resource(app_settings_location);
-        if (!ayu::source_exists(r)) {
-            fs::copy_file(
-                ayu::resource_filename("res:/liv/settings-template.ayu"),
-                ayu::resource_filename(r)
-            );
-        }
-        return r;
-    }();
-    return res.ref();
-}
-
 App* current_app = null;
 Book* current_book = null;
 
@@ -226,13 +210,13 @@ static tap::TestSet tests ("liv/app", []{
 
     fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
 
+    App app;
     auto settings = std::make_unique<Settings>();
     settings->window.size = {{120, 120}};
      // TODO: Figure out how to get headless rendering working on nvidia drivers
     //settings->window.hidden = true;
     settings->window.automated_input = true;
-    settings->parent = app_settings();
-    App app;
+    settings->parent = app.app_settings;
     doesnt_throw([&]{
         app.open_files({
             "/res/liv/test/image.png",

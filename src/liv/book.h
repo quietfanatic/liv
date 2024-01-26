@@ -1,3 +1,4 @@
+#pragma once
 
 #include "../dirt/iri/path.h"
 #include "app.h"
