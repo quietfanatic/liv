@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include "../dirt/ayu/resources/purpose.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/uni/strings.h"
 #include "../dirt/wind/passive_loop.h"
@@ -45,10 +44,6 @@ struct App {
 
      // The main app settings.
     const Settings* app_settings;
-
-     // For managing resources that the app uses.  Currently, this only acquires
-     // the global app settings and the default settings.
-    ayu::Purpose purpose;
 };
 
  // Temporal state for commands

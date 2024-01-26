@@ -1,5 +1,6 @@
 #include "mark.h"
 
+#include "../dirt/ayu/resources/resource.h"
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/traversal/scan.h"
 #include "../dirt/ayu/traversal/to-tree.h"
@@ -41,9 +42,8 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
      // Load resource from disk
     auto res = ayu::SharedResource(get_mark_location(loc));
     if (!ayu::source_exists(res->name())) return null;
-    ayu::Purpose purpose;
     try {
-        purpose.acquire(res);
+        ayu::load(res);
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(

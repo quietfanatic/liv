@@ -1,5 +1,6 @@
 #include "format.h"
 
+#include "../dirt/ayu/resources/resource.h"
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/traversal/from-tree.h"
 #include "../dirt/ayu/traversal/to-tree.h"

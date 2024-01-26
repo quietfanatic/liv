@@ -92,7 +92,6 @@ App::App () : loop{
             ayu::resource_filename(settings_res->name())
         );
     }
-    purpose.acquire(settings_res);
     app_settings = settings_res->ref();
 }
 
