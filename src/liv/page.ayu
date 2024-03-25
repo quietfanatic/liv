@@ -87,6 +87,7 @@ vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 
 void main () {
     switch (u_interpolation_mode) {
+        default: // error on some drivers: color may be used uninitialized
         case NEAREST: {
             color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));
             break;
