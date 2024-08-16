@@ -152,7 +152,7 @@ static tap::TestSet tests ("liv/page", []{
         page.draw(settings, 1, Rect(-.5, -.5, .5, .5));
     }, "Page::draw");
 
-    Image expected (test_size);
+    UniqueImage expected (test_size);
     for (int y = 0; y < test_size.y; y++)
     for (int x = 0; x < test_size.x; x++) {
         if (y >= test_size.y / 4 && y < test_size.y * 3 / 4
@@ -164,7 +164,7 @@ static tap::TestSet tests ("liv/page", []{
         }
     }
 
-    Image got (test_size);
+    UniqueImage got (test_size);
     glReadPixels(0, 0, test_size.x, test_size.y, GL_RGBA, GL_UNSIGNED_BYTE, got.pixels);
 
     bool match = true;

@@ -304,7 +304,7 @@ static tap::TestSet tests ("liv/book", []{
     Book book (move(src), move(block), move(state));
 
     book.view.draw_if_needed();
-    glow::Image img (size);
+    glow::UniqueImage img (size);
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(book.state.page_offset, 0, "Initial page is 1");

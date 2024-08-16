@@ -102,7 +102,7 @@ void save_mark (const App& app, Book& book) {
          // Most if not all memory files will have settings/parent set to the
          // app settings.
         static auto app_settings_loc =
-            ayu::location_from_iri(app_settings_location);
+            ayu::location_from_iri(IRI("#", app_settings_location));
         ayu::PushLikelyReference plr (
             app.app_settings, app_settings_loc
         );
@@ -156,6 +156,9 @@ static tap::TestSet tests ("liv/mark", []{
         BookType::Folder,
         Slice<IRI>{IRI("res/liv/test/", iri::program_location())}
     );
+     // Delete mark file to make sure we don't see previous test's results
+    IRI mark_loc = get_mark_location(src.location_for_mark());
+    ayu::remove_source(mark_loc);
 
     App app;
 
@@ -167,6 +170,7 @@ static tap::TestSet tests ("liv/mark", []{
     Book to_save (move(src), move(settings));
     to_save.state.page_offset = 0;
     save_mark(app, to_save);
+
     pass("save_mark");
 
     auto overrides = std::make_unique<Settings>();
@@ -191,6 +195,9 @@ static tap::TestSet tests ("liv/mark", []{
      // Reusing overrides which has been moved from but we don't care
     loaded = load_mark(to_save.source, *overrides);
     is(loaded->state.page_offset, -1);
+
+     // Clean up
+    ayu::remove_source(mark_loc);
 
     done_testing();
 });

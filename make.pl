@@ -93,6 +93,7 @@ my @sources = (qw(
     dirt/ayu/reflection/reference.cpp
     dirt/ayu/reflection/type.cpp
     dirt/ayu/resources/document.cpp
+    dirt/ayu/resources/global.cpp
     dirt/ayu/resources/resource.cpp
     dirt/ayu/resources/scheme.cpp
     dirt/ayu/traversal/compound.cpp
@@ -109,13 +110,16 @@ my @sources = (qw(
     dirt/geo/vec.t.cpp
     dirt/glow/colors.cpp
     dirt/glow/common.cpp
+    dirt/glow/file-image.cpp
     dirt/glow/file-texture.cpp
+    dirt/glow/image-texture.cpp
+    dirt/glow/image-transform.cpp
     dirt/glow/gl.cpp
     dirt/glow/image.cpp
-    dirt/glow/objects.cpp
     dirt/glow/program.cpp
     dirt/glow/test-environment.cpp
     dirt/glow/texture-program.cpp
+    dirt/glow/texture.cpp
     dirt/iri/iri.cpp
     dirt/iri/path.cpp
     dirt/uni/arrays.t.cpp
