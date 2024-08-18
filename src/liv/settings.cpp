@@ -11,6 +11,7 @@ static AnyString extensions [12] = {
 };
 
 const Settings builtin_default_settings = {
+    .parent = null,
     .window = {
         .size = geo::IVec{720, 720},
         .fullscreen = false,
@@ -60,7 +61,6 @@ const Settings builtin_default_settings = {
         .trim_when_minimized = TrimMode::PageCache,
     },
     .mappings = { },
-    .parent = null,
 };
 
 void Settings::canonicalize () {
