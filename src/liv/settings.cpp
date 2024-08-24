@@ -237,13 +237,13 @@ AYU_DESCRIBE(liv::MemorySettings,
 
 AYU_DESCRIBE(liv::Settings,
     attrs(
-        attr("window", &Settings::window, collapse_empty),
-        attr("layout", &Settings::layout, collapse_empty),
-        attr("render", &Settings::render, collapse_empty),
-        attr("control", &Settings::control, collapse_empty),
-        attr("files", &Settings::files, collapse_empty),
-        attr("memory", &Settings::memory, collapse_empty),
-        attr("mappings", &Settings::mappings, collapse_empty),
+        attr_default("window", &Settings::window, ayu::Tree::object()),
+        attr_default("layout", &Settings::layout, ayu::Tree::object()),
+        attr_default("render", &Settings::render, ayu::Tree::object()),
+        attr_default("control", &Settings::control, ayu::Tree::object()),
+        attr_default("files", &Settings::files, ayu::Tree::object()),
+        attr_default("memory", &Settings::memory, ayu::Tree::object()),
+        attr_default("mappings", &Settings::mappings, ayu::Tree::object()),
         attr("parent", &Settings::parent, optional)
     ),
     init<&Settings::canonicalize>()

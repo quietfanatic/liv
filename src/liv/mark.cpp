@@ -93,7 +93,7 @@ void save_mark (const App& app, Book& book) {
 
     auto res = ayu::SharedResource(
         get_mark_location(loc),
-        ayu::Dynamic::make<Mark>(
+        ayu::AnyVal::make<Mark>(
             move(book.source), move(book.state), move(page_loc), now()
         )
     );
@@ -103,7 +103,7 @@ void save_mark (const App& app, Book& book) {
          // app settings.
         static auto app_settings_loc =
             ayu::location_from_iri(IRI("#", app_settings_location));
-        ayu::PushLikelyReference plr (
+        ayu::PushLikelyRef plr (
             app.app_settings, app_settings_loc
         );
         ayu::save(res);

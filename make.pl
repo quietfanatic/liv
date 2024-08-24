@@ -85,12 +85,12 @@ my @sources = (qw(
     dirt/ayu/data/print.cpp
     dirt/ayu/data/tree.cpp
     dirt/ayu/reflection/accessors.cpp
+    dirt/ayu/reflection/anyptr.cpp
+    dirt/ayu/reflection/anyref.cpp
+    dirt/ayu/reflection/anyval.cpp
     dirt/ayu/reflection/describe-builtin.cpp
     dirt/ayu/reflection/describe-standard.cpp
     dirt/ayu/reflection/description.cpp
-    dirt/ayu/reflection/dynamic.cpp
-    dirt/ayu/reflection/pointer.cpp
-    dirt/ayu/reflection/reference.cpp
     dirt/ayu/reflection/type.cpp
     dirt/ayu/resources/document.cpp
     dirt/ayu/resources/global.cpp
