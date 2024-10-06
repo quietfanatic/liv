@@ -26,7 +26,7 @@ static IRI get_mark_location (const IRI& location) {
     fs::create_directory(
         ayu::resource_filename(marks_folder)
     );
-    uint64 hash = uni::hash64(location.spec());
+    u64 hash = uni::hash64(location.spec());
     char hex [16];
     for (usize i = 0; i < 16; i++) {
         hex[i] = uni::to_hex_digit(hash >> 60);
@@ -69,7 +69,7 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     mark->state.settings->merge(move(settings));
      // Find start page
     PageBlock block (mark->source, *mark->state.settings);
-    int32 index = block.find(mark->page);
+    i32 index = block.find(mark->page);
     if (index >= 0) mark->state.page_offset = index;
      // Assemble the book
     auto r = std::make_unique<Book>(

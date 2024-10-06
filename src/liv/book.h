@@ -22,7 +22,7 @@ struct Book {
      // To work around a bug where gaining focus from another window closing due
      // to a keystroke makes our window receive the keystroke that closed the
      // other window.
-    uint32 last_focused = 0;
+    u32 last_focused = 0;
 
     bool need_mark = false;
 
@@ -43,15 +43,15 @@ struct Book {
 
      // Commands
     void fullscreen ();
-    void set_page_offset (int32);
+    void set_page_offset (i32);
     void next ();
     void prev ();
-    void seek (int32);
+    void seek (i32);
     void go_next (Direction);
-    void go (Direction, int32);
+    void go (Direction, i32);
     void remove_current_page ();
     void sort (SortMethod);
-    void spread_count (int32);
+    void spread_count (i32);
     void spread_direction (Direction);
     void auto_zoom_mode (AutoZoomMode);
     void align (Vec small, Vec large);

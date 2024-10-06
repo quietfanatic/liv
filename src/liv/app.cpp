@@ -12,7 +12,7 @@
 
 namespace liv {
 
-static Book* book_with_window_id (App& self, uint32 id) {
+static Book* book_with_window_id (App& self, u32 id) {
     auto iter = self.books_by_window_id.find(id);
     require(iter != self.books_by_window_id.end());
     return &*iter->second;
@@ -112,7 +112,7 @@ static void add_book (
         BookState state (move(settings));
         if (src.type == BookType::FileWithNeighbors) {
             expect(src.locations.size() == 1);
-            int32 start = block.find(src.locations[0]);
+            i32 start = block.find(src.locations[0]);
             if (start >= 0) state.page_offset = start;
         }
         book = std::make_unique<Book>(move(src), move(block), move(state));

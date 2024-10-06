@@ -20,6 +20,7 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
         return;
     }
      // Find longest common prefix and suffix
+     // TODO: u32
     usize prefix = paths[0].size();
     usize suffix = paths[0].size();
     for (auto& path : paths.slice(1)) {
@@ -82,7 +83,7 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
 }
 
 NOINLINE
-void FormatToken::write (UniqueString& s, Book* book, int32 page) const {
+void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
     switch (command) {
         case FormatCommand::None: break;
         case FormatCommand::Literal:
@@ -287,7 +288,7 @@ void FormatList::write (UniqueString& s, Book* book) const {
     write(s, book, size(visible) ? visible.l : -1);
 }
 NOINLINE
-void FormatList::write (UniqueString& r, Book* book, int32 page) const {
+void FormatList::write (UniqueString& r, Book* book, i32 page) const {
     for (auto& token : tokens) token.write(r, book, page);
 }
 

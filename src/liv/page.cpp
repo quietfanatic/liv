@@ -92,7 +92,7 @@ void Page::draw (
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
     auto interp = settings.get(&RenderSettings::interpolation_mode);
-    glUniform1i(program->u_interpolation_mode, uint8(interp));
+    glUniform1i(program->u_interpolation_mode, u8(interp));
     auto bg = settings.get(&RenderSettings::transparency_background);
     glUniform4f(program->u_transparency_background,
         bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f

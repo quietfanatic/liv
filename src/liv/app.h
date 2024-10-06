@@ -37,7 +37,7 @@ struct App {
     void stop ();
 
     UniqueArray<std::unique_ptr<Book>> books;
-    std::unordered_map<uint32, Book*> books_by_window_id;
+    std::unordered_map<u32, Book*> books_by_window_id;
 
      // The main loop.  Need to store this here to call stop() on it.
     wind::PassiveLoop loop;

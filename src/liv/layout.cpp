@@ -10,7 +10,7 @@ namespace liv {
 Spread::Spread (Book& book) {
     Vec small_align = book.state.settings->get(&LayoutSettings::small_align);
      // Collect visible pages
-    for (int32 i : book.visible_range()) {
+    for (i32 i : book.visible_range()) {
         if (Page* page = book.block.get(i)) {
             book.block.load_page(page);
             pages.emplace_back(book.block.get(i));

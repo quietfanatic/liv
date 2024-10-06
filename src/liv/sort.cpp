@@ -18,23 +18,23 @@ using F = SortFlags;
  // Go through a bit of work to only instantiate a single copy of
  // std::stable_sort
 struct Comparator {
-    using Cmp = bool (const Comparator&, uint32, uint32) noexcept;
+    using Cmp = bool (const Comparator&, u32, u32) noexcept;
 
     IRI* iris;
     void* props;
     Cmp* f; // Should point to an instantiation of cmp
 
-    bool operator() (uint32 a, uint32 b) const noexcept {
+    bool operator() (u32 a, u32 b) const noexcept {
         return (*f)(*this, a, b);
     }
 
     template <SortMethod method>
-    static bool cmp (const Comparator& self, uint32 a, uint32 b) noexcept {
+    static bool cmp (const Comparator& self, u32 a, u32 b) noexcept {
         auto iris = self.iris;
         auto modtimes = (ModTime*)self.props;
         auto sizes = (usize*)self.props;
         if constexpr (!!(method.flags & F::Reverse)) {
-            uint32 t = a; a = b; b = t;
+            u32 t = a; a = b; b = t;
         }
         switch (method.criterion) {
             case C::Natural: {
@@ -67,7 +67,7 @@ struct Comparator {
 
 NOINLINE static
 void sort_with_props (
-    IRI* iris, uint32 len, Comparator::Cmp* cmp, void* props
+    IRI* iris, u32 len, Comparator::Cmp* cmp, void* props
 ) {
      // Sort an array of indexes as a proxy for the actual array of IRIs.  We
      // need to do this because std::stable_sort doesn't give the comparing
@@ -78,7 +78,7 @@ void sort_with_props (
      // ends up being slightly faster than sorting the IRI array, at least for
      // large sets (and it's much faster than sorting an array of std::pair<IRI,
      // ModTime> or such).
-    auto indexes = std::unique_ptr<uint32[]>(new uint32[len]);
+    auto indexes = std::unique_ptr<u32[]>(new u32[len]);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
     }
@@ -86,7 +86,7 @@ void sort_with_props (
      // Now reorder the input according to the sorted indexes.  This algorithm
      // looks wild but it works and is O(n).  Basically, we're finding closed
      // loops of indexes, and rotating the items backwards along that loop.
-    for (uint32 i = 0; i < len; i++) {
+    for (u32 i = 0; i < len; i++) {
          // Don't need to do this one or already did it.
         if (indexes[i] == i) continue;
          // Start the loop by picking up the first item.  We won't put it back
@@ -94,7 +94,7 @@ void sort_with_props (
         IRI tmp;
         std::memcpy((void*)&tmp, &iris[i], sizeof(IRI));
         for (;;) {
-            uint32 next = indexes[i];
+            u32 next = indexes[i];
              // Move the item from the next slot into this slot.
             std::memcpy((void*)&iris[i], &iris[next], sizeof(IRI));
              // This slot is now correct
@@ -110,7 +110,7 @@ void sort_with_props (
         std::memcpy((void*)&iris[i], &tmp, sizeof(IRI));
         std::memset((void*)&tmp, 0, sizeof(IRI));
          // Mark the slot as done
-        uint32 next = indexes[i];
+        u32 next = indexes[i];
         indexes[i] = i;
          // Return to the beginning
         i = next;
@@ -145,7 +145,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 : &Comparator::cmp<SortMethod{C::LastModified, F::Reverse}>;
 
             auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
-            for (uint32 i = 0; i < len; i++) {
+            for (u32 i = 0; i < len; i++) {
                 modtimes[i] = fs::last_write_time(iri::to_fs_path(begin[i]));
             }
             sort_with_props(begin, len, cmp, &modtimes[0]);
@@ -157,7 +157,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
                 : &Comparator::cmp<SortMethod{C::FileSize, F::Reverse}>;
 
             auto sizes = std::unique_ptr<usize[]>(new usize[len]);
-            for (uint32 i = 0; i < len; i++) {
+            for (u32 i = 0; i < len; i++) {
                 sizes[i] = fs::file_size(iri::to_fs_path(begin[i]));
             }
             sort_with_props(begin, len, cmp, &sizes[0]);
@@ -184,7 +184,7 @@ bool operator== (SortMethodToken a, SortMethodToken b) {
 
 ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     using namespace ayu;
-    auto cap = 1 + std::popcount(uint8(v.flags));
+    auto cap = 1 + std::popcount(u8(v.flags));
     auto a = UniqueArray<Tree>(Capacity(cap));
     SortMethodToken c = {v.criterion, F::None};
     a.push_back_expect_capacity(item_to_tree(&c));

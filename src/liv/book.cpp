@@ -89,13 +89,13 @@ void Book::fullscreen () {
     view.need_draw = true;
 }
 
-void Book::set_page_offset (int32 off) {
+void Book::set_page_offset (i32 off) {
     auto spread_count = state.settings->get(&LayoutSettings::spread_count);
      // Clamp such that there is at least one visible page in the range
     state.page_offset = clamp(
         off,
-        1 - int32(spread_count),
-        int32(block.pages.size()) - 1
+        1 - i32(spread_count),
+        i32(block.pages.size()) - 1
     );
     if (state.settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
         state.manual_zoom = {};
@@ -113,7 +113,7 @@ void Book::prev () {
     need_mark = true;
 }
 
-void Book::seek (int32 offset) {
+void Book::seek (i32 offset) {
     set_page_offset(state.page_offset + offset);
     view.spread = {};
     view.layout = {};
@@ -127,7 +127,7 @@ void Book::go_next (Direction dir) {
     else if (dir == -spread_dir) prev();
 }
 
-void Book::go (Direction dir, int32 offset) {
+void Book::go (Direction dir, i32 offset) {
     auto spread_dir = state.settings->get(&LayoutSettings::spread_direction);
     if (dir == spread_dir) seek(offset);
     else if (dir == -spread_dir) seek(-offset);
@@ -166,7 +166,7 @@ void Book::sort (SortMethod method) {
     need_mark = true;
 }
 
-void Book::spread_count (int32 count) {
+void Book::spread_count (i32 count) {
     state.settings->layout.spread_count = {
         clamp(count, 1, LayoutSettings::max_spread_count)
     };

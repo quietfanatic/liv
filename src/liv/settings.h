@@ -75,8 +75,8 @@ struct WindowSettings {
     std::optional<AnyString> last_prompt_command;
 };
 struct LayoutSettings {
-    std::optional<int32> spread_count;
-    static constexpr int32 max_spread_count = 16;
+    std::optional<i32> spread_count;
+    static constexpr i32 max_spread_count = 16;
     std::optional<Direction> spread_direction;
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
@@ -99,8 +99,8 @@ struct FilesSettings {
     std::optional<AnyArray<AnyString>> page_extensions;
 };
 struct MemorySettings {
-    std::optional<uint32> preload_ahead;
-    std::optional<uint32> preload_behind;
+    std::optional<u32> preload_ahead;
+    std::optional<u32> preload_behind;
     std::optional<double> page_cache_mb;
     std::optional<TrimMode> trim_when_minimized;
 };

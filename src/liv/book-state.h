@@ -19,7 +19,7 @@ struct BookState {
      // Book-specific settings.  Has the app settings as its parent.
     std::unique_ptr<Settings> settings;
      // Index of first page currently being viewed.
-    int32 page_offset = 0;
+    i32 page_offset = 0;
      // If not defined, use the auto zoom mode.
     std::optional<float> manual_zoom;
     std::optional<Vec> manual_offset;

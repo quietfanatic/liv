@@ -44,7 +44,7 @@ struct FormatList {
         UniqueArray<FormatToken>::make(std::forward<Args>(args)...)
     ) { }
     void write (UniqueString&, Book*) const;
-    void write (UniqueString&, Book*, int32 page) const;
+    void write (UniqueString&, Book*, i32 page) const;
 };
 
 struct FormatToken {
@@ -91,7 +91,7 @@ struct FormatToken {
         }
     }
 
-    void write (UniqueString&, Book*, int32 page) const;
+    void write (UniqueString&, Book*, i32 page) const;
 };
 
 } // liv
