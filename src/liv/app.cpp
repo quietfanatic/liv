@@ -139,7 +139,7 @@ void App::open_args (
 void App::open_files (
     Slice<AnyString> filenames, std::unique_ptr<Settings> settings
 ) {
-    auto iris = UniqueArray<IRI>(filenames.size(), [=](usize i){
+    auto iris = UniqueArray<IRI>(filenames.size(), [=](u32 i){
         return iri::from_fs_path(filenames[i]);
     });
     auto src = BookSource(BookType::Misc, iris);

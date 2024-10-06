@@ -20,17 +20,16 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
         return;
     }
      // Find longest common prefix and suffix
-     // TODO: u32
-    usize prefix = paths[0].size();
-    usize suffix = paths[0].size();
+    u32 prefix = paths[0].size();
+    u32 suffix = paths[0].size();
     for (auto& path : paths.slice(1)) {
-        for (usize i = 0; i < prefix && i < path.size(); i++) {
+        for (u32 i = 0; i < prefix && i < path.size(); i++) {
             if (path[i] != paths[0][i]) {
                 prefix = i;
                 break;
             }
         }
-        for (usize i = 0; i < suffix && i < path.size(); i++) {
+        for (u32 i = 0; i < suffix && i < path.size(); i++) {
             if (path[path.size() - i - 1] !=
                 paths[0][paths[0].size() - i - 1]
             ) {
@@ -75,7 +74,7 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
      // Now do it
     encat(s,
         paths[0].slice(0, prefix), '{',
-        Caterator(",", paths.size(), [&paths, prefix, suffix](usize i){
+        Caterator(",", paths.size(), [&paths, prefix, suffix](u32 i){
             return paths[i].slice(prefix, paths[i].size() - suffix);
         }),
         '}', paths[0].slice(paths[0].size() - suffix)
@@ -207,7 +206,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::MergedPagesAbs: {
             auto visible = book->visible_range();
             if (!size(visible)) break;
-            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
+            auto paths = UniqueArray<UniqueString>(size(visible), [=](auto i){
                 auto&& loc = book->block.pages[visible[i]]->location;
                 return iri::to_fs_path(loc);
             });
@@ -217,7 +216,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::MergedPagesRelCwd: {
             auto visible = book->visible_range();
             if (!size(visible)) break;
-            auto paths = UniqueArray<UniqueString>(size(visible), [=](usize i){
+            auto paths = UniqueArray<UniqueString>(size(visible), [=](auto i){
                 auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(iri::working_directory());
                 return iri::decode_path(rel);
@@ -230,7 +229,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             if (!size(visible)) break;
             auto&& base = book->source.base_for_page_rel_book();
             auto paths = UniqueArray<UniqueString>(
-                size(visible), [=, &base](usize i)
+                size(visible), [=, &base](auto i)
             {
                 auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(base);
@@ -244,7 +243,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             if (!size(visible)) break;
             auto&& base = book->source.base_for_page_rel_book_parent();
             auto paths = UniqueArray<UniqueString>(
-                size(visible), [=, &base](usize i)
+                size(visible), [=, &base](auto i)
             {
                 auto&& loc = book->block.pages[visible[i]]->location;
                 auto&& rel = loc.relative_to(base);
@@ -299,12 +298,12 @@ static ayu::Tree FormatToken_to_tree (const FormatToken& v){
         case FormatCommand::Literal: return Tree(v.literal);
         case FormatCommand::IfZoomed: {
             auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
-            a.insert(usize(0), Tree("if_zoomed"));
+            a.insert(+0, Tree("if_zoomed"));
             return Tree(move(a));
         }
         case FormatCommand::ForVisiblePages: {
             auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
-            a.insert(usize(0), Tree("for_visible_pages"));
+            a.insert(+0, Tree("for_visible_pages"));
             return Tree(move(a));
         }
         default: {

@@ -136,13 +136,13 @@ Command shell (shell_, "shell", "Create a system shell command with a format lis
 static void run_ (const UniqueArray<FormatList>& fmts) {
     if (!current_book) return;
     auto args = UniqueArray<UniqueString>(
-        fmts.size(), [&fmts](usize i)
+        fmts.size(), [&fmts](u32 i)
     {
         UniqueString s;
         fmts[i].write(s, current_book);
         return s;
     });
-    auto strs = UniqueArray<Str>(args.size(), [&args](usize i){
+    auto strs = UniqueArray<Str>(args.size(), [&args](u32 i){
         return Str(args[i]);
     });
     run(strs);

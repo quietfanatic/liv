@@ -153,7 +153,7 @@ void Book::sort (SortMethod method) {
         : IRI();
     block.resort(method);
     if (current_location) {
-        for (usize i = 0; i < size(block.pages); i++) {
+        for (u32 i = 0; i < size(block.pages); i++) {
             if (block.pages[i]->location == current_location) {
                 set_page_offset(i);
                 break;
