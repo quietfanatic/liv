@@ -102,6 +102,7 @@ my @sources = (qw(
     dirt/ayu/traversal/scan.cpp
     dirt/ayu/traversal/test.cpp
     dirt/ayu/traversal/to-tree.cpp
+    dirt/ayu/traversal/traversal.cpp
     dirt/control/command.cpp
     dirt/control/command-builtins.cpp
     dirt/control/input.cpp
@@ -126,6 +127,8 @@ my @sources = (qw(
     dirt/uni/assertions.cpp
     dirt/uni/errors.cpp
     dirt/uni/io.cpp
+    dirt/uni/lilac-global-override.cpp
+    dirt/uni/lilac.cpp
     dirt/uni/shell.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp

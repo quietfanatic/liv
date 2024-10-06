@@ -5,6 +5,7 @@
 #include "../dirt/ayu/traversal/from-tree.h"
 #include "../dirt/ayu/traversal/to-tree.h"
 #include "../dirt/uni/hash.h"
+#include "../dirt/uni/utf.h"
 #include "book.h"
 
 namespace liv {
