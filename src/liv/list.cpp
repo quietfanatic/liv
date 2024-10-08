@@ -1,5 +1,6 @@
 #include "list.h"
 
+#include <algorithm>
 #include "../dirt/iri/path.h"
 #include "../dirt/uni/io.h"
 #include "sort.h"
