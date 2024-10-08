@@ -42,7 +42,7 @@ Book and Page Commands
     there is always at least one visible page in the spread.
 - `[go_next <Direction>]` = If the direction matches the current spread
     direction, go forward by one spread count.  If it's the opposite, go
-    backwards.
+    backwards.  If perpendicular, does nothing.
 - `[go <Direction> <int32>]` = If the direction matches or is opposite the
     current spread direction, seek by that much in that direction.
 - `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
@@ -74,16 +74,16 @@ Layout Commands
 ---------------
 - `[spread_count <int32>]` = Set the number of pages to simultaneously view.
 - `[spread_direction <Direction>]` = Set the direction to view simultaneous
-    pages in.  Also affects the `[move]` and `[move_next]` commands.
+    pages in.  Also affects the `[go]` and `[go_next]` commands.
 - `[auto_zoom_mode <AutoZoomMode>]` = Set the auto zoom mode for the current
     book.  See res/liv/settings-default.ayu for documentation on auto zoom
     modes.
 - `[align <Vec2> <Vec2>]` = Set the small and large page alignment values,
     respectively.  See `small_align` and `large_align` in
     res/liv/settings-default.ayu for more information.  If one of the components
-    of the vectors is +nan, then that component will not be set.  This is so you
-    can change the horizontal alignment without touching the vertical alignment
-    or vice versa.
+    of the vectors is +nan, then that component will not be changed.  This is so
+    you can change the horizontal alignment without touching the vertical
+    alignment or vice versa.
 - `[zoom_multiply <float>]` = Multiply current zoom level by the given amount.
     The zoom level will be clamped according to the max_zoom and min_zoomed_size
     settings.

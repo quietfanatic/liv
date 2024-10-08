@@ -113,7 +113,7 @@ memory: {
     preload_behind: 1
      -- Start unloading pages when their cumulative texture memory exceeds this
      -- amount.  This is an estimate; actual video memory usage may vary.  The
-     -- current pages and pages in the preloading window will never be unloaded.
+     -- current pages and pages in the preloading window will not be unloaded.
     page_cache_mb: 100
      -- Reduce memory usage when the window is minimized.  Options:
      --   none = Don't do anything
