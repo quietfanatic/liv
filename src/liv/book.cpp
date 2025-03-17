@@ -2,8 +2,10 @@
 
 #include <SDL2/SDL_events.h>
 #include "../dirt/control/input.h"
+#include "mark.h"
 
 namespace liv {
+
 Book::Book (
     BookSource&& src,
     PageBlock&& bl,
@@ -13,16 +15,30 @@ Book::Book (
     block(move(bl)),
     state(move(st)),
     view(this)
+{
+     // If we were opened with one page, there's a good chance we'll be closed
+     // without looking at any other pages, so don't bother preloading any
+     // other images until we navigate once.
+    if (source.type == BookType::FileWithNeighbors) {
+        delay_preload = true;
+    }
+}
+
+ // Some really awkward double delegation to make sure settings isn't used after
+ // being moved from.
+Book::Book (
+    BookSource&& src,
+    PageBlock&& bl,
+    std::unique_ptr<Settings>&& settings
+) :
+    Book(move(src), move(bl), BookState(move(settings)))
 { }
 
 Book::Book (
     BookSource&& src,
     std::unique_ptr<Settings> settings
 ) :
-    source(move(src)),
-    block(source, *settings),
-    state(move(settings)),
-    view(this)
+    Book(move(src), PageBlock(src, *settings), move(settings))
 { }
 
 void Book::on_event (SDL_Event* e) {
@@ -105,12 +121,10 @@ void Book::set_page_offset (i32 off) {
 
 void Book::next () {
     seek(state.settings->get(&LayoutSettings::spread_count));
-    need_mark = true;
 }
 
 void Book::prev () {
     seek(-state.settings->get(&LayoutSettings::spread_count));
-    need_mark = true;
 }
 
 void Book::seek (i32 offset) {
@@ -119,6 +133,7 @@ void Book::seek (i32 offset) {
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
+    delay_preload = false;
 }
 
 void Book::go_next (Direction dir) {
@@ -144,6 +159,7 @@ void Book::remove_current_page () {
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
+    delay_preload = false;
 }
 
 void Book::sort (SortMethod method) {
@@ -164,6 +180,7 @@ void Book::sort (SortMethod method) {
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
+    delay_preload = false;
 }
 
 void Book::spread_count (i32 count) {
@@ -174,6 +191,7 @@ void Book::spread_count (i32 count) {
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
+    delay_preload = false;
 }
 
 void Book::spread_direction (Direction dir) {
@@ -274,6 +292,16 @@ void Book::drag (Vec amount) {
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
+}
+
+bool Book::idle_processing (const App& app) {
+    if (need_mark) {
+        need_mark = false;
+        save_mark(app, *this);
+        return true;
+    }
+    if (delay_preload) return false;
+    return block.idle_processing(this, *state.settings);
 }
 
 } using namespace liv;

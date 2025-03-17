@@ -91,6 +91,8 @@ void save_mark (const App& app, Book& book) {
         page_loc = page->location;
     }
 
+     // Borrow some of book's internals.  This is kinda bad but it's the easiest
+     // way to serialize them.
     auto res = ayu::SharedResource(
         get_mark_location(loc),
         ayu::AnyVal::make<Mark>(
@@ -99,10 +101,12 @@ void save_mark (const App& app, Book& book) {
     );
 
     try {
-         // Most if not all memory files will have settings/parent set to the
-         // app settings.
+         // Most if not all mark files will have settings/parent set to the app
+         // settings, so tell ayu about that reference so it doesn't need to
+         // scan.
         static auto app_settings_loc =
             ayu::location_from_iri(IRI("#", app_settings_location));
+         // TODO: find a way to not require app to be passed in
         ayu::PushLikelyRef plr (
             app.app_settings, app_settings_loc
         );
@@ -110,9 +114,10 @@ void save_mark (const App& app, Book& book) {
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(
-            "Failed to save save file ", ayu::resource_filename(res->name()),
-            ": ", e.what(), "\nSave file for this book will not be saved.\n"
+            "Failed to save mark file ", ayu::resource_filename(res->name()),
+            ": ", e.what(), "\nMark file for this book will not be saved.\n"
         ));
+         // Don't propagate exception.
     }
 
      // Give book it's insides back

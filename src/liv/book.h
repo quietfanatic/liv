@@ -24,10 +24,17 @@ struct Book {
      // other window.
     u32 last_focused = 0;
 
+     // Set to true when we navigate or change book settings
     bool need_mark = false;
+     // Set to false when we navigate.
+    bool delay_preload = false;
 
     explicit Book (
         BookSource&&, PageBlock&&, BookState&&
+    );
+     // Dumb intermediate constructor to sequence uses of settings
+    explicit Book (
+        BookSource&&, PageBlock&&, std::unique_ptr<Settings>&&
     );
     explicit Book (
         BookSource&&, std::unique_ptr<Settings>
@@ -63,6 +70,10 @@ struct Book {
     void transparency_background (Fill);
      // Not a command, but we need to figure out how to make this configurable.
     void drag (Vec amount);
+
+     // Preload pages perhaps
+     // Returns true if any processing was actually done.
+    bool idle_processing (const App&);
 };
 
 } // namespace liv

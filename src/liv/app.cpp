@@ -68,12 +68,7 @@ static bool on_idle (App& self) {
          // happens in response to user input, and the user is
          // probably only interacting with one book.  And currently
          // we only have one book per process anyway.
-        if (book->block.idle_processing(&*book, *book->state.settings)) {
-            return true;
-        }
-        if (book->need_mark) {
-            book->need_mark = false;
-            save_mark(self, *book);
+        if (book->idle_processing(self)) {
             return true;
         }
     }
