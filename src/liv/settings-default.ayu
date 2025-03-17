@@ -124,7 +124,7 @@ memory: {
  -- Key and mouse bindings.  See help/commands.md for a list of supported
  -- commands.
 mappings: [
-  ----- PAGES
+  -------- NAVIGATION
      -- Go to next page(s)
     [[repeatable z] [next]]
      -- Go to previous page(s)
@@ -154,10 +154,10 @@ mappings: [
     [[repeatable ctrl left] [go left 20]]
     [[repeatable ctrl down] [go down 20]]
     [[repeatable ctrl up] [go up 20]]
-    [[repeatable ctrl shift right] [go right 1000000000]]
-    [[repeatable ctrl shift left] [go left 1000000000]]
-    [[repeatable ctrl shift down] [go down 1000000000]]
-    [[repeatable ctrl shift up] [go up 1000000000]]
+    [[ctrl shift right] [go right 1000000000]]
+    [[ctrl shift left] [go left 1000000000]]
+    [[ctrl shift down] [go down 1000000000]]
+    [[ctrl shift up] [go up 1000000000]]
      -- Set simultaneous viewed pages
     [[1] [spread_count 1]]
     [[2] [spread_count 2]]
@@ -168,8 +168,18 @@ mappings: [
     [[alt left] [spread_direction left]]
     [[alt down] [spread_direction down]]
     [[alt up] [spread_direction up]]
+  -------- INFORMATION
      -- Print filename of current page to stdout
     [[enter] [say [[page_abs]]]]
+     -- Open current book in the desktop's preferred application.
+     --  - For folder books, opens the folder with the file manager (probably).
+     --  - For list books, opens the list file with a text editor (probably).
+     --  - For miscellaneous books (multiple command-line arguments, single
+     --    image with neighbors), does nothing (probably).
+    [[shift enter] [run [
+        [xdg-open]  -- Only works on freedesktop-compatible systems
+        [[book_iri]]
+    ]]]
      -- Show some information in a message box.  See help/formats.md
     [[i] [message_box ["Page Info"], [
         [for_visible_pages
@@ -179,12 +189,13 @@ mappings: [
             [page_est_mem] "\n\n"
         ]
     ]]]
-     -- Put filename on OS clipboard
+     -- Copy page filename to clipboard
     [[ctrl c] [clipboard_text [[page_abs]]]]
-  ----- LAYOUT
+  -------- LAYOUT
      -- Toggle fullscreen mode
     [[f] [fullscreen]]
     [[f11] [fullscreen]]
+    [[escape] [leave_fullscreen]]
      -- Set auto zoom mode
     [[0] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
@@ -208,7 +219,7 @@ mappings: [
     [[r] [reset_layout]]
      -- Reset all temporary setting overrides.
     [[ctrl r] [reset_settings]]
-  ----- DISPLAY
+  -------- DISPLAY
      -- Set interpolation mode
     [[ctrl 1] [interpolation_mode nearest]]
     [[ctrl 2] [interpolation_mode linear]]
@@ -221,9 +232,7 @@ mappings: [
      -- Set transparency color
     [[ctrl t] [transparency_background white]]
     [[ctrl shift t] [transparency_background black]]
-  ----- EXECUTION
-     -- Quitting
-    [[escape] [leave_fullscreen]]
+  -------- EXECUTION
     [[q] [quit]]
     [[ctrl q] [quit]]
     [["`"] [prompt_command]]

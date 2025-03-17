@@ -47,11 +47,16 @@ Book and Page Commands
     current spread direction, seek by that much in that direction.
 - `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
     current maximum is 16.
+- `[sort <SortMethod>]` = Change how the pages are sorted in the current book,
+    keeping the current page filename the same (possibly changing the current
+    page number).  See res/liv/settings-default.ayu for documentation on sort
+    methods.
 - `[add_to_list <String> <SortMethod>]` = Add given page to a list file at the
     given path (a file containing filenames, one per line), and then sort the
     file with the given sort method.  Duplicates will be removed unless the sort
     method is `[unsorted]`.  See res/liv/settings-default.ayu for documentation
-    on sort methods.
+    on sort methods.  If multiple pages are being viewed, this and below
+    commands only affect the lowest-numbered page being viewed.
 - `[remove_from_list <String>]` = Remove page from list file at the given path.
 - `[remove_from_book]` = Remove current page from the current book.  This only
     affects the set of pages currently being tracked by the application; it does
@@ -65,10 +70,6 @@ Book and Page Commands
     [remove_from_book]
 ]]
 ```
-- `[sort <SortMethod>]` = Change how the pages are sorted in the current book,
-    keeping the current page filename the same (possibly changing the current
-    page number).  See res/liv/settings-default.ayu for documentation on sort
-    methods.
 
 Layout Commands
 ---------------
@@ -85,8 +86,8 @@ Layout Commands
     you can change the horizontal alignment without touching the vertical
     alignment or vice versa.
 - `[zoom_multiply <float>]` = Multiply current zoom level by the given amount.
-    The zoom level will be clamped according to the max_zoom and min_zoomed_size
-    settings.
+    The zoom level will be clamped according to the `max_zoom` and
+    `min_zoomed_size` settings.
 - `[reset_layout]` = Reset all layout parameters that have been altered by
     commands to their default (specified in the settings files).
 - `[reset_settings]` = Reset all temporary settings that have been altered by

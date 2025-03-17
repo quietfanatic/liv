@@ -18,7 +18,7 @@ be printed exactly and the special tokens mean the following:
   `[page_rel_book]` = Path of current page relative to book path.
   `[page_rel_book_parent]` =
       Path of current page relative to the folder containing the book.  This
-      only differs from page_rel_book if the book is itself a folder.
+      only differs from `page_rel_book` if the book is itself a folder.
   `[page_file_size]` = Filesize of current page on disk.
   `[page_pixel_width]` = Width of current image in pixels.
   `[page_pixel_height]` = Height of current image in pixels.

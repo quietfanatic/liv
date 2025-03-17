@@ -176,6 +176,12 @@ static void go_ (Direction dir, int32 count) {
 }
 Command go (go_, "go", "Move in the given direction by the given number of pages");
 
+static void sort_ (SortMethod method) {
+    if (!current_book) return;
+    current_book->sort(method);
+}
+Command sort (sort_, "sort", "Change sort method of current book");
+
 static void add_to_list_ (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
     auto visible = current_book->visible_range();
@@ -212,12 +218,6 @@ static void move_to_folder_ (const AnyString& folder) {
     fs::rename(iri::to_fs_path(loc), new_path);
 }
 Command move_to_folder (move_to_folder_, "move_to_folder", "Move current page to a folder");
-
-static void sort_ (SortMethod method) {
-    if (!current_book) return;
-    current_book->sort(method);
-}
-Command sort (sort_, "sort", "Change sort method of current book");
 
 ///// LAYOUT COMMANDS
 
