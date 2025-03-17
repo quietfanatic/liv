@@ -19,9 +19,11 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
         encat(s, paths[0]);
         return;
     }
-     // Find longest common prefix and suffix
+     // Find longest common prefix and suffix.  While we're at it, get the
+     // length of the shortest path.
     u32 prefix = paths[0].size();
     u32 suffix = paths[0].size();
+    u32 shortest = paths[0].size();
     for (auto& path : paths.slice(1)) {
         for (u32 i = 0; i < prefix && i < path.size(); i++) {
             if (path[i] != paths[0][i]) {
@@ -37,6 +39,7 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
                 break;
             }
         }
+        if (path.size() < shortest) shortest = path.size();
     }
      // Oh but don't chop up numbers or multibyte sequences.
     Str p = paths[0];
@@ -65,11 +68,11 @@ void merge_paths (UniqueString& s, Slice<UniqueString> paths) {
             while (suffix && std::isdigit(r[suffix-1])) suffix--;
         }
     }
-    if (prefix + suffix > paths[0].size()) {
-         // If the prefix and suffix overlap, we must have been given identical
-         // paths.  I don't know what to do with this situation!  For now we'll
-         // do something safish.
-        suffix = 0;
+    if (prefix + suffix > shortest) {
+         // If the prefix and suffix overlap, shrunk the suffix.  This can
+         // happen if we have two identical paths or if the paths have differing
+         // amounts of repeated characters, e.g. "a-b" and "a--b".
+        suffix = shortest - prefix;
     }
      // Now do it
     encat(s,
@@ -415,6 +418,16 @@ static tap::TestSet tests ("liv/format", []{
         "foobarbaz0123.jpeg", "foobarbaz0124.jpeg", "foobarbaz0125.jpeg"
     });
     is(s, "foobarbaz{0123,0124,0125}.jpeg", "merge_paths");
+    s = "";
+    merge_paths(s, Slice<UniqueString>{
+        "foo1..jpg", "foo1.jpg"
+    });
+    is(s, "foo1.{.,}jpg", "merge_paths with one side empty middle");
+    s = "";
+    merge_paths(s, Slice<UniqueString>{
+        "foo1.jpg", "foo1..jpg"
+    });
+    is(s, "foo1.{,.}jpg", "merge_paths with other side empty middle");
 
     auto settings = std::make_unique<Settings>();
     settings->window.size = {120, 120};

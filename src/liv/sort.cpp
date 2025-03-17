@@ -40,7 +40,7 @@ struct Comparator {
             case C::Natural: {
                 expect(iris[a].has_path());
                 expect(iris[b].has_path());
-                return uni::natural_lessthan(
+                return uni::natural_lessthan_path(
                     iris[a].path(),
                     iris[b].path()
                 );
