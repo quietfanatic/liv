@@ -72,6 +72,9 @@ render: {
     window_background: black
      -- Background to show behind transparent parts of images.
     transparency_background: white
+     -- Color output range.  Specifies the black and white levels of each of
+     -- red, green, and blue.
+    color_range: [[0 1] [0 1] [0 1]]
 }
 
  -- Options about control and input
@@ -186,7 +189,8 @@ mappings: [
             [page_abs] "\n"
             [page_file_size] " -> "
             [page_pixel_width] x [page_pixel_height] "@" [page_pixel_bits] "bpp -> "
-            [page_est_mem] "\n\n"
+            [page_est_mem] " | "
+            [page_load_time] "\n\n"
         ]
     ]]]
      -- Copy page filename to clipboard
@@ -232,6 +236,9 @@ mappings: [
      -- Set transparency color
     [[ctrl t] [transparency_background white]]
     [[ctrl shift t] [transparency_background black]]
+     -- Dim color for night mode, in case your screen doesn't get dark enough.
+    [[n] [color_range [[0 0.5] [0 0.5] [0 0.5]]]]
+    [[shift n] [color_range [[0 1] [0 1] [0 1]]]]
   -------- EXECUTION
     [[q] [quit]]
     [[ctrl q] [quit]]

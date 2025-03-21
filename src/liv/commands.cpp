@@ -273,4 +273,9 @@ static void transparency_background_ (Fill bg) {
 }
 Command transparency_background (transparency_background_, "transparency_background", "Change fill behind transparent images");
 
+static void color_range_ (const ColorRange& range) {
+    if (current_book) current_book->color_range(range);
+}
+Command color_range (color_range_, "color_range", "Adjust the color output range with [[rl rh] [gl gh] [bl bh]]");
+
 } // namespace liv::commands

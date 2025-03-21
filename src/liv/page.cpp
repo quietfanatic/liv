@@ -3,6 +3,7 @@
 #include "../dirt/glow/program.h"
 #include "../dirt/iri/path.h"
 #include "../dirt/uni/io.h"
+#include "../dirt/uni/time.h"
 #include "../dirt/ayu/reflection/describe.h"
 #include "../dirt/ayu/resources/resource.h"
 #include "app.h"
@@ -19,6 +20,7 @@ Page::~Page () { }
 
 void Page::load () {
     plog("Loading page");
+    load_started_at = now();
     if (texture) return;
     auto filename = iri::to_fs_path(location);
     try {
@@ -35,11 +37,14 @@ void Page::load () {
         ));
         load_failed = true;
     }
+    load_finished_at = now();
     plog("loaded page");
 }
 
 void Page::unload () {
     texture = null;
+    load_started_at = GNAN;
+    load_finished_at = GNAN;
     load_failed = false;
 }
 
@@ -49,21 +54,27 @@ struct PageProgram : Program {
     int u_interpolation_mode = -1;
     int u_transparency_background = -1;
     int u_zoom = -1;
+    int u_color_mul = -1;
+    int u_color_add = -1;
 
     void Program_after_link () override {
         u_screen_rect = glGetUniformLocation(id, "u_screen_rect");
+        expect(u_screen_rect != -1);
         u_tex_rect = glGetUniformLocation(id, "u_tex_rect");
+        expect(u_tex_rect != -1);
         int u_tex = glGetUniformLocation(id, "u_tex");
+        expect(u_tex != -1);
         glUniform1i(u_tex, 0);
         u_interpolation_mode = glGetUniformLocation(id, "u_interpolation_mode");
-        u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
-        u_zoom = glGetUniformLocation(id, "u_zoom");
-        expect(u_screen_rect != -1);
-        expect(u_tex_rect != -1);
-        expect(u_tex != -1);
         expect(u_interpolation_mode != -1);
+        u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
         expect(u_transparency_background != -1);
+        u_zoom = glGetUniformLocation(id, "u_zoom");
         expect(u_zoom != -1);
+        u_color_mul = glGetUniformLocation(id, "u_color_mul");
+        expect(u_color_mul != -1);
+        u_color_add = glGetUniformLocation(id, "u_color_add");
+        expect(u_color_add != -1);
         plog("linked gl program");
     }
 };
@@ -98,6 +109,17 @@ void Page::draw (
         bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f
     );
     glUniform1f(program->u_zoom, zoom);
+    auto& color = settings.get(&RenderSettings::color_range);
+    glUniform3f(program->u_color_mul,
+        geo::size(color.ranges[0]),
+        geo::size(color.ranges[1]),
+        geo::size(color.ranges[2])
+    );
+    glUniform3f(program->u_color_add,
+        color.ranges[0].l,
+        color.ranges[1].l,
+        color.ranges[2].l
+    );
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     plog("drew page");

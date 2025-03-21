@@ -20,6 +20,8 @@ struct Page {
     IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;
+    double load_started_at = GNAN;
+    double load_finished_at = GNAN;
     bool load_failed = false;
 
     explicit Page (const IRI&);

@@ -24,6 +24,7 @@ enum class FormatCommand {
     PagePixelHeight,
     PagePixelBits,
     PageEstMem,
+    PageLoadTime,
     MergedPagesAbs,
     MergedPagesRelCwd,
     MergedPagesRelBook,

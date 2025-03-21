@@ -42,6 +42,7 @@ const Settings builtin_default_settings = {
         .interpolation_mode = InterpolationMode::SmartCubic,
         .window_background = Fill::Black,
         .transparency_background = Fill::White,
+        .color_range = ColorRange{{{0, 1}, {0, 1}, {0, 1}}},
     },
     .control = {
         .drag_speed = 1,
@@ -106,6 +107,7 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(render.interpolation_mode)
     LIV_MERGE(render.window_background)
     LIV_MERGE(render.transparency_background)
+    LIV_MERGE(render.color_range)
     LIV_MERGE(control.drag_speed)
     LIV_MERGE(files.sort)
     LIV_MERGE(files.page_extensions)
@@ -161,6 +163,10 @@ AYU_DESCRIBE(liv::InterpolationMode,
     )
 )
 
+AYU_DESCRIBE(liv::ColorRange,
+    delegate(&ColorRange::ranges)
+)
+
 AYU_DESCRIBE(liv::Direction,
     values(
         value("right", Direction::Right),
@@ -209,7 +215,8 @@ AYU_DESCRIBE(liv::RenderSettings,
     attrs(
         attr("interpolation_mode", &RenderSettings::interpolation_mode, collapse_optional),
         attr("window_background", &RenderSettings::window_background, collapse_optional),
-        attr("transparency_background", &RenderSettings::transparency_background, collapse_optional)
+        attr("transparency_background", &RenderSettings::transparency_background, collapse_optional),
+        attr("color_range", &RenderSettings::color_range, collapse_optional)
     )
 )
 

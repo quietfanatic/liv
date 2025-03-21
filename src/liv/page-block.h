@@ -33,6 +33,7 @@ struct PageBlock {
 
     void load_page (Page*);
     void unload_page (Page*);
+
      // Preload pages perhaps
      // Returns true if any processing was actually done.
     bool idle_processing (const Book*, const Settings&);

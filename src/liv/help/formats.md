@@ -25,6 +25,7 @@ be printed exactly and the special tokens mean the following:
   `[page_pixel_bits]` = Bits-per-pixel of current image (e.g. 24 for RGB8).
   `[page_est_mem]` =
       Estimated video memory usage of current page; Width * height * bits/8.
+  `[page_load_time]` = Time in seconds it took to load the page
   `[merged_pages_abs]` =
       All page paths in absolute form merged together like
       /home/foo/bar{01,02}.png

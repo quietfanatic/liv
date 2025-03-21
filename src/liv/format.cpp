@@ -206,6 +206,19 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             encat(s, (book->block.get(page)->estimated_memory + 1023) / 1024, 'K');
             break;
         }
+        case FormatCommand::PageLoadTime: {
+            if (page < 0) break;
+            auto p = book->block.get(page);
+            double time = p->load_finished_at - p->load_started_at;
+            if (!defined(time)) {
+                encat(s, "(unavailable)");
+            }
+            else {
+                expect(time >= 0 && time <= 1000000);
+                encat(s, round(time * 1000) / 1000.0, 's');
+            }
+            break;
+        }
         case FormatCommand::MergedPagesAbs: {
             auto visible = book->visible_range();
             if (!size(visible)) break;
@@ -374,6 +387,7 @@ AYU_DESCRIBE(liv::FormatCommand,
         value("page_pixel_height", FormatCommand::PagePixelHeight),
         value("page_pixel_bits", FormatCommand::PagePixelBits),
         value("page_est_mem", FormatCommand::PageEstMem),
+        value("page_load_time", FormatCommand::PageLoadTime),
         value("merged_pages_abs", FormatCommand::MergedPagesAbs),
         value("merged_pages_rel_cwd", FormatCommand::MergedPagesRelCwd),
         value("merged_pages_rel_book", FormatCommand::MergedPagesRelBook),

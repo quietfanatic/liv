@@ -3,6 +3,7 @@
 #include <optional>
 #include "../dirt/control/command.h"
 #include "../dirt/control/input.h"
+#include "../dirt/geo/range.h"
 #include "../dirt/geo/vec.h"
 #include "../dirt/glow/colors.h"
 #include "../dirt/iri/iri.h"
@@ -51,6 +52,10 @@ enum class InterpolationMode {
     SmartCubic
 };
 
+struct ColorRange {
+    geo::Range ranges [3];
+};
+
 enum class TrimMode {
     None,
     PageCache
@@ -89,6 +94,7 @@ struct RenderSettings {
     std::optional<InterpolationMode> interpolation_mode;
     std::optional<Fill> window_background;
     std::optional<Fill> transparency_background;
+    std::optional<ColorRange> color_range;
 };
 struct ControlSettings {
     std::optional<float> drag_speed;

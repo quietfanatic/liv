@@ -29,6 +29,8 @@ uniform sampler2DRect u_tex;
 uniform int u_interpolation_mode;
 uniform vec4 u_transparency_background;
 uniform float u_zoom;
+uniform vec3 u_color_mul;
+uniform vec3 u_color_add;
 in vec2 v_tex_coords;
 out vec4 color;
 
@@ -37,6 +39,7 @@ const int LINEAR = 1;
 const int SMOOTHED = 2;
 const int CUBIC = 3;
 const int SMART_CUBIC = 4;
+const int EXTRA_SMOOTH = 5;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -52,7 +55,7 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 }
 
  // t   | wa  | wb  | wc  | wd
- // ----+-----+-----+-----+----
+ // ----+-----+-----+-----+-----
  // 0   | 1/4 | 1/2 | 1/4 | 0
  // 0.5 | 1/8 | 3/8 | 3/8 | 1/8
  // 1   | 0   | 1/4 | 1/2 | 1/4
@@ -150,6 +153,9 @@ void main () {
     }
      // Apply transparency background with alpha blending
     color = color * color.a + u_transparency_background * (1.0 - color.a);
+     // Apply color range setting
+    color.rgb = color.rgb * u_color_mul + u_color_add;
+    
 }"
 
 [ayu::Document {

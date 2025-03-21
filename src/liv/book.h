@@ -68,6 +68,7 @@ struct Book {
     void interpolation_mode (InterpolationMode);
     void window_background (Fill);
     void transparency_background (Fill);
+    void color_range (const ColorRange&);
      // Not a command, but we need to figure out how to make this configurable.
     void drag (Vec amount);
 

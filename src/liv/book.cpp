@@ -280,6 +280,12 @@ void Book::transparency_background (Fill bg) {
     need_mark = true;
 }
 
+void Book::color_range (const ColorRange& range) {
+    state.settings->render.color_range = range;
+    view.need_draw = true;
+    need_mark = true;
+}
+
  // Not a command, but we need to figure out how to make this configurable.
 void Book::drag (Vec amount) {
     if (!state.manual_offset) {
