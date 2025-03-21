@@ -89,6 +89,13 @@ void Book::on_event (SDL_Event* e) {
             }
             break;
         }
+        case SDL_MOUSEWHEEL: {
+            auto amount = Vec(e->wheel.preciseX, e->wheel.preciseY);
+            if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) amount = -amount;
+            amount *= state.settings->get(&ControlSettings::scroll_speed);
+            drag(amount);
+            break;
+        }
          // TODO: Support wheel
         default: break;
     }

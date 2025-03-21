@@ -46,6 +46,7 @@ const Settings builtin_default_settings = {
     },
     .control = {
         .drag_speed = 1,
+        .scroll_speed = -20,
     },
     .files = {
         .sort = SortMethod{
@@ -222,7 +223,8 @@ AYU_DESCRIBE(liv::RenderSettings,
 
 AYU_DESCRIBE(liv::ControlSettings,
     attrs(
-        attr("drag_speed", &ControlSettings::drag_speed, collapse_optional)
+        attr("drag_speed", &ControlSettings::drag_speed, collapse_optional),
+        attr("scroll_speed", &ControlSettings::scroll_speed, collapse_optional)
     )
 )
 

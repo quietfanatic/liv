@@ -49,7 +49,10 @@ static void on_event (App& self, SDL_Event* e) {
             current_book = book_with_window_id(self, e->motion.windowID);
             break;
         }
-         // TODO: Support wheel
+        case SDL_MOUSEWHEEL: {
+            current_book = book_with_window_id(self, e->wheel.windowID);
+            break;
+        }
         default: break;
     }
     if (current_book) current_book->on_event(e);

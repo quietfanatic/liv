@@ -81,6 +81,11 @@ render: {
 control: {
      -- When dragging the page with the mouse, multiply the speed by this.
     drag_speed: 1
+     -- When scrolling with a mouse wheel or touchpad, multiply the speed
+     -- by this.  SDL's scrolling events seem to ignore the system's settings.
+     -- In addition, on some platforms we only get scrolling amounts of 1 and -1
+     -- even on precision hardware, so scrolling may be choppy.
+    scroll_speed: 20
 }
 
  -- Options dealing with files and filenames

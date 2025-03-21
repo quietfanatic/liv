@@ -98,6 +98,7 @@ struct RenderSettings {
 };
 struct ControlSettings {
     std::optional<float> drag_speed;
+    std::optional<float> scroll_speed;
 };
 struct FilesSettings {
     std::optional<SortMethod> sort;
