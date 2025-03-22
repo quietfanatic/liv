@@ -79,15 +79,16 @@ Layout Commands
 - `[auto_zoom_mode <AutoZoomMode>]` = Set the auto zoom mode for the current
     book.  See res/liv/settings-default.ayu for documentation on auto zoom
     modes.
+- `[zoom_multiply <float>]` = Multiply current zoom level by the given amount.
+    The zoom level will be clamped according to the `max_zoom` and
+    `min_zoomed_size` settings.
 - `[align <Vec2> <Vec2>]` = Set the small and large page alignment values,
     respectively.  See `small_align` and `large_align` in
     res/liv/settings-default.ayu for more information.  If one of the components
     of the vectors is +nan, then that component will not be changed.  This is so
     you can change the horizontal alignment without touching the vertical
     alignment or vice versa.
-- `[zoom_multiply <float>]` = Multiply current zoom level by the given amount.
-    The zoom level will be clamped according to the `max_zoom` and
-    `min_zoomed_size` settings.
+- `[orientation <Direction>]` = Change viewing orientation
 - `[reset_layout]` = Reset all layout parameters that have been altered by
     commands to their default (specified in the settings files).
 - `[reset_settings]` = Reset all temporary settings that have been altered by
@@ -104,5 +105,5 @@ Render Commands
     transparent images.
 - `[color_range [[<float> <float>] [<float> <float>] [<float> <float>]] = Set
     the output color range.  As an example, use [[0 0.5] [0 0.5] [0 0.5]] to
-    reduce the brightness to half.
+    display at half brightness, or [[0 1] [0 1] [0 1]] to reset to default.
 

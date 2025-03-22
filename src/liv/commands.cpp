@@ -236,20 +236,25 @@ static void auto_zoom_mode_ (AutoZoomMode mode) {
 }
 Command auto_zoom_mode (auto_zoom_mode_, "auto_zoom_mode", "Set auto zoom mode: fit or original");
 
-static void align_ (Vec small, Vec large) {
-    if (current_book) current_book->align(small, large);
-}
-Command align (align_, "align", "Set page alignment (small_align and large_align)");
-
 static void zoom_multiply_ (float factor) {
     if (current_book) current_book->zoom_multiply(factor);
 }
 Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
 
+static void align_ (Vec small, Vec large) {
+    if (current_book) current_book->align(small, large);
+}
+Command align (align_, "align", "Set page alignment (small_align and large_align)");
+
+static void orientation_ (Direction o) {
+    if (current_book) current_book->orientation(o);
+}
+Command orientation (orientation_, "orientation", "Set page orientation");
+
 static void reset_layout_ () {
     if (current_book) current_book->reset_layout();
 }
-Command reset_layout (reset_layout_, "reset_layout", "Reset layout parameters to default");
+Command reset_layout (reset_layout_, "reset_layout", "Reset most layout parameters to default");
 
 static void reset_settings_ () {
     if (current_book) current_book->reset_settings();

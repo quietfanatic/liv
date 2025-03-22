@@ -52,6 +52,9 @@ layout: {
      -- the other dimension, it will use small_align for the smaller dimension
      -- and large_align for the larger.
     large_align: [0.5 0.5]
+     -- Rotate the spread so that the top of the pages is pointing in this
+     -- direction.  Options: up down left right.
+    orientation: up
 }
 
  -- Settings for how things are displayed
@@ -210,6 +213,10 @@ mappings: [
     [[h] [auto_zoom_mode fit_width]]
     [[v] [auto_zoom_mode fit_height]]
     [[o] [auto_zoom_mode original]]
+     -- Zoom in by √2
+    [["="] [zoom_multiply 1.4142135623731]]
+     -- Zoom out by √2
+    [["-"] [zoom_multiply 0.707106781186547]]
      -- Align page to top of window
     [[shift w] [align [+nan 0] [+nan 0]]]
      -- Align page to left of window
@@ -220,10 +227,11 @@ mappings: [
     [[shift d] [align [1 +nan] [1 +nan]]]
      -- Center page within window
     [[shift c] [align [0.5 0.5] [0.5 0.5]]]
-     -- Zoom in by √2
-    [["="] [zoom_multiply 1.4142135623731]]
-     -- Zoom out by √2
-    [["-"] [zoom_multiply 0.707106781186547]]
+     -- Change viewing orientation
+    [[alt shift up] [orientation up]]
+    [[alt shift left] [orientation left]]
+    [[alt shift down] [orientation down]]
+    [[alt shift right] [orientation right]]
      -- Reset layout to default
     [[r] [reset_layout]]
      -- Reset all temporary setting overrides.

@@ -30,6 +30,8 @@ struct Layout {
     float zoom;
      // Offset is applied after zoom
     Vec offset;
+     // Window size, but swapped if orientation is Left or Right
+    Vec size;
     Layout (
         const BookState&, const Spread&, Vec window_size
     );

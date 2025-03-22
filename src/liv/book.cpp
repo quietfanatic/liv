@@ -210,15 +210,9 @@ void Book::spread_direction (Direction dir) {
 }
 
 void Book::auto_zoom_mode (AutoZoomMode mode) {
-    state.set_auto_zoom_mode(mode);
-    view.layout = {};
-    view.need_draw = true;
-    need_mark = true;
-}
-
-void Book::align (Vec small, Vec large) {
-    state.set_align(small, large);
-    view.spread = {};
+    state.settings->layout.auto_zoom_mode = {mode};
+    state.manual_zoom = {};
+    state.manual_offset = {};
     view.layout = {};
     view.need_draw = true;
     need_mark = true;
@@ -244,8 +238,37 @@ void Book::zoom_multiply (float factor) {
     need_mark = true;
 }
 
+void Book::align (Vec small, Vec large) {
+    auto small_align = state.settings->get(&LayoutSettings::small_align);
+    auto large_align = state.settings->get(&LayoutSettings::large_align);
+    if (defined(small.x)) small_align.x = small.x;
+    if (defined(small.y)) small_align.y = small.y;
+    if (defined(large.x)) large_align.x = large.x;
+    if (defined(large.y)) large_align.y = large.y;
+    state.settings->layout.small_align = {small_align};
+    state.settings->layout.large_align = {large_align};
+    state.manual_offset = {};
+    view.spread = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_mark = true;
+}
+
+void Book::orientation (Direction o) {
+    state.settings->layout.orientation = o;
+    state.manual_zoom = {};
+    state.manual_offset = {};
+    view.layout = {};
+    view.need_draw = true;
+    need_mark = true;
+}
+
 void Book::reset_layout () {
-    state.reset_layout();
+    auto sc = state.settings->layout.spread_count;
+    state.settings->layout = {};
+    state.settings->layout.spread_count = sc;
+    state.manual_zoom = {};
+    state.manual_offset = {};
     view.spread = {};
     view.layout = {};
     view.need_draw = true;

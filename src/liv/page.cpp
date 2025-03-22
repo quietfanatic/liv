@@ -49,6 +49,7 @@ void Page::unload () {
 }
 
 struct PageProgram : Program {
+    int u_orientation = -1;
     int u_screen_rect = -1;
     int u_tex_rect = -1;
     int u_interpolation_mode = -1;
@@ -58,6 +59,8 @@ struct PageProgram : Program {
     int u_color_add = -1;
 
     void Program_after_link () override {
+        u_orientation = glGetUniformLocation(id, "u_orientation");
+        expect(u_orientation != -1);
         u_screen_rect = glGetUniformLocation(id, "u_screen_rect");
         expect(u_screen_rect != -1);
         u_tex_rect = glGetUniformLocation(id, "u_tex_rect");
@@ -94,6 +97,10 @@ void Page::draw (
     static PageProgram* program = ayu::ResourceRef(program_location)["program"][1];
     program->use();
 
+     // Vertex parameters
+    auto ori = settings.get(&LayoutSettings::orientation);
+    glUniform1i(program->u_orientation, i32(ori));
+
     glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
     if (defined(tex_rect)) {
         glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
@@ -102,8 +109,10 @@ void Page::draw (
         auto whole_page = Rect(Vec{0, 0}, size);
         glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
     }
+
+     // Fragment parameters
     auto interp = settings.get(&RenderSettings::interpolation_mode);
-    glUniform1i(program->u_interpolation_mode, u8(interp));
+    glUniform1i(program->u_interpolation_mode, i32(interp));
     auto bg = settings.get(&RenderSettings::transparency_background);
     glUniform4f(program->u_transparency_background,
         bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f
@@ -120,6 +129,7 @@ void Page::draw (
         color.ranges[1].l,
         color.ranges[2].l
     );
+     // Do it
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     plog("drew page");

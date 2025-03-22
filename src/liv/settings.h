@@ -26,6 +26,7 @@ constexpr Fill Fill::Black = {0, 0, 0, 255};
 constexpr Fill Fill::White = {255, 255, 255, 255};
 constexpr Fill Fill::Transparent = {0, 0, 0, 0};
 
+ // TODO: reorder
 enum class Direction {
     Right,
     Left,
@@ -89,6 +90,7 @@ struct LayoutSettings {
     std::optional<bool> reset_zoom_on_page_turn;
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;
+    std::optional<Direction> orientation;
 };
 struct RenderSettings {
     std::optional<InterpolationMode> interpolation_mode;

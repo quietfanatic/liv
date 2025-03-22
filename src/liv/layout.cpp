@@ -97,6 +97,12 @@ Layout::Layout (
     const Spread& spread,
     Vec window_size
 ) {
+    switch (state.settings->get(&LayoutSettings::orientation)) {
+        case Direction::Up:
+        case Direction::Down: size = window_size; break;
+        case Direction::Left:
+        case Direction::Right: size = {window_size.y, window_size.x}; break;
+    }
     if (state.manual_offset) {
         expect(defined(*state.manual_offset));
         offset = *state.manual_offset;
@@ -115,22 +121,22 @@ Layout::Layout (
         else switch (state.settings->get(&LayoutSettings::auto_zoom_mode)) {
             case AutoZoomMode::Fit: {
                  // slope = 1 / aspect ratio
-                if (slope(spread.size) > slope(window_size)) {
-                    zoom = window_size.y / spread.size.y;
+                if (slope(spread.size) > slope(size)) {
+                    zoom = size.y / spread.size.y;
                 }
                 else {
-                    zoom = window_size.x / spread.size.x;
+                    zoom = size.x / spread.size.x;
                 }
                 zoom = spread.clamp_zoom(*state.settings, zoom);
                 break;
             }
             case AutoZoomMode::FitWidth: {
-                zoom = window_size.x / spread.size.x;
+                zoom = size.x / spread.size.x;
                 zoom = spread.clamp_zoom(*state.settings, zoom);
                 break;
             }
             case AutoZoomMode::FitHeight: {
-                zoom = window_size.y / spread.size.y;
+                zoom = size.y / spread.size.y;
                 zoom = spread.clamp_zoom(*state.settings, zoom);
                 break;
             }
@@ -142,7 +148,7 @@ Layout::Layout (
          // Auto align
         Vec small_align = state.settings->get(&LayoutSettings::small_align);
         Vec large_align = state.settings->get(&LayoutSettings::large_align);
-        Vec range = window_size - (spread.size * zoom); // Can be negative
+        Vec range = size - (spread.size * zoom); // Can be negative
         Vec align = {
             range.x > 0 ? small_align.x : large_align.x,
             range.y > 0 ? small_align.y : large_align.y

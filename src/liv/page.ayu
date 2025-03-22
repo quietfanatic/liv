@@ -1,10 +1,19 @@
 &vertex_source:
 "#version 140
 
+ // Declaring and transmitting vertex attributes is annoying, so instead we're
+ // doing everything with uniforms and the gl_VertexID.
+uniform int u_orientation;
 uniform float u_screen_rect [4];
 uniform float u_tex_rect [4];
 uniform sampler2DRect u_tex;
 out vec2 v_tex_coords;
+
+ // TODO: reorder
+const int RIGHT = 0;
+const int LEFT = 1;
+const int DOWN = 2;
+const int UP = 3;
 
 const ivec2 corners [4] = ivec2[4](
     ivec2(0, 1),
@@ -14,9 +23,22 @@ const ivec2 corners [4] = ivec2[4](
 );
 
 void main () {
+     // Here we flip from y-down to y-up coordinates
     gl_Position.x = u_screen_rect[corners[gl_VertexID].x];
-     // Flip vertically
     gl_Position.y = -u_screen_rect[corners[gl_VertexID].y];
+     // Rotating is easy when [0 0] is in the center of the screen
+    switch (u_orientation) {
+        case UP: break;
+        case DOWN:
+            gl_Position.xy = -gl_Position.xy;
+            break;
+        case LEFT:
+            gl_Position.xy = vec2(-gl_Position.y, gl_Position.x);
+            break;
+        case RIGHT:
+            gl_Position.xy = vec2(gl_Position.y, -gl_Position.x);
+            break;
+    }
     gl_Position.zw = vec2(0, 1);
     v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
     v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];

@@ -37,6 +37,7 @@ const Settings builtin_default_settings = {
         .reset_zoom_on_page_turn = true,
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
+        .orientation = Direction::Up,
     },
     .render = {
         .interpolation_mode = InterpolationMode::SmartCubic,
@@ -105,11 +106,13 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(layout.reset_zoom_on_page_turn)
     LIV_MERGE(layout.small_align)
     LIV_MERGE(layout.large_align)
+    LIV_MERGE(layout.orientation)
     LIV_MERGE(render.interpolation_mode)
     LIV_MERGE(render.window_background)
     LIV_MERGE(render.transparency_background)
     LIV_MERGE(render.color_range)
     LIV_MERGE(control.drag_speed)
+    LIV_MERGE(control.scroll_speed)
     LIV_MERGE(files.sort)
     LIV_MERGE(files.page_extensions)
     LIV_MERGE(memory.preload_ahead)
@@ -209,7 +212,8 @@ AYU_DESCRIBE(liv::LayoutSettings,
         attr("max_zoom", &LayoutSettings::max_zoom, collapse_optional),
         attr("min_zoomed_size", &LayoutSettings::min_zoomed_size, collapse_optional),
         attr("small_align", &LayoutSettings::small_align, collapse_optional),
-        attr("large_align", &LayoutSettings::large_align, collapse_optional)
+        attr("large_align", &LayoutSettings::large_align, collapse_optional),
+        attr("orientation", &LayoutSettings::orientation, collapse_optional)
     )
 )
 AYU_DESCRIBE(liv::RenderSettings,

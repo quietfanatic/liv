@@ -63,7 +63,6 @@ bool BookView::draw_if_needed () {
     );
     glClear(GL_COLOR_BUFFER_BIT);
      // Draw spread
-    Vec window_size = get_window_size();
     for (auto& spread_page : spread.pages) {
         spread_page.page->last_viewed_at = uni::now();
         Rect spread_rect = Rect(
@@ -72,7 +71,7 @@ bool BookView::draw_if_needed () {
         );
         Rect window_rect = spread_rect * layout.zoom + layout.offset;
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
-        Rect screen_rect = window_rect / window_size * float(2) - Vec(1, 1);
+        Rect screen_rect = window_rect / layout.size * float(2) - Vec(1, 1);
          // Draw
         spread_page.page->draw(*book->state.settings, layout.zoom, screen_rect);
     }
@@ -125,6 +124,7 @@ IVec BookView::get_window_size () const {
 }
 
 void BookView::window_size_changed (IVec size) {
+     // TODO: write window.size setting
     require(size.x > 0 && size.y > 0);
     glViewport(0, 0, size.x, size.y);
     layout = {};

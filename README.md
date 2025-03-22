@@ -29,18 +29,18 @@ with `--help`.
 
 ### FEATURES AND ROADMAP
 
-- [x] Dragging and zooming
-- [x] Nice filtering
-- [x] View two pages side-by-side
-- [x] Folder support
-- [x] List support
-- [x] Sorting
-- [ ] Zoom around cursor
-- [ ] Customizable mouse controls
-- [ ] Support avif images (maybe switch to SAIL)
-- [ ] Archive file support
-- [ ] Official Windows (mingw) support
-- [ ] Off-thread image loading
-- [ ] Text rendering
-- [ ] Simple animation
+[x] Dragging and zooming
+[x] Nice filtering
+[x] View two pages side-by-side
+[x] Folder support
+[x] List support
+[x] Sorting
+[ ] Zoom around cursor
+[ ] Customizable mouse controls
+[ ] Support avif images (maybe switch to SAIL)
+[ ] Archive file support
+[ ] Official Windows (mingw) support
+[ ] Off-thread image loading
+[ ] Text rendering
+[ ] Simple animation
 
