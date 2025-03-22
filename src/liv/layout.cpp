@@ -104,11 +104,11 @@ Layout::Layout (
         case Direction::Right: size = {window_size.y, window_size.x}; break;
     }
     if (state.manual_offset) {
-        expect(defined(*state.manual_offset));
-        offset = *state.manual_offset;
         expect(state.manual_zoom);
         expect(defined(*state.manual_zoom));
         zoom = *state.manual_zoom;
+        expect(defined(*state.manual_offset));
+        offset = *state.manual_offset;
     }
     else {
         if (state.manual_zoom) {
@@ -154,6 +154,35 @@ Layout::Layout (
             range.y > 0 ? small_align.y : large_align.y
         };
         offset = range * align;
+    }
+}
+
+void Layout::scroll (
+    const Settings& settings, const Spread& spread, Vec amount
+) {
+     // Clamp to valid scroll area
+    float scroll_margin = settings.get(&LayoutSettings::scroll_margin);
+    Vec small_align = settings.get(&LayoutSettings::small_align);
+     // Convert margin to pixels
+    Vec margin_lt = size * scroll_margin;
+    Vec margin_rb = size * (1 - scroll_margin);
+     // Left side is constrained by right side of spread
+    Vec valid_lt = margin_rb - spread.size * zoom;
+     // Right side is constrained by left margin
+    Vec valid_rb = margin_lt;
+     // If the valid region is negative, the image is smaller than the margin
+     // area, so just center it.
+    if (valid_lt.x <= valid_rb.x) {
+        offset.x = clamp(offset.x + amount.x, valid_lt.x, valid_rb.x);
+    }
+    else {
+        offset.x = valid_lt.x * small_align.x + valid_rb.x * (1 - small_align.x);
+    }
+    if (valid_lt.y <= valid_rb.y) {
+        offset.y = clamp(offset.y + amount.y, valid_lt.y, valid_rb.y);
+    }
+    else {
+        offset.y = valid_lt.y * small_align.y + valid_rb.y * (1 - small_align.y);
     }
 }
 

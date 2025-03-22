@@ -82,7 +82,7 @@ void Book::on_event (SDL_Event* e) {
         }
         case SDL_MOUSEMOTION: {
             if (e->motion.state & SDL_BUTTON_RMASK) {
-                drag(geo::Vec(
+                scroll(geo::Vec(
                     e->motion.xrel,
                     e->motion.yrel
                 ) * state.settings->get(&ControlSettings::drag_speed));
@@ -93,7 +93,7 @@ void Book::on_event (SDL_Event* e) {
             auto amount = Vec(e->wheel.preciseX, e->wheel.preciseY);
             if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) amount = -amount;
             amount *= state.settings->get(&ControlSettings::scroll_speed);
-            drag(amount);
+            scroll(amount);
             break;
         }
          // TODO: Support wheel
@@ -316,16 +316,12 @@ void Book::color_range (const ColorRange& range) {
     need_mark = true;
 }
 
- // Not a command, but we need to figure out how to make this configurable.
-void Book::drag (Vec amount) {
-    if (!state.manual_offset) {
-         // Transition from automatic to manual
-        auto& layout = view.get_layout();
-        state.manual_offset = {layout.offset};
-        state.manual_zoom = {layout.zoom};
-    }
-    *state.manual_offset += amount;
-    view.layout = {};
+void Book::scroll (Vec amount) {
+    view.get_layout();
+    view.layout->scroll(*state.settings, view.get_spread(), amount);
+     // Transition from automatic to manual if necessary
+    state.manual_zoom = {view.layout->zoom};
+    state.manual_offset = {view.layout->offset};
     view.need_draw = true;
     need_mark = true;
 }

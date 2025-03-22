@@ -71,7 +71,7 @@ struct Book {
     void transparency_background (Fill);
     void color_range (const ColorRange&);
      // Not a command, but we need to figure out how to make this configurable.
-    void drag (Vec amount);
+    void scroll (Vec amount);
 
      // Preload pages perhaps
      // Returns true if any processing was actually done.

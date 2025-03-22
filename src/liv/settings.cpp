@@ -37,6 +37,7 @@ const Settings builtin_default_settings = {
         .reset_zoom_on_page_turn = true,
         .small_align = geo::Vec{0.5, 0.5},
         .large_align = geo::Vec{0.5, 0.5},
+        .scroll_margin = 0,
         .orientation = Direction::Up,
     },
     .render = {
@@ -104,6 +105,7 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(layout.max_zoom)
     LIV_MERGE(layout.min_zoomed_size)
     LIV_MERGE(layout.reset_zoom_on_page_turn)
+    LIV_MERGE(layout.scroll_margin)
     LIV_MERGE(layout.small_align)
     LIV_MERGE(layout.large_align)
     LIV_MERGE(layout.orientation)
@@ -213,6 +215,7 @@ AYU_DESCRIBE(liv::LayoutSettings,
         attr("min_zoomed_size", &LayoutSettings::min_zoomed_size, collapse_optional),
         attr("small_align", &LayoutSettings::small_align, collapse_optional),
         attr("large_align", &LayoutSettings::large_align, collapse_optional),
+        attr("scroll_margin", &LayoutSettings::scroll_margin, collapse_optional),
         attr("orientation", &LayoutSettings::orientation, collapse_optional)
     )
 )

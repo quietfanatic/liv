@@ -90,6 +90,7 @@ struct LayoutSettings {
     std::optional<bool> reset_zoom_on_page_turn;
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;
+    std::optional<float> scroll_margin;
     std::optional<Direction> orientation;
 };
 struct RenderSettings {

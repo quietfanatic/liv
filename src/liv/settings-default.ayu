@@ -52,6 +52,9 @@ layout: {
      -- the other dimension, it will use small_align for the smaller dimension
      -- and large_align for the larger.
     large_align: [0.5 0.5]
+     -- Don't allow dragging/scrolling the view farther than this distance from
+     -- the window border *proportional to the window dimensions*.
+    scroll_margin: 0
      -- Rotate the spread so that the top of the pages is pointing in this
      -- direction.  Options: up down left right.
     orientation: up

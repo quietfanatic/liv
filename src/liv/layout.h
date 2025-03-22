@@ -28,13 +28,17 @@ struct Spread {
 struct Layout {
      // Zoom is applied before offset
     float zoom;
-     // Offset is applied after zoom
+     // Offset is in window coordinates, not spread coordinates
     Vec offset;
      // Window size, but swapped if orientation is Left or Right
     Vec size;
     Layout (
         const BookState&, const Spread&, Vec window_size
     );
+
+     // Changes offset, clamped according to scroll_margin setting.  This does
+     // not require recalculating the entire layout.
+    void scroll (const Settings&, const Spread&, Vec);
 };
 
 } // namespace liv
