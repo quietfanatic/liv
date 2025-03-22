@@ -45,19 +45,19 @@ my %configs = (
     rel => {
         opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS -s), @O3_opts],
     },
-    opt32 => {
-        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @O3_opts],
-    },
-    san => {
-        opts => [qw(-ggdb), @O0_opts, '-fsanitize=address,undefined', '-fno-sanitize=enum'],
-    },
-    pro => {
-        opts => [qw(-Og -DNDEBUG -flto -pg)],
-    },
-    ana => {
-        opts => [qw(-ggdb -fanalyzer)],
-        fork => 0,  # Absolutely thrashes RAM
-    },
+#    opt32 => {
+#        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @O3_opts],
+#    },
+#    san => {
+#        opts => [qw(-ggdb), @O0_opts, '-fsanitize=address,undefined', '-fno-sanitize=enum'],
+#    },
+#    pro => {
+#        opts => [qw(-Og -DNDEBUG -flto -pg)],
+#    },
+#    ana => {
+#        opts => [qw(-ggdb -fanalyzer)],
+#        fork => 0,  # Absolutely thrashes RAM
+#    },
 );
 
 ##### SOURCES
@@ -157,17 +157,6 @@ my @test_resources = (qw(
     dirt/glow/texture-program.ayu
 ));
 
-##### MISC
-
-sub ensure_path {
-    if ($_[0] =~ /^(.*)\//) {
-        -d $1 or do {
-            require File::Path;
-            File::Path::make_path($1);
-        }
-    }
-}
-
 ##### RULES
 
 for my $cfg (keys %configs) {
@@ -186,33 +175,30 @@ for my $cfg (keys %configs) {
         my ($mod, $ext) = ($1, $2);
         my $compiler = $compilers{$ext} // die "Unrecognized source file extension in $src";
 
-        rule "tmp/$cfg/$mod.o", "src/$src", sub {
-            ensure_path($_[0][0]);
+        step "tmp/$cfg/$mod.o", "src/$src", sub {
             run @$compiler, '-c', @{$_[1]},
                 @opts,
                 '-o', $_[0][0];
-        }, {fork => $configs{$cfg}{fork} // 1};
-        rule "tmp/$cfg/$mod.s", "src/$mod.cpp", sub {
-            ensure_path($_[0][0]);
+        }, {fork => $configs{$cfg}{fork} // 1, mkdir => 1};
+        step "tmp/$cfg/$mod.s", "src/$mod.cpp", sub {
             run @$compiler, '-S', '-masm=intel', @{$_[1]},
                 grep($_ ne '-ggdb' && $_ !~ /^-flto/, @opts),
                 '-o', $_[0][0];
-        }, {fork => $configs{$cfg}{fork} // 1};
+        }, {fork => $configs{$cfg}{fork} // 1, mkdir => 1};
 
         push @objects, "tmp/$cfg/$mod.o";
     }
 
      # Link program
     my $out_program = "out/$cfg/$program";
-    rule $out_program, [@objects], sub {
-        ensure_path $out_program;
+    step $out_program, [@objects], sub {
         run @linker, @objects,
             @link_opts, @{$configs{$cfg}{opts} // []},
             '-o', $out_program;
         if ($cfg eq 'rel') {
             print "Final program size: ", -s $out_program, "\n";
         }
-    }, {fork => 1};
+    }, {fork => 1, mkdir => 1};
 
      # Copy resources
     my $testing_disabled = grep $_ eq '-DTAP_DISABLE_TESTS', @{$configs{$cfg}{opts}};
@@ -233,10 +219,9 @@ for my $cfg (keys %configs) {
                 $to =~ s[^src/][out/$cfg/res/];
             }
             push @out_resources, $to;
-            rule $to, $from, sub {
-                ensure_path($to);
+            step $to, $from, sub {
                 copy($from, $to) or die "Copy failed: $!";
-            }, {fork => 1};
+            }, {fork => 1, mkdir => 1};
         }
     }
 
@@ -247,15 +232,16 @@ for my $cfg (keys %configs) {
     };
 }
 
-phony 'debug', 'out/deb/build';
-phony 'release', 'out/rel/build';
-phony 'test', 'out/deb/test';
-defaults 'test';
-
 phony 'clean', [], sub {
     require File::Path;
     File::Path::remove_tree('tmp');
     File::Path::remove_tree('out');
 };
+
+suggest 'out/deb/test', 'Build in debug mode and run tests';
+suggest 'out/dog/build', 'Build in dogfood mode (optimized but with debug assertions)';
+suggest 'out/rel/build', 'Build in release mode';
+suggest 'clean', 'Delete all temporary files and output products';
+defaults 'out/deb/test';
 
 make;
