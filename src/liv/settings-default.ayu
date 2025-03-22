@@ -85,13 +85,16 @@ render: {
 
  -- Options about control and input
 control: {
+     -- When scrolling with a mouse wheel or touchpad, multiply the speed by
+     -- this.  On some platforms (X) we only get scrolling amounts of 1 and -1
+     -- even on precision hardware, so scrolling may be choppy.  Determining the
+     -- system's scroll direction can be difficult, so you might need to negate
+     -- one of the dimensions to reverse the scrolling direction.
+    scroll_speed: [20 20]
      -- When dragging the page with the mouse, multiply the speed by this.
-    drag_speed: 1
-     -- When scrolling with a mouse wheel or touchpad, multiply the speed
-     -- by this.  SDL's scrolling events seem to ignore the system's settings.
-     -- In addition, on some platforms we only get scrolling amounts of 1 and -1
-     -- even on precision hardware, so scrolling may be choppy.
-    scroll_speed: 20
+     -- Dragging may be smoother than scrolling.  [1 1] matches the cursor
+     -- position exactly.
+    drag_speed: [1 1]
 }
 
  -- Options dealing with files and filenames

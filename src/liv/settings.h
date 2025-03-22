@@ -100,8 +100,8 @@ struct RenderSettings {
     std::optional<ColorRange> color_range;
 };
 struct ControlSettings {
-    std::optional<float> drag_speed;
-    std::optional<float> scroll_speed;
+    std::optional<Vec> scroll_speed;
+    std::optional<Vec> drag_speed;
 };
 struct FilesSettings {
     std::optional<SortMethod> sort;

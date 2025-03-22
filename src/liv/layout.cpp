@@ -176,13 +176,13 @@ void Layout::scroll (
         offset.x = clamp(offset.x + amount.x, valid_lt.x, valid_rb.x);
     }
     else {
-        offset.x = valid_lt.x * small_align.x + valid_rb.x * (1 - small_align.x);
+        offset.x = lerp(valid_lt.x, valid_rb.x, small_align.x);
     }
     if (valid_lt.y <= valid_rb.y) {
         offset.y = clamp(offset.y + amount.y, valid_lt.y, valid_rb.y);
     }
     else {
-        offset.y = valid_lt.y * small_align.y + valid_rb.y * (1 - small_align.y);
+        offset.y = lerp(valid_lt.y, valid_rb.y, small_align.y);
     }
 }
 

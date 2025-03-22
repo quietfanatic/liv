@@ -91,7 +91,10 @@ void Book::on_event (SDL_Event* e) {
         }
         case SDL_MOUSEWHEEL: {
             auto amount = Vec(e->wheel.preciseX, e->wheel.preciseY);
-            if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) amount = -amount;
+            amount.x = -amount.x;
+            if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+                amount.y = -amount.y;
+            }
             amount *= state.settings->get(&ControlSettings::scroll_speed);
             scroll(amount);
             break;

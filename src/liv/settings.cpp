@@ -13,9 +13,9 @@ static AnyString extensions [12] = {
 const Settings builtin_default_settings = {
     .parent = null,
     .window = {
-        .size = geo::IVec{720, 720},
-        .fullscreen = false,
-        .title = FormatList(
+        .size = {geo::IVec{720, 720}},
+        .fullscreen = {false},
+        .title = {FormatList(
             FormatToken("["), FormatToken(FormatCommand::VisibleRange),
             FormatToken("/"), FormatToken(FormatCommand::PageCount),
             FormatToken("] "), FormatToken(FormatCommand::PageRelCwd),
@@ -23,46 +23,46 @@ const Settings builtin_default_settings = {
                 FormatToken(" ("), FormatToken(FormatCommand::ZoomPercent),
                 FormatToken("%)")
             ))
-        ),
-        .hidden = false,
-        .automated_input = false,
-        .last_prompt_command = "",
+        )},
+        .hidden = {false},
+        .automated_input = {false},
+        .last_prompt_command = {""},
     },
     .layout = {
-        .spread_count = 1,
-        .spread_direction = Direction::Right,
-        .auto_zoom_mode = AutoZoomMode::Fit,
-        .max_zoom = 32,
-        .min_zoomed_size = 16,
-        .reset_zoom_on_page_turn = true,
-        .small_align = geo::Vec{0.5, 0.5},
-        .large_align = geo::Vec{0.5, 0.5},
-        .scroll_margin = 0,
-        .orientation = Direction::Up,
+        .spread_count = {1},
+        .spread_direction = {Direction::Right},
+        .auto_zoom_mode = {AutoZoomMode::Fit},
+        .max_zoom = {32},
+        .min_zoomed_size = {16},
+        .reset_zoom_on_page_turn = {true},
+        .small_align = {geo::Vec{0.5, 0.5}},
+        .large_align = {geo::Vec{0.5, 0.5}},
+        .scroll_margin = {0},
+        .orientation = {Direction::Up},
     },
     .render = {
-        .interpolation_mode = InterpolationMode::SmartCubic,
-        .window_background = Fill::Black,
-        .transparency_background = Fill::White,
-        .color_range = ColorRange{{{0, 1}, {0, 1}, {0, 1}}},
+        .interpolation_mode = {InterpolationMode::SmartCubic},
+        .window_background = {Fill::Black},
+        .transparency_background = {Fill::White},
+        .color_range = {ColorRange{{{0, 1}, {0, 1}, {0, 1}}}},
     },
     .control = {
-        .drag_speed = 1,
-        .scroll_speed = -20,
+        .scroll_speed = {geo::Vec{20, 20}},
+        .drag_speed = {geo::Vec{1, 1}},
     },
     .files = {
-        .sort = SortMethod{
+        .sort = {SortMethod{
             SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
-        },
-        .page_extensions = StaticArray<AnyString>(
+        }},
+        .page_extensions = {StaticArray<AnyString>(
             extensions, sizeof(extensions)/sizeof(extensions[0])
-        ),
+        )},
     },
     .memory = {
-        .preload_ahead = 1,
-        .preload_behind = 1,
-        .page_cache_mb = 200,
-        .trim_when_minimized = TrimMode::PageCache,
+        .preload_ahead = {1},
+        .preload_behind = {1},
+        .page_cache_mb = {200},
+        .trim_when_minimized = {TrimMode::PageCache},
     },
     .mappings = { },
 };
