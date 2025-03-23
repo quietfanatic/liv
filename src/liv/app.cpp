@@ -50,6 +50,7 @@ static void on_event (App& self, SDL_Event* e) {
             break;
         }
         case SDL_MOUSEWHEEL: {
+            SDL_ShowCursor(SDL_DISABLE);
             current_book = book_with_window_id(self, e->wheel.windowID);
             break;
         }

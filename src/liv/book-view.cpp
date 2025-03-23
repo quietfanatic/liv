@@ -85,8 +85,9 @@ bool BookView::draw_if_needed () {
         title = "Little Image Viewer (no pages visible)";
     }
     else {
+        auto& title_format = book->state.settings->get(&WindowSettings::title);
         UniqueString t;
-        book->state.settings->get(&WindowSettings::title).write(t, book);
+        title_format.write(t, book);
         title = t;
     }
     SDL_SetWindowTitle(window, title.c_str());
