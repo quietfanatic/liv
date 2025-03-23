@@ -90,6 +90,17 @@ bool BookView::draw_if_needed () {
         title_format.write(t, book);
         title = t;
     }
+     // This might be an X-specific problem, but if SDL_SetWindowTitle is given
+     // invalid Unicode, the window title doesn't get updated.  There's no way
+     // to check that this happened, because the string returned by
+     // SDL_GetWindowTitle is the requested title, not the string that's
+     // currently being rendered on the title bar.  Checking the validity of the
+     // Unicode ahead of time would require having access to a table of hundreds
+     // of thousands of characters.  So the only thing we can really do is to
+     // set the error message title, then set the desired title, and if the
+     // desired title has invalid unicode, the old error title will remain
+     // rendered.
+    SDL_SetWindowTitle(window, "Little Image Viewer (invalid unicode in title)");
     SDL_SetWindowTitle(window, title.c_str());
     plog("drew view");
      // vsync
