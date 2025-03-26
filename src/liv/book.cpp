@@ -53,7 +53,7 @@ void Book::on_event (SDL_Event* e) {
                     break;
                 }
                 case SDL_WINDOWEVENT_EXPOSED: {
-                    view.need_draw = true;
+                    view.update_picture();
                     break;
                 }
                 case SDL_WINDOWEVENT_FOCUS_GAINED: {
@@ -111,8 +111,7 @@ void Book::on_event (SDL_Event* e) {
  // Commands
 void Book::fullscreen () {
     view.set_fullscreen(!view.is_fullscreen());
-    view.layout = {};
-    view.need_draw = true;
+    view.update_layout();
 }
 
 void Book::set_page_offset (i32 off) {
@@ -139,9 +138,7 @@ void Book::prev () {
 
 void Book::seek (i32 offset) {
     set_page_offset(state.page_offset + offset);
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
     delay_preload = false;
 }
@@ -165,9 +162,7 @@ void Book::remove_current_page () {
     block.pages.erase(visible.l);
      // Reclamp page offset
     set_page_offset(state.page_offset);
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
     delay_preload = false;
 }
@@ -186,9 +181,7 @@ void Book::sort (SortMethod method) {
             }
         }
     }
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
     delay_preload = false;
 }
@@ -197,18 +190,14 @@ void Book::spread_count (i32 count) {
     state.settings->layout.spread_count = {
         clamp(count, 1, LayoutSettings::max_spread_count)
     };
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
     delay_preload = false;
 }
 
 void Book::spread_direction (Direction dir) {
     state.settings->layout.spread_direction = {dir};
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
 }
 
@@ -216,8 +205,7 @@ void Book::auto_zoom_mode (AutoZoomMode mode) {
     state.settings->layout.auto_zoom_mode = {mode};
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_layout();
     need_mark = true;
 }
 
@@ -236,8 +224,7 @@ void Book::zoom_multiply (float factor) {
         *state.manual_offset +=
             spread.size * (layout.zoom - *state.manual_zoom) / 2;
     }
-    view.layout = {};
-    view.need_draw = true;
+    view.update_layout();
     need_mark = true;
 }
 
@@ -251,9 +238,8 @@ void Book::align (Vec small, Vec large) {
     state.settings->layout.small_align = {small_align};
     state.settings->layout.large_align = {large_align};
     state.manual_offset = {};
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+     // Alignment affects spread, not just layout
+    view.update_spread();
     need_mark = true;
 }
 
@@ -261,8 +247,7 @@ void Book::orientation (Direction o) {
     state.settings->layout.orientation = o;
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_layout();
     need_mark = true;
 }
 
@@ -272,9 +257,7 @@ void Book::reset_layout () {
     state.settings->layout.spread_count = sc;
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_layout();
     need_mark = true;
 }
 
@@ -289,43 +272,41 @@ void Book::reset_settings () {
      // Resort if sort has changed
     auto new_sort = state.settings->get(&FilesSettings::sort);
     if (new_sort != old_sort) block.resort(new_sort);
-    view.spread = {};
-    view.layout = {};
-    view.need_draw = true;
+    view.update_spread();
     need_mark = true;
 }
 
 void Book::interpolation_mode (InterpolationMode mode) {
     state.settings->render.interpolation_mode = mode;
-    view.need_draw = true;
+    view.update_picture();
     need_mark = true;
 }
 
 void Book::window_background (Fill bg) {
     state.settings->render.window_background = bg;
-    view.need_draw = true;
+    view.update_picture();
     need_mark = true;
 }
 
 void Book::transparency_background (Fill bg) {
     state.settings->render.transparency_background = bg;
-    view.need_draw = true;
+    view.update_picture();
     need_mark = true;
 }
 
 void Book::color_range (const ColorRange& range) {
     state.settings->render.color_range = range;
-    view.need_draw = true;
+    view.update_picture();
     need_mark = true;
 }
 
 void Book::scroll (Vec amount) {
     view.get_layout();
-    view.layout->scroll(*state.settings, view.get_spread(), amount);
+    view.layout.scroll(*state.settings, view.get_spread(), amount);
      // Transition from automatic to manual if necessary
-    state.manual_zoom = {view.layout->zoom};
-    state.manual_offset = {view.layout->offset};
-    view.need_draw = true;
+    state.manual_zoom = {view.layout.zoom};
+    state.manual_offset = {view.layout.offset};
+    view.update_picture();
     need_mark = true;
 }
 
@@ -408,8 +389,8 @@ static tap::TestSet tests ("liv/book", []{
     book.set_page_offset(0);
     is(book.visible_range(), IRange{0, 2}, "Two visible pages");
     book.view.draw_if_needed();
-    is(book.view.spread->pages.size(), usize(2), "Spread has two pages");
-    is(book.view.spread->pages[1].offset.x, 7, "Spread second page has correct offset");
+    is(book.view.spread.pages.size(), usize(2), "Spread has two pages");
+    is(book.view.spread.pages[1].offset.x, 7, "Spread second page has correct offset");
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{20, 60}], glow::RGBA8(0x2674dbff), "Left side of spread is correct");
