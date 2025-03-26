@@ -209,14 +209,11 @@ void Book::auto_zoom_mode (AutoZoomMode mode) {
     need_mark = true;
 }
 
-void Book::zoom_multiply (float factor) {
-     // Need spread to clamp the zoom
+void Book::set_zoom (float zoom) {
     auto& spread = view.get_spread();
-     // Actually we also need the layout to multiply the zoom
     auto& layout = view.get_layout();
-     // Set manual zoom
     state.manual_zoom = spread.clamp_zoom(
-        *state.settings, layout.zoom * factor
+        *state.settings, zoom
     );
     if (state.manual_offset) {
          // Hacky way to zoom from center
@@ -226,6 +223,10 @@ void Book::zoom_multiply (float factor) {
     }
     view.update_layout();
     need_mark = true;
+}
+
+void Book::zoom (float factor) {
+    set_zoom(view.get_layout().zoom * factor);
 }
 
 void Book::align (Vec small, Vec large) {

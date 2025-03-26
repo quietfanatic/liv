@@ -61,7 +61,8 @@ struct Book {
     void spread_count (i32);
     void spread_direction (Direction);
     void auto_zoom_mode (AutoZoomMode);
-    void zoom_multiply (float);
+    void set_zoom (float);
+    void zoom (float);
     void align (Vec small, Vec large);
     void orientation (Direction);
     void reset_layout ();

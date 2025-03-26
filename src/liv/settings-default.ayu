@@ -220,9 +220,9 @@ mappings: [
     [[v] [auto_zoom_mode fit_height]]
     [[o] [auto_zoom_mode original]]
      -- Zoom in by √2
-    [["="] [zoom_multiply 1.4142135623731]]
+    [["="] [zoom 1.4142135623731]]
      -- Zoom out by √2
-    [["-"] [zoom_multiply 0.707106781186547]]
+    [["-"] [zoom 0.707106781186547]]
      -- Align page to top of window
     [[shift w] [align [+nan 0] [+nan 0]]]
      -- Align page to left of window

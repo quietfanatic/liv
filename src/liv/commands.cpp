@@ -236,10 +236,15 @@ static void auto_zoom_mode_ (AutoZoomMode mode) {
 }
 Command auto_zoom_mode (auto_zoom_mode_, "auto_zoom_mode", "Set auto zoom mode: fit or original");
 
-static void zoom_multiply_ (float factor) {
-    if (current_book) current_book->zoom_multiply(factor);
+static void set_zoom_ (float zoom) {
+    if (current_book) current_book->set_zoom(zoom);
 }
-Command zoom_multiply (zoom_multiply_, "zoom_multiply", "Multiply zoom by a factor");
+Command set_zoom (set_zoom_, "set_zoom", "Set zoom to a specific amount");
+
+static void zoom_ (float factor) {
+    if (current_book) current_book->zoom(factor);
+}
+Command zoom (zoom_, "zoom", "Multiply zoom by a factor");
 
 static void align_ (Vec small, Vec large) {
     if (current_book) current_book->align(small, large);
