@@ -44,6 +44,12 @@ enum class AutoZoomMode {
     Original
 };
 
+enum class ResetOnSeek {
+    None,
+    Offset,
+    Zoom
+};
+
  // This is sent to the shader as an int so the order matters
 enum class InterpolationMode {
     Nearest,
@@ -87,7 +93,7 @@ struct LayoutSettings {
     std::optional<AutoZoomMode> auto_zoom_mode;
     std::optional<float> max_zoom;
     std::optional<float> min_zoomed_size;
-    std::optional<bool> reset_zoom_on_page_turn;
+    std::optional<ResetOnSeek> reset_on_seek;
     std::optional<geo::Vec> small_align;
     std::optional<geo::Vec> large_align;
     std::optional<float> scroll_margin;

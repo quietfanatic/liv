@@ -30,10 +30,12 @@ layout: {
      --   fit_height = Match page's height to window's height
      --   original = View page at original pixel resolution
     auto_zoom_mode: fit
-     -- true = When turning pages, reset manual zoom and apply auto zoom
-     -- false = When turning pages, keep same zoom and offset as last page if
-     --         zoom or offset were manually changed.
-    reset_zoom_on_page_turn: true
+     -- When turning pages:
+     --   none = Keep same zoom and offset as last page if zoom or offset were
+     --          manually changed.
+     --   offset = Keep just the zoom but reset offset (scroll position)
+     --   zoom = Reset both offset and zoom (to current auto zoom mode)
+    reset_on_seek: zoom
      -- Maximum allowed zoom factor
     max_zoom: 32
      -- Minimum zoom factor is such that the page can't be any smaller than

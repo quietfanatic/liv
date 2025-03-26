@@ -122,9 +122,15 @@ void Book::set_page_offset (i32 off) {
         1 - i32(spread_count),
         i32(block.pages.size()) - 1
     );
-    if (state.settings->get(&LayoutSettings::reset_zoom_on_page_turn)) {
-        state.manual_zoom = {};
-        state.manual_offset = {};
+    switch (state.settings->get(&LayoutSettings::reset_on_seek)) {
+        case ResetOnSeek::Zoom:
+            state.manual_zoom = {};
+            [[fallthrough]];
+        case ResetOnSeek::Offset:
+            state.manual_offset = {};
+            [[fallthrough]];
+        case ResetOnSeek::None: break;
+        default: never();
     }
 }
 

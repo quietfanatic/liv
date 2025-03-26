@@ -5,7 +5,7 @@
 
 namespace liv {
 
-static AnyString extensions [12] = {
+static AnyString extensions [] = {
     "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
     "png", "tif", "tiff", "xbm", "xpm", "webp",
 };
@@ -34,7 +34,7 @@ const Settings builtin_default_settings = {
         .auto_zoom_mode = {AutoZoomMode::Fit},
         .max_zoom = {32},
         .min_zoomed_size = {16},
-        .reset_zoom_on_page_turn = {true},
+        .reset_on_seek = {ResetOnSeek::Zoom},
         .small_align = {geo::Vec{0.5, 0.5}},
         .large_align = {geo::Vec{0.5, 0.5}},
         .scroll_margin = {0},
@@ -104,7 +104,7 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(layout.auto_zoom_mode)
     LIV_MERGE(layout.max_zoom)
     LIV_MERGE(layout.min_zoomed_size)
-    LIV_MERGE(layout.reset_zoom_on_page_turn)
+    LIV_MERGE(layout.reset_on_seek)
     LIV_MERGE(layout.scroll_margin)
     LIV_MERGE(layout.small_align)
     LIV_MERGE(layout.large_align)
@@ -159,6 +159,14 @@ AYU_DESCRIBE(liv::AutoZoomMode,
     )
 )
 
+AYU_DESCRIBE(liv::ResetOnSeek,
+    values(
+        value("none", ResetOnSeek::None),
+        value("offset", ResetOnSeek::Offset),
+        value("zoom", ResetOnSeek::Zoom)
+    )
+)
+
 AYU_DESCRIBE(liv::InterpolationMode,
     values(
         value("nearest", InterpolationMode::Nearest),
@@ -210,7 +218,7 @@ AYU_DESCRIBE(liv::LayoutSettings,
         attr("spread_count", &LayoutSettings::spread_count, collapse_optional),
         attr("spread_direction", &LayoutSettings::spread_direction, collapse_optional),
         attr("auto_zoom_mode", &LayoutSettings::auto_zoom_mode, collapse_optional),
-        attr("reset_zoom_on_page_turn", &LayoutSettings::reset_zoom_on_page_turn, collapse_optional),
+        attr("reset_on_seek", &LayoutSettings::reset_on_seek, collapse_optional),
         attr("max_zoom", &LayoutSettings::max_zoom, collapse_optional),
         attr("min_zoomed_size", &LayoutSettings::min_zoomed_size, collapse_optional),
         attr("small_align", &LayoutSettings::small_align, collapse_optional),
