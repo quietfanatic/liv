@@ -92,7 +92,7 @@ float Spread::clamp_zoom (const Settings& settings, float zoom) const {
     return zoom;
 }
 
-Layout::Layout (
+Projection::Projection (
     const BookState& state,
     const Spread& spread,
     Vec window_size
@@ -157,7 +157,7 @@ Layout::Layout (
     }
 }
 
-void Layout::scroll (
+void Projection::scroll (
     const Settings& settings, const Spread& spread, Vec amount
 ) {
      // Clamp to valid scroll area

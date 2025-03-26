@@ -35,25 +35,25 @@ const Spread& BookView::get_spread () {
     if (need_spread) {
         spread = Spread(*book);
         need_spread = false;
-        need_layout = true;
+        need_projection = true;
     }
     return spread;
 }
 
-const Layout& BookView::get_layout () {
+const Projection& BookView::get_projection () {
     get_spread();
-    if (need_layout) {
-        layout = Layout(book->state, spread, get_window_size());
-        need_layout = false;
+    if (need_projection) {
+        projection = Projection(book->state, spread, get_window_size());
+        need_projection = false;
         need_title = true;
         need_picture = true;
     }
-    return layout;
+    return projection;
 }
 
 bool BookView::draw_if_needed () {
     if (!need_something) return false;
-    get_layout();
+    get_projection();
     if (need_title) {
          // Theoretically we track whether we need to do the title independently
          // of whether we need to draw.
@@ -106,11 +106,11 @@ bool BookView::draw_if_needed () {
                 spread_page.offset,
                 spread_page.offset + spread_page.page->size
             );
-            Rect window_rect = spread_rect * layout.zoom + layout.offset;
+            Rect window_rect = spread_rect * projection.zoom + projection.offset;
              // Convert to OpenGL coords (-1,-1)..(+1,+1)
-            Rect screen_rect = window_rect / layout.size * float(2) - Vec(1, 1);
+            Rect screen_rect = window_rect / projection.size * float(2) - Vec(1, 1);
              // Draw
-            spread_page.page->draw(*book->state.settings, layout.zoom, screen_rect);
+            spread_page.page->draw(*book->state.settings, projection.zoom, screen_rect);
         }
         plog("drew view");
          // vsync
@@ -119,7 +119,7 @@ bool BookView::draw_if_needed () {
         need_picture = false;
     }
     need_something = false;
-    expect(!need_spread && !need_layout);
+    expect(!need_spread && !need_projection);
     return true;
 }
 
@@ -153,7 +153,7 @@ void BookView::window_size_changed (IVec size) {
      // TODO: write window.size setting
     require(size.x > 0 && size.y > 0);
     glViewport(0, 0, size.x, size.y);
-    update_layout();
+    update_projection();
 }
 
 } // namespace liv

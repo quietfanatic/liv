@@ -111,7 +111,7 @@ void Book::on_event (SDL_Event* e) {
  // Commands
 void Book::fullscreen () {
     view.set_fullscreen(!view.is_fullscreen());
-    view.update_layout();
+    view.update_projection();
 }
 
 void Book::set_page_offset (i32 off) {
@@ -211,13 +211,13 @@ void Book::auto_zoom_mode (AutoZoomMode mode) {
     state.settings->layout.auto_zoom_mode = {mode};
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.update_layout();
+    view.update_projection();
     need_mark = true;
 }
 
 void Book::set_zoom (float zoom) {
     auto& spread = view.get_spread();
-    auto& layout = view.get_layout();
+    auto& proj = view.get_projection();
     state.manual_zoom = spread.clamp_zoom(
         *state.settings, zoom
     );
@@ -225,14 +225,14 @@ void Book::set_zoom (float zoom) {
          // Hacky way to zoom from center
          // TODO: zoom to preserve current alignment instead
         *state.manual_offset +=
-            spread.size * (layout.zoom - *state.manual_zoom) / 2;
+            spread.size * (proj.zoom - *state.manual_zoom) / 2;
     }
-    view.update_layout();
+    view.update_projection();
     need_mark = true;
 }
 
 void Book::zoom (float factor) {
-    set_zoom(view.get_layout().zoom * factor);
+    set_zoom(view.get_projection().zoom * factor);
 }
 
 void Book::align (Vec small, Vec large) {
@@ -245,7 +245,7 @@ void Book::align (Vec small, Vec large) {
     state.settings->layout.small_align = {small_align};
     state.settings->layout.large_align = {large_align};
     state.manual_offset = {};
-     // Alignment affects spread, not just layout
+     // Alignment affects spread, not just projection
     view.update_spread();
     need_mark = true;
 }
@@ -254,7 +254,7 @@ void Book::orientation (Direction o) {
     state.settings->layout.orientation = o;
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.update_layout();
+    view.update_projection();
     need_mark = true;
 }
 
@@ -264,7 +264,7 @@ void Book::reset_layout () {
     state.settings->layout.spread_count = sc;
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.update_layout();
+    view.update_projection();
     need_mark = true;
 }
 
@@ -308,11 +308,11 @@ void Book::color_range (const ColorRange& range) {
 }
 
 void Book::scroll (Vec amount) {
-    view.get_layout();
-    view.layout.scroll(*state.settings, view.get_spread(), amount);
+    view.get_projection();
+    view.projection.scroll(*state.settings, view.get_spread(), amount);
      // Transition from automatic to manual if necessary
-    state.manual_zoom = {view.layout.zoom};
-    state.manual_offset = {view.layout.offset};
+    state.manual_zoom = {view.projection.zoom};
+    state.manual_offset = {view.projection.offset};
     view.update_picture();
     need_mark = true;
 }

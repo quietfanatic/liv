@@ -13,12 +13,12 @@ struct BookView {
     ~BookView ();
 
     void update_spread () { need_something = need_spread = true; }
-    void update_layout () { need_something = need_layout = true; }
+    void update_projection () { need_something = need_projection = true; }
     void update_picture () { need_something = need_picture = true; }
 
      // Lazy getters.
     const Spread& get_spread ();
-    const Layout& get_layout ();
+    const Projection& get_projection ();
 
     bool is_fullscreen () const;
     void set_fullscreen (bool);
@@ -35,14 +35,14 @@ struct BookView {
     wind::Window window;
 
     Spread spread;
-    Layout layout;
+    Projection projection;
 
      // True if any of the below are true
     bool need_something = true;
      // Pages being viewed have changed
     bool need_spread = true;
      // Zoom, offset have changed
-    bool need_layout = true;
+    bool need_projection = true;
      // Window title needs updating
     bool need_title = true;
      // Don't regenerate anything, just redraw

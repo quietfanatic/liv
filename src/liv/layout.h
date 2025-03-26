@@ -26,7 +26,7 @@ struct Spread {
 };
 
 // This determines how a Spread is shown in the window.
-struct Layout {
+struct Projection {
      // Zoom is applied before offset
     float zoom;
      // Offset is in window coordinates, not spread coordinates
@@ -34,12 +34,12 @@ struct Layout {
      // Window size, but swapped if orientation is Left or Right
     Vec size;
 
-    constexpr Layout () { }
-     // Determine layout from book state
-    Layout (const BookState&, const Spread&, Vec window_size);
+    constexpr Projection () { }
+     // Determine projection from book state
+    Projection (const BookState&, const Spread&, Vec window_size);
 
      // Changes offset, clamped according to scroll_margin setting.  This does
-     // not require recalculating the entire layout.
+     // not require recalculating the entire projection.
     void scroll (const Settings&, const Spread&, Vec);
 };
 
