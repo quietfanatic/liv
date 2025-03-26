@@ -252,14 +252,23 @@ mappings: [
     [[ctrl 4] [interpolation_mode smart_cubic]]
     [[ctrl 9] [interpolation_mode smoothed]]
      -- Set background color
-    [[ctrl b] [window_background white]]
-    [[ctrl shift b] [window_background black]]
+    [[ctrl b] [toggle
+        [window_background white]
+        [window_background black]
+        false
+    ]]
      -- Set transparency color
-    [[ctrl t] [transparency_background white]]
-    [[ctrl shift t] [transparency_background black]]
+    [[ctrl t] [toggle
+        [transparency_background white]
+        [transparency_background black]
+        false
+    ]]
      -- Dim color for night mode, in case your screen doesn't get dark enough.
-    [[n] [color_range [[0 0.5] [0 0.5] [0 0.5]]]]
-    [[shift n] [color_range [[0 1] [0 1] [0 1]]]]
+    [[n] [toggle
+        [color_range [[0 0.5] [0 0.5] [0 0.5]]]
+        [color_range [[0 1] [0 1] [0 1]]]
+        false -- TODO optional arguments
+    ]]
   -------- EXECUTION
     [[q] [quit]]
     [[ctrl q] [quit]]
