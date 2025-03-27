@@ -10,7 +10,8 @@ static AnyString extensions [] = {
     "png", "tif", "tiff", "xbm", "xpm", "webp",
 };
 
-const Settings builtin_default_settings = {
+ // TODO: reconst this somehow
+Settings builtin_default_settings = {
     .parent = null,
     .window = {
         .size = {geo::IVec{720, 720}},
@@ -129,7 +130,7 @@ void Settings::merge (Settings&& o) {
     if (o.parent != &builtin_default_settings) parent = o.parent;
 }
 
-const control::Statement* Settings::map_input (control::Input input) const {
+control::Statement* Settings::map_input (control::Input input) {
     for (auto& [binding, action] : mappings) {
         if (input_matches_binding(input, binding)) {
             return &action;

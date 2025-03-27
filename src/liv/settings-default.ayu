@@ -255,19 +255,16 @@ mappings: [
     [[ctrl b] [toggle
         [window_background white]
         [window_background black]
-        false
     ]]
      -- Set transparency color
     [[ctrl t] [toggle
         [transparency_background white]
         [transparency_background black]
-        false
     ]]
      -- Dim color for night mode, in case your screen doesn't get dark enough.
     [[n] [toggle
         [color_range [[0 0.5] [0 0.5] [0 0.5]]]
         [color_range [[0 1] [0 1] [0 1]]]
-        false -- TODO optional arguments
     ]]
   -------- EXECUTION
     [[q] [quit]]

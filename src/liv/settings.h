@@ -121,11 +121,11 @@ struct MemorySettings {
     std::optional<TrimMode> trim_when_minimized;
 };
 
-extern const Settings builtin_default_settings;
+extern Settings builtin_default_settings;
 
 struct Settings {
      // Parent is at the beginning in memory but at the end in ayu
-    const Settings* parent = &builtin_default_settings;
+    Settings* parent = &builtin_default_settings;
     WindowSettings window;
     LayoutSettings layout;
     RenderSettings render;
@@ -143,7 +143,7 @@ struct Settings {
      // parent will also be transferred unless it is &builtin_default_settings.
     void merge (Settings&&);
 
-    const control::Statement* map_input (control::Input) const;
+    control::Statement* map_input (control::Input);
 };
 
 template <class T, class Category>

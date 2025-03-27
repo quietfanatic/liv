@@ -43,7 +43,7 @@ struct App {
     wind::PassiveLoop loop;
 
      // The main app settings.
-    const Settings* app_settings;
+    Settings* app_settings;
 };
 
  // Temporal state for commands
