@@ -18,7 +18,7 @@ BookView::BookView (Book* book) :
     SDL_SetWindowResizable(window, SDL_TRUE);
     expect(!SDL_GL_SetSwapInterval(1));
     if (book->state.settings->get(&WindowSettings::fullscreen)) {
-        set_fullscreen(true);
+        window.set_fullscreen(true);
     }
     plog("set window props");
     glow::init();
@@ -43,7 +43,7 @@ const Spread& BookView::get_spread () {
 const Projection& BookView::get_projection () {
     get_spread();
     if (need_projection) {
-        projection = Projection(book->state, spread, get_window_size());
+        projection = Projection(book->state, spread, window.size());
         need_projection = false;
         need_title = true;
         need_picture = true;
@@ -121,32 +121,6 @@ bool BookView::draw_if_needed () {
     need_something = false;
     expect(!need_spread && !need_projection);
     return true;
-}
-
-bool BookView::is_fullscreen () const {
-    auto flags = glow::require_sdl(SDL_GetWindowFlags(window));
-    return flags & (SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_FULLSCREEN);
-}
-
-void BookView::set_fullscreen (bool fs) {
-     // This will trigger a window_size_changed, so no need to clear layout or
-     // set need_draw
-    glow::require_sdl(!SDL_SetWindowFullscreen(
-        window,
-        fs ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0
-    ));
-}
-
-bool BookView::is_minimized () const {
-    auto flags = glow::require_sdl(SDL_GetWindowFlags(window));
-    return flags & SDL_WINDOW_MINIMIZED;
-}
-
-IVec BookView::get_window_size () const {
-    int w, h;
-    SDL_GL_GetDrawableSize(window, &w, &h);
-    require(w > 0 && h > 0);
-    return {w, h};
 }
 
 void BookView::window_size_changed (IVec size) {

@@ -22,20 +22,26 @@ static void quit_ () {
 Command<quit_> quit (0, "quit", "Quit application");
 
 static void fullscreen_ () {
-    if (current_book) current_book->fullscreen();
+    if (current_book) {
+        current_book->view.window.set_fullscreen(
+            !current_book->view.window.is_fullscreen()
+        );
+    }
 }
 Command<fullscreen_> fullscreen (0, "fullscreen", "Toggle fullscreen mode");
 
 static void leave_fullscreen_ () {
-    if (current_book && current_book->view.is_fullscreen()) {
-        current_book->fullscreen();
+     // Check if we're already fullscreen to avoid generating a size changed
+     // event.
+    if (current_book && current_book->view.window.is_fullscreen()) {
+        current_book->view.window.set_fullscreen(false);
     }
 }
 Command<leave_fullscreen_> leave_fullscreen (0, "leave_fullscreen", "Leave fullscreen mode");
 
 static void leave_fullscreen_or_quit_ () {
-    if (current_book && current_book->view.is_fullscreen()) {
-        current_book->fullscreen();
+    if (current_book && current_book->view.window.is_fullscreen()) {
+        current_book->view.window.set_fullscreen(false);
     }
     else if (current_app) {
         current_app->stop();

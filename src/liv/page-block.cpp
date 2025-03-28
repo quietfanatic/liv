@@ -186,7 +186,7 @@ bool PageBlock::idle_processing (const Book* book, const Settings& settings) {
     };
 
      // Unload a cached page if we're minimized
-    if (book->view.is_minimized()) {
+    if (book->view.window.is_minimized()) {
         switch (settings.get(&MemorySettings::trim_when_minimized)) {
             case TrimMode::None: break;
             case TrimMode::PageCache: {

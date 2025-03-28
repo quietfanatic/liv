@@ -108,12 +108,6 @@ void Book::on_event (SDL_Event* e) {
     }
 }
 
- // Commands
-void Book::fullscreen () {
-    view.set_fullscreen(!view.is_fullscreen());
-    view.update_projection();
-}
-
 void Book::set_page_offset (i32 off) {
     auto spread_count = state.settings->get(&LayoutSettings::spread_count);
      // Clamp such that there is at least one visible page in the range

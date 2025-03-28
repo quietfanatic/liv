@@ -20,10 +20,7 @@ struct BookView {
     const Spread& get_spread ();
     const Projection& get_projection ();
 
-    bool is_fullscreen () const;
-    void set_fullscreen (bool);
-    bool is_minimized () const;
-    geo::IVec get_window_size () const;
+     // change glViewport and update projection
     void window_size_changed (geo::IVec new_size);
      // Returns true if drawing was actually done.
     bool draw_if_needed ();

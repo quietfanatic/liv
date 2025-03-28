@@ -49,7 +49,6 @@ struct Book {
     void on_event (SDL_Event*);
 
      // Commands
-    void fullscreen ();
     void set_page_offset (i32);
     void next ();
     void prev ();
