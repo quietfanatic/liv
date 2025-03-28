@@ -275,12 +275,12 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             break;
         }
         case FormatCommand::ZoomPercent: {
-            float zoom = book->view.get_projection().zoom;
+            float zoom = book->view.get_zoom();
             encat(s, round(zoom * 100));
             break;
         }
         case FormatCommand::IfZoomed: {
-            if (book->view.get_projection().zoom != 1) {
+            if (book->view.get_zoom() != 1) {
                 sublist.write(s, book, page);
             }
             break;

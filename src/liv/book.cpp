@@ -99,7 +99,6 @@ void Book::on_event (SDL_Event* e) {
             scroll(amount);
             break;
         }
-         // TODO: Support wheel
         default: break;
     }
     if (auto input = control::input_from_event(e)) {
@@ -119,9 +118,11 @@ void Book::set_page_offset (i32 off) {
     switch (state.settings->get(&LayoutSettings::reset_on_seek)) {
         case ResetOnSeek::Zoom:
             state.manual_zoom = {};
+            view.need_zoom = true;
             [[fallthrough]];
         case ResetOnSeek::Offset:
             state.manual_offset = {};
+            view.need_offset = true;
             [[fallthrough]];
         case ResetOnSeek::None: break;
         default: never();
@@ -205,28 +206,27 @@ void Book::auto_zoom_mode (AutoZoomMode mode) {
     state.settings->layout.auto_zoom_mode = {mode};
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.update_projection();
+    view.update_zoom();
+    view.update_offset();
     need_mark = true;
 }
 
 void Book::set_zoom (float zoom) {
-    auto& spread = view.get_spread();
-    auto& proj = view.get_projection();
-    state.manual_zoom = spread.clamp_zoom(
-        *state.settings, zoom
-    );
+    state.manual_zoom = view.clamp_zoom(zoom);
     if (state.manual_offset) {
-         // Hacky way to zoom from center
-         // TODO: zoom to preserve current alignment instead
-        *state.manual_offset +=
-            spread.size * (proj.zoom - *state.manual_zoom) / 2;
+         // Hacky way to zoom from center.  TODO: make view.offset depend on
+         // alignment
+        Vec ss = view.get_spread_size();
+        float zoom = view.get_zoom();
+        *state.manual_offset += ss * (zoom - *state.manual_zoom) / 2;
     }
-    view.update_projection();
+    view.update_zoom();
+    view.update_offset(); // TODO see above
     need_mark = true;
 }
 
 void Book::zoom (float factor) {
-    set_zoom(view.get_projection().zoom * factor);
+    set_zoom(view.get_zoom() * factor);
 }
 
 void Book::align (Vec small, Vec large) {
@@ -239,16 +239,14 @@ void Book::align (Vec small, Vec large) {
     state.settings->layout.small_align = {small_align};
     state.settings->layout.large_align = {large_align};
     state.manual_offset = {};
-     // Alignment affects spread, not just projection
+     // Alignment affects spread, not just offset
     view.update_spread();
     need_mark = true;
 }
 
 void Book::orientation (Direction o) {
     state.settings->layout.orientation = o;
-    state.manual_zoom = {};
-    state.manual_offset = {};
-    view.update_projection();
+    view.update_picture_size();
     need_mark = true;
 }
 
@@ -258,7 +256,7 @@ void Book::reset_layout () {
     state.settings->layout.spread_count = sc;
     state.manual_zoom = {};
     state.manual_offset = {};
-    view.update_projection();
+    view.update_spread();
     need_mark = true;
 }
 
@@ -273,6 +271,7 @@ void Book::reset_settings () {
      // Resort if sort has changed
     auto new_sort = state.settings->get(&FilesSettings::sort);
     if (new_sort != old_sort) block.resort(new_sort);
+    view.update_picture_size();
     view.update_spread();
     need_mark = true;
 }
@@ -302,12 +301,10 @@ void Book::color_range (const ColorRange& range) {
 }
 
 void Book::scroll (Vec amount) {
-    view.get_projection();
-    view.projection.scroll(*state.settings, view.get_spread(), amount);
-     // Transition from automatic to manual if necessary
-    state.manual_zoom = {view.projection.zoom};
-    state.manual_offset = {view.projection.offset};
-    view.update_picture();
+    state.manual_zoom = {view.get_zoom()};
+    state.manual_offset = {view.clamp_offset(view.get_offset() + amount)};
+    view.update_zoom();
+    view.update_offset();
     need_mark = true;
 }
 
@@ -390,8 +387,8 @@ static tap::TestSet tests ("liv/book", []{
     book.set_page_offset(0);
     is(book.visible_range(), IRange{0, 2}, "Two visible pages");
     book.view.draw_if_needed();
-    is(book.view.spread.pages.size(), usize(2), "Spread has two pages");
-    is(book.view.spread.pages[1].offset.x, 7, "Spread second page has correct offset");
+    is(book.view.pages.size(), usize(2), "Spread has two pages");
+    is(book.view.pages[1].offset.x, 7, "Spread second page has correct offset");
     glFinish();
     glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, img.pixels);
     is(img[{20, 60}], glow::RGBA8(0x2674dbff), "Left side of spread is correct");
