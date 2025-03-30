@@ -81,7 +81,7 @@ render: {
      -- Background to show behind transparent parts of images.
     transparency_background: white
      -- Color output range.  Specifies the black and white levels of each of
-     -- red, green, and blue.
+     -- red, green, and blue (0 = none, 1 = full).
     color_range: [[0 0 0] [1 1 1]]
 }
 

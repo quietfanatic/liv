@@ -282,9 +282,9 @@ bool BookView::draw_if_needed () {
         need_title = false;
     }
     if (need_picture) {
-         // TODO: Currently we have a different context for each window, would it
-         // be better to share a context between all windows?  Not that we currently
-         // allow multiple windows per process.
+         // TODO: Currently we have a different context for each window, would
+         // it be better to share a context between all windows?  Not that we
+         // currently allow multiple windows per process.
         SDL_GL_MakeCurrent(window, window.gl_context);
          // Draw background
         auto bg = book->state.settings->get(&RenderSettings::window_background);
@@ -300,18 +300,7 @@ bool BookView::draw_if_needed () {
         auto spread_pages = get_pages();
         float zoom = get_zoom();
         Vec offset = get_offset();
-        for (auto& spread_page : spread_pages) {
-            spread_page.page->last_viewed_at = uni::now();
-            Rect spread_rect = Rect(
-                spread_page.offset,
-                spread_page.offset + spread_page.page->size
-            );
-            Rect window_rect = spread_rect * zoom + offset;
-             // Convert to OpenGL coords (-1,-1)..(+1,+1)
-            Rect screen_rect = window_rect / picture_size * float(2) - Vec(1, 1);
-             // Draw
-            spread_page.page->draw(*book->state.settings, zoom, screen_rect);
-        }
+        draw_pages(spread_pages, *book->state.settings, picture_size, offset, zoom);
         plog("drew view");
          // vsync
         SDL_GL_SwapWindow(window);

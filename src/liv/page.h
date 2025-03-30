@@ -29,13 +29,19 @@ struct Page {
 
     void load ();
     void unload ();
-
-    void draw (
-        const Settings& settings,
-        float zoom,
-        const geo::Rect& screen_rect,
-        const geo::Rect& tex_rect = GNAN // defaults to whole page
-    );
 };
+
+struct PageView {
+    Page* page;
+    Vec offset;  // unzoomed coordinates
+};
+
+void draw_pages (
+    Slice<PageView> pages,
+    const Settings& settings,
+    Vec picture_size,
+    Vec offset,
+    float zoom
+);
 
 } // namespace liv

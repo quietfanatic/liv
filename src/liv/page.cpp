@@ -82,50 +82,62 @@ struct PageProgram : Program {
     }
 };
 
-void Page::draw (
+void draw_pages (
+    Slice<PageView> views,
     const Settings& settings,
-    float zoom,
-    const Rect& screen_rect,
-    const Rect& tex_rect
+    Vec picture_size,
+    Vec offset,
+    float zoom
 ) {
-    plog("drawing page");
-    if (!texture) return;
-    require(!!*texture);
-    require(texture->target == GL_TEXTURE_RECTANGLE);
-
     static constexpr IRI program_location = IRI("res:/liv/page.ayu");
     static PageProgram* program = ayu::ResourceRef(program_location)["program"][1];
     program->use();
+    double view_time = uni::now();
 
-     // Vertex parameters
+     // Shared parameters
     auto ori = settings.get(&LayoutSettings::orientation);
     glUniform1i(program->u_orientation, i32(ori));
 
-    glUniform1fv(program->u_screen_rect, 4, &screen_rect.l);
-    if (defined(tex_rect)) {
-        glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
-    }
-    else {
-        auto whole_page = Rect(Vec{0, 0}, size);
-        glUniform1fv(program->u_tex_rect, 4, &whole_page.l);
-    }
-
-     // Fragment parameters
     auto interp = settings.get(&RenderSettings::interpolation_mode);
     glUniform1i(program->u_interpolation_mode, i32(interp));
+
     auto bg = settings.get(&RenderSettings::transparency_background);
     auto bg_scaled = Vec4(bg.r, bg.g, bg.b, bg.a) / 255.f;
     glUniform4fv(program->u_transparency_background, 1, &bg_scaled[0]);
+
     glUniform1f(program->u_zoom, zoom);
+
     auto& color = settings.get(&RenderSettings::color_range);
     auto color_mul = geo::size(color);
     auto color_add = color.l;
     glUniform3fv(program->u_color_mul, 1, &color_mul[0]);
     glUniform3fv(program->u_color_add, 1, &color_add[0]);
-     // Do it
-    glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    plog("drew page");
+
+    for (auto& view : views) {
+        auto texture = &*view.page->texture;
+         // Some validation
+        if (!texture) continue;  // Probably failed to load.
+        expect(!!*texture);
+        expect(texture->target == GL_TEXTURE_RECTANGLE);
+        plog("drawing page");
+
+        view.page->last_viewed_at = view_time;
+        Rect unzoomed = Rect(
+            view.offset,
+            view.offset + view.page->size
+        );
+        Rect zoomed = unzoomed * zoom + offset;
+         // Convert to OpenGL coords (-1,-1)..(+1,+1)
+        Rect on_picture = zoomed / picture_size * float(2) - Vec(1, 1);
+
+        glUniform1fv(program->u_screen_rect, 4, &on_picture.l);
+        auto tex_rect = Rect(Vec{0, 0}, view.page->size);
+        glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
+         // Do it
+        glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        plog("drew page");
+    }
 }
 
 } using namespace liv;
@@ -173,15 +185,20 @@ static tap::TestSet tests ("liv/page", []{
     settings.render.interpolation_mode = InterpolationMode::Linear;
     settings.render.window_background = Fill::Black;
 
+    UniqueArray<PageView> views {
+        PageView{&page, Vec{0, 0}}
+    };
+
     doesnt_throw([&]{
-        page.draw(settings, 1, Rect(-.5, -.5, .5, .5));
+        draw_pages(views, settings, test_size, Vec{25, 35}, 10);
     }, "Page::draw");
+    glFinish();
 
     UniqueImage expected (test_size);
     for (int y = 0; y < test_size.y; y++)
     for (int x = 0; x < test_size.x; x++) {
-        if (y >= test_size.y / 4 && y < test_size.y * 3 / 4
-         && x >= test_size.x / 4 && x < test_size.x * 3 / 4) {
+        if (y >= 35 && y < 85
+         && x >= 25 && x < 95) {
             expected[{x, y}] = RGBA8(0x2674dbff);
         }
         else {
@@ -197,6 +214,7 @@ static tap::TestSet tests ("liv/page", []{
     for (int x = 0; x < test_size.x; x++) {
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
+            diag(cat(x, ' ', y));
             diag(ayu::item_to_string(&expected[{x, y}]));
             diag(ayu::item_to_string(&got[{x, y}]));
             goto no_match;

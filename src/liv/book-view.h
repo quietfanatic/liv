@@ -3,13 +3,9 @@
 #include "../dirt/uni/common.h"
 #include "../dirt/wind/window.h"
 #include "common.h"
+#include "page.h"
 
 namespace liv {
-
-struct PageView {
-    Page* page;
-    Vec offset;  // unzoomed coordinates
-};
 
  // Responsible for window management and drawing.
 struct BookView {
