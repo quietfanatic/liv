@@ -280,8 +280,8 @@ static tap::TestSet tests ("liv/settings", []{
 
      // This is already covered by other tests here, but it's useful to isolate
      // this for performance testing.
-    auto default_res = ayu::SharedResource(iri::IRI("res:/liv/settings-default.ayu"));
-    auto settings_res = ayu::SharedResource(iri::IRI("res:/liv/settings-template.ayu"));
+    auto default_res = ayu::SharedResource("res:/liv/settings-default.ayu");
+    auto settings_res = ayu::SharedResource("res:/liv/settings-template.ayu");
     is(default_res->state(), ayu::RS::Unloaded, "Default settings not loaded yet");
     doesnt_throw([&]{ ayu::load(settings_res); }, "Can load initial settings");
     is(default_res->state(), ayu::RS::Loaded,

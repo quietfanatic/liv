@@ -10,7 +10,7 @@
 
 namespace liv {
 
-constexpr iri::IRI app_settings_location ("data:/settings.ayu");
+constexpr iri::IRI app_settings_location = "data:/settings.ayu";
 
 struct App {
     App();

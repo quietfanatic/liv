@@ -290,7 +290,7 @@ static tap::TestSet tests ("liv/page-block", []{
     is(misc_block.pages[2]->location.relative_to(here), "test/non-image.txt", "BookType::Misc 2");
     is(misc_block.pages[3]->location.relative_to(here), "test/image.png", "BookType::Misc 3");
     is(misc_block.pages[4]->location.relative_to(here), "test/image2.png", "BookType::Misc 4");
-    is(misc_src.location_for_mark(), "", "BookType::Misc shouldn't be remembered");
+    ok(misc_src.location_for_mark().empty(), "BookType::Misc shouldn't be remembered");
 
     BookSource folder_src {BookType::Folder, {iri::from_fs_path("test/", here)}};
     PageBlock folder_block {folder_src, *settings};
@@ -304,7 +304,7 @@ static tap::TestSet tests ("liv/page-block", []{
     is(file_block.pages.size(), 2u, "BookType::FileWithNeighbors");
     is(file_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
     is(file_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
-    is(file_src.location_for_mark(), "", "BookType::FileWithNeighbors shouldn't be remembered");
+    ok(file_src.location_for_mark().empty(), "BookType::FileWithNeighbors shouldn't be remembered");
 
     BookSource list_src {BookType::List, {iri::from_fs_path("test/list.lst", here)}};
     PageBlock list_block {list_src, *settings};

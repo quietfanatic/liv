@@ -85,7 +85,7 @@ App::App () : loop{
 } {
     auto settings_res = ayu::SharedResource(app_settings_location);
     if (!ayu::source_exists(settings_res->name())) {
-        static constexpr IRI template_loc = IRI("res:/liv/settings-template.ayu");
+        static constexpr IRI template_loc = "res:/liv/settings-template.ayu";
         fs::copy_file(
             ayu::resource_filename(template_loc),
             ayu::resource_filename(settings_res->name())
@@ -164,7 +164,7 @@ void App::open_folder (
 void App::open_list (
     const AnyString& list_path, std::unique_ptr<Settings> settings
 ) {
-    constexpr IRI stdin_loc ("liv:stdin");
+    constexpr IRI stdin_loc = "liv:stdin";
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = BookSource(BookType::List, Slice<IRI>{loc});
     add_book(*this, move(src), move(settings));

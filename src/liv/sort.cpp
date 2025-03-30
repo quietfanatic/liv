@@ -256,7 +256,7 @@ static tap::TestSet tests ("liv/sort", []{
     std::mt19937 gen (0);
     std::uniform_int_distribution dist(0, 99999);
 
-    IRI base ("file:/");
+    IRI base = "file:/";
 
     auto iris = UniqueArray<IRI>(4000, [&](usize){
         return IRI(cat(dist(gen)), base);

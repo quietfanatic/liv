@@ -8,7 +8,7 @@
 
 namespace liv {
 
-constexpr IRI marks_folder = IRI("data:/marks/");
+constexpr IRI marks_folder = "data:/marks/";
 
  // Returns null if this book is not remembered.  If returns non-null, the
  // passed-in Settings will be moved from.
