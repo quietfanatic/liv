@@ -209,11 +209,11 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::PageLoadTime: {
             if (page < 0) break;
             auto p = book->block.get(page);
-            double time = p->load_finished_at - p->load_started_at;
-            if (!defined(time)) {
+            if (!p->load_finished_at) {
                 encat(s, "(unavailable)");
             }
             else {
+                double time = p->load_finished_at - p->load_started_at;
                 expect(time >= 0 && time <= 1000000);
                 encat(s, round(time * 1000) / 1000.0, 's');
             }

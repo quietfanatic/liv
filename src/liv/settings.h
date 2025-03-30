@@ -59,9 +59,7 @@ enum class InterpolationMode {
     SmartCubic
 };
 
-struct ColorRange {
-    geo::Range ranges [3];
-};
+using ColorRange = geo::GRange<Vec3>;
 
 enum class TrimMode {
     None,
@@ -74,7 +72,7 @@ struct Mapping {
 };
 
 struct WindowSettings {
-    std::optional<geo::IVec> size;
+    std::optional<IVec> size;
     std::optional<bool> fullscreen;
     std::optional<FormatList> title;
      // For testing.  Don't show windows.  Note that some graphics drivers will
@@ -94,8 +92,8 @@ struct LayoutSettings {
     std::optional<float> max_zoom;
     std::optional<float> min_zoomed_size;
     std::optional<ResetOnSeek> reset_on_seek;
-    std::optional<geo::Vec> small_align;
-    std::optional<geo::Vec> large_align;
+    std::optional<Vec> small_align;
+    std::optional<Vec> large_align;
     std::optional<float> scroll_margin;
     std::optional<Direction> orientation;
 };

@@ -177,7 +177,6 @@ void main () {
     color = color * color.a + u_transparency_background * (1.0 - color.a);
      // Apply color range setting
     color.rgb = color.rgb * u_color_mul + u_color_add;
-    
 }"
 
 [ayu::Document {

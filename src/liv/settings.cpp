@@ -14,7 +14,7 @@ static AnyString extensions [] = {
 Settings builtin_default_settings = {
     .parent = null,
     .window = {
-        .size = {geo::IVec{720, 720}},
+        .size = {IVec{720, 720}},
         .fullscreen = {false},
         .title = {FormatList(
             FormatToken("["), FormatToken(FormatCommand::VisibleRange),
@@ -36,8 +36,8 @@ Settings builtin_default_settings = {
         .max_zoom = {32},
         .min_zoomed_size = {16},
         .reset_on_seek = {ResetOnSeek::Zoom},
-        .small_align = {geo::Vec{0.5, 0.5}},
-        .large_align = {geo::Vec{0.5, 0.5}},
+        .small_align = {Vec{0.5, 0.5}},
+        .large_align = {Vec{0.5, 0.5}},
         .scroll_margin = {0},
         .orientation = {Direction::Up},
     },
@@ -45,11 +45,11 @@ Settings builtin_default_settings = {
         .interpolation_mode = {InterpolationMode::SmartCubic},
         .window_background = {Fill::Black},
         .transparency_background = {Fill::White},
-        .color_range = {ColorRange{{{0, 1}, {0, 1}, {0, 1}}}},
+        .color_range = {ColorRange{Vec3{0, 0, 0}, Vec3{1, 1, 1}}},
     },
     .control = {
-        .scroll_speed = {geo::Vec{20, 20}},
-        .drag_speed = {geo::Vec{1, 1}},
+        .scroll_speed = {Vec{20, 20}},
+        .drag_speed = {Vec{1, 1}},
     },
     .files = {
         .sort = {SortMethod{
@@ -176,10 +176,6 @@ AYU_DESCRIBE(liv::InterpolationMode,
         value("cubic", InterpolationMode::Cubic),
         value("smart_cubic", InterpolationMode::SmartCubic)
     )
-)
-
-AYU_DESCRIBE(liv::ColorRange,
-    delegate(&ColorRange::ranges)
 )
 
 AYU_DESCRIBE(liv::Direction,

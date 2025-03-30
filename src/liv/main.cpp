@@ -33,6 +33,7 @@ int main (int argc, char** argv) {
     bool list = false;
     bool done_flags = false;
     std::optional<SortMethod> sort;
+     // TODO: --no-mark, --data-folder, --settings
     for (int i = 1; i < argc; i++) {
         auto arg = StaticString(argv[i]);
         if (!done_flags && arg && arg[0] == '-' && arg != "-") {

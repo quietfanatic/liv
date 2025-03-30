@@ -82,7 +82,7 @@ render: {
     transparency_background: white
      -- Color output range.  Specifies the black and white levels of each of
      -- red, green, and blue.
-    color_range: [[0 1] [0 1] [0 1]]
+    color_range: [[0 0 0] [1 1 1]]
 }
 
  -- Options about control and input
@@ -263,8 +263,8 @@ mappings: [
     ]]
      -- Dim color for night mode, in case your screen doesn't get dark enough.
     [[n] [toggle
-        [color_range [[0 0.5] [0 0.5] [0 0.5]]]
-        [color_range [[0 1] [0 1] [0 1]]]
+        [color_range [[0 0 0] [0.5 0.5 0.5]]]
+        [color_range [[0 0 0] [1 1 1]]]
     ]]
   -------- EXECUTION
     [[q] [quit]]

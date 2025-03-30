@@ -19,16 +19,12 @@ Page::Page (const IRI& loc) :
 Page::~Page () { }
 
 void Page::load () {
+    if (texture) return;
     plog("Loading page");
     load_started_at = now();
-    if (texture) return;
     auto filename = iri::to_fs_path(location);
     try {
         texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        size = texture->size();
-        estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     }
     catch (std::exception& e) {
         ayu::warn_utf8(cat(
@@ -37,14 +33,18 @@ void Page::load () {
         ));
         load_failed = true;
     }
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    size = texture->size();
+    estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     load_finished_at = now();
     plog("loaded page");
 }
 
 void Page::unload () {
     texture = null;
-    load_started_at = GNAN;
-    load_finished_at = GNAN;
+    load_started_at = 0;
+    load_finished_at = 0;
     load_failed = false;
 }
 
@@ -114,21 +114,14 @@ void Page::draw (
     auto interp = settings.get(&RenderSettings::interpolation_mode);
     glUniform1i(program->u_interpolation_mode, i32(interp));
     auto bg = settings.get(&RenderSettings::transparency_background);
-    glUniform4f(program->u_transparency_background,
-        bg.r / 255.f, bg.g / 255.f, bg.b / 255.f, bg.a / 255.f
-    );
+    auto bg_scaled = Vec4(bg.r, bg.g, bg.b, bg.a) / 255.f;
+    glUniform4fv(program->u_transparency_background, 1, &bg_scaled[0]);
     glUniform1f(program->u_zoom, zoom);
     auto& color = settings.get(&RenderSettings::color_range);
-    glUniform3f(program->u_color_mul,
-        geo::size(color.ranges[0]),
-        geo::size(color.ranges[1]),
-        geo::size(color.ranges[2])
-    );
-    glUniform3f(program->u_color_add,
-        color.ranges[0].l,
-        color.ranges[1].l,
-        color.ranges[2].l
-    );
+    auto color_mul = geo::size(color);
+    auto color_add = color.l;
+    glUniform3fv(program->u_color_mul, 1, &color_mul[0]);
+    glUniform3fv(program->u_color_add, 1, &color_add[0]);
      // Do it
     glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
