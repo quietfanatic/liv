@@ -1,6 +1,7 @@
--- This is the default settings file for liv.  You probably don't want to
--- manually modify this file; instead modify settings.ayu in the same folder as
--- the program.
+-- This is the default settings file for liv.  This file serves as documentation
+-- for all the settings, as well as default values for all of them.  You
+-- probably don't want to manually modify this file; instead modify settings.ayu
+-- in the same folder as the program.
 
 [liv::Settings {
 
@@ -75,13 +76,14 @@ render: {
      -- it gradually transitions to smoothed to reduce aliasing.
     interpolation_mode: smart_cubic
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
-     -- where r,g,b,a : 0..255).  The alpha value is probably meaningless for
-     -- the window background.
+     -- where r,g,b,a are between 0 and 1).  The alpha value is probably
+     -- meaningless for the window background.
     window_background: black
      -- Background to show behind transparent parts of images.
     transparency_background: white
      -- Color output range.  Specifies the black and white levels of each of
-     -- red, green, and blue (0 = none, 1 = full).
+     -- red, green, and blue (0 = none, 1 = full).  Values can be below 0 or
+     -- above 1, which will cause the color space to be cut off.
     color_range: [[0 0 0] [1 1 1]]
 }
 
@@ -102,7 +104,7 @@ control: {
  -- Options dealing with files and filenames
 files: {
      -- How to sort files.  Must contain one of:
-     --   natural: Like unicode but is smart about numbers
+     --   natural: Like unicode but is smarter about numbers and folders
      --   unicode: Sort according to Unicode order
      --   last_modified: Older files first
      --   file_size: Smaller files first
@@ -141,7 +143,9 @@ memory: {
 }
 
  -- Key and mouse bindings.  See help/commands.md for a list of supported
- -- commands.
+ -- commands.  To disable one of these bindings, put it in your settings file
+ -- with an empty command, e.g. [[repeatable z] []].  Or I guess you can comment
+ -- it out here, I won't tell anyone.
 mappings: [
   -------- NAVIGATION
      -- Go to next page(s)
@@ -262,6 +266,10 @@ mappings: [
         [transparency_background black]
     ]]
      -- Dim color for night mode, in case your screen doesn't get dark enough.
+     -- Known issue: if you toggle one of these then close the book and open it
+     -- again, then the altered setting will be remembered but not the toggle
+     -- state for the command, so the first issue of the command will not
+     -- appear to do anything.
     [[n] [toggle
         [color_range [[0 0 0] [0.5 0.5 0.5]]]
         [color_range [[0 0 0] [1 1 1]]]

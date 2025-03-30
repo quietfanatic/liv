@@ -92,7 +92,6 @@ my @sources = (qw(
     dirt/ayu/reflection/description.cpp
     dirt/ayu/reflection/type.cpp
     dirt/ayu/resources/document.cpp
-    dirt/ayu/resources/global.cpp
     dirt/ayu/resources/resource.cpp
     dirt/ayu/resources/scheme.cpp
     dirt/ayu/traversal/compound.cpp

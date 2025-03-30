@@ -89,8 +89,10 @@ void draw_pages (
     Vec offset,
     float zoom
 ) {
-    static constexpr IRI program_location = IRI("res:/liv/page.ayu");
-    static PageProgram* program = ayu::ResourceRef(program_location)["program"][1];
+    static PageProgram* program = (
+        ayu::track(program),
+        ayu::reference_from_iri(iri::constant("res:/liv/page.ayu#program"))
+    );
     program->use();
     double view_time = uni::now();
 
