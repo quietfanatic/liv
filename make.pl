@@ -96,7 +96,7 @@ my @sources = (qw(
     dirt/ayu/resources/scheme.cpp
     dirt/ayu/traversal/compound.cpp
     dirt/ayu/traversal/from-tree.cpp
-    dirt/ayu/traversal/location.cpp
+    dirt/ayu/traversal/route.cpp
     dirt/ayu/traversal/scan.cpp
     dirt/ayu/traversal/test.cpp
     dirt/ayu/traversal/to-tree.cpp

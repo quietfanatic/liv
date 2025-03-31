@@ -105,7 +105,7 @@ void save_mark (const App& app, Book& book) {
          // settings, so tell ayu about that reference so it doesn't need to
          // scan.
         static auto app_settings_loc =
-            ayu::location_from_iri(IRI("#", app_settings_location));
+            ayu::route_from_iri(IRI("#", app_settings_location));
          // TODO: find a way to not require app to be passed in
         ayu::PushLikelyRef plr (
             app.app_settings, app_settings_loc
