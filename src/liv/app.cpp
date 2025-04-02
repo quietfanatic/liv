@@ -14,8 +14,10 @@ namespace liv {
 
 static Book* book_with_window_id (App& self, u32 id) {
     auto iter = self.books_by_window_id.find(id);
-    require(iter != self.books_by_window_id.end());
-    return &*iter->second;
+    if (iter != self.books_by_window_id.end()) {
+        return &*iter->second;
+    }
+    else return null;
 }
 
 static void on_event (App& self, SDL_Event* e) {
