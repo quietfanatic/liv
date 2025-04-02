@@ -94,7 +94,7 @@ vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
         case CUBIC: return cubic_hermite(a, b, c, d, t);
         case SMOOTHED: return weighted_average(a, b, c, d, t);
         case SMART_CUBIC: {
-            if (u_zoom >= 1) {
+            if (u_zoom >= 1.0) {
                 return cubic_hermite(a, b, c, d, t);
             }
             else if (u_zoom <= 0.5) {
@@ -111,7 +111,12 @@ vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 }
 
 void main () {
-    switch (u_interpolation_mode) {
+    if (u_zoom == 1.0 && u_interpolation_mode != SMOOTHED) {
+         // If the zoom is exactly 1, ignore any interpolation mode that is
+         // theoretically pixel-perfect.  Does this make scrolling faintly more
+         // responsive?  Hard to tell.  Probably placebo.
+        color = texelFetch(u_tex, ivec2(v_tex_coords));
+    } switch (u_interpolation_mode) {
         default: // error on some drivers: color may be used uninitialized
         case NEAREST: {
             color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));

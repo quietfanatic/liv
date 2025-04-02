@@ -87,9 +87,9 @@ Render Commands
     res/liv/settings-default.ayu for more information.
 - `[transparency_background <Fill>]` = Set the background shown behind
     transparent images.
-- `[color_range [[<float> <float>] [<float> <float>] [<float> <float>]] = Set
-    the output color range.  As an example, use [[0 0.5] [0 0.5] [0 0.5]] to
-    display at half brightness, or [[0 1] [0 1] [0 1]] to reset to default.
+- `[color_range [[<float> <float> <float>] [<float float float>]]` = Set the
+    output color range.  For example, use `[[0 0 0] [0.5 0.5 0.5]]` to display
+    at half brightness, or `[[0 0 0] [1 1 1]]` to reset to default.
 
 Book Commands
 -------------
