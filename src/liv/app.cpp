@@ -35,22 +35,18 @@ static void on_event (App& self, SDL_Event* e) {
         }
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            SDL_ShowCursor(SDL_DISABLE);
             current_book = book_with_window_id(self, e->key.windowID);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP: {
-            SDL_ShowCursor(SDL_ENABLE);
             current_book = book_with_window_id(self, e->button.windowID);
             break;
         }
         case SDL_MOUSEMOTION: {
-            SDL_ShowCursor(SDL_ENABLE);
             current_book = book_with_window_id(self, e->motion.windowID);
             break;
         }
         case SDL_MOUSEWHEEL: {
-            SDL_ShowCursor(SDL_DISABLE);
             current_book = book_with_window_id(self, e->wheel.windowID);
             break;
         }

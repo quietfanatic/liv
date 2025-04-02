@@ -156,7 +156,7 @@ static void run_ (const UniqueArray<FormatList>& fmts) {
 }
 Command<run_> run (1, "run", "Run a system command with the command name and each argument from format lists.");
 
-///// BOOK AND PAGE COMMANDS
+///// ACTION COMMANDS
 
 static void next_ () {
     if (current_book) current_book->next();
@@ -182,6 +182,13 @@ static void go_ (Direction dir, int32 count) {
     if (current_book) current_book->go(dir, count);
 }
 Command<go_> go (2, "go", "Move in the given direction by the given number of pages");
+
+static void trap_pointer_ (bool trap) {
+    if (current_book) current_book->trap_pointer(trap);
+}
+Command<trap_pointer_> trap_pointer (1, "trap_pointer", "Set pointer trap mode");
+
+///// BOOK COMMANDS
 
 static void sort_ (SortMethod method) {
     if (!current_book) return;

@@ -24,6 +24,10 @@ computer made since 2011 should work.
 There are lots of settings you can configure by editing the file `settings.ayu`
 in the program directory (it may not exist until you run the program once).
 
+Note that by default, left-clicking in the window will trap the pointer (make it
+invisible and constrain it to the window).  Left-click again or press Escape to
+bring it back.
+
 There are comparatively few command-line arguments.  You can get info about them
 with `--help`.
 

@@ -67,8 +67,7 @@ void Book::on_event (SDL_Event* e) {
             }
             break;
         }
-        case SDL_KEYDOWN:
-        case SDL_KEYUP: {
+        case SDL_KEYDOWN: {
              // There's a bug where if we gain focus by another window being
              // closed with a keystroke, the keystroke gets sent to us.  I don't
              // know if this is a bug in SDL or the window manager, but the
@@ -78,18 +77,21 @@ void Book::on_event (SDL_Event* e) {
              // some reason.  This is still faster than 1 video frame and faster
              // than the typical input device polling rate (10ms).
             if (e->key.timestamp - last_focused <= 3) return;
-            else break;
+            SDL_ShowCursor(SDL_DISABLE);
+            break;
         }
         case SDL_MOUSEMOTION: {
-            if (e->motion.state & SDL_BUTTON_RMASK) {
+            if (pointer_trapped) {
                 scroll(geo::Vec(
                     e->motion.xrel,
                     e->motion.yrel
                 ) * state.settings->get(&ControlSettings::drag_speed));
             }
+            else SDL_ShowCursor(SDL_ENABLE);
             break;
         }
         case SDL_MOUSEWHEEL: {
+            SDL_ShowCursor(SDL_DISABLE);
             auto amount = Vec(e->wheel.preciseX, e->wheel.preciseY);
             amount.x = -amount.x;
             if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
@@ -154,6 +156,11 @@ void Book::go (Direction dir, i32 offset) {
     auto spread_dir = state.settings->get(&LayoutSettings::spread_direction);
     if (dir == spread_dir) seek(offset);
     else if (dir == -spread_dir) seek(-offset);
+}
+
+void Book::trap_pointer (bool trap) {
+    pointer_trapped = trap;
+    SDL_SetRelativeMouseMode(trap ? SDL_TRUE : SDL_FALSE);
 }
 
 void Book::remove_current_page () {

@@ -181,6 +181,13 @@ mappings: [
     [[ctrl shift left] [go left 1000000000]]
     [[ctrl shift down] [go down 1000000000]]
     [[ctrl shift up] [go up 1000000000]]
+     -- Toggle drag mode
+    [[leftbtn] [toggle
+        [trap_pointer true]
+        [trap_pointer false]
+    ]]
+    [[middlebtn] [next]]
+    [[rightbtn] [prev]]
      -- Set simultaneous viewed pages
     [[1] [spread_count 1]]
     [[2] [spread_count 2]]
@@ -219,7 +226,6 @@ mappings: [
      -- Toggle fullscreen mode
     [[f] [fullscreen]]
     [[f11] [fullscreen]]
-    [[escape] [leave_fullscreen]]
      -- Set auto zoom mode
     [[0] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
@@ -278,6 +284,10 @@ mappings: [
     [[q] [quit]]
     [[ctrl q] [quit]]
     [["`"] [prompt_command]]
+    [[escape] [seq [
+        [leave_fullscreen]
+        [trap_pointer false]
+    ]]]
 ]
 
 }]

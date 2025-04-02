@@ -29,6 +29,8 @@ struct Book {
      // Set to false when we navigate.
     bool delay_preload = false;
 
+    bool pointer_trapped = false;
+
     explicit Book (
         BookSource&&, PageBlock&&, BookState&&
     );
@@ -55,6 +57,7 @@ struct Book {
     void seek (i32);
     void go_next (Direction);
     void go (Direction, i32);
+    void trap_pointer (bool);
     void remove_current_page ();
     void sort (SortMethod);
     void spread_count (i32);

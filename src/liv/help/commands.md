@@ -36,8 +36,8 @@ Application Commands
     and argument strings created from format lists.  There will be a lot of
     square brackets.  Example: `[run [[gvim] [[app_settings_abs]]]]`
 
-Book and Page Commands
-----------------------
+Action Commands
+---------------
 - `[next]` = Go to the next page or pages, depending on current spread count.
 - `[prev]` = Go to the previous page or pages, depending on current spread
     count.
@@ -49,35 +49,15 @@ Book and Page Commands
     backwards.  If perpendicular, does nothing.
 - `[go <Direction> <int32>]` = If the direction matches or is opposite the
     current spread direction, seek by that much in that direction.
-- `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
-    current maximum is 16.
-- `[sort <SortMethod>]` = Change how the pages are sorted in the current book,
-    keeping the current page filename the same (possibly changing the current
-    page number).  See res/liv/settings-default.ayu for documentation on sort
-    methods.
-- `[add_to_list <String> <SortMethod>]` = Add given page to a list file at the
-    given path (a file containing filenames, one per line), and then sort the
-    file with the given sort method.  Duplicates will be removed unless the sort
-    method is `[unsorted]`.  See res/liv/settings-default.ayu for documentation
-    on sort methods.  If multiple pages are being viewed, this and below
-    commands only affect the lowest-numbered page being viewed.
-- `[remove_from_list <String>]` = Remove page from list file at the given path.
-- `[remove_from_book]` = Remove current page from the current book.  This only
-    affects the set of pages currently being tracked by the application; it does
-    nothing to the page's actual file on disk.
-- `[move_to_folder <String>]` = Move current page's file to the folder at the
-    given path.  This does not remove the page from the current book.  To do
-    both, use the `seq` command as follows:
-```
-[seq [
-    [move_to_folder myfolder]
-    [remove_from_book]
-]]
-```
+- `[trap_pointer <bool>]` = Switch pointer trapping mode.  If true, the pointer
+    will be hidden and constrained in the window, and moving the pointer will
+    scroll the view around.  If false, the pointer will be returned to normal
+    desktop behavior.
 
 Layout Commands
 ---------------
-- `[spread_count <int32>]` = Set the number of pages to simultaneously view.
+- `[spread_count <int32>]` = Change how many pages to view simultaneously.  The
+    current maximum is 16.
 - `[spread_direction <Direction>]` = Set the direction to view simultaneous
     pages in.  Also affects the `[go]` and `[go_next]` commands.
 - `[auto_zoom_mode <AutoZoomMode>]` = Set the auto zoom mode for the current
@@ -111,3 +91,28 @@ Render Commands
     the output color range.  As an example, use [[0 0.5] [0 0.5] [0 0.5]] to
     display at half brightness, or [[0 1] [0 1] [0 1]] to reset to default.
 
+Book Commands
+-------------
+- `[sort <SortMethod>]` = Change how the pages are sorted in the current book,
+    keeping the current page filename the same (possibly changing the current
+    page number).  See res/liv/settings-default.ayu for documentation on sort
+    methods.
+- `[add_to_list <String> <SortMethod>]` = Add given page to a list file at the
+    given path (a file containing filenames, one per line), and then sort the
+    file with the given sort method.  Duplicates will be removed unless the sort
+    method is `[unsorted]`.  See res/liv/settings-default.ayu for documentation
+    on sort methods.  If multiple pages are being viewed, this and below
+    commands only affect the lowest-numbered page being viewed.
+- `[remove_from_list <String>]` = Remove page from list file at the given path.
+- `[remove_from_book]` = Remove current page from the current book.  This only
+    affects the set of pages currently being tracked by the application; it does
+    nothing to the page's actual file on disk.
+- `[move_to_folder <String>]` = Move current page's file to the folder at the
+    given path.  This does not remove the page from the current book.  To do
+    both, use the `seq` command as follows:
+```
+[seq [
+    [move_to_folder myfolder]
+    [remove_from_book]
+]]
+```
