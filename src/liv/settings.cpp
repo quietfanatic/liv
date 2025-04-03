@@ -257,6 +257,7 @@ AYU_DESCRIBE(liv::MemorySettings,
 )
 
 AYU_DESCRIBE(liv::Settings,
+    flags(no_refs_to_children),
     attrs(
         attr_default("window", &Settings::window, ayu::Tree::object()),
         attr_default("layout", &Settings::layout, ayu::Tree::object()),

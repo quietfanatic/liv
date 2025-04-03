@@ -133,11 +133,14 @@ void save_mark (const App& app, Book& book) {
 } using namespace liv;
 
 AYU_DESCRIBE(liv::Mark,
+    flags(no_refs_to_children),
     attrs(
         attr("source", &Mark::source),
         attr("state", &Mark::state, include),
         attr("page", mixed_funcs<AnyString>(
             [](const Mark& v){
+                 // Book sources with multiple source locations will never have
+                 // marks.
                 expect(v.source.locations.size() == 1);
                 return AnyString(v.page.relative_to(v.source.locations[0]));
             },

@@ -39,6 +39,7 @@ with `--help`.
 [x] Folder support
 [x] List support
 [x] Sorting
+[ ] Switch to OpenGL ES
 [ ] Zoom around cursor
 [ ] Customizable mouse controls
 [ ] Support avif images (maybe switch to SAIL)
