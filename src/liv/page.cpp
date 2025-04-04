@@ -25,6 +25,10 @@ void Page::load () {
     auto filename = iri::to_fs_path(location);
     try {
         texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
+        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        size = texture->size();
+        estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     }
     catch (std::exception& e) {
         ayu::warn_utf8(cat(
@@ -33,10 +37,6 @@ void Page::load () {
         ));
         load_failed = true;
     }
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    size = texture->size();
-    estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     load_finished_at = now();
     plog("loaded page");
 }
