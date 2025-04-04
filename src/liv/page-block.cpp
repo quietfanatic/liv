@@ -1,6 +1,8 @@
 #include "page-block.h"
 
+#include <fcntl.h>
 #include "../dirt/geo/scalar.h"
+#include "../dirt/uni/io.h"
 #include "../dirt/uni/text.h"
 #include "book-source.h"
 #include "book.h"
@@ -9,43 +11,80 @@
 
 namespace liv {
 
-static
+NOINLINE static
 UniqueArray<IRI> expand_neighbors (
     const Settings& settings, const IRI& loc
 ) {
     plog("expanding neighbors");
-    auto sort = settings.get(&FilesSettings::sort);
     auto& extensions = settings.get(&FilesSettings::page_extensions);
+    IRI folder = loc.chop_filename();
+    Str self = iri::path_filename(loc.path());
+
     UniqueArray<IRI> r;
 
-    IRI folder = loc.chop_filename();
-    for (auto& entry : fs::directory_iterator(iri::to_fs_path(folder))) {
-        auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
-        expect(child);
-         // Don't skip if we explicitly requested this file
-        if (child != loc) {
-            auto ext = ascii_to_lower(iri::path_extension(child.path()));
+    for (Str child : Dir(iri::to_fs_path(folder))) {
+        expect(child[0]);
+        if (child[0] == '.') continue;
+         // Don't check extension if we explicitly requested the file.
+        if (child != self) {
+            auto ext = ascii_to_lower(iri::path_extension(child));
             for (auto& e : extensions) {
-                if (e == ext) goto found;
+                if (e == ext) goto pick;
             }
             continue;
-            found:;
         }
-        r.emplace_back(move(child));
-    }
+        pick:
+        IRI neighbor = iri::from_fs_path(child, folder);
+        expect(neighbor);
+        r.emplace_back(move(neighbor));
+    };
+
+    auto sort = settings.get(&FilesSettings::sort);
     sort_iris(r.begin(), r.end(), sort);
     return r;
 }
 
-static
+void expand_recursively_recurse (
+    UniqueArray<IRI>& r,
+    Slice<AnyString> extensions,
+    Dir& dir,
+    const IRI& folder
+) {
+    for (Str child : dir) {
+        expect(child);
+        if (child[0] == '.') continue;
+         // TODO: reduce string copies
+        if (Dir subdir = Dir::try_open_at(dir.fd, child)) {
+            IRI subfolder = iri::from_fs_path(cat(subdir.path, '/'), folder);
+            expect(subfolder);
+            expand_recursively_recurse(
+                r, extensions, subdir, subfolder
+            );
+        }
+        else {
+             // Ignore failure to open, delay it for when we load the page.
+            auto ext = ascii_to_lower(iri::path_extension(child));
+            for (auto& e : extensions) {
+                if (e == ext) goto pick;
+            }
+            continue;
+            pick:
+            IRI neighbor = iri::from_fs_path(child, folder);
+            expect(neighbor);
+            r.emplace_back(move(neighbor));
+        }
+    }
+}
+
+
+NOINLINE static
 UniqueArray<IRI> expand_recursively (
     const Settings& settings, Slice<IRI> locs, BookType type
 ) {
     plog("expanding recursively");
-    auto sort = settings.get(&FilesSettings::sort);
-    auto& extensions = settings.get(&FilesSettings::page_extensions);
-    UniqueArray<IRI> r;
 
+    auto& extensions = settings.get(&FilesSettings::page_extensions);
+    auto sort = settings.get(&FilesSettings::sort);
     bool sort_everything;
     switch (type) {
         case BookType::Misc: {
@@ -63,28 +102,22 @@ UniqueArray<IRI> expand_recursively (
         default: never();
     }
 
+    UniqueArray<IRI> r;
     for (auto& loc : locs) {
-        auto fs_path = iri::to_fs_path(loc);
-        if (fs::is_directory(fs_path)) {
+        auto path = iri::to_fs_path(loc);
+        if (Dir dir = Dir::try_open_at(AT_FDCWD, path)) {
+            IRI folder = IRI(cat(dir.path, '/'), "file:");
             usize old_size = r.size();
-            for (auto& entry : fs::recursive_directory_iterator(fs_path)) {
-                auto child = iri::from_fs_path(Str(entry.path().generic_u8string()));
-                expect(child);
-                auto ext = ascii_to_lower(iri::path_extension(child.path()));
-                for (auto& e : extensions) {
-                    if (e == ext) goto found;
-                }
-                continue;
-                found:;
-                r.emplace_back(move(child));
-            }
+            expand_recursively_recurse(
+                r, extensions, dir, folder
+            );
             if (!sort_everything) {
                 sort_iris(r.begin() + old_size, r.end(), sort);
             }
         }
         else {
-             // Don't check the file extension for explicitly specified
-             // files.
+             // Don't check the file extension or hiddenness for explicitly
+             // specified files.
             r.emplace_back(loc);
         }
     }
