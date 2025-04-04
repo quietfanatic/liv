@@ -24,9 +24,9 @@ void Page::load () {
     load_started_at = now();
     auto filename = iri::to_fs_path(location);
     try {
-        texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_RECTANGLE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        texture = std::make_unique<FileTexture>(filename, GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         size = texture->size();
         estimated_memory = area(size) * ((texture->bpp() + 1) / 8);
     }
@@ -119,7 +119,7 @@ void draw_pages (
          // Some validation
         if (!texture) continue;  // Probably failed to load.
         expect(!!*texture);
-        expect(texture->target == GL_TEXTURE_RECTANGLE);
+        expect(texture->target == GL_TEXTURE_2D);
         plog("drawing page");
 
         view.page->last_viewed_at = view_time;
@@ -135,7 +135,7 @@ void draw_pages (
         auto tex_rect = Rect(Vec{0, 0}, view.page->size);
         glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
          // Do it
-        glBindTexture(GL_TEXTURE_RECTANGLE, *texture);
+        glBindTexture(GL_TEXTURE_2D, *texture);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         plog("drew page");
     }

@@ -6,7 +6,6 @@
 uniform int u_orientation;
 uniform float u_screen_rect [4];
 uniform float u_tex_rect [4];
-uniform sampler2DRect u_tex;
 out vec2 v_tex_coords;
 
  // TODO: reorder
@@ -47,7 +46,7 @@ void main () {
 &fragment_source:
 "#version 140
 
-uniform sampler2DRect u_tex;
+uniform sampler2D u_tex;
 uniform int u_interpolation_mode;
 uniform vec4 u_transparency_background;
 uniform float u_zoom;
@@ -115,15 +114,16 @@ void main () {
          // If the zoom is exactly 1, ignore any interpolation mode that is
          // theoretically pixel-perfect.  Does this make scrolling faintly more
          // responsive?  Hard to tell.  Probably placebo.
-        color = texelFetch(u_tex, ivec2(v_tex_coords));
+        color = texelFetch(u_tex, ivec2(v_tex_coords), 0);
     } switch (u_interpolation_mode) {
         default: // error on some drivers: color may be used uninitialized
         case NEAREST: {
-            color = texelFetch(u_tex, ivec2(floor(v_tex_coords)));
+            color = texelFetch(u_tex, ivec2(floor(v_tex_coords)), 0);
             break;
         }
         case LINEAR: {
-            color = texture(u_tex, v_tex_coords);
+            vec2 lookup_coords = v_tex_coords / textureSize(u_tex, 0);
+            color = texture(u_tex, lookup_coords);
             break;
         }
         case SMOOTHED:
@@ -138,7 +138,7 @@ void main () {
              // Use textureOffset instead of texelFetchOffset because the
              // latter bypasses GL_CLAMP_TO_BORDER...but then we have to
              // add the 0.5 back.
-            vec2 lookup_coords = int_coords + 0.5;
+            vec2 lookup_coords = (int_coords + 0.5) / textureSize(u_tex, 0);
             vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
             vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
             vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
