@@ -7,14 +7,22 @@ A lightning-fast image viewer.
 
 ### BUILDING
 
-Builds on Linux Mint (Ubuntu 22.04 base).  Will probably build on Windows and
-Mac if you tweak it a bit.
+Builds with GCC on Linux Mint (Ubuntu 22.04 base).  Will probably build on
+Windows and Mac if you tweak it a bit.
 
-Requires libsdl2-dev and libsdl2-image-dev (or equivalent).
+Requires the following packages (or equivalent)"
 
-    perl make.pl --jobs=7 release
+- libsdl2-dev
+- libsail-dev
+- libsail-common-dev
+- libsail-manip-dev
 
-The program and all runtime files will be put into `out/rel`.
+Run this command to build.  The program and all runtime files will be put into
+`out/rel`.
+
+```
+perl make.pl release
+```
 
 ### USAGE
 
@@ -42,7 +50,7 @@ with `--help`.
 [ ] Switch to OpenGL ES
 [ ] Zoom around cursor
 [ ] Customizable mouse controls
-[ ] Support avif images (maybe switch to SAIL)
+[x] Support avif images (maybe switch to SAIL)
 [ ] Archive file support
 [ ] Official Windows (mingw) support
 [ ] Off-thread image loading

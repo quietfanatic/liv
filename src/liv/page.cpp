@@ -218,14 +218,13 @@ static tap::TestSet tests ("liv/page", []{
             diag(cat(x, ' ', y));
             diag(ayu::item_to_string(&expected[{x, y}]));
             diag(ayu::item_to_string(&got[{x, y}]));
-            goto no_match;
+            goto done;
         }
     }
-    no_match:;
+    done:;
     ok(match, "Page program wrote correct pixels");
 
      // TODO: test failure to load image
-
     done_testing();
 });
 #endif

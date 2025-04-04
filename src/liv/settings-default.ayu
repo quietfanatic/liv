@@ -122,7 +122,9 @@ files: {
      -- regardless of their extensions.  The file extension is case-insensitive
      -- for ASCII characters only.
     page_extensions: [
-        bmp gif jfif jpe jpeg jpg png tif tiff xbm xpm webp
+        avif bmp cur gif icb ico j2c j2k jfi jfif jif jp2 jpc
+        jpe jpeg jpf jpg jpg2 jpm jpx jxl mj2 pbm pcx pgm png
+        pnm ppm psd qoi tga tif tiff vda vst wal webp xbm xpm
     ]
 }
 

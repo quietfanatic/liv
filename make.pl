@@ -12,18 +12,14 @@ my %compilers = (
 );
 my @linker = 'g++-14';
 
-my @includes = ();
+my @includes = ('/usr/include/sail');
 my @compile_opts = (map("-I$_", @includes), qw(
     -msse2 -mfpmath=sse
     -fstrict-aliasing -fstack-protector
     -Wall -Wextra -Wno-unused-value
     -fmax-errors=10 -fdiagnostics-color -fno-diagnostics-show-caret
 ));
-my @link_opts = (qw(-lSDL2 -lSDL2_image));
-#my @link_opts = (('-L' . rel2abs("$mingw_sdl2/lib")), qw(
-#    -static-libgcc -static-libstdc++
-#    -lmingw32 -lSDL2main -lSDL2
-#));
+my @link_opts = (qw(-lSDL2 -lsail -lsail-common -lsail-manip));
 
  # Dead code elimination actually makes compilation slightly faster.
 my @O0_opts = (qw(-fdce));
@@ -109,13 +105,15 @@ my @sources = (qw(
     dirt/geo/vec.t.cpp
     dirt/glow/colors.cpp
     dirt/glow/common.cpp
-    dirt/glow/file-image.cpp
     dirt/glow/file-texture.cpp
+    dirt/glow/gl.cpp
     dirt/glow/image-texture.cpp
     dirt/glow/image-transform.cpp
-    dirt/glow/gl.cpp
     dirt/glow/image.cpp
+    dirt/glow/load-image.cpp
     dirt/glow/program.cpp
+    dirt/glow/resource-image.cpp
+    dirt/glow/resource-texture.cpp
     dirt/glow/test-environment.cpp
     dirt/glow/texture-program.cpp
     dirt/glow/texture.cpp
@@ -226,7 +224,7 @@ for my $cfg (keys %configs) {
      # Misc phonies
     phony "out/$cfg/build", [$out_program, @out_resources];
     phony "out/$cfg/test", "out/$cfg/build", sub {
-        run "$out_program --test | perl -pe \"s/\\r//\" | prove -e \"$out_program --test\" -";
+        run "$out_program --test | perl -pe \"s/\\r//\" | prove -f -e \"$out_program --test\" -";
     };
 }
 
