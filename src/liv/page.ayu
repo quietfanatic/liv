@@ -1,5 +1,5 @@
 &vertex_source:
-"#version 140
+"#version 300 es
 
  // Declaring and transmitting vertex attributes is annoying, so instead we're
  // doing everything with uniforms and the gl_VertexID.
@@ -44,7 +44,9 @@ void main () {
 }"
 
 &fragment_source:
-"#version 140
+"#version 300 es
+precision highp float;
+precision highp int;
 
 uniform sampler2D u_tex;
 uniform int u_interpolation_mode;
@@ -68,11 +70,11 @@ const int EXTRA_SMOOTH = 5;
 vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
      // I'd use a matrix here, but I don't think GLSL supports matrixes with
      // vectors as their individual components. :)
-    vec4 v0 =       2*b;
-    vec4 v1 =  -a       +   c;
-    vec4 v2 = 2*a - 5*b + 4*c - d;
-    vec4 v3 =  -a + 3*b - 3*c + d;
-    return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2;
+    vec4 v0 =         2.0*b;
+    vec4 v1 =    -a         +     c;
+    vec4 v2 = 2.0*a - 5.0*b + 4.0*c - d;
+    vec4 v3 =    -a + 3.0*b - 3.0*c + d;
+    return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2.0;
 }
 
  // t   | wa  | wb  | wc  | wd
@@ -81,11 +83,11 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
  // 0.5 | 1/8 | 3/8 | 3/8 | 1/8
  // 1   | 0   | 1/4 | 1/2 | 1/4
 vec4 weighted_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
-    float wa = 1 - t;
-    float wb = 2 - t;
-    float wc = 1 + t;
+    float wa = 1.0 - t;
+    float wb = 2.0 - t;
+    float wc = 1.0 + t;
     float wd = t;
-    return (a*wa + b*wb + c*wc + d*wd) / 4;
+    return (a*wa + b*wb + c*wc + d*wd) / 4.0;
 }
 
 vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
@@ -102,8 +104,8 @@ vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
             else {
                 vec4 cubic = cubic_hermite(a, b, c, d, t);
                 vec4 average = weighted_average(a, b, c, d, t);
-                float zt = u_zoom * 2 - 1;
-                return average * (1-zt) + cubic * zt;
+                float zt = u_zoom * 2.0 - 1.0;
+                return average = (1.0-zt) + cubic * zt;
             }
         }
     }
@@ -117,7 +119,7 @@ void main () {
             break;
         }
         case LINEAR: {
-            vec2 lookup_coords = v_tex_coords / textureSize(u_tex, 0);
+            vec2 lookup_coords = v_tex_coords / vec2(textureSize(u_tex, 0));
             color = texture(u_tex, lookup_coords);
             break;
         }
@@ -133,7 +135,7 @@ void main () {
              // Use textureOffset instead of texelFetchOffset because the
              // latter bypasses GL_CLAMP_TO_BORDER...but then we have to
              // add the 0.5 back.
-            vec2 lookup_coords = (int_coords + 0.5) / textureSize(u_tex, 0);
+            vec2 lookup_coords = (int_coords + 0.5) / vec2(textureSize(u_tex, 0));
             vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
             vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
             vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
