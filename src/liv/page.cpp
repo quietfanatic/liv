@@ -100,6 +100,10 @@ void draw_pages (
     glUniform1i(program->u_orientation, i32(ori));
 
     auto interp = settings.get(&RenderSettings::interpolation_mode);
+     // Increase chances of pixel-perfect rendering
+    if (zoom == 1.f && interpolation_mode_preserves_centers(interp)) {
+        interp = InterpolationMode::Nearest;
+    }
     glUniform1i(program->u_interpolation_mode, i32(interp));
 
     auto bg = settings.get(&RenderSettings::transparency_background);
@@ -130,8 +134,8 @@ void draw_pages (
         Rect zoomed = unzoomed * zoom + offset;
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect on_picture = zoomed / picture_size * float(2) - Vec(1, 1);
-
         glUniform1fv(program->u_screen_rect, 4, &on_picture.l);
+
         auto tex_rect = Rect(Vec{0, 0}, view.page->size);
         glUniform1fv(program->u_tex_rect, 4, &tex_rect.l);
          // Do it

@@ -59,6 +59,10 @@ enum class InterpolationMode {
     SmartCubic
 };
 
+constexpr bool interpolation_mode_preserves_centers (InterpolationMode mode) {
+    return mode != InterpolationMode::Smoothed;
+}
+
 using ColorRange = geo::GRange<Vec3>;
 
 enum class TrimMode {
