@@ -13,6 +13,7 @@ static
 UniqueArray<IRI> expand_neighbors (
     const Settings& settings, const IRI& loc
 ) {
+    plog("expanding neighbors");
     auto sort = settings.get(&FilesSettings::sort);
     auto& extensions = settings.get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;
@@ -40,6 +41,7 @@ static
 UniqueArray<IRI> expand_recursively (
     const Settings& settings, Slice<IRI> locs, BookType type
 ) {
+    plog("expanding recursively");
     auto sort = settings.get(&FilesSettings::sort);
     auto& extensions = settings.get(&FilesSettings::page_extensions);
     UniqueArray<IRI> r;

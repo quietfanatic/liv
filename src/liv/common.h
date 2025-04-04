@@ -1,5 +1,6 @@
 #pragma once
 
+//#define LIV_PROFILE
 #ifdef LIV_PROFILE
 #include <cstdio>
 #include <ctime> // Will be using POSIX functions though

@@ -8,6 +8,7 @@
 namespace liv {
 
 UniqueArray<IRI> read_list (const IRI& loc) {
+    plog("reading list");
     UniqueArray<IRI> r;
 
     UniqueString line;

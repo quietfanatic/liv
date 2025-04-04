@@ -43,7 +43,9 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     auto res = ayu::SharedResource(get_mark_location(loc));
     if (!ayu::source_exists(res->name())) return null;
     try {
+        plog("loading mark");
         ayu::load(res);
+        plog("loaded mark");
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(

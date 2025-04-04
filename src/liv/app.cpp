@@ -90,6 +90,7 @@ App::App () : loop{
         );
     }
     app_settings = settings_res->ref();
+    plog("Loaded settings");
 }
 
 App::~App () { }
