@@ -43,7 +43,7 @@ Settings builtin_default_settings = {
     },
     .render = {
         .upscaler = {Upscaler::CubicRingless},
-        .downscaler = {Downscaler::Squares9},
+        .downscaler = {Downscaler::Squares16},
         .window_background = {Fill::Black},
         .transparency_background = {Fill::White},
         .color_range = {ColorRange{Vec3{0, 0, 0}, Vec3{1, 1, 1}}},
@@ -183,7 +183,8 @@ AYU_DESCRIBE(liv::Downscaler,
     values(
         value("nearest", Downscaler::Nearest),
         value("linear", Downscaler::Linear),
-        value("squares9", Downscaler::Squares9)
+        value("squares9", Downscaler::Squares9),
+        value("squares16", Downscaler::Squares16)
     )
 )
 

@@ -62,6 +62,7 @@ enum class Downscaler {
     Nearest = 0,
     Linear = 1,
     Squares9 = 4,
+    Squares16 = 5,
 };
 
 using ColorRange = geo::GRange<Vec3>;

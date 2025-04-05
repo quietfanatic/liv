@@ -49,7 +49,7 @@ precision highp float;
 precision highp int;
 
 uniform sampler2D u_tex;
-uniform int u_interpolation_mode;
+uniform int u_interpolator;
 uniform vec4 u_transparency_background;
 uniform float u_zoom;
 uniform vec3 u_color_mul;
@@ -63,6 +63,7 @@ const int LINEAR = 1;
 const int CUBIC = 2;
 const int CUBIC_RINGLESS = 3;
 const int SQUARES9 = 4;
+const int SQUARES16 = 5;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -77,13 +78,13 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
     return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2.0;
 }
 
-vec4 merge_squares_3 (vec4 a, vec4 b, vec4 c, float frac) {
-    float zoom = min(1.0, u_zoom);
+vec4 sliding_area_3 (vec4 a, vec4 b, vec4 c, float frac) {
+    float zoom = clamp(u_zoom, 1.0/2.0, 1.0);
     float expand = 1.0/zoom;
 
      //            | frac=0.0 | frac=0.5 | frac=1.0
-     // expand=1.0 |  wa=0.5  |  wa=0.0  |  wa=-0.5
-     // expand=1.5 |  wa=0.75 |  wa=0.25 |  wa=-0.25
+     // expand=1.0 |  wa=0.5  |  wa=0.0  |  wa=0.0
+     // expand=1.5 |  wa=0.75 |  wa=0.25 |  wa=0.0
      // expand=2.0 |  wa=1.0  |  wa=0.5  |  wa=0.0
 
      //            | frac=0.0 | frac=0.5 | frac=1.0
@@ -99,8 +100,31 @@ vec4 merge_squares_3 (vec4 a, vec4 b, vec4 c, float frac) {
     return (wa*a + wb*b + wc*c) * zoom;
 }
 
+vec4 sliding_area_4 (vec4 a, vec4 b, vec4 c, vec4 d, float frac) {
+    float zoom = clamp(u_zoom, 1.0/3.0, 1.0/2.0);
+    float expand = 1.0/zoom;
+
+     //            | frac=0.0 | frac=0.5 | frac=1.0
+     // expand=2.0 |  wa=0.5  |  wa=0.0  |  wa=0.0
+     // expand=2.5 |  wa=0.75 |  wa=0.25 |  wa=0.0
+     // expand=3.0 |  wa=1.0  |  wa=0.5  |  wa=0.0
+
+     //            | frac=0.0 | frac=0.5 | frac=1.0
+     // expand=2.0 |  wb=1.0  |  wb=1.0  |  wb=0.5
+     // expand=2.5 |  wb=1.0  |  wb=1.0  |  wb=0.75
+     // expand=3.0 |  wb=1.0  |  wb=1.0  |  wb=1.0
+
+    float base = 0.5 * (expand - 1.0);
+
+    float wa = max(0.0, base - frac);
+    float wb = min(1.0, base + (1.0 - frac));
+    float wc = min(1.0, base + frac);
+    float wd = max(0.0, base - (1.0 - frac));
+    return (wa*a + wb*b + wc*c + wd*d) * zoom;
+}
+
 void main () {
-    switch (u_interpolation_mode) {
+    switch (u_interpolator) {
         default: // error on some drivers: color may be used uninitialized
         case NEAREST: {
             color = texelFetch(u_tex, ivec2(floor(v_tex_coords)), 0);
@@ -112,11 +136,12 @@ void main () {
             break;
         }
         case SQUARES9: {
-             // Supersampling downscaling for zoom levels between 1 and 1/2
-            vec2 adjusted_coords = v_tex_coords - 0.5;
-            vec2 int_coords = floor(adjusted_coords);
-            vec2 frac_coords = adjusted_coords - int_coords;
-            vec2 lookup_coords = (int_coords + 0.5) / vec2(textureSize(u_tex, 0));
+             // Supersampling downscaling for zoom levels between 1 and 1/2.
+             // Because the square is an odd number wide, don't adjust coords by
+             // 0.5.
+            vec2 int_coords = floor(v_tex_coords);
+            vec2 frac_coords = v_tex_coords - int_coords;
+            vec2 lookup_coords = int_coords / vec2(textureSize(u_tex, 0));
             vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
             vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
             vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
@@ -126,13 +151,14 @@ void main () {
             vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
             vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
             vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
-            vec4 r0 = merge_squares_3(s00, s10, s20, frac_coords.x);
-            vec4 r1 = merge_squares_3(s01, s11, s21, frac_coords.x);
-            vec4 r2 = merge_squares_3(s02, s12, s22, frac_coords.x);
-            color = merge_squares_3(r0, r1, r2, frac_coords.y);
+            vec4 r0 = sliding_area_3(s00, s10, s20, frac_coords.x);
+            vec4 r1 = sliding_area_3(s01, s11, s21, frac_coords.x);
+            vec4 r2 = sliding_area_3(s02, s12, s22, frac_coords.x);
+            color = sliding_area_3(r0, r1, r2, frac_coords.y);
         }
         case CUBIC:
-        case CUBIC_RINGLESS: {
+        case CUBIC_RINGLESS:
+        case SQUARES16: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
@@ -159,27 +185,42 @@ void main () {
             vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
             vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
             vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
-            vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
-            vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
-            vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
-            vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
-            color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
-             // Clamp output to prevent haloing.
-             // Ideally we would adjust the derivative at s[1-2][1-2] to prevent
-             // haloing, AKA monotonic cubic interpolation, but that looks
-             // really complicated and expensive.  So we're clamping the output
-             // instead.  It doesn't always preserve the first derivative, but
-             // when it doesn't, it's when the image had a sharp edge anyway, so
-             // it looks fine.  This is also not guaranteed to preserve the
-             // overall color distribution, but from my observations there's no
-             // visible difference.
-            if (u_interpolation_mode == CUBIC_RINGLESS) {
-                color = clamp(color,
-                    min(min(s11, s12), min(s21, s22)),
-                    max(max(s11, s12), max(s21, s22))
-                );
+            switch (u_interpolator) {
+                default:
+                case CUBIC:
+                case CUBIC_RINGLESS: {
+                    vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
+                    vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
+                    vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
+                    vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
+                    color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
+                     // Clamp output to prevent haloing.  Ideally we would
+                     // adjust the derivative at s[1-2][1-2] to prevent haloing,
+                     // AKA monotonic cubic interpolation, but that looks really
+                     // complicated and expensive.  So we're clamping the output
+                     // instead.  It doesn't always preserve the first
+                     // derivative, but when it doesn't, it's when the image had
+                     // a sharp edge anyway, so it looks fine.  This is also not
+                     // guaranteed to preserve the overall color distribution,
+                     // but from my observations there's no visible difference.
+                    if (u_interpolator == CUBIC_RINGLESS) {
+                        color = clamp(color,
+                            min(min(s11, s12), min(s21, s22)),
+                            max(max(s11, s12), max(s21, s22))
+                        );
+                    }
+                    break;
+                }
+                case SQUARES16: {
+                    vec4 r0 = sliding_area_4(s00, s10, s20, s30, frac_coords.x);
+                    vec4 r1 = sliding_area_4(s01, s11, s21, s31, frac_coords.x);
+                    vec4 r2 = sliding_area_4(s02, s12, s22, s32, frac_coords.x);
+                    vec4 r3 = sliding_area_4(s03, s13, s23, s33, frac_coords.x);
+                    color = sliding_area_4(r0, r1, r2, r3, frac_coords.y);
+                    break;
+                }
+                break;
             }
-            break;
         }
     }
      // Apply transparency background with alpha blending

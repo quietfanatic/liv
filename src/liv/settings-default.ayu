@@ -76,7 +76,8 @@ render: {
      -- order or processing cost, are:
      --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
-     --   squares9 = 9-sample area averaging
+     --   squares9 = 9-sample sliding area convolution
+     --   squares16 = Up to 16-sample sliding area convolution
     downscaler: squares9
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
      -- where r,g,b,a are between 0 and 1).  The alpha value is probably
@@ -265,6 +266,10 @@ mappings: [
     [[ctrl 2] [upscaler linear]]
     [[ctrl 3] [upscaler cubic]]
     [[ctrl 4] [upscaler cubic_ringless]]
+    [[ctrl shift 1] [downscaler nearest]]
+    [[ctrl shift 2] [downscaler linear]]
+    [[ctrl shift 3] [downscaler squares9]]
+    [[ctrl shift 4] [downscaler squares16]]
      -- Set background color
     [[ctrl b] [toggle
         [window_background white]
