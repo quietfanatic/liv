@@ -268,18 +268,38 @@ void main () {
                     break;
                 }
                 case LANCZOS16: {
-                    float xw0 = lanczos2(-1.0 - frac_coords.x);
-                    float xw1 = lanczos2(+0.0 - frac_coords.x);
-                    float xw2 = lanczos2(+1.0 - frac_coords.x);
-                    float xw3 = lanczos2(+2.0 - frac_coords.x);
-                    float yw0 = lanczos2(-1.0 - frac_coords.y);
-                    float yw1 = lanczos2(+0.0 - frac_coords.y);
-                    float yw2 = lanczos2(+1.0 - frac_coords.y);
-                    float yw3 = lanczos2(+2.0 - frac_coords.y);
-                    color = (s00*(xw0*yw0) + s10*(xw1*yw0) + s20*(xw2*yw0) + s30*(xw3*yw0))
-                          + (s01*(xw0*yw1) + s11*(xw1*yw1) + s21*(xw2*yw1) + s31*(xw3*yw1))
-                          + (s02*(xw0*yw2) + s12*(xw1*yw2) + s22*(xw2*yw2) + s32*(xw3*yw2))
-                          + (s03*(xw0*yw3) + s13*(xw1*yw3) + s23*(xw2*yw3) + s33*(xw3*yw3));
+                     // Hope this gets vectorized
+                    float xw [4];
+                    float yw [4];
+                    for (int i = 0; i < 4; i++) {
+                        xw[i] = lanczos2(-1.0 + float(i) - frac_coords.x);
+                        yw[i] = lanczos2(-1.0 + float(i) - frac_coords.y);
+                    }
+                     // The lanczos coefficients don't always quite add up to 1,
+                     // which will introduce bumps on a flat color area.  To fix
+                     // this, renormalize them.
+                    float xsum = xw[0] + xw[1] + xw[2] + xw[3];
+                    float ysum = yw[0] + yw[1] + yw[2] + yw[3];
+                    for (int i = 0; i < 4; i++) {
+                        xw[i] /= xsum;
+                        yw[i] /= ysum;
+                    }
+                    color = s00*(xw[0]*yw[0])
+                          + s10*(xw[1]*yw[0])
+                          + s20*(xw[2]*yw[0])
+                          + s30*(xw[3]*yw[0])
+                          + s01*(xw[0]*yw[1])
+                          + s11*(xw[1]*yw[1])
+                          + s21*(xw[2]*yw[1])
+                          + s31*(xw[3]*yw[1])
+                          + s02*(xw[0]*yw[2])
+                          + s12*(xw[1]*yw[2])
+                          + s22*(xw[2]*yw[2])
+                          + s32*(xw[3]*yw[2])
+                          + s03*(xw[0]*yw[3])
+                          + s13*(xw[1]*yw[3])
+                          + s23*(xw[2]*yw[3])
+                          + s33*(xw[3]*yw[3]);
                     break;
                 }
                 case SQUARES16: {
