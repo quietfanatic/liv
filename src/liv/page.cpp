@@ -54,12 +54,12 @@ enum class Interpolator {
     Linear = 1,
     Cubic = 2,
     Lanczos16 = 3,
-    Squares9 = 5,
-    Squares16 = 6,
-    Squares25 = 7,
-    Squares36 = 8,
-    Squares49 = 9,
-//    Squares64 = 10,
+    Box9 = 5,
+    Box16 = 6,
+    Box25 = 7,
+    Box36 = 8,
+    Box49 = 9,
+//    Box64 = 10,
 };
 
 struct PageProgram : Program {
@@ -129,11 +129,11 @@ void draw_pages (
         auto downscaler = settings.get(&RenderSettings::downscaler);
          // Don't use higher sample count than necessary.
         Downscaler necessary =
-            zoom >= 1/2.f ? Downscaler::Squares9
-          : zoom >= 1/3.f ? Downscaler::Squares16
-          : zoom >= 1/4.f ? Downscaler::Squares25
-          : zoom >= 1/5.f ? Downscaler::Squares36
-          :                 Downscaler::Squares49;
+            zoom >= 1/2.f ? Downscaler::Box9
+          : zoom >= 1/3.f ? Downscaler::Box16
+          : zoom >= 1/4.f ? Downscaler::Box25
+          : zoom >= 1/5.f ? Downscaler::Box36
+          :                 Downscaler::Box49;
         if (i32(downscaler) > i32(necessary)) {
             downscaler = necessary;
         }

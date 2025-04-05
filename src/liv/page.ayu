@@ -63,12 +63,12 @@ const int NEAREST = 0;
 const int LINEAR = 1;
 const int CUBIC = 2;
 const int LANCZOS16 = 3;
-const int SQUARES9 = 5;
-const int SQUARES16 = 6;
-const int SQUARES25 = 7;
-const int SQUARES36 = 8;
-const int SQUARES49 = 9;
-//const int SQUARES64 = 10;
+const int BOX9 = 5;
+const int BOX16 = 6;
+const int BOX25 = 7;
+const int BOX36 = 8;
+const int BOX49 = 9;
+//const int BOX64 = 10;
 
  // Deringers
 const int NONE = 0;
@@ -98,7 +98,7 @@ float lanczos2 (float x) {
     return sinc(pix) * sinc(pix / 2.0);
 }
 
-vec4 sliding_area_3 (vec4 a, vec4 b, vec4 c, float frac) {
+vec4 box3 (vec4 a, vec4 b, vec4 c, float frac) {
     float zoom = clamp(u_zoom, 1.0/2.0, 1.0);
     float expand = 1.0/zoom;
 
@@ -120,7 +120,7 @@ vec4 sliding_area_3 (vec4 a, vec4 b, vec4 c, float frac) {
     return (wa*a + wb*b + wc*c) * zoom;
 }
 
-vec4 sliding_area_4 (vec4 a, vec4 b, vec4 c, vec4 d, float frac) {
+vec4 box4 (vec4 a, vec4 b, vec4 c, vec4 d, float frac) {
     float zoom = clamp(u_zoom, 1.0/3.0, 1.0/2.0);
     float expand = 1.0/zoom;
 
@@ -143,7 +143,7 @@ vec4 sliding_area_4 (vec4 a, vec4 b, vec4 c, vec4 d, float frac) {
     return (wa*a + wb*b + wc*c + wd*d) * zoom;
 }
 
-vec4 sliding_area_5 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, float frac) {
+vec4 box5 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, float frac) {
     float zoom = clamp(u_zoom, 1.0/4.0, 1.0/3.0);
     float expand = 1.0/zoom;
     float base = 0.5 * (expand - 2.0);
@@ -155,7 +155,7 @@ vec4 sliding_area_5 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, float frac) {
     return (wa*a + wb*b + wc*c + wd*d + we*e) * zoom;
 }
 
-vec4 sliding_area_6 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, float frac) {
+vec4 box6 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, float frac) {
     float zoom = clamp(u_zoom, 1.0/5.0, 1.0/4.0);
     float expand = 1.0/zoom;
     float base = 0.5 * (expand - 3.0);
@@ -168,7 +168,7 @@ vec4 sliding_area_6 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, float frac)
     return (wa*a + wb*b + wc*c + wd*d + we*e + wf*f) * zoom;
 }
 
-vec4 sliding_area_7 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, float frac) {
+vec4 box7 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, float frac) {
     float zoom = clamp(u_zoom, 1.0/6.0, 1.0/5.0);
     float expand = 1.0/zoom;
     float base = 0.5 * (expand - 4.0);
@@ -182,7 +182,7 @@ vec4 sliding_area_7 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, flo
     return (wa*a + wb*b + wc*c + wd*d + we*e + wf*f + wg*g) * zoom;
 }
 
-//vec4 sliding_area_8 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h, float frac) {
+//vec4 box8 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h, float frac) {
 //    float zoom = clamp(u_zoom, 1.0/7.0, 1.0/6.0);
 //    float expand = 1.0/zoom;
 //    float base = 0.5 * (expand - 5.0);
@@ -209,7 +209,7 @@ void main () {
             color = texture(u_tex, lookup_coords);
             break;
         }
-        case SQUARES9: {
+        case BOX9: {
              // Supersampling downscaling for zoom levels between 1 and 1/2.
              // Because the square is an odd number wide, don't adjust coords by
              // 0.5.
@@ -225,14 +225,14 @@ void main () {
             vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
             vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
             vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
-            vec4 r0 = sliding_area_3(s00, s10, s20, frac_coords.x);
-            vec4 r1 = sliding_area_3(s01, s11, s21, frac_coords.x);
-            vec4 r2 = sliding_area_3(s02, s12, s22, frac_coords.x);
-            color = sliding_area_3(r0, r1, r2, frac_coords.y);
+            vec4 r0 = box3(s00, s10, s20, frac_coords.x);
+            vec4 r1 = box3(s01, s11, s21, frac_coords.x);
+            vec4 r2 = box3(s02, s12, s22, frac_coords.x);
+            color = box3(r0, r1, r2, frac_coords.y);
         }
         case CUBIC:
         case LANCZOS16:
-        case SQUARES16: {
+        case BOX16: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
              // around (_.5,_.5) coordinates.
@@ -304,12 +304,12 @@ void main () {
                           + s33*(xw[3]*yw[3]);
                     break;
                 }
-                case SQUARES16: {
-                    vec4 r0 = sliding_area_4(s00, s10, s20, s30, frac_coords.x);
-                    vec4 r1 = sliding_area_4(s01, s11, s21, s31, frac_coords.x);
-                    vec4 r2 = sliding_area_4(s02, s12, s22, s32, frac_coords.x);
-                    vec4 r3 = sliding_area_4(s03, s13, s23, s33, frac_coords.x);
-                    color = sliding_area_4(r0, r1, r2, r3, frac_coords.y);
+                case BOX16: {
+                    vec4 r0 = box4(s00, s10, s20, s30, frac_coords.x);
+                    vec4 r1 = box4(s01, s11, s21, s31, frac_coords.x);
+                    vec4 r2 = box4(s02, s12, s22, s32, frac_coords.x);
+                    vec4 r3 = box4(s03, s13, s23, s33, frac_coords.x);
+                    color = box4(r0, r1, r2, r3, frac_coords.y);
                     break;
                 }
                 break;
@@ -331,7 +331,7 @@ void main () {
             }
             break;
         }
-        case SQUARES25: {
+        case BOX25: {
             vec2 int_coords = floor(v_tex_coords);
             vec2 frac_coords = v_tex_coords - int_coords;
             vec2 lookup_coords = int_coords / vec2(textureSize(u_tex, 0));
@@ -360,15 +360,15 @@ void main () {
             vec4 s24 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
             vec4 s34 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
             vec4 s44 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
-            vec4 r0 = sliding_area_5(s00, s10, s20, s30, s40, frac_coords.x);
-            vec4 r1 = sliding_area_5(s01, s11, s21, s31, s41, frac_coords.x);
-            vec4 r2 = sliding_area_5(s02, s12, s22, s32, s42, frac_coords.x);
-            vec4 r3 = sliding_area_5(s03, s13, s23, s33, s43, frac_coords.x);
-            vec4 r4 = sliding_area_5(s04, s14, s24, s34, s44, frac_coords.x);
-            color = sliding_area_5(r0, r1, r2, r3, r4, frac_coords.y);
+            vec4 r0 = box5(s00, s10, s20, s30, s40, frac_coords.x);
+            vec4 r1 = box5(s01, s11, s21, s31, s41, frac_coords.x);
+            vec4 r2 = box5(s02, s12, s22, s32, s42, frac_coords.x);
+            vec4 r3 = box5(s03, s13, s23, s33, s43, frac_coords.x);
+            vec4 r4 = box5(s04, s14, s24, s34, s44, frac_coords.x);
+            color = box5(r0, r1, r2, r3, r4, frac_coords.y);
             break;
         }
-        case SQUARES36: {
+        case BOX36: {
             vec2 adjusted_coords = v_tex_coords - 0.5;
             vec2 int_coords = floor(adjusted_coords);
             vec2 frac_coords = adjusted_coords - int_coords;
@@ -409,16 +409,16 @@ void main () {
             vec4 s35 = textureOffset(u_tex, lookup_coords, ivec2(+1, +3));
             vec4 s45 = textureOffset(u_tex, lookup_coords, ivec2(+2, +3));
             vec4 s55 = textureOffset(u_tex, lookup_coords, ivec2(+3, +3));
-            vec4 r0 = sliding_area_6(s00, s10, s20, s30, s40, s50, frac_coords.x);
-            vec4 r1 = sliding_area_6(s01, s11, s21, s31, s41, s51, frac_coords.x);
-            vec4 r2 = sliding_area_6(s02, s12, s22, s32, s42, s52, frac_coords.x);
-            vec4 r3 = sliding_area_6(s03, s13, s23, s33, s43, s53, frac_coords.x);
-            vec4 r4 = sliding_area_6(s04, s14, s24, s34, s44, s54, frac_coords.x);
-            vec4 r5 = sliding_area_6(s05, s15, s25, s35, s45, s55, frac_coords.x);
-            color = sliding_area_6(r0, r1, r2, r3, r4, r5, frac_coords.y);
+            vec4 r0 = box6(s00, s10, s20, s30, s40, s50, frac_coords.x);
+            vec4 r1 = box6(s01, s11, s21, s31, s41, s51, frac_coords.x);
+            vec4 r2 = box6(s02, s12, s22, s32, s42, s52, frac_coords.x);
+            vec4 r3 = box6(s03, s13, s23, s33, s43, s53, frac_coords.x);
+            vec4 r4 = box6(s04, s14, s24, s34, s44, s54, frac_coords.x);
+            vec4 r5 = box6(s05, s15, s25, s35, s45, s55, frac_coords.x);
+            color = box6(r0, r1, r2, r3, r4, r5, frac_coords.y);
             break;
         }
-        case SQUARES49: {
+        case BOX49: {
             vec2 int_coords = floor(v_tex_coords);
             vec2 frac_coords = v_tex_coords - int_coords;
             vec2 lookup_coords = int_coords / vec2(textureSize(u_tex, 0));
@@ -471,17 +471,17 @@ void main () {
             vec4 s46 = textureOffset(u_tex, lookup_coords, ivec2(+1, +3));
             vec4 s56 = textureOffset(u_tex, lookup_coords, ivec2(+2, +3));
             vec4 s66 = textureOffset(u_tex, lookup_coords, ivec2(+3, +3));
-            vec4 r0 = sliding_area_7(s00, s10, s20, s30, s40, s50, s60, frac_coords.x);
-            vec4 r1 = sliding_area_7(s01, s11, s21, s31, s41, s51, s61, frac_coords.x);
-            vec4 r2 = sliding_area_7(s02, s12, s22, s32, s42, s52, s62, frac_coords.x);
-            vec4 r3 = sliding_area_7(s03, s13, s23, s33, s43, s53, s63, frac_coords.x);
-            vec4 r4 = sliding_area_7(s04, s14, s24, s34, s44, s54, s64, frac_coords.x);
-            vec4 r5 = sliding_area_7(s05, s15, s25, s35, s45, s55, s65, frac_coords.x);
-            vec4 r6 = sliding_area_7(s06, s16, s26, s36, s46, s56, s66, frac_coords.x);
-            color = sliding_area_7(r0, r1, r2, r3, r4, r5, r6, frac_coords.y);
+            vec4 r0 = box7(s00, s10, s20, s30, s40, s50, s60, frac_coords.x);
+            vec4 r1 = box7(s01, s11, s21, s31, s41, s51, s61, frac_coords.x);
+            vec4 r2 = box7(s02, s12, s22, s32, s42, s52, s62, frac_coords.x);
+            vec4 r3 = box7(s03, s13, s23, s33, s43, s53, s63, frac_coords.x);
+            vec4 r4 = box7(s04, s14, s24, s34, s44, s54, s64, frac_coords.x);
+            vec4 r5 = box7(s05, s15, s25, s35, s45, s55, s65, frac_coords.x);
+            vec4 r6 = box7(s06, s16, s26, s36, s46, s56, s66, frac_coords.x);
+            color = box7(r0, r1, r2, r3, r4, r5, r6, frac_coords.y);
             break;
         }
-//        case SQUARES64: {
+//        case BOX64: {
 //            vec2 adjusted_coords = v_tex_coords - 0.5;
 //            vec2 int_coords = floor(adjusted_coords);
 //            vec2 frac_coords = adjusted_coords - int_coords;
@@ -550,15 +550,15 @@ void main () {
 //            vec4 s57 = textureOffset(u_tex, lookup_coords, ivec2(+2, +4));
 //            vec4 s67 = textureOffset(u_tex, lookup_coords, ivec2(+3, +4));
 //            vec4 s77 = textureOffset(u_tex, lookup_coords, ivec2(+4, +4));
-//            vec4 r0 = sliding_area_8(s00, s10, s20, s30, s40, s50, s60, s70, frac_coords.x);
-//            vec4 r1 = sliding_area_8(s01, s11, s21, s31, s41, s51, s61, s71, frac_coords.x);
-//            vec4 r2 = sliding_area_8(s02, s12, s22, s32, s42, s52, s62, s72, frac_coords.x);
-//            vec4 r3 = sliding_area_8(s03, s13, s23, s33, s43, s53, s63, s73, frac_coords.x);
-//            vec4 r4 = sliding_area_8(s04, s14, s24, s34, s44, s54, s64, s74, frac_coords.x);
-//            vec4 r5 = sliding_area_8(s05, s15, s25, s35, s45, s55, s65, s75, frac_coords.x);
-//            vec4 r6 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
-//            vec4 r7 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
-//            color = sliding_area_8(r0, r1, r2, r3, r4, r5, r6, r7, frac_coords.y);
+//            vec4 r0 = box8(s00, s10, s20, s30, s40, s50, s60, s70, frac_coords.x);
+//            vec4 r1 = box8(s01, s11, s21, s31, s41, s51, s61, s71, frac_coords.x);
+//            vec4 r2 = box8(s02, s12, s22, s32, s42, s52, s62, s72, frac_coords.x);
+//            vec4 r3 = box8(s03, s13, s23, s33, s43, s53, s63, s73, frac_coords.x);
+//            vec4 r4 = box8(s04, s14, s24, s34, s44, s54, s64, s74, frac_coords.x);
+//            vec4 r5 = box8(s05, s15, s25, s35, s45, s55, s65, s75, frac_coords.x);
+//            vec4 r6 = box8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
+//            vec4 r7 = box8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
+//            color = box8(r0, r1, r2, r3, r4, r5, r6, r7, frac_coords.y);
 //            break;
     }
      // Apply transparency background with alpha blending
