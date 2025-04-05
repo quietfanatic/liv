@@ -118,8 +118,14 @@ void draw_pages (
         auto upscaler = settings.get(&RenderSettings::upscaler);
         interp = Interpolator(i32(upscaler));
     }
-    else { // zoom < 1.f
+    else {
         auto downscaler = settings.get(&RenderSettings::downscaler);
+         // Don't use higher sample count than necessary.
+        if (zoom > 1/2.f) {
+            if (downscaler == Downscaler::Squares16) {
+                downscaler = Downscaler::Squares9;
+            }
+        }
         interp = Interpolator(i32(downscaler));
     }
 
