@@ -50,7 +50,7 @@ enum class ResetOnSeek {
     Zoom
 };
 
- // These values must match Interpolator in page.ayu
+ // These values must match Interpolator in page.cpp and page.ayu
 enum class Upscaler {
     Nearest = 0,
     Linear = 1,
@@ -63,6 +63,9 @@ enum class Downscaler {
     Linear = 1,
     Squares9 = 4,
     Squares16 = 5,
+    Squares25 = 6,
+    Squares36 = 7,
+    Squares49 = 8,
 };
 
 using ColorRange = geo::GRange<Vec3>;

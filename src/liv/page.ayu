@@ -64,6 +64,10 @@ const int CUBIC = 2;
 const int CUBIC_RINGLESS = 3;
 const int SQUARES9 = 4;
 const int SQUARES16 = 5;
+const int SQUARES25 = 6;
+const int SQUARES36 = 7;
+const int SQUARES49 = 8;
+//const int SQUARES64 = 9;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -122,6 +126,60 @@ vec4 sliding_area_4 (vec4 a, vec4 b, vec4 c, vec4 d, float frac) {
     float wd = max(0.0, base - (1.0 - frac));
     return (wa*a + wb*b + wc*c + wd*d) * zoom;
 }
+
+vec4 sliding_area_5 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, float frac) {
+    float zoom = clamp(u_zoom, 1.0/4.0, 1.0/3.0);
+    float expand = 1.0/zoom;
+    float base = 0.5 * (expand - 2.0);
+    float wa = max(0.0, base - frac);
+    float wb = min(1.0, base + (1.0 - frac));
+    float wc = 1.0;
+    float wd = min(1.0, base + frac);
+    float we = max(0.0, base - (1.0 - frac));
+    return (wa*a + wb*b + wc*c + wd*d + we*e) * zoom;
+}
+
+vec4 sliding_area_6 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, float frac) {
+    float zoom = clamp(u_zoom, 1.0/5.0, 1.0/4.0);
+    float expand = 1.0/zoom;
+    float base = 0.5 * (expand - 3.0);
+    float wa = max(0.0, base - frac);
+    float wb = min(1.0, base + (1.0 - frac));
+    float wc = 1.0;
+    float wd = 1.0;
+    float we = min(1.0, base + frac);
+    float wf = max(0.0, base - (1.0 - frac));
+    return (wa*a + wb*b + wc*c + wd*d + we*e + wf*f) * zoom;
+}
+
+vec4 sliding_area_7 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, float frac) {
+    float zoom = clamp(u_zoom, 1.0/6.0, 1.0/5.0);
+    float expand = 1.0/zoom;
+    float base = 0.5 * (expand - 4.0);
+    float wa = max(0.0, base - frac);
+    float wb = min(1.0, base + (1.0 - frac));
+    float wc = 1.0;
+    float wd = 1.0;
+    float we = 1.0;
+    float wf = min(1.0, base + frac);
+    float wg = max(0.0, base - (1.0 - frac));
+    return (wa*a + wb*b + wc*c + wd*d + we*e + wf*f + wg*g) * zoom;
+}
+
+//vec4 sliding_area_8 (vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h, float frac) {
+//    float zoom = clamp(u_zoom, 1.0/7.0, 1.0/6.0);
+//    float expand = 1.0/zoom;
+//    float base = 0.5 * (expand - 5.0);
+//    float wa = max(0.0, base - frac);
+//    float wb = min(1.0, base + (1.0 - frac));
+//    float wc = 1.0;
+//    float wd = 1.0;
+//    float we = 1.0;
+//    float wf = 1.0;
+//    float wg = min(1.0, base + frac);
+//    float wh = max(0.0, base - (1.0 - frac));
+//    return (wa*a + wb*b + wc*c + wd*d + we*e + wf*f + wg*g + wh*h) * zoom;
+//}
 
 void main () {
     switch (u_interpolator) {
@@ -222,6 +280,231 @@ void main () {
                 break;
             }
         }
+        case SQUARES25: {
+            vec2 int_coords = floor(v_tex_coords);
+            vec2 frac_coords = v_tex_coords - int_coords;
+            vec2 lookup_coords = int_coords / vec2(textureSize(u_tex, 0));
+            vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-2, -2));
+            vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(-1, -2));
+            vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+0, -2));
+            vec4 s30 = textureOffset(u_tex, lookup_coords, ivec2(+1, -2));
+            vec4 s40 = textureOffset(u_tex, lookup_coords, ivec2(+2, -2));
+            vec4 s01 = textureOffset(u_tex, lookup_coords, ivec2(-2, -1));
+            vec4 s11 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
+            vec4 s21 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
+            vec4 s31 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
+            vec4 s41 = textureOffset(u_tex, lookup_coords, ivec2(+2, -1));
+            vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-2, +0));
+            vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(-1, +0));
+            vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(+0, +0));
+            vec4 s32 = textureOffset(u_tex, lookup_coords, ivec2(+1, +0));
+            vec4 s42 = textureOffset(u_tex, lookup_coords, ivec2(+2, +0));
+            vec4 s03 = textureOffset(u_tex, lookup_coords, ivec2(-2, +1));
+            vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
+            vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
+            vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
+            vec4 s43 = textureOffset(u_tex, lookup_coords, ivec2(+2, +1));
+            vec4 s04 = textureOffset(u_tex, lookup_coords, ivec2(-2, +2));
+            vec4 s14 = textureOffset(u_tex, lookup_coords, ivec2(-1, +2));
+            vec4 s24 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
+            vec4 s34 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
+            vec4 s44 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
+            vec4 r0 = sliding_area_5(s00, s10, s20, s30, s40, frac_coords.x);
+            vec4 r1 = sliding_area_5(s01, s11, s21, s31, s41, frac_coords.x);
+            vec4 r2 = sliding_area_5(s02, s12, s22, s32, s42, frac_coords.x);
+            vec4 r3 = sliding_area_5(s03, s13, s23, s33, s43, frac_coords.x);
+            vec4 r4 = sliding_area_5(s04, s14, s24, s34, s44, frac_coords.x);
+            color = sliding_area_5(r0, r1, r2, r3, r4, frac_coords.y);
+        }
+        case SQUARES36: {
+            vec2 adjusted_coords = v_tex_coords - 0.5;
+            vec2 int_coords = floor(adjusted_coords);
+            vec2 frac_coords = adjusted_coords - int_coords;
+            vec2 lookup_coords = (int_coords + 0.5) / vec2(textureSize(u_tex, 0));
+            vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-2, -2));
+            vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(-1, -2));
+            vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(+0, -2));
+            vec4 s30 = textureOffset(u_tex, lookup_coords, ivec2(+1, -2));
+            vec4 s40 = textureOffset(u_tex, lookup_coords, ivec2(+2, -2));
+            vec4 s50 = textureOffset(u_tex, lookup_coords, ivec2(+3, -2));
+            vec4 s01 = textureOffset(u_tex, lookup_coords, ivec2(-2, -1));
+            vec4 s11 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
+            vec4 s21 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
+            vec4 s31 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
+            vec4 s41 = textureOffset(u_tex, lookup_coords, ivec2(+2, -1));
+            vec4 s51 = textureOffset(u_tex, lookup_coords, ivec2(+3, -1));
+            vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-2, +0));
+            vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(-1, +0));
+            vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(+0, +0));
+            vec4 s32 = textureOffset(u_tex, lookup_coords, ivec2(+1, +0));
+            vec4 s42 = textureOffset(u_tex, lookup_coords, ivec2(+2, +0));
+            vec4 s52 = textureOffset(u_tex, lookup_coords, ivec2(+3, +0));
+            vec4 s03 = textureOffset(u_tex, lookup_coords, ivec2(-2, +1));
+            vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
+            vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
+            vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
+            vec4 s43 = textureOffset(u_tex, lookup_coords, ivec2(+2, +1));
+            vec4 s53 = textureOffset(u_tex, lookup_coords, ivec2(+3, +1));
+            vec4 s04 = textureOffset(u_tex, lookup_coords, ivec2(-2, +2));
+            vec4 s14 = textureOffset(u_tex, lookup_coords, ivec2(-1, +2));
+            vec4 s24 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
+            vec4 s34 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
+            vec4 s44 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
+            vec4 s54 = textureOffset(u_tex, lookup_coords, ivec2(+3, +2));
+            vec4 s05 = textureOffset(u_tex, lookup_coords, ivec2(-2, +3));
+            vec4 s15 = textureOffset(u_tex, lookup_coords, ivec2(-1, +3));
+            vec4 s25 = textureOffset(u_tex, lookup_coords, ivec2(+0, +3));
+            vec4 s35 = textureOffset(u_tex, lookup_coords, ivec2(+1, +3));
+            vec4 s45 = textureOffset(u_tex, lookup_coords, ivec2(+2, +3));
+            vec4 s55 = textureOffset(u_tex, lookup_coords, ivec2(+3, +3));
+            vec4 r0 = sliding_area_6(s00, s10, s20, s30, s40, s50, frac_coords.x);
+            vec4 r1 = sliding_area_6(s01, s11, s21, s31, s41, s51, frac_coords.x);
+            vec4 r2 = sliding_area_6(s02, s12, s22, s32, s42, s52, frac_coords.x);
+            vec4 r3 = sliding_area_6(s03, s13, s23, s33, s43, s53, frac_coords.x);
+            vec4 r4 = sliding_area_6(s04, s14, s24, s34, s44, s54, frac_coords.x);
+            vec4 r5 = sliding_area_6(s05, s15, s25, s35, s45, s55, frac_coords.x);
+            color = sliding_area_6(r0, r1, r2, r3, r4, r5, frac_coords.y);
+        }
+        case SQUARES49: {
+            vec2 int_coords = floor(v_tex_coords);
+            vec2 frac_coords = v_tex_coords - int_coords;
+            vec2 lookup_coords = int_coords / vec2(textureSize(u_tex, 0));
+            vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-3, -3));
+            vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(-2, -3));
+            vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(-1, -3));
+            vec4 s30 = textureOffset(u_tex, lookup_coords, ivec2(+0, -3));
+            vec4 s40 = textureOffset(u_tex, lookup_coords, ivec2(+1, -3));
+            vec4 s50 = textureOffset(u_tex, lookup_coords, ivec2(+2, -3));
+            vec4 s60 = textureOffset(u_tex, lookup_coords, ivec2(+3, -3));
+            vec4 s01 = textureOffset(u_tex, lookup_coords, ivec2(-3, -2));
+            vec4 s11 = textureOffset(u_tex, lookup_coords, ivec2(-2, -2));
+            vec4 s21 = textureOffset(u_tex, lookup_coords, ivec2(-1, -2));
+            vec4 s31 = textureOffset(u_tex, lookup_coords, ivec2(+0, -2));
+            vec4 s41 = textureOffset(u_tex, lookup_coords, ivec2(+1, -2));
+            vec4 s51 = textureOffset(u_tex, lookup_coords, ivec2(+2, -2));
+            vec4 s61 = textureOffset(u_tex, lookup_coords, ivec2(+3, -2));
+            vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-3, -1));
+            vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(-2, -1));
+            vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
+            vec4 s32 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
+            vec4 s42 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
+            vec4 s52 = textureOffset(u_tex, lookup_coords, ivec2(+2, -1));
+            vec4 s62 = textureOffset(u_tex, lookup_coords, ivec2(+3, -1));
+            vec4 s03 = textureOffset(u_tex, lookup_coords, ivec2(-3, +0));
+            vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(-2, +0));
+            vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(-1, +0));
+            vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+0, +0));
+            vec4 s43 = textureOffset(u_tex, lookup_coords, ivec2(+1, +0));
+            vec4 s53 = textureOffset(u_tex, lookup_coords, ivec2(+2, +0));
+            vec4 s63 = textureOffset(u_tex, lookup_coords, ivec2(+3, +0));
+            vec4 s04 = textureOffset(u_tex, lookup_coords, ivec2(-3, +1));
+            vec4 s14 = textureOffset(u_tex, lookup_coords, ivec2(-2, +1));
+            vec4 s24 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
+            vec4 s34 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
+            vec4 s44 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
+            vec4 s54 = textureOffset(u_tex, lookup_coords, ivec2(+2, +1));
+            vec4 s64 = textureOffset(u_tex, lookup_coords, ivec2(+3, +1));
+            vec4 s05 = textureOffset(u_tex, lookup_coords, ivec2(-3, +2));
+            vec4 s15 = textureOffset(u_tex, lookup_coords, ivec2(-2, +2));
+            vec4 s25 = textureOffset(u_tex, lookup_coords, ivec2(-1, +2));
+            vec4 s35 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
+            vec4 s45 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
+            vec4 s55 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
+            vec4 s65 = textureOffset(u_tex, lookup_coords, ivec2(+3, +2));
+            vec4 s06 = textureOffset(u_tex, lookup_coords, ivec2(-3, +3));
+            vec4 s16 = textureOffset(u_tex, lookup_coords, ivec2(-2, +3));
+            vec4 s26 = textureOffset(u_tex, lookup_coords, ivec2(-1, +3));
+            vec4 s36 = textureOffset(u_tex, lookup_coords, ivec2(+0, +3));
+            vec4 s46 = textureOffset(u_tex, lookup_coords, ivec2(+1, +3));
+            vec4 s56 = textureOffset(u_tex, lookup_coords, ivec2(+2, +3));
+            vec4 s66 = textureOffset(u_tex, lookup_coords, ivec2(+3, +3));
+            vec4 r0 = sliding_area_7(s00, s10, s20, s30, s40, s50, s60, frac_coords.x);
+            vec4 r1 = sliding_area_7(s01, s11, s21, s31, s41, s51, s61, frac_coords.x);
+            vec4 r2 = sliding_area_7(s02, s12, s22, s32, s42, s52, s62, frac_coords.x);
+            vec4 r3 = sliding_area_7(s03, s13, s23, s33, s43, s53, s63, frac_coords.x);
+            vec4 r4 = sliding_area_7(s04, s14, s24, s34, s44, s54, s64, frac_coords.x);
+            vec4 r5 = sliding_area_7(s05, s15, s25, s35, s45, s55, s65, frac_coords.x);
+            vec4 r6 = sliding_area_7(s06, s16, s26, s36, s46, s56, s66, frac_coords.x);
+            color = sliding_area_7(r0, r1, r2, r3, r4, r5, r6, frac_coords.y);
+        }
+//        case SQUARES64: {
+//            vec2 adjusted_coords = v_tex_coords - 0.5;
+//            vec2 int_coords = floor(adjusted_coords);
+//            vec2 frac_coords = adjusted_coords - int_coords;
+//            vec2 lookup_coords = (int_coords + 0.5) / vec2(textureSize(u_tex, 0));
+//            vec4 s00 = textureOffset(u_tex, lookup_coords, ivec2(-3, -3));
+//            vec4 s10 = textureOffset(u_tex, lookup_coords, ivec2(-2, -3));
+//            vec4 s20 = textureOffset(u_tex, lookup_coords, ivec2(-1, -3));
+//            vec4 s30 = textureOffset(u_tex, lookup_coords, ivec2(+0, -3));
+//            vec4 s40 = textureOffset(u_tex, lookup_coords, ivec2(+1, -3));
+//            vec4 s50 = textureOffset(u_tex, lookup_coords, ivec2(+2, -3));
+//            vec4 s60 = textureOffset(u_tex, lookup_coords, ivec2(+3, -3));
+//            vec4 s70 = textureOffset(u_tex, lookup_coords, ivec2(+4, -3));
+//            vec4 s01 = textureOffset(u_tex, lookup_coords, ivec2(-3, -2));
+//            vec4 s11 = textureOffset(u_tex, lookup_coords, ivec2(-2, -2));
+//            vec4 s21 = textureOffset(u_tex, lookup_coords, ivec2(-1, -2));
+//            vec4 s31 = textureOffset(u_tex, lookup_coords, ivec2(+0, -2));
+//            vec4 s41 = textureOffset(u_tex, lookup_coords, ivec2(+1, -2));
+//            vec4 s51 = textureOffset(u_tex, lookup_coords, ivec2(+2, -2));
+//            vec4 s61 = textureOffset(u_tex, lookup_coords, ivec2(+3, -2));
+//            vec4 s71 = textureOffset(u_tex, lookup_coords, ivec2(+4, -2));
+//            vec4 s02 = textureOffset(u_tex, lookup_coords, ivec2(-3, -1));
+//            vec4 s12 = textureOffset(u_tex, lookup_coords, ivec2(-2, -1));
+//            vec4 s22 = textureOffset(u_tex, lookup_coords, ivec2(-1, -1));
+//            vec4 s32 = textureOffset(u_tex, lookup_coords, ivec2(+0, -1));
+//            vec4 s42 = textureOffset(u_tex, lookup_coords, ivec2(+1, -1));
+//            vec4 s52 = textureOffset(u_tex, lookup_coords, ivec2(+2, -1));
+//            vec4 s62 = textureOffset(u_tex, lookup_coords, ivec2(+3, -1));
+//            vec4 s72 = textureOffset(u_tex, lookup_coords, ivec2(+4, -1));
+//            vec4 s03 = textureOffset(u_tex, lookup_coords, ivec2(-3, +0));
+//            vec4 s13 = textureOffset(u_tex, lookup_coords, ivec2(-2, +0));
+//            vec4 s23 = textureOffset(u_tex, lookup_coords, ivec2(-1, +0));
+//            vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+0, +0));
+//            vec4 s43 = textureOffset(u_tex, lookup_coords, ivec2(+1, +0));
+//            vec4 s53 = textureOffset(u_tex, lookup_coords, ivec2(+2, +0));
+//            vec4 s63 = textureOffset(u_tex, lookup_coords, ivec2(+3, +0));
+//            vec4 s73 = textureOffset(u_tex, lookup_coords, ivec2(+4, +0));
+//            vec4 s04 = textureOffset(u_tex, lookup_coords, ivec2(-3, +1));
+//            vec4 s14 = textureOffset(u_tex, lookup_coords, ivec2(-2, +1));
+//            vec4 s24 = textureOffset(u_tex, lookup_coords, ivec2(-1, +1));
+//            vec4 s34 = textureOffset(u_tex, lookup_coords, ivec2(+0, +1));
+//            vec4 s44 = textureOffset(u_tex, lookup_coords, ivec2(+1, +1));
+//            vec4 s54 = textureOffset(u_tex, lookup_coords, ivec2(+2, +1));
+//            vec4 s64 = textureOffset(u_tex, lookup_coords, ivec2(+3, +1));
+//            vec4 s74 = textureOffset(u_tex, lookup_coords, ivec2(+4, +1));
+//            vec4 s05 = textureOffset(u_tex, lookup_coords, ivec2(-3, +2));
+//            vec4 s15 = textureOffset(u_tex, lookup_coords, ivec2(-2, +2));
+//            vec4 s25 = textureOffset(u_tex, lookup_coords, ivec2(-1, +2));
+//            vec4 s35 = textureOffset(u_tex, lookup_coords, ivec2(+0, +2));
+//            vec4 s45 = textureOffset(u_tex, lookup_coords, ivec2(+1, +2));
+//            vec4 s55 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
+//            vec4 s65 = textureOffset(u_tex, lookup_coords, ivec2(+3, +2));
+//            vec4 s75 = textureOffset(u_tex, lookup_coords, ivec2(+4, +2));
+//            vec4 s06 = textureOffset(u_tex, lookup_coords, ivec2(-3, +3));
+//            vec4 s16 = textureOffset(u_tex, lookup_coords, ivec2(-2, +3));
+//            vec4 s26 = textureOffset(u_tex, lookup_coords, ivec2(-1, +3));
+//            vec4 s36 = textureOffset(u_tex, lookup_coords, ivec2(+0, +3));
+//            vec4 s46 = textureOffset(u_tex, lookup_coords, ivec2(+1, +3));
+//            vec4 s56 = textureOffset(u_tex, lookup_coords, ivec2(+2, +3));
+//            vec4 s66 = textureOffset(u_tex, lookup_coords, ivec2(+3, +3));
+//            vec4 s76 = textureOffset(u_tex, lookup_coords, ivec2(+4, +3));
+//            vec4 s07 = textureOffset(u_tex, lookup_coords, ivec2(-3, +4));
+//            vec4 s17 = textureOffset(u_tex, lookup_coords, ivec2(-2, +4));
+//            vec4 s27 = textureOffset(u_tex, lookup_coords, ivec2(-1, +4));
+//            vec4 s37 = textureOffset(u_tex, lookup_coords, ivec2(+0, +4));
+//            vec4 s47 = textureOffset(u_tex, lookup_coords, ivec2(+1, +4));
+//            vec4 s57 = textureOffset(u_tex, lookup_coords, ivec2(+2, +4));
+//            vec4 s67 = textureOffset(u_tex, lookup_coords, ivec2(+3, +4));
+//            vec4 s77 = textureOffset(u_tex, lookup_coords, ivec2(+4, +4));
+//            vec4 r0 = sliding_area_8(s00, s10, s20, s30, s40, s50, s60, s70, frac_coords.x);
+//            vec4 r1 = sliding_area_8(s01, s11, s21, s31, s41, s51, s61, s71, frac_coords.x);
+//            vec4 r2 = sliding_area_8(s02, s12, s22, s32, s42, s52, s62, s72, frac_coords.x);
+//            vec4 r3 = sliding_area_8(s03, s13, s23, s33, s43, s53, s63, s73, frac_coords.x);
+//            vec4 r4 = sliding_area_8(s04, s14, s24, s34, s44, s54, s64, s74, frac_coords.x);
+//            vec4 r5 = sliding_area_8(s05, s15, s25, s35, s45, s55, s65, s75, frac_coords.x);
+//            vec4 r6 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
+//            vec4 r7 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
+//            color = sliding_area_8(r0, r1, r2, r3, r4, r5, r6, r7, frac_coords.y);
     }
      // Apply transparency background with alpha blending
     color = color * color.a + u_transparency_background * (1.0 - color.a);

@@ -56,6 +56,10 @@ enum class Interpolator {
     CubicRingless = 3,
     Squares9 = 4,
     Squares16 = 5,
+    Squares25 = 6,
+    Squares36 = 7,
+    Squares49 = 8,
+//    Squares64 = 9,
 };
 
 struct PageProgram : Program {
@@ -122,8 +126,15 @@ void draw_pages (
         auto downscaler = settings.get(&RenderSettings::downscaler);
          // Don't use higher sample count than necessary.
         if (zoom > 1/2.f) {
-            if (downscaler == Downscaler::Squares16) {
+            if (downscaler == Downscaler::Squares16
+             || downscaler == Downscaler::Squares25
+            ) {
                 downscaler = Downscaler::Squares9;
+            }
+        }
+        else if (zoom > 1/3.f) {
+            if (downscaler == Downscaler::Squares25) {
+                downscaler = Downscaler::Squares16;
             }
         }
         interp = Interpolator(i32(downscaler));
