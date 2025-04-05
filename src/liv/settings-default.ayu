@@ -71,7 +71,6 @@ render: {
      --   linear = 4-sample bilinear interpolation
      --   cubic = 16-sample bicubic hermetic spline
      --   cubic_ringless = cubic but adjusted to prevent ringing artifacts
-     --   smoothed = 16-sample smoothing filter (deprecated)
     upscaler: cubic_ringless
      -- Interpolation mode for downscaling images (zoom < 1).  Options, in rough
      -- order or processing cost, are:
@@ -266,7 +265,6 @@ mappings: [
     [[ctrl 2] [upscaler linear]]
     [[ctrl 3] [upscaler cubic]]
     [[ctrl 4] [upscaler cubic_ringless]]
-    [[ctrl 9] [upscaler smoothed]]
      -- Set background color
     [[ctrl b] [toggle
         [window_background white]

@@ -175,8 +175,7 @@ AYU_DESCRIBE(liv::Upscaler,
         value("nearest", Upscaler::Nearest),
         value("linear", Upscaler::Linear),
         value("cubic", Upscaler::Cubic),
-        value("cubic_ringless", Upscaler::CubicRingless),
-        value("smoothed", Upscaler::Smoothed)
+        value("cubic_ringless", Upscaler::CubicRingless)
     )
 )
 

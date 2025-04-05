@@ -54,8 +54,7 @@ enum class Interpolator {
     Linear = 1,
     Cubic = 2,
     CubicRingless = 3,
-    Smoothed = 4,
-    Squares9 = 5,
+    Squares9 = 4,
 };
 
 struct PageProgram : Program {
