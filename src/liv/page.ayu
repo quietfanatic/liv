@@ -83,19 +83,15 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
     return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2.0;
 }
 
-#define PI 3.1415926538
-float la2 (float x) {
-    if (x == 0.0) return 1.0;
-    float pix = PI*x;
-    return 2.0 * sin(pix) * sin(pix / 2.0) / (pix*pix);
+float sinc (float x) {
+    return sin(x) / x;
 }
 
-vec4 lanczos2 (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
-    float wa = la2(-1.0 - t);
-    float wb = la2(-t);
-    float wc = la2(1.0 - t);
-    float wd = la2(2.0 - t);
-    return wa*a + wb*b + wc*c + wd*d;
+#define PI 3.1415926538
+float lanczos2 (float x) {
+    if (x == 0.0) return 1.0;
+    float pix = PI*x;
+    return sinc(pix) * sinc(pix / 2.0);
 }
 
 vec4 sliding_area_3 (vec4 a, vec4 b, vec4 c, float frac) {
@@ -272,11 +268,18 @@ void main () {
                     break;
                 }
                 case LANCZOS16: {
-                    vec4 r0 = lanczos2(s00, s10, s20, s30, frac_coords.x);
-                    vec4 r1 = lanczos2(s01, s11, s21, s31, frac_coords.x);
-                    vec4 r2 = lanczos2(s02, s12, s22, s32, frac_coords.x);
-                    vec4 r3 = lanczos2(s03, s13, s23, s33, frac_coords.x);
-                    color = lanczos2(r0, r1, r2, r3, frac_coords.y);
+                    float xw0 = lanczos2(-1.0 - frac_coords.x);
+                    float xw1 = lanczos2(+0.0 - frac_coords.x);
+                    float xw2 = lanczos2(+1.0 - frac_coords.x);
+                    float xw3 = lanczos2(+2.0 - frac_coords.x);
+                    float yw0 = lanczos2(-1.0 - frac_coords.y);
+                    float yw1 = lanczos2(+0.0 - frac_coords.y);
+                    float yw2 = lanczos2(+1.0 - frac_coords.y);
+                    float yw3 = lanczos2(+2.0 - frac_coords.y);
+                    color = (s00*(xw0*yw0) + s10*(xw1*yw0) + s20*(xw2*yw0) + s30*(xw3*yw0))
+                          + (s01*(xw0*yw1) + s11*(xw1*yw1) + s21*(xw2*yw1) + s31*(xw3*yw1))
+                          + (s02*(xw0*yw2) + s12*(xw1*yw2) + s22*(xw2*yw2) + s32*(xw3*yw2))
+                          + (s03*(xw0*yw3) + s13*(xw1*yw3) + s23*(xw2*yw3) + s33*(xw3*yw3));
                     break;
                 }
                 case SQUARES16: {
@@ -298,7 +301,7 @@ void main () {
              // a sharp edge anyway, so it looks fine.  This is also not
              // guaranteed to preserve the overall color distribution,
              // but from my observations there's no visible difference.
-            if (u_interpolator == CUBIC_RINGLESS) {
+            if (u_interpolator == CUBIC_RINGLESS || u_interpolator == LANCZOS16) {
                 color = clamp(color,
                     min(min(s11, s12), min(s21, s22)),
                     max(max(s11, s12), max(s21, s22))
