@@ -125,17 +125,14 @@ void draw_pages (
     else {
         auto downscaler = settings.get(&RenderSettings::downscaler);
          // Don't use higher sample count than necessary.
-        if (zoom > 1/2.f) {
-            if (downscaler == Downscaler::Squares16
-             || downscaler == Downscaler::Squares25
-            ) {
-                downscaler = Downscaler::Squares9;
-            }
-        }
-        else if (zoom > 1/3.f) {
-            if (downscaler == Downscaler::Squares25) {
-                downscaler = Downscaler::Squares16;
-            }
+        Downscaler necessary =
+            zoom >= 1/2.f ? Downscaler::Squares9
+          : zoom >= 1/3.f ? Downscaler::Squares16
+          : zoom >= 1/4.f ? Downscaler::Squares25
+          : zoom >= 1/5.f ? Downscaler::Squares36
+          :                 Downscaler::Squares49;
+        if (i32(downscaler) > i32(necessary)) {
+            downscaler = necessary;
         }
         interp = Interpolator(i32(downscaler));
     }
