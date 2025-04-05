@@ -56,6 +56,7 @@ enum class Upscaler {
     Linear = 1,
     Cubic = 2,
     Lanczos16 = 3,
+    Lanczos36 = 4,
 };
 
 enum class Deringer {

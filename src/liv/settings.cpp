@@ -177,7 +177,8 @@ AYU_DESCRIBE(liv::Upscaler,
         value("nearest", Upscaler::Nearest),
         value("linear", Upscaler::Linear),
         value("cubic", Upscaler::Cubic),
-        value("lanczos16", Upscaler::Lanczos16)
+        value("lanczos16", Upscaler::Lanczos16),
+        value("lanczos36", Upscaler::Lanczos36)
     )
 )
 

@@ -71,6 +71,10 @@ render: {
      --   linear = 4-sample bilinear interpolation
      --   cubic = 16-sample bicubic hermetic spline
      --   lanczos16 = 16-sample sine interpolation
+     --   lanczos36 = 36-sample sine interpolation
+     -- lanczos16 is nearly indistinguishable from cubic and lanczos36 doesn't
+     -- necessarily look better (it sometimes "overinterprets" the image), so
+     -- the default is cubic.
     upscaler: cubic
      -- The cubic and lanczos upscalers can introduce ringing artifacts.  This
      -- removes them.  Options are:
@@ -81,11 +85,11 @@ render: {
      -- order or processing cost, are:
      --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
-     --   box9 = 9-sample box convolution (100%~50% zoom)
-     --   box16 = Up to 16-samples (50%~33% zoom)
-     --   box25 = Up to 25-samples (33%~25% zoom)
-     --   box36 = Up to 36-samples (25%~20% zoom)
-     --   box49 = Up to 49-samples (20%~17% zoom)
+     --   box9 = 9-sample box convolution (for 100%~50% zoom)
+     --   box16 = Up to 16-samples (for 50%~33% zoom)
+     --   box25 = Up to 25-samples (for 33%~25% zoom)
+     --   box36 = Up to 36-samples (for 25%~20% zoom)
+     --   box49 = Up to 49-samples (for 20%~17% zoom)
      -- A simpler downscaler will be used if the zoom factor is too high for a
      -- more complex one.  Box25 can antialias an 8k image on a 1080p screen;
      -- anything beyond that is probably excessive.
@@ -277,6 +281,8 @@ mappings: [
     [[ctrl 2] [upscaler linear]]
     [[ctrl 3] [upscaler cubic]]
     [[ctrl 4] [upscaler lanczos16]]
+     -- ctrl 5 is reserved on mint for some reason
+    [[ctrl 6] [upscaler lanczos36]]
      -- Set deringer mode
     [[ctrl 8] [deringer none]]
     [[ctrl 9] [deringer flat]]
