@@ -54,12 +54,13 @@ enum class Interpolator {
     Linear = 1,
     Cubic = 2,
     CubicRingless = 3,
-    Squares9 = 4,
-    Squares16 = 5,
-    Squares25 = 6,
-    Squares36 = 7,
-    Squares49 = 8,
-//    Squares64 = 9,
+    Lanczos16 = 4,
+    Squares9 = 5,
+    Squares16 = 6,
+    Squares25 = 7,
+    Squares36 = 8,
+    Squares49 = 9,
+//    Squares64 = 10,
 };
 
 struct PageProgram : Program {

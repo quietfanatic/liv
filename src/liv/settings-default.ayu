@@ -272,6 +272,7 @@ mappings: [
     [[ctrl 2] [upscaler linear]]
     [[ctrl 3] [upscaler cubic]]
     [[ctrl 4] [upscaler cubic_ringless]]
+    [[ctrl 6] [upscaler lanczos16]]
      -- Set downscaling mode
     [[ctrl shift 1] [downscaler nearest]]
     [[ctrl shift 2] [downscaler linear]]

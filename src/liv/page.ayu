@@ -62,12 +62,13 @@ const int NEAREST = 0;
 const int LINEAR = 1;
 const int CUBIC = 2;
 const int CUBIC_RINGLESS = 3;
-const int SQUARES9 = 4;
-const int SQUARES16 = 5;
-const int SQUARES25 = 6;
-const int SQUARES36 = 7;
-const int SQUARES49 = 8;
-//const int SQUARES64 = 9;
+const int LANCZOS16 = 4;
+const int SQUARES9 = 5;
+const int SQUARES16 = 6;
+const int SQUARES25 = 7;
+const int SQUARES36 = 8;
+const int SQUARES49 = 9;
+//const int SQUARES64 = 10;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -80,6 +81,21 @@ vec4 cubic_hermite (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
     vec4 v2 = 2.0*a - 5.0*b + 4.0*c - d;
     vec4 v3 =    -a + 3.0*b - 3.0*c + d;
     return (v0 + v1*t + v2*(t*t) + v3*(t*t*t)) / 2.0;
+}
+
+#define PI 3.1415926538
+float la2 (float x) {
+    if (x == 0.0) return 1.0;
+    float pix = PI*x;
+    return 2.0 * sin(pix) * sin(pix / 2.0) / (pix*pix);
+}
+
+vec4 lanczos2 (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
+    float wa = la2(-1.0 - t);
+    float wb = la2(-t);
+    float wc = la2(1.0 - t);
+    float wd = la2(2.0 - t);
+    return wa*a + wb*b + wc*c + wd*d;
 }
 
 vec4 sliding_area_3 (vec4 a, vec4 b, vec4 c, float frac) {
@@ -216,6 +232,7 @@ void main () {
         }
         case CUBIC:
         case CUBIC_RINGLESS:
+        case LANCZOS16:
         case SQUARES16: {
              // It's easy to run into off-by-one-half errors, because texels
              // aren't centered around integer coordinates, they're centered
@@ -252,21 +269,14 @@ void main () {
                     vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
                     vec4 r3 = cubic_hermite(s03, s13, s23, s33, frac_coords.x);
                     color = cubic_hermite(r0, r1, r2, r3, frac_coords.y);
-                     // Clamp output to prevent haloing.  Ideally we would
-                     // adjust the derivative at s[1-2][1-2] to prevent haloing,
-                     // AKA monotonic cubic interpolation, but that looks really
-                     // complicated and expensive.  So we're clamping the output
-                     // instead.  It doesn't always preserve the first
-                     // derivative, but when it doesn't, it's when the image had
-                     // a sharp edge anyway, so it looks fine.  This is also not
-                     // guaranteed to preserve the overall color distribution,
-                     // but from my observations there's no visible difference.
-                    if (u_interpolator == CUBIC_RINGLESS) {
-                        color = clamp(color,
-                            min(min(s11, s12), min(s21, s22)),
-                            max(max(s11, s12), max(s21, s22))
-                        );
-                    }
+                    break;
+                }
+                case LANCZOS16: {
+                    vec4 r0 = lanczos2(s00, s10, s20, s30, frac_coords.x);
+                    vec4 r1 = lanczos2(s01, s11, s21, s31, frac_coords.x);
+                    vec4 r2 = lanczos2(s02, s12, s22, s32, frac_coords.x);
+                    vec4 r3 = lanczos2(s03, s13, s23, s33, frac_coords.x);
+                    color = lanczos2(r0, r1, r2, r3, frac_coords.y);
                     break;
                 }
                 case SQUARES16: {
@@ -278,6 +288,21 @@ void main () {
                     break;
                 }
                 break;
+            }
+             // Clamp output to prevent haloing.  Ideally we would
+             // adjust the derivative at s[1-2][1-2] to prevent haloing,
+             // AKA monotonic cubic interpolation, but that looks really
+             // complicated and expensive.  So we're clamping the output
+             // instead.  It doesn't always preserve the first
+             // derivative, but when it doesn't, it's when the image had
+             // a sharp edge anyway, so it looks fine.  This is also not
+             // guaranteed to preserve the overall color distribution,
+             // but from my observations there's no visible difference.
+            if (u_interpolator == CUBIC_RINGLESS) {
+                color = clamp(color,
+                    min(min(s11, s12), min(s21, s22)),
+                    max(max(s11, s12), max(s21, s22))
+                );
             }
             break;
         }

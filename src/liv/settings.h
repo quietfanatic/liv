@@ -56,16 +56,17 @@ enum class Upscaler {
     Linear = 1,
     Cubic = 2,
     CubicRingless = 3,
+    Lanczos16 = 4,
 };
 
 enum class Downscaler {
     Nearest = 0,
     Linear = 1,
-    Squares9 = 4,
-    Squares16 = 5,
-    Squares25 = 6,
-    Squares36 = 7,
-    Squares49 = 8,
+    Squares9 = 5,
+    Squares16 = 6,
+    Squares25 = 7,
+    Squares36 = 8,
+    Squares49 = 9,
 };
 
 using ColorRange = geo::GRange<Vec3>;

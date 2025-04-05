@@ -44,6 +44,7 @@ UniqueArray<IRI> expand_neighbors (
     return r;
 }
 
+NOINLINE static
 void expand_recursively_recurse (
     UniqueArray<IRI>& r,
     Slice<AnyString> extensions,
