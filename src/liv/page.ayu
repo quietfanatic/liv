@@ -105,7 +105,7 @@ vec4 cubic_or_average (vec4 a, vec4 b, vec4 c, vec4 d, float t) {
                 vec4 cubic = cubic_hermite(a, b, c, d, t);
                 vec4 average = weighted_average(a, b, c, d, t);
                 float zt = u_zoom * 2.0 - 1.0;
-                return average = (1.0-zt) + cubic * zt;
+                return average * (1.0-zt) + cubic * zt;
             }
         }
     }
