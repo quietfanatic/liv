@@ -311,7 +311,7 @@ Command<move_to_folder_> move_to_folder (1, "move_to_folder", "Move current page
 
 static void delete_mark_ () {
     if (!current_book) return;
-    liv::delete_mark(*current_app, *current_book);
+    liv::delete_mark(*current_book);
 }
 Command<delete_mark_> delete_mark (0, "delete_mark", "Delete mark file that saves book state.");
 
