@@ -283,10 +283,15 @@ Command<reset_settings_> reset_settings (0, "reset_settings", "Reset all tempora
 
 ///// RENDER COMMANDS
 
-static void interpolation_mode_ (InterpolationMode mode) {
-    if (current_book) current_book->interpolation_mode(mode);
+static void upscaler_ (Upscaler mode) {
+    if (current_book) current_book->upscaler(mode);
 }
-Command<interpolation_mode_> interpolation_mode (1, "interpolation_mode", "Set the pixel interpolation mode: nearest, linear, or cubic");
+Command<upscaler_> upscaler (1, "upscaler", "Set the upscaling interpolation mode");
+
+static void downscaler_ (Downscaler mode) {
+    if (current_book) current_book->downscaler(mode);
+}
+Command<downscaler_> downscaler (1, "downscaler", "Set the downscaling interpolation mode");
 
 static void window_background_ (Fill bg) {
     if (current_book) current_book->window_background(bg);

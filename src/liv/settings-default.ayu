@@ -65,16 +65,20 @@ layout: {
 
  -- Settings for how things are displayed
 render: {
-     -- Pixel interpolation mode.  Options (in rough order of processing cost):
-     --   nearest = 1-sample nearest-neighbor (lowest quality)
+     -- Interpolation mode for upscaling images (zoom > 1).  Options, in rough
+     -- order of processing cost, are:
+     --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
-     --   smoothed = 16-sample smoothing filter for downscaling.
      --   cubic = 16-sample bicubic hermetic spline
-     --   smart_cubic = cubic with some adjustments (highest quality)
-     -- The smart_cubic mode is like cubic, but it clamps the output value to
-     -- prevent halo artifacts.  In addition, if the image is being downscaled,
-     -- it gradually transitions to smoothed to reduce aliasing.
-    interpolation_mode: smart_cubic
+     --   cubic_ringless = cubic but adjusted to prevent ringing artifacts
+     --   smoothed = 16-sample smoothing filter (deprecated)
+    upscaler: cubic_ringless
+     -- Interpolation mode for downscaling images (zoom < 1).  Options, in rough
+     -- order or processing cost, are:
+     --   nearest = 1-sample nearest-neighbor
+     --   linear = 4-sample bilinear interpolation
+     --   squares9 = 9-sample area averaging
+    downscaler: squares9
      -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
      -- where r,g,b,a are between 0 and 1).  The alpha value is probably
      -- meaningless for the window background.
@@ -257,12 +261,12 @@ mappings: [
      -- Reset all temporary setting overrides.
     [[ctrl r] [reset_settings]]
   -------- DISPLAY
-     -- Set interpolation mode
-    [[ctrl 1] [interpolation_mode nearest]]
-    [[ctrl 2] [interpolation_mode linear]]
-    [[ctrl 3] [interpolation_mode cubic]]
-    [[ctrl 4] [interpolation_mode smart_cubic]]
-    [[ctrl 9] [interpolation_mode smoothed]]
+     -- Set upscaling mode
+    [[ctrl 1] [upscaler nearest]]
+    [[ctrl 2] [upscaler linear]]
+    [[ctrl 3] [upscaler cubic]]
+    [[ctrl 4] [upscaler cubic_ringless]]
+    [[ctrl 9] [upscaler smoothed]]
      -- Set background color
     [[ctrl b] [toggle
         [window_background white]

@@ -283,8 +283,14 @@ void Book::reset_settings () {
     need_mark = true;
 }
 
-void Book::interpolation_mode (InterpolationMode mode) {
-    state.settings->render.interpolation_mode = mode;
+void Book::upscaler (Upscaler mode) {
+    state.settings->render.upscaler = mode;
+    view.update_picture();
+    need_mark = true;
+}
+
+void Book::downscaler (Downscaler mode) {
+    state.settings->render.downscaler = mode;
     view.update_picture();
     need_mark = true;
 }

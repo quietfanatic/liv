@@ -50,18 +50,20 @@ enum class ResetOnSeek {
     Zoom
 };
 
- // This is sent to the shader as an int so the order matters
-enum class InterpolationMode {
-    Nearest,
-    Linear,
-    Smoothed,
-    Cubic,
-    SmartCubic
+ // These values match Interpolator in page.ayu
+enum class Upscaler {
+    Nearest = 0,
+    Linear = 1,
+    Cubic = 2,
+    CubicRingless = 3,
+    Smoothed = 4,
 };
 
-constexpr bool interpolation_mode_preserves_centers (InterpolationMode mode) {
-    return mode != InterpolationMode::Smoothed;
-}
+enum class Downscaler {
+    Nearest = 0,
+    Linear = 1,
+    Squares9 = 5,
+};
 
 using ColorRange = geo::GRange<Vec3>;
 
@@ -102,7 +104,8 @@ struct LayoutSettings {
     std::optional<Direction> orientation;
 };
 struct RenderSettings {
-    std::optional<InterpolationMode> interpolation_mode;
+    std::optional<Upscaler> upscaler;
+    std::optional<Downscaler> downscaler;
     std::optional<Fill> window_background;
     std::optional<Fill> transparency_background;
     std::optional<ColorRange> color_range;

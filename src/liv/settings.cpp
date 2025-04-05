@@ -42,7 +42,8 @@ Settings builtin_default_settings = {
         .orientation = {Direction::Up},
     },
     .render = {
-        .interpolation_mode = {InterpolationMode::SmartCubic},
+        .upscaler = {Upscaler::CubicRingless},
+        .downscaler = {Downscaler::Squares9},
         .window_background = {Fill::Black},
         .transparency_background = {Fill::White},
         .color_range = {ColorRange{Vec3{0, 0, 0}, Vec3{1, 1, 1}}},
@@ -110,7 +111,8 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(layout.small_align)
     LIV_MERGE(layout.large_align)
     LIV_MERGE(layout.orientation)
-    LIV_MERGE(render.interpolation_mode)
+    LIV_MERGE(render.upscaler)
+    LIV_MERGE(render.downscaler)
     LIV_MERGE(render.window_background)
     LIV_MERGE(render.transparency_background)
     LIV_MERGE(render.color_range)
@@ -168,13 +170,21 @@ AYU_DESCRIBE(liv::ResetOnSeek,
     )
 )
 
-AYU_DESCRIBE(liv::InterpolationMode,
+AYU_DESCRIBE(liv::Upscaler,
     values(
-        value("nearest", InterpolationMode::Nearest),
-        value("linear", InterpolationMode::Linear),
-        value("smoothed", InterpolationMode::Smoothed),
-        value("cubic", InterpolationMode::Cubic),
-        value("smart_cubic", InterpolationMode::SmartCubic)
+        value("nearest", Upscaler::Nearest),
+        value("linear", Upscaler::Linear),
+        value("cubic", Upscaler::Cubic),
+        value("cubic_ringless", Upscaler::CubicRingless),
+        value("smoothed", Upscaler::Smoothed)
+    )
+)
+
+AYU_DESCRIBE(liv::Downscaler,
+    values(
+        value("nearest", Downscaler::Nearest),
+        value("linear", Downscaler::Linear),
+        value("squares9", Downscaler::Squares9)
     )
 )
 
@@ -226,7 +236,8 @@ AYU_DESCRIBE(liv::LayoutSettings,
 )
 AYU_DESCRIBE(liv::RenderSettings,
     attrs(
-        attr("interpolation_mode", &RenderSettings::interpolation_mode, collapse_optional),
+        attr("upscaler", &RenderSettings::upscaler, collapse_optional),
+        attr("downscaler", &RenderSettings::downscaler, collapse_optional),
         attr("window_background", &RenderSettings::window_background, collapse_optional),
         attr("transparency_background", &RenderSettings::transparency_background, collapse_optional),
         attr("color_range", &RenderSettings::color_range, collapse_optional)

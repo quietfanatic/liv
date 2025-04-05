@@ -48,6 +48,16 @@ void Page::unload () {
     load_failed = false;
 }
 
+ // These must match the constants in page.ayu#fragment
+enum class Interpolator {
+    Nearest = 0,
+    Linear = 1,
+    Cubic = 2,
+    CubicRingless = 3,
+    Smoothed = 4,
+    Squares9 = 5,
+};
+
 struct PageProgram : Program {
     int u_orientation = -1;
     int u_screen_rect = -1;
@@ -99,11 +109,20 @@ void draw_pages (
     auto ori = settings.get(&LayoutSettings::orientation);
     glUniform1i(program->u_orientation, i32(ori));
 
-    auto interp = settings.get(&RenderSettings::interpolation_mode);
-     // Increase chances of pixel-perfect rendering
-    if (zoom == 1.f && interpolation_mode_preserves_centers(interp)) {
-        interp = InterpolationMode::Nearest;
+    Interpolator interp;
+    if (zoom == 1.f) {
+         // Increase chances of pixel-perfect rendering
+        interp = Interpolator::Nearest;
     }
+    else if (zoom > 1.f) {
+        auto upscaler = settings.get(&RenderSettings::upscaler);
+        interp = Interpolator(i32(upscaler));
+    }
+    else { // zoom < 1.f
+        auto downscaler = settings.get(&RenderSettings::downscaler);
+        interp = Interpolator(i32(downscaler));
+    }
+
     glUniform1i(program->u_interpolation_mode, i32(interp));
 
     auto bg = settings.get(&RenderSettings::transparency_background);
@@ -187,7 +206,7 @@ static tap::TestSet tests ("liv/page", []{
     glClear(GL_COLOR_BUFFER_BIT);
 
     Settings settings;
-    settings.render.interpolation_mode = InterpolationMode::Linear;
+    settings.render.upscaler = Upscaler::Linear;
     settings.render.window_background = Fill::Black;
 
     UniqueArray<PageView> views {

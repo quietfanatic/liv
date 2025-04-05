@@ -69,7 +69,8 @@ struct Book {
     void orientation (Direction);
     void reset_layout ();
     void reset_settings ();
-    void interpolation_mode (InterpolationMode);
+    void upscaler (Upscaler);
+    void downscaler (Downscaler);
     void window_background (Fill);
     void transparency_background (Fill);
     void color_range (const ColorRange&);
