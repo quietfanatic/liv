@@ -279,6 +279,7 @@ void main () {
                 }
                 break;
             }
+            break;
         }
         case SQUARES25: {
             vec2 int_coords = floor(v_tex_coords);
@@ -315,6 +316,7 @@ void main () {
             vec4 r3 = sliding_area_5(s03, s13, s23, s33, s43, frac_coords.x);
             vec4 r4 = sliding_area_5(s04, s14, s24, s34, s44, frac_coords.x);
             color = sliding_area_5(r0, r1, r2, r3, r4, frac_coords.y);
+            break;
         }
         case SQUARES36: {
             vec2 adjusted_coords = v_tex_coords - 0.5;
@@ -364,6 +366,7 @@ void main () {
             vec4 r4 = sliding_area_6(s04, s14, s24, s34, s44, s54, frac_coords.x);
             vec4 r5 = sliding_area_6(s05, s15, s25, s35, s45, s55, frac_coords.x);
             color = sliding_area_6(r0, r1, r2, r3, r4, r5, frac_coords.y);
+            break;
         }
         case SQUARES49: {
             vec2 int_coords = floor(v_tex_coords);
@@ -426,6 +429,7 @@ void main () {
             vec4 r5 = sliding_area_7(s05, s15, s25, s35, s45, s55, s65, frac_coords.x);
             vec4 r6 = sliding_area_7(s06, s16, s26, s36, s46, s56, s66, frac_coords.x);
             color = sliding_area_7(r0, r1, r2, r3, r4, r5, r6, frac_coords.y);
+            break;
         }
 //        case SQUARES64: {
 //            vec2 adjusted_coords = v_tex_coords - 0.5;
@@ -505,6 +509,7 @@ void main () {
 //            vec4 r6 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
 //            vec4 r7 = sliding_area_8(s06, s16, s26, s36, s46, s56, s66, s76, frac_coords.x);
 //            color = sliding_area_8(r0, r1, r2, r3, r4, r5, r6, r7, frac_coords.y);
+//            break;
     }
      // Apply transparency background with alpha blending
     color = color * color.a + u_transparency_background * (1.0 - color.a);
