@@ -302,6 +302,10 @@ mappings: [
   -------- EXECUTION
     [[q] [quit]]
     [[ctrl q] [quit]]
+    [[ctrl shift q] [seq [
+        [delete_mark]
+        [quit]
+    ]]]
     [["`"] [prompt_command]]
     [[escape] [seq [
         [leave_fullscreen]

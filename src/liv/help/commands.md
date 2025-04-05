@@ -116,3 +116,5 @@ Book Commands
     [remove_from_book]
 ]]
 ```
+- `[delete_mark]` = Clear the app's memory for this book.  The mark file will be
+    regenerated if you take any action afterward except quitting.

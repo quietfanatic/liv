@@ -132,6 +132,12 @@ void save_mark (const App& app, Book& book) {
     ayu::force_unload(res);
 }
 
+void delete_mark (const App& app, Book& book) {
+    auto& loc = book.source.location_for_mark();
+    if (!loc) return;
+    ayu::remove_source(get_mark_location(loc));
+}
+
 } using namespace liv;
 
 AYU_DESCRIBE(liv::Mark,

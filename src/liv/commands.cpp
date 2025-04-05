@@ -9,6 +9,7 @@
 #include "app.h"
 #include "book.h"
 #include "list.h"
+#include "mark.h"
 #include "settings.h"
 
 namespace liv::commands {
@@ -188,52 +189,6 @@ static void trap_pointer_ (bool trap) {
 }
 Command<trap_pointer_> trap_pointer (1, "trap_pointer", "Set pointer trap mode");
 
-///// BOOK COMMANDS
-
-static void sort_ (SortMethod method) {
-    if (!current_book) return;
-    current_book->sort(method);
-}
-Command<sort_> sort (1, "sort", "Change sort method of current book");
-
- // TODO: optional argument?
-static void add_to_list_ (const AnyString& list, SortMethod sort) {
-    if (!current_book) return;
-    auto visible = current_book->visible_range();
-    if (!size(visible)) return;
-
-    auto loc = iri::from_fs_path(list);
-    const IRI& entry = current_book->block.pages[visible.l]->location;
-    add_to_list(loc, entry, sort);
-}
-Command<add_to_list_> add_to_list (2, "add_to_list", "Add current page filename to a list file and sort it");
-
-static void remove_from_list_ (const AnyString& list) {
-    if (!current_book) return;
-    auto visible = current_book->visible_range();
-    if (!size(visible)) return;
-    auto loc = iri::from_fs_path(list);
-    const IRI& entry = current_book->block.pages[visible.l]->location;
-    remove_from_list(loc, entry);
-}
-Command<remove_from_list_> remove_from_list (1, "remove_from_list", "Remove current page from list file");
-
-static void remove_from_book_ () {
-    if (!current_book) return;
-    current_book->remove_current_page();
-}
-Command<remove_from_book_> remove_from_book (0, "remove_from_book", "Remove current page from current book");
-
-static void move_to_folder_ (const AnyString& folder) {
-    if (!current_book) return;
-    auto visible = current_book->visible_range();
-    if (!size(visible)) return;
-    auto& loc = current_book->block.pages[visible.l]->location;
-    auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
-    fs::rename(iri::to_fs_path(loc), new_path);
-}
-Command<move_to_folder_> move_to_folder (1, "move_to_folder", "Move current page to a folder");
-
 ///// LAYOUT COMMANDS
 
 static void spread_count_ (int32 count) {
@@ -307,5 +262,57 @@ static void color_range_ (const ColorRange& range) {
     if (current_book) current_book->color_range(range);
 }
 Command<color_range_> color_range (1, "color_range", "Adjust the color output range with [[rl rh] [gl gh] [bl bh]]");
+
+///// BOOK COMMANDS
+
+static void sort_ (SortMethod method) {
+    if (!current_book) return;
+    current_book->sort(method);
+}
+Command<sort_> sort (1, "sort", "Change sort method of current book");
+
+ // TODO: optional argument?
+static void add_to_list_ (const AnyString& list, SortMethod sort) {
+    if (!current_book) return;
+    auto visible = current_book->visible_range();
+    if (!size(visible)) return;
+
+    auto loc = iri::from_fs_path(list);
+    const IRI& entry = current_book->block.pages[visible.l]->location;
+    add_to_list(loc, entry, sort);
+}
+Command<add_to_list_> add_to_list (2, "add_to_list", "Add current page filename to a list file and sort it");
+
+static void remove_from_list_ (const AnyString& list) {
+    if (!current_book) return;
+    auto visible = current_book->visible_range();
+    if (!size(visible)) return;
+    auto loc = iri::from_fs_path(list);
+    const IRI& entry = current_book->block.pages[visible.l]->location;
+    remove_from_list(loc, entry);
+}
+Command<remove_from_list_> remove_from_list (1, "remove_from_list", "Remove current page from list file");
+
+static void remove_from_book_ () {
+    if (!current_book) return;
+    current_book->remove_current_page();
+}
+Command<remove_from_book_> remove_from_book (0, "remove_from_book", "Remove current page from current book");
+
+static void move_to_folder_ (const AnyString& folder) {
+    if (!current_book) return;
+    auto visible = current_book->visible_range();
+    if (!size(visible)) return;
+    auto& loc = current_book->block.pages[visible.l]->location;
+    auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
+    fs::rename(iri::to_fs_path(loc), new_path);
+}
+Command<move_to_folder_> move_to_folder (1, "move_to_folder", "Move current page to a folder");
+
+static void delete_mark_ () {
+    if (!current_book) return;
+    liv::delete_mark(*current_app, *current_book);
+}
+Command<delete_mark_> delete_mark (0, "delete_mark", "Delete mark file that saves book state.");
 
 } // namespace liv::commands
