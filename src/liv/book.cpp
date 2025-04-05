@@ -283,6 +283,12 @@ void Book::reset_settings () {
     need_mark = true;
 }
 
+void Book::deringer (Deringer mode) {
+    state.settings->render.deringer = mode;
+    view.update_picture();
+    need_mark = true;
+}
+
 void Book::upscaler (Upscaler mode) {
     state.settings->render.upscaler = mode;
     view.update_picture();

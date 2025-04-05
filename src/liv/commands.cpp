@@ -243,6 +243,11 @@ static void upscaler_ (Upscaler mode) {
 }
 Command<upscaler_> upscaler (1, "upscaler", "Set the upscaling interpolation mode");
 
+static void deringer_ (Deringer mode) {
+    if (current_book) current_book->deringer(mode);
+}
+Command<deringer_> deringer (1, "deringer", "Set upscale deringing mode");
+
 static void downscaler_ (Downscaler mode) {
     if (current_book) current_book->downscaler(mode);
 }

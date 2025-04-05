@@ -50,6 +50,7 @@ precision highp int;
 
 uniform sampler2D u_tex;
 uniform int u_interpolator;
+uniform int u_deringer;
 uniform vec4 u_transparency_background;
 uniform float u_zoom;
 uniform vec3 u_color_mul;
@@ -61,14 +62,17 @@ out vec4 color;
 const int NEAREST = 0;
 const int LINEAR = 1;
 const int CUBIC = 2;
-const int CUBIC_RINGLESS = 3;
-const int LANCZOS16 = 4;
+const int LANCZOS16 = 3;
 const int SQUARES9 = 5;
 const int SQUARES16 = 6;
 const int SQUARES25 = 7;
 const int SQUARES36 = 8;
 const int SQUARES49 = 9;
 //const int SQUARES64 = 10;
+
+ // Deringers
+const int NONE = 0;
+const int FLAT = 1;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -227,7 +231,6 @@ void main () {
             color = sliding_area_3(r0, r1, r2, frac_coords.y);
         }
         case CUBIC:
-        case CUBIC_RINGLESS:
         case LANCZOS16:
         case SQUARES16: {
              // It's easy to run into off-by-one-half errors, because texels
@@ -258,8 +261,7 @@ void main () {
             vec4 s33 = textureOffset(u_tex, lookup_coords, ivec2(+2, +2));
             switch (u_interpolator) {
                 default:
-                case CUBIC:
-                case CUBIC_RINGLESS: {
+                case CUBIC: {
                     vec4 r0 = cubic_hermite(s00, s10, s20, s30, frac_coords.x);
                     vec4 r1 = cubic_hermite(s01, s11, s21, s31, frac_coords.x);
                     vec4 r2 = cubic_hermite(s02, s12, s22, s32, frac_coords.x);
@@ -321,7 +323,7 @@ void main () {
              // a sharp edge anyway, so it looks fine.  This is also not
              // guaranteed to preserve the overall color distribution,
              // but from my observations there's no visible difference.
-            if (u_interpolator == CUBIC_RINGLESS || u_interpolator == LANCZOS16) {
+            if (u_deringer == FLAT) {
                 color = clamp(color,
                     min(min(s11, s12), min(s21, s22)),
                     max(max(s11, s12), max(s21, s22))

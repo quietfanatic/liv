@@ -80,9 +80,10 @@ Layout Commands
 
 Render Commands
 ---------------
-- `[interpolation_mode <InterpolationMode>]` = Set interpolation mode for
-    current book.  See res/liv/settings-default.ayu for documentation on
-    interpolation modes.
+- `[upscaler <Upscaler>]` = Set upscaling interpolation mode for current book.
+    See res/liv/settings-default.ayu for documentation on interpolation modes.
+- `[deringer <Deringer>]` = Set upscale deringing mode for current book.
+- `[downscaler <Downscaler>]` = Set downscaling mode for current book.
 - `[window_background <Fill>]` = Set window background to a color.  See
     res/liv/settings-default.ayu for more information.
 - `[transparency_background <Fill>]` = Set the background shown behind

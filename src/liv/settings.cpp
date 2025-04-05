@@ -42,7 +42,8 @@ Settings builtin_default_settings = {
         .orientation = {Direction::Up},
     },
     .render = {
-        .upscaler = {Upscaler::CubicRingless},
+        .upscaler = {Upscaler::Cubic},
+        .deringer = {Deringer::Flat},
         .downscaler = {Downscaler::Squares36},
         .window_background = {Fill::Black},
         .transparency_background = {Fill::White},
@@ -112,6 +113,7 @@ void Settings::merge (Settings&& o) {
     LIV_MERGE(layout.large_align)
     LIV_MERGE(layout.orientation)
     LIV_MERGE(render.upscaler)
+    LIV_MERGE(render.deringer)
     LIV_MERGE(render.downscaler)
     LIV_MERGE(render.window_background)
     LIV_MERGE(render.transparency_background)
@@ -175,8 +177,14 @@ AYU_DESCRIBE(liv::Upscaler,
         value("nearest", Upscaler::Nearest),
         value("linear", Upscaler::Linear),
         value("cubic", Upscaler::Cubic),
-        value("cubic_ringless", Upscaler::CubicRingless),
         value("lanczos16", Upscaler::Lanczos16)
+    )
+)
+
+AYU_DESCRIBE(liv::Deringer,
+    values(
+        value("none", Deringer::None),
+        value("flat", Deringer::Flat)
     )
 )
 
@@ -241,6 +249,7 @@ AYU_DESCRIBE(liv::LayoutSettings,
 AYU_DESCRIBE(liv::RenderSettings,
     attrs(
         attr("upscaler", &RenderSettings::upscaler, collapse_optional),
+        attr("deringer", &RenderSettings::deringer, collapse_optional),
         attr("downscaler", &RenderSettings::downscaler, collapse_optional),
         attr("window_background", &RenderSettings::window_background, collapse_optional),
         attr("transparency_background", &RenderSettings::transparency_background, collapse_optional),

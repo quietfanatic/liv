@@ -70,6 +70,7 @@ struct Book {
     void reset_layout ();
     void reset_settings ();
     void upscaler (Upscaler);
+    void deringer (Deringer);
     void downscaler (Downscaler);
     void window_background (Fill);
     void transparency_background (Fill);

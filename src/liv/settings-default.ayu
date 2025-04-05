@@ -70,8 +70,13 @@ render: {
      --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
      --   cubic = 16-sample bicubic hermetic spline
-     --   cubic_ringless = cubic but adjusted to prevent ringing artifacts
-    upscaler: cubic_ringless
+     --   lanczos16 = 16-sample sine interpolation
+    upscaler: cubic
+     -- The cubic and lanczos upscalers can introduce ringing artifacts.  This
+     -- removes them.  Options are:
+     --   none = Don't dering
+     --   flat = Clamp output value to four neighbors
+    deringer: flat
      -- Interpolation mode for downscaling images (zoom < 1).  Options, in rough
      -- order or processing cost, are:
      --   nearest = 1-sample nearest-neighbor
@@ -271,8 +276,10 @@ mappings: [
     [[ctrl 1] [upscaler nearest]]
     [[ctrl 2] [upscaler linear]]
     [[ctrl 3] [upscaler cubic]]
-    [[ctrl 4] [upscaler cubic_ringless]]
-    [[ctrl 6] [upscaler lanczos16]]
+    [[ctrl 4] [upscaler lanczos16]]
+     -- Set deringer mode
+    [[ctrl 8] [deringer none]]
+    [[ctrl 9] [deringer flat]]
      -- Set downscaling mode
     [[ctrl shift 1] [downscaler nearest]]
     [[ctrl shift 2] [downscaler linear]]

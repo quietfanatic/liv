@@ -55,8 +55,12 @@ enum class Upscaler {
     Nearest = 0,
     Linear = 1,
     Cubic = 2,
-    CubicRingless = 3,
-    Lanczos16 = 4,
+    Lanczos16 = 3,
+};
+
+enum class Deringer {
+    None = 0,
+    Flat = 1,
 };
 
 enum class Downscaler {
@@ -109,6 +113,7 @@ struct LayoutSettings {
 };
 struct RenderSettings {
     std::optional<Upscaler> upscaler;
+    std::optional<Deringer> deringer;
     std::optional<Downscaler> downscaler;
     std::optional<Fill> window_background;
     std::optional<Fill> transparency_background;

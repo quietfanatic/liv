@@ -53,8 +53,7 @@ enum class Interpolator {
     Nearest = 0,
     Linear = 1,
     Cubic = 2,
-    CubicRingless = 3,
-    Lanczos16 = 4,
+    Lanczos16 = 3,
     Squares9 = 5,
     Squares16 = 6,
     Squares25 = 7,
@@ -68,6 +67,7 @@ struct PageProgram : Program {
     int u_screen_rect = -1;
     int u_tex_rect = -1;
     int u_interpolator = -1;
+    int u_deringer = -1;
     int u_transparency_background = -1;
     int u_zoom = -1;
     int u_color_mul = -1;
@@ -85,6 +85,8 @@ struct PageProgram : Program {
         glUniform1i(u_tex, 0);
         u_interpolator = glGetUniformLocation(id, "u_interpolator");
         expect(u_interpolator != -1);
+        u_deringer = glGetUniformLocation(id, "u_deringer");
+        expect(u_deringer != -1);
         u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
         expect(u_transparency_background != -1);
         u_zoom = glGetUniformLocation(id, "u_zoom");
@@ -137,8 +139,10 @@ void draw_pages (
         }
         interp = Interpolator(i32(downscaler));
     }
-
     glUniform1i(program->u_interpolator, i32(interp));
+
+    auto deringer = settings.get(&RenderSettings::deringer);
+    glUniform1i(program->u_deringer, i32(deringer));
 
     auto bg = settings.get(&RenderSettings::transparency_background);
     auto bg_scaled = Vec4(bg.r, bg.g, bg.b, bg.a) / 255.f;
