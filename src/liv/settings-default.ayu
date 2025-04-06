@@ -76,8 +76,8 @@ render: {
      -- necessarily look better (it sometimes "overinterprets" the image), so
      -- the default is cubic.
     upscaler: cubic
-     -- The cubic and lanczos upscalers can introduce ringing artifacts.  This
-     -- reduces them.  Options are:
+     -- The cubic and lanczos upscalers can introduce ringing artifacts (aka
+     -- halos).  This reduces those.  Options are:
      --   none = Don't dering
      --   flat = Clamp output to the min and max of the surrounding four
      --            pixels
@@ -91,10 +91,10 @@ render: {
      --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
      --   box9 = 9-sample box convolution (for 100%~50% zoom)
-     --   box16 = Up to 16-samples (for 50%~33% zoom)
-     --   box25 = Up to 25-samples (for 33%~25% zoom)
-     --   box36 = Up to 36-samples (for 25%~20% zoom)
-     --   box49 = Up to 49-samples (for 20%~17% zoom)
+     --   box16 = Up to 16 samples (for 50%~33% zoom)
+     --   box25 = Up to 25 samples (for 33%~25% zoom)
+     --   box36 = Up to 36 samples (for 25%~20% zoom)
+     --   box49 = Up to 49 samples (for 20%~17% zoom)
      -- A simpler downscaler will be used if the zoom factor is too high for a
      -- more complex one.  Box25 can antialias an 8k image on a 1080p screen;
      -- anything beyond that is probably excessive.
