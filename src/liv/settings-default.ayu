@@ -77,10 +77,15 @@ render: {
      -- the default is cubic.
     upscaler: cubic
      -- The cubic and lanczos upscalers can introduce ringing artifacts.  This
-     -- removes them.  Options are:
+     -- reduces them.  Options are:
      --   none = Don't dering
-     --   flat = Clamp output value to four neighbors
-    deringer: flat
+     --   flat = Clamp output to the min and max of the surrounding four
+     --            pixels
+     --   smooth = Clamp output to a window determined by a curved mixture of the
+     --            surrounding four pixels
+     -- The smooth deringer also tends to reign in the behavior of some of the
+     -- fancier upscalers a bit and makes pixels more recognizable.
+    deringer: smooth
      -- Interpolation mode for downscaling images (zoom < 1).  Options, in rough
      -- order or processing cost, are:
      --   nearest = 1-sample nearest-neighbor
@@ -286,6 +291,7 @@ mappings: [
      -- Set deringer mode
     [[ctrl 8] [deringer none]]
     [[ctrl 9] [deringer flat]]
+    [[ctrl 0] [deringer smooth]]
      -- Set downscaling mode
     [[ctrl shift 1] [downscaler nearest]]
     [[ctrl shift 2] [downscaler linear]]

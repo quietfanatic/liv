@@ -62,6 +62,7 @@ enum class Upscaler {
 enum class Deringer {
     None = 0,
     Flat = 1,
+    Smooth = 2,
 };
 
 enum class Downscaler {

@@ -74,6 +74,7 @@ const int BOX49 = 9;
  // Deringers
 const int NONE = 0;
 const int FLAT = 1;
+const int SMOOTH = 2;
 
  // With help from
  // https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/
@@ -100,7 +101,7 @@ float lanczos (float x, float a) {
     return sinc(pix) * sinc(pix / a);
 }
 
-vec4 dering (vec4 color, vec4 lb, vec4 rb, vec4 lt, vec4 rt) {
+vec4 dering (vec4 color, vec4 lb, vec4 rb, vec4 lt, vec4 rt, vec2 frac) {
      // Clamp output to prevent haloing.  Ideally we would
      // adjust the derivative at s[1-2][1-2] to prevent haloing,
      // AKA monotonic cubic interpolation, but that looks really
@@ -111,10 +112,39 @@ vec4 dering (vec4 color, vec4 lb, vec4 rb, vec4 lt, vec4 rt) {
      // guaranteed to preserve the overall color distribution,
      // but from my observations there's no visible difference.
     if (u_deringer == FLAT) {
-        return clamp(color,
-            min(min(lt, lb), min(rt, rb)),
-            max(max(lt, lb), max(rt, rb))
+        vec4 lo = min(min(lb, rb), min(lt, rt));
+        vec4 hi = max(max(lb, rb), max(lt, rt));
+        return clamp(color, lo, hi);
+    }
+    else if (u_deringer == SMOOTH) {
+         // This is easy in one dimension, but generalizing it to two dimensions
+         // is tricky.  You can think of it as taking the four corners and
+         // moving them closer together in linear blend space.
+        vec2 t0 = pow(frac, vec2(1.3, 1.3));
+        vec2 t1 = 1.0 - pow(1.0 - frac, vec2(1.3, 1.3));
+        vec4 bound0 = mix(
+            mix(lb, rb, t0.x),
+            mix(lt, rt, t0.x),
+            t0.y
         );
+        vec4 bound1 = mix(
+            mix(lb, rb, t1.x),
+            mix(lt, rt, t1.x),
+            t0.y
+        );
+        vec4 bound2 = mix(
+            mix(lb, rb, t0.x),
+            mix(lt, rt, t0.x),
+            t1.y
+        );
+        vec4 bound3 = mix(
+            mix(lb, rb, t1.x),
+            mix(lt, rt, t1.x),
+            t1.y
+        );
+        vec4 lo = min(min(bound0, bound1), min(bound2, bound3));
+        vec4 hi = max(max(bound0, bound1), max(bound2, bound3));
+        return clamp(color, lo, hi);
     }
     else return color;
 }
@@ -201,7 +231,7 @@ void main () {
             vec4 r2 = cubic_hermite(s02, s12, s22, s32, fracs.x);
             vec4 r3 = cubic_hermite(s03, s13, s23, s33, fracs.x);
             color = cubic_hermite(r0, r1, r2, r3, fracs.y);
-            color = dering(color, s11, s21, s12, s22);
+            color = dering(color, s11, s21, s12, s22, fracs);
         }
         else if (u_interpolator == LANCZOS16) {
              // Hope this gets vectorized
@@ -228,7 +258,7 @@ void main () {
                   + s22*(xw[2]*yw[2]) + s32*(xw[3]*yw[2])
                   + s03*(xw[0]*yw[3]) + s13*(xw[1]*yw[3])
                   + s23*(xw[2]*yw[3]) + s33*(xw[3]*yw[3]);
-            color = dering(color, s11, s21, s12, s22);
+            color = dering(color, s11, s21, s12, s22, fracs);
         }
         else if (u_interpolator == BOX16) {
              //            | frac=0.0 | frac=0.5 | frac=1.0
@@ -372,7 +402,7 @@ void main () {
                   + s34*(xw[3]*yw[4]) + s44*(xw[4]*yw[4]) + s54*(xw[5]*yw[4])
                   + s05*(xw[0]*yw[5]) + s15*(xw[1]*yw[5]) + s25*(xw[2]*yw[5])
                   + s35*(xw[3]*yw[5]) + s45*(xw[4]*yw[5]) + s55*(xw[5]*yw[5]);
-            color = dering(color, s22, s32, s23, s33);
+            color = dering(color, s22, s32, s23, s33, fracs);
         }
         else if (u_interpolator == BOX36) {
             float zoom = clamp(u_zoom, 1.0/5.0, 1.0/4.0);

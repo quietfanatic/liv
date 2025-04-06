@@ -185,7 +185,8 @@ AYU_DESCRIBE(liv::Upscaler,
 AYU_DESCRIBE(liv::Deringer,
     values(
         value("none", Deringer::None),
-        value("flat", Deringer::Flat)
+        value("flat", Deringer::Flat),
+        value("smooth", Deringer::Smooth)
     )
 )
 
