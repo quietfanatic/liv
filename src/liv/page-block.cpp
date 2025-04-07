@@ -56,7 +56,7 @@ void expand_recursively_recurse (
         if (child[0] == '.') continue;
          // TODO: reduce string copies
         if (Dir subdir = Dir::try_open_at(dir.fd, child)) {
-            IRI subfolder = iri::from_fs_path(cat(subdir.path, '/'), folder);
+            IRI subfolder = iri::from_fs_path(cat(child, '/'), folder);
             expect(subfolder);
             expand_recursively_recurse(
                 r, extensions, subdir, subfolder
@@ -107,7 +107,7 @@ UniqueArray<IRI> expand_recursively (
     for (auto& loc : locs) {
         auto path = iri::to_fs_path(loc);
         if (Dir dir = Dir::try_open_at(AT_FDCWD, path)) {
-            IRI folder = IRI(cat(dir.path, '/'), "file:");
+            IRI folder = IRI("./", loc);  // Make sure it has / on the end
             usize old_size = r.size();
             expand_recursively_recurse(
                 r, extensions, dir, folder
