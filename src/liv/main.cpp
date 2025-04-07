@@ -25,9 +25,9 @@ int main (int argc, char** argv) {
     ayu::FolderResourceScheme data_scheme ("data", UniqueString(base));
     free(base);
     plog("set up");
-
+#ifndef TAP_DISABLE_TESTS
     tap::allow_testing(argc, argv);
-
+#endif
     UniqueArray<AnyString> args;
     bool help = false;
     bool list = false;

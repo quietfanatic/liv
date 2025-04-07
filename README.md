@@ -10,7 +10,7 @@ A lightning-fast image viewer.
 Builds with GCC on Linux Mint (Ubuntu 22.04 base).  Will probably build on
 Windows and Mac if you tweak it a bit.
 
-Requires the following packages (or equivalent)"
+Requires the following packages (or equivalent)
 
 - libsdl2-dev
 - libsail-dev
@@ -26,18 +26,18 @@ perl make.pl release
 
 ### USAGE
 
-Requires a video driver that supports OpenGL 3.1 or higher.  Any personal
-computer made since 2011 should work.
+Requires a video driver that supports OpenGL ES 3.0 or higher.  Any personal
+computer made since 2012 should work.
 
 There are lots of settings you can configure by editing the file `settings.ayu`
 in the program directory (it may not exist until you run the program once).
 
+There are comparatively few command-line arguments.  You can get info about them
+with `--help`.
+
 Note that by default, left-clicking in the window will trap the pointer (make it
 invisible and constrain it to the window).  Left-click again or press Escape to
 bring it back.
-
-There are comparatively few command-line arguments.  You can get info about them
-with `--help`.
 
 ### FEATURES AND ROADMAP
 
@@ -47,7 +47,7 @@ with `--help`.
 [x] Folder support
 [x] List support
 [x] Sorting
-[ ] Switch to OpenGL ES
+[x] Switch to OpenGL ES
 [ ] Zoom around cursor
 [ ] Customizable mouse controls
 [x] Support avif images (maybe switch to SAIL)

@@ -27,6 +27,8 @@ my @O0_opts = (qw(-fdce));
  # MFW I discovered parallel LTO
 my @O3_opts = (qw(-O3 -flto=7));
 
+my @no_tests = (qw(-DTAP_DISABLE_TESTS -DTAP_REMOVE_TESTS));
+
 $ENV{ASAN_OPTIONS} = 'new_delete_type_mismatch=0';
 my %configs = (
     deb => {
@@ -36,10 +38,13 @@ my %configs = (
         opts => [qw(-DNDEBUG -ggdb), @O3_opts],
     },
     dog => {
-        opts => [qw(-DTAP_DISABLE_TESTS -ggdb), @O3_opts],
+        opts => [qw(-fno-rtti -ggdb), @no_tests, @O3_opts],
     },
     rel => {
-        opts => [qw(-DNDEBUG -DTAP_DISABLE_TESTS -s), @O3_opts],
+        opts => [qw(-DNDEBUG -fno-rtti -s), @no_tests, @O3_opts],
+    },
+    sss => {
+        opts => [qw(-DNDEBUG -fno-rtti), @no_tests, @O3_opts],
     },
 #    opt32 => {
 #        opts => [qw(-m32 -fno-pie -DNDEBUG -ggdb), @O3_opts],
