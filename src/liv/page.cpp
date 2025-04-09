@@ -170,8 +170,9 @@ void draw_pages (
             view.offset + view.page->size
         );
         Rect zoomed = unzoomed * zoom + offset;
-         // Snap to pixels to make diagonal seam less likely
-        Rect rounded = Rect(floor(zoomed));
+         // Snap to pixels to make diagonal seam less likely.
+         // Round one corner and keep the size constant.
+        Rect rounded = zoomed + (round(lb(zoomed)) - lb(zoomed));
          // Convert to OpenGL coords (-1,-1)..(+1,+1)
         Rect on_picture = rounded / picture_size * float(2) - Vec(1, 1);
         glUniform1fv(program->u_screen_rect, 4, &on_picture.l);
