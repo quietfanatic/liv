@@ -94,7 +94,7 @@ R"(liv <options> [--] <filenames>
             "zenity", "--error", "--title=LIV Error", "--no-markup",
                 cat("--text=Uncaught exception: ", e.what())
         });
-        if (res.command_not_found()) {
+        if (res.command_wasnt_found()) {
             SDL_ShowSimpleMessageBox(
                 SDL_MESSAGEBOX_ERROR,
                 "LIV Error",

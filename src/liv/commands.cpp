@@ -17,30 +17,30 @@ using namespace control;
 
 ///// APP AND WINDOW COMMANDS
 
-static void quit_ () {
+static void quit () {
     if (current_app) current_app->stop();
 }
-Command<quit_> quit (0, "quit", "Quit application");
+CONTROL_COMMAND(quit, 0, "Quit application")
 
-static void fullscreen_ () {
+static void fullscreen () {
     if (current_book) {
         current_book->view.window.set_fullscreen(
             !current_book->view.window.is_fullscreen()
         );
     }
 }
-Command<fullscreen_> fullscreen (0, "fullscreen", "Toggle fullscreen mode");
+CONTROL_COMMAND(fullscreen, 0, "Toggle fullscreen mode")
 
-static void leave_fullscreen_ () {
+static void leave_fullscreen () {
      // Check if we're already fullscreen to avoid generating a size changed
      // event.
     if (current_book && current_book->view.window.is_fullscreen()) {
         current_book->view.window.set_fullscreen(false);
     }
 }
-Command<leave_fullscreen_> leave_fullscreen (0, "leave_fullscreen", "Leave fullscreen mode");
+CONTROL_COMMAND(leave_fullscreen, 0, "Leave fullscreen mode")
 
-static void leave_fullscreen_or_quit_ () {
+static void leave_fullscreen_or_quit () {
     if (current_book && current_book->view.window.is_fullscreen()) {
         current_book->view.window.set_fullscreen(false);
     }
@@ -48,11 +48,11 @@ static void leave_fullscreen_or_quit_ () {
         current_app->stop();
     }
 }
-Command<leave_fullscreen_or_quit_> leave_fullscreen_or_quit (
-    0, "leave_fullscreen_or_quit", "Leave fullscreen mode, or quit app if not in fullscreen mode"
-);
+CONTROL_COMMAND(leave_fullscreen_or_quit, 0,
+    "Leave fullscreen mode, or quit app if not in fullscreen mode"
+)
 
-static void prompt_command_ () {
+static void prompt_command () {
     if (!current_book) return;
     auto last = current_book->state.settings->get(
         &WindowSettings::last_prompt_command
@@ -64,7 +64,7 @@ static void prompt_command_ () {
         cat("--entry-text=", last)
     });
     if (res.ret != 0) {
-        if (res.command_not_found()) {
+        if (res.command_wasnt_found()) {
             SDL_ShowSimpleMessageBox(
                 SDL_MESSAGEBOX_ERROR,
                 "Cannot run zenity",
@@ -92,19 +92,19 @@ static void prompt_command_ () {
         });
     }
 }
-Command<prompt_command_> prompt_command (0, "prompt_command", "Prompt for a command with a dialog box");
+CONTROL_COMMAND(prompt_command, 0, "Prompt for a command with a dialog box")
 
-static void say_ (const FormatList& fmt) {
+static void say (const FormatList& fmt) {
     if (current_book) {
         UniqueString s;
         fmt.write(s, current_book);
         print_utf8(cat(move(s), "\n"));
     }
 }
-Command<say_> say (1, "say", "Print a formatted string to stdout with a newline.");
+CONTROL_COMMAND(say, 1, "Print a formatted string to stdout with a newline.")
 
  // TODO: allow single parameter
-static void message_box_ (const FormatList& title, const FormatList& message) {
+static void message_box (const FormatList& title, const FormatList& message) {
     if (current_book) {
         UniqueString t;
         title.write(t, current_book);
@@ -113,7 +113,7 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
         auto res = run({
             "zenity", "--no-markup", cat("--title=", t), "--info", cat("--text=", m)
         });
-        if (res.command_not_found()) {
+        if (res.command_wasnt_found()) {
             SDL_ShowSimpleMessageBox(
                 SDL_MESSAGEBOX_INFORMATION,
                 t.c_str(), m.c_str(),
@@ -122,26 +122,26 @@ static void message_box_ (const FormatList& title, const FormatList& message) {
         }
     }
 }
-Command<message_box_> message_box (2, "message_box", "Show a message box with formatted title and content");
+CONTROL_COMMAND(message_box, 2, "Show a message box with formatted title and content")
 
-static void clipboard_text_ (const FormatList& fmt) {
+static void clipboard_text (const FormatList& fmt) {
     if (!current_book) return;
     UniqueString text;
     fmt.write(text, current_book);
     SDL_SetClipboardText(text.c_str());
 }
-Command<clipboard_text_> clipboard_text (1, "clipboard_text", "Set clipboard text with format list");
+CONTROL_COMMAND(clipboard_text, 1, "Set clipboard text with format list")
 
-static void shell_ (const FormatList& fmt) {
+static void shell (const FormatList& fmt) {
     if (!current_book) return;
     UniqueString cmd;
     fmt.write(cmd, current_book);
     shell(cmd.c_str());
 }
-Command<shell_> shell (1, "shell", "Create a system shell command with a format list and run it.");
+CONTROL_COMMAND(shell, 1, "Create a system shell command with a format list and run it.")
 
  // Not AnyArray because FormatList is not copyable
-static void run_ (const UniqueArray<FormatList>& fmts) {
+static void run (const UniqueArray<FormatList>& fmts) {
     if (!current_book) return;
     auto args = UniqueArray<UniqueString>(
         fmts.size(), [&fmts](u32 i)
@@ -155,129 +155,129 @@ static void run_ (const UniqueArray<FormatList>& fmts) {
     });
     run(strs);
 }
-Command<run_> run (1, "run", "Run a system command with the command name and each argument from format lists.");
+CONTROL_COMMAND(run, 1, "Run a system command with the command name and each argument from format lists.")
 
 ///// ACTION COMMANDS
 
-static void next_ () {
+static void next () {
     if (current_book) current_book->next();
 }
-Command<next_> next (0, "next", "Go to next page or pages");
+CONTROL_COMMAND(next, 0, "Go to next page or pages")
 
-static void prev_ () {
+static void prev () {
     if (current_book) current_book->prev();
 }
-Command<prev_> prev (0, "prev", "Go to previous page or pages");
+CONTROL_COMMAND(prev, 0, "Go to previous page or pages")
 
-static void seek_ (int32 count) {
+static void seek (int32 count) {
     if (current_book) current_book->seek(count);
 }
-Command<seek_> seek (1, "seek", "Add given amount to the current page number");
+CONTROL_COMMAND(seek, 1, "Add given amount to the current page number")
 
-static void go_next_ (Direction dir) {
+static void go_next (Direction dir) {
     if (current_book) current_book->go_next(dir);
 }
-Command<go_next_> go_next (1, "go_next", "Move one spread count in the given direction");
+CONTROL_COMMAND(go_next, 1, "Move one spread count in the given direction")
 
-static void go_ (Direction dir, int32 count) {
+static void go (Direction dir, int32 count) {
     if (current_book) current_book->go(dir, count);
 }
-Command<go_> go (2, "go", "Move in the given direction by the given number of pages");
+CONTROL_COMMAND(go, 2, "Move in the given direction by the given number of pages")
 
-static void trap_pointer_ (bool trap) {
+static void trap_pointer (bool trap) {
     if (current_book) current_book->trap_pointer(trap);
 }
-Command<trap_pointer_> trap_pointer (1, "trap_pointer", "Set pointer trap mode");
+CONTROL_COMMAND(trap_pointer, 1, "Set pointer trap mode")
 
 ///// LAYOUT COMMANDS
 
-static void spread_count_ (int32 count) {
+static void spread_count (int32 count) {
     if (current_book) current_book->spread_count(count);
 }
-Command<spread_count_> spread_count (1, "spread_count", "Change number of pages to view at once");
+CONTROL_COMMAND(spread_count, 1, "Change number of pages to view at once")
 
-static void spread_direction_ (Direction dir) {
+static void spread_direction (Direction dir) {
     if (current_book) current_book->spread_direction(dir);
 }
-Command<spread_direction_> spread_direction (1, "spread_direction", "Change direction to read book in");
+CONTROL_COMMAND(spread_direction, 1, "Change direction to read book in")
 
-static void auto_zoom_mode_ (AutoZoomMode mode) {
+static void auto_zoom_mode (AutoZoomMode mode) {
     if (current_book) current_book->auto_zoom_mode(mode);
 }
-Command<auto_zoom_mode_> auto_zoom_mode (1, "auto_zoom_mode", "Set auto zoom mode: fit or original");
+CONTROL_COMMAND(auto_zoom_mode, 1, "Set auto zoom mode: fit or original")
 
-static void set_zoom_ (float zoom) {
+static void set_zoom (float zoom) {
     if (current_book) current_book->set_zoom(zoom);
 }
-Command<set_zoom_> set_zoom (1, "set_zoom", "Set zoom to a specific amount");
+CONTROL_COMMAND(set_zoom, 1, "Set zoom to a specific amount")
 
-static void zoom_ (float factor) {
+static void zoom (float factor) {
     if (current_book) current_book->zoom(factor);
 }
-Command<zoom_> zoom (1, "zoom", "Multiply zoom by a factor");
+CONTROL_COMMAND(zoom, 1, "Multiply zoom by a factor")
 
-static void align_ (Vec small, Vec large) {
+static void align (Vec small, Vec large) {
     if (current_book) current_book->align(small, large);
 }
-Command<align_> align (2, "align", "Set page alignment (small_align and large_align)");
+CONTROL_COMMAND(align, 2, "Set page alignment (small_align and large_align)")
 
-static void orientation_ (Direction o) {
+static void orientation (Direction o) {
     if (current_book) current_book->orientation(o);
 }
-Command<orientation_> orientation (1, "orientation", "Set page orientation");
+CONTROL_COMMAND(orientation, 1, "Set page orientation")
 
-static void reset_layout_ () {
+static void reset_layout () {
     if (current_book) current_book->reset_layout();
 }
-Command<reset_layout_> reset_layout (0, "reset_layout", "Reset most layout parameters to default");
+CONTROL_COMMAND(reset_layout, 0, "Reset most layout parameters to default")
 
-static void reset_settings_ () {
+static void reset_settings () {
     if (current_book) current_book->reset_settings();
 }
-Command<reset_settings_> reset_settings (0, "reset_settings", "Reset all temporary settings to default");
+CONTROL_COMMAND(reset_settings, 0, "Reset all temporary settings to default")
 
 ///// RENDER COMMANDS
 
-static void upscaler_ (Upscaler mode) {
+static void upscaler (Upscaler mode) {
     if (current_book) current_book->upscaler(mode);
 }
-Command<upscaler_> upscaler (1, "upscaler", "Set the upscaling interpolation mode");
+CONTROL_COMMAND(upscaler, 1, "Set the upscaling interpolation mode")
 
-static void deringer_ (Deringer mode) {
+static void deringer (Deringer mode) {
     if (current_book) current_book->deringer(mode);
 }
-Command<deringer_> deringer (1, "deringer", "Set upscale deringing mode");
+CONTROL_COMMAND(deringer, 1, "Set upscale deringing mode")
 
-static void downscaler_ (Downscaler mode) {
+static void downscaler (Downscaler mode) {
     if (current_book) current_book->downscaler(mode);
 }
-Command<downscaler_> downscaler (1, "downscaler", "Set the downscaling interpolation mode");
+CONTROL_COMMAND(downscaler, 1, "Set the downscaling interpolation mode")
 
-static void window_background_ (Fill bg) {
+static void window_background (Fill bg) {
     if (current_book) current_book->window_background(bg);
 }
-Command<window_background_> window_background (1, "window_background", "Change window background fill");
+CONTROL_COMMAND(window_background, 1, "Change window background fill")
 
-static void transparency_background_ (Fill bg) {
+static void transparency_background (Fill bg) {
     if (current_book) current_book->transparency_background(bg);
 }
-Command<transparency_background_> transparency_background (1, "transparency_background", "Change fill behind transparent images");
+CONTROL_COMMAND(transparency_background, 1, "Change fill behind transparent images")
 
-static void color_range_ (const ColorRange& range) {
+static void color_range (const ColorRange& range) {
     if (current_book) current_book->color_range(range);
 }
-Command<color_range_> color_range (1, "color_range", "Adjust the color output range with [[rl rh] [gl gh] [bl bh]]");
+CONTROL_COMMAND(color_range, 1, "Adjust the color output range with [[rl rh] [gl gh] [bl bh]]")
 
 ///// BOOK COMMANDS
 
-static void sort_ (SortMethod method) {
+static void sort (SortMethod method) {
     if (!current_book) return;
     current_book->sort(method);
 }
-Command<sort_> sort (1, "sort", "Change sort method of current book");
+CONTROL_COMMAND(sort, 1, "Change sort method of current book")
 
  // TODO: optional argument?
-static void add_to_list_ (const AnyString& list, SortMethod sort) {
+static void add_to_list (const AnyString& list, SortMethod sort) {
     if (!current_book) return;
     auto visible = current_book->visible_range();
     if (!size(visible)) return;
@@ -286,25 +286,25 @@ static void add_to_list_ (const AnyString& list, SortMethod sort) {
     const IRI& entry = current_book->block.pages[visible.l]->location;
     add_to_list(loc, entry, sort);
 }
-Command<add_to_list_> add_to_list (2, "add_to_list", "Add current page filename to a list file and sort it");
+CONTROL_COMMAND(add_to_list, 2, "Add current page filename to a list file and sort it")
 
-static void remove_from_list_ (const AnyString& list) {
+static void remove_from_list (const AnyString& list) {
     if (!current_book) return;
     auto visible = current_book->visible_range();
     if (!size(visible)) return;
     auto loc = iri::from_fs_path(list);
     const IRI& entry = current_book->block.pages[visible.l]->location;
-    remove_from_list(loc, entry);
+    liv::remove_from_list(loc, entry);
 }
-Command<remove_from_list_> remove_from_list (1, "remove_from_list", "Remove current page from list file");
+CONTROL_COMMAND(remove_from_list, 1, "Remove current page from list file")
 
-static void remove_from_book_ () {
+static void remove_from_book () {
     if (!current_book) return;
     current_book->remove_current_page();
 }
-Command<remove_from_book_> remove_from_book (0, "remove_from_book", "Remove current page from current book");
+CONTROL_COMMAND(remove_from_book, 0, "Remove current page from current book")
 
-static void move_to_folder_ (const AnyString& folder) {
+static void move_to_folder (const AnyString& folder) {
     if (!current_book) return;
     auto visible = current_book->visible_range();
     if (!size(visible)) return;
@@ -312,12 +312,12 @@ static void move_to_folder_ (const AnyString& folder) {
     auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
     fs::rename(iri::to_fs_path(loc), new_path);
 }
-Command<move_to_folder_> move_to_folder (1, "move_to_folder", "Move current page to a folder");
+CONTROL_COMMAND(move_to_folder, 1, "Move current page to a folder")
 
-static void delete_mark_ () {
+static void delete_mark () {
     if (!current_book) return;
     liv::delete_mark(*current_book);
 }
-Command<delete_mark_> delete_mark (0, "delete_mark", "Delete mark file that saves book state.");
+CONTROL_COMMAND(delete_mark, 0, "Delete mark file that saves book state.")
 
 } // namespace liv::commands
