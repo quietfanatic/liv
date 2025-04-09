@@ -107,7 +107,7 @@ UniqueArray<IRI> expand_recursively (
     for (auto& loc : locs) {
         auto path = iri::to_fs_path(loc);
         if (Dir dir = Dir::try_open_at(AT_FDCWD, path)) {
-            IRI folder = IRI("./", loc);  // Make sure it has / on the end
+            IRI folder = loc.add_slash_to_path();
             usize old_size = r.size();
             expand_recursively_recurse(
                 r, extensions, dir, folder
