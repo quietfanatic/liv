@@ -356,7 +356,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
             default: {
                 if (a.size() != 1) {
                     raise_LengthRejected(
-                        ayu::Type::CppType<FormatToken>(),
+                        ayu::Type::For<FormatToken>(),
                         1, 1, a.size()
                     );
                 }

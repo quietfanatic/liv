@@ -90,7 +90,6 @@ my @sources = (qw(
     dirt/ayu/reflection/anyval.cpp
     dirt/ayu/reflection/describe-builtin.cpp
     dirt/ayu/reflection/describe-standard.cpp
-    dirt/ayu/reflection/description.cpp
     dirt/ayu/reflection/type.cpp
     dirt/ayu/resources/document.cpp
     dirt/ayu/resources/resource.cpp
