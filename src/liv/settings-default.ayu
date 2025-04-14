@@ -99,9 +99,9 @@ render: {
      -- more complex one.  Box25 can antialias an 8k image on a 1080p screen;
      -- anything beyond that is probably excessive.
     downscaler: box25
-     -- Background color for window (black, white, 0xrrggbbaa, or [r g b a],
-     -- where r,g,b,a are between 0 and 1).  The alpha value is probably
-     -- meaningless for the window background.
+     -- Background color for window (black, white, #rgb, #rgba, #rrggbb,
+     -- #rrggbbaa, or [r g b] or [r g b a] where r,g,b,a are between 0 and 1).
+     -- The alpha value is probably meaningless for the window background.
     window_background: black
      -- Background to show behind transparent parts of images.
     transparency_background: white

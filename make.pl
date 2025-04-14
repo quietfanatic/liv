@@ -25,7 +25,7 @@ my @link_opts = (qw(-lSDL2 -lsail -lsail-common -lsail-manip));
 my @O0_opts = (qw(-fdce));
 
  # MFW I discovered parallel LTO
-my @O3_opts = (qw(-O3 -flto=7));
+my @O3_opts = (qw(-O3 -flimit-function-alignment -flto=7));
 
 my @no_tests = (qw(-DTAP_DISABLE_TESTS -DTAP_REMOVE_TESTS));
 

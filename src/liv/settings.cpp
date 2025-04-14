@@ -5,7 +5,7 @@
 
 namespace liv {
 
-static AnyString extensions [] = {
+static constexpr AnyString extensions [] = {
     "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
     "png", "tif", "tiff", "xbm", "xpm", "webp",
 };
