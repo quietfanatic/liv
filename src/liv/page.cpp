@@ -261,8 +261,8 @@ static tap::TestSet tests ("liv/page", []{
         if (expected[{x, y}] != got[{x, y}]) {
             match = false;
             diag(cat(x, ' ', y));
-            diag(ayu::item_to_string(&expected[{x, y}]));
-            diag(ayu::item_to_string(&got[{x, y}]));
+            diag(ayu::show(&expected[{x, y}]));
+            diag(ayu::show(&got[{x, y}]));
             goto done;
         }
     }

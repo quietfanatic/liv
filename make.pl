@@ -84,7 +84,7 @@ my @sources = (qw(
     dirt/ayu/data/parse.cpp
     dirt/ayu/data/print.cpp
     dirt/ayu/data/tree.cpp
-    dirt/ayu/reflection/accessors.cpp
+    dirt/ayu/reflection/access.cpp
     dirt/ayu/reflection/anyptr.cpp
     dirt/ayu/reflection/anyref.cpp
     dirt/ayu/reflection/anyval.cpp

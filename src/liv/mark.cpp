@@ -60,8 +60,8 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     if (mark->source != src) [[unlikely]] {
         uni::warn_utf8(cat(
             "Hash collision in mark file ", ayu::resource_filename(res->name()),
-            ".\nOld source: ", ayu::item_to_string(&mark->source),
-            "\nNew source: ", ayu::item_to_string(&src),
+            ".\nOld source: ", ayu::show(&mark->source),
+            "\nNew source: ", ayu::show(&src),
             "\nOld mark will be overwritten with new mark.\n"
         ));
         ayu::force_unload(res);
