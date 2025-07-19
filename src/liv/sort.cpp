@@ -33,7 +33,7 @@ struct Comparator {
         auto iris = self.iris;
         auto modtimes = (ModTime*)self.props;
         auto sizes = (usize*)self.props;
-        if constexpr (!!(method.flags & F::Reverse)) {
+        if constexpr (method.flags % F::Reverse) {
             u32 t = a; a = b; b = t;
         }
         switch (method.criterion) {
@@ -124,25 +124,25 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     plog("starting sort");
     switch (method.criterion) {
         case C::Natural: {
-            auto cmp = !(method.flags & F::Reverse)
-                ? &Comparator::cmp<SortMethod{C::Natural, F::None}>
-                : &Comparator::cmp<SortMethod{C::Natural, F::Reverse}>;
+            auto cmp = method.flags % F::Reverse
+                ? &Comparator::cmp<SortMethod{C::Natural, F::Reverse}>
+                : &Comparator::cmp<SortMethod{C::Natural, F::None}>;
 
             sort_with_props(begin, len, cmp, null);
             break;
         }
         case C::Unicode: {
-            auto cmp = !(method.flags & F::Reverse)
-                ? &Comparator::cmp<SortMethod{C::Unicode, F::None}>
-                : &Comparator::cmp<SortMethod{C::Unicode, F::Reverse}>;
+            auto cmp = method.flags % F::Reverse
+                ? &Comparator::cmp<SortMethod{C::Unicode, F::Reverse}>
+                : &Comparator::cmp<SortMethod{C::Unicode, F::None}>;
 
             sort_with_props(begin, len, cmp, null);
             break;
         }
         case C::LastModified: {
-            auto cmp = !(method.flags & F::Reverse)
-                ? &Comparator::cmp<SortMethod{C::LastModified, F::None}>
-                : &Comparator::cmp<SortMethod{C::LastModified, F::Reverse}>;
+            auto cmp = method.flags % F::Reverse
+                ? &Comparator::cmp<SortMethod{C::LastModified, F::Reverse}>
+                : &Comparator::cmp<SortMethod{C::LastModified, F::None}>;
 
             auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
             for (u32 i = 0; i < len; i++) {
@@ -152,9 +152,9 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
             break;
         }
         case C::FileSize: {
-            auto cmp = !(method.flags & F::Reverse)
-                ? &Comparator::cmp<SortMethod{C::FileSize, F::None}>
-                : &Comparator::cmp<SortMethod{C::FileSize, F::Reverse}>;
+            auto cmp = method.flags % F::Reverse
+                ? &Comparator::cmp<SortMethod{C::FileSize, F::Reverse}>
+                : &Comparator::cmp<SortMethod{C::FileSize, F::None}>;
 
             auto sizes = std::unique_ptr<usize[]>(new usize[len]);
             for (u32 i = 0; i < len; i++) {
@@ -193,7 +193,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
         flag <= F::NotLists;
         flag <<= 1
     ) {
-        if (!!(v.flags & flag)) {
+        if (v.flags % flag) {
             SortMethodToken f = {C::None, flag};
             a.push_back_expect_capacity(item_to_tree(&f));
         }
@@ -214,7 +214,7 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
             v.criterion = token.criterion;
         }
         else {
-            if (!!(v.flags & token.flags)) {
+            if (v.flags % token.flags) {
                 raise(e_General, "Duplicate sort flag in sort method.");
             }
             v.flags |= token.flags;

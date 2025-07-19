@@ -89,7 +89,7 @@ UniqueArray<IRI> expand_recursively (
     bool sort_everything;
     switch (type) {
         case BookType::Misc: {
-            sort_everything = !(sort.flags & SortFlags::NotArgs);
+            sort_everything = !(sort.flags % SortFlags::NotArgs);
             break;
         }
         case BookType::Folder: {
@@ -97,7 +97,7 @@ UniqueArray<IRI> expand_recursively (
             break;
         }
         case BookType::List: {
-            sort_everything = !(sort.flags & SortFlags::NotLists);
+            sort_everything = !(sort.flags % SortFlags::NotLists);
             break;
         }
         default: never();
