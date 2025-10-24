@@ -10,19 +10,25 @@ A lightning-fast image viewer.
 Builds with GCC on Linux Mint (Ubuntu 22.04 base).  Will probably build on
 Windows and Mac if you tweak it a bit.
 
-Requires the following packages (or equivalent)
+Requires SDL and SAIL.  On debian-like systems:
 
 - libsdl2-dev
 - libsail-dev
 - libsail-common-dev
 - libsail-manip-dev
 
-Run this command to build.  The program and all runtime files will be put into
-`out/rel`.
+On Arch Linux:
+
+- sdl2-compat
+- sail-img from AUR
+
+After installing dependencies, run this command to build.
 
 ```
 perl make.pl release
 ```
+
+The program and all runtime files will be in `out/rel/`.
 
 ### USAGE
 

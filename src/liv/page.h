@@ -16,7 +16,7 @@ namespace liv {
 
 struct Page {
     IRI location;
-    std::unique_ptr<glow::FileTexture> texture;
+    std::unique_ptr<glow::FileTexture> texture;  // null if not loaded
     IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;
