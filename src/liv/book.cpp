@@ -105,7 +105,10 @@ void Book::on_event (SDL_Event* e) {
     }
     if (auto input = control::input_from_event(e)) {
         auto action = state.settings->map_input(input);
-        if (action && *action) (*action)();
+        if (action && *action) {
+            ayu::dump(*action);
+            (*action)();
+        }
     }
 }
 

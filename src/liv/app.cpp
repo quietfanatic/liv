@@ -36,6 +36,17 @@ static void on_event (App& self, SDL_Event* e) {
             break;
         }
         case SDL_KEYDOWN:
+             // Some SDL versions send duplicate keypress events for some keys.
+            static u64 last_timestamp = 0;
+            static u32 last_windowID = 0;
+            static i32 last_sym = 0;
+            if (e->key.timestamp == last_timestamp
+             && e->key.windowID == last_windowID
+             && e->key.keysym.sym == last_sym) goto drop_event;
+            last_timestamp = e->key.timestamp;
+            last_windowID = e->key.windowID;
+            last_sym = e->key.keysym.sym;
+            [[fallthrough]];
         case SDL_KEYUP:
             current_book = book_with_window_id(self, e->key.windowID);
             break;
@@ -56,6 +67,7 @@ static void on_event (App& self, SDL_Event* e) {
     }
     if (current_book) current_book->on_event(e);
     current_book = null;
+    drop_event:
     current_app = null;
 }
 
