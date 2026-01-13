@@ -46,7 +46,7 @@ int main (int argc, char** argv) {
             else if (arg == "--list") {
                 list = true;
             }
-            else if (arg.slice(0, 7) == "--sort=") {
+            else if (arg.substr(0, 7) == "--sort=") {
                 sort.emplace();
                 ayu::item_from_list_string(&*sort, arg.slice(7));
             }

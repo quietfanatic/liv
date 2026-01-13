@@ -347,10 +347,7 @@ static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
             case FormatCommand::ForVisiblePages: {
                 new (&v.sublist) FormatList();
                 auto args = AnyArray(a.slice(1));
-                item_from_tree(
-                    &v.sublist, ayu::Tree(move(args)),
-                    {}, ayu::FromTreeOptions::DelaySwizzle
-                );
+                item_from_tree(&v.sublist, ayu::Tree(move(args)));
                 break;
             }
             default: {
