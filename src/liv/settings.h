@@ -68,11 +68,9 @@ enum class Deringer {
 enum class Downscaler {
     Nearest = 0,
     Linear = 1,
-    Box9 = 5,
-    Box16 = 6,
-    Box25 = 7,
-    Box36 = 8,
-    Box49 = 9,
+    SSAA4 = 5,
+    SSAA9 = 6,
+    SSAA16 = 7,
 };
 
 using ColorRange = geo::GRange<Vec3>;

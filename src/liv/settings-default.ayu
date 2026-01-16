@@ -90,15 +90,12 @@ render: {
      -- order or processing cost, are:
      --   nearest = 1-sample nearest-neighbor
      --   linear = 4-sample bilinear interpolation
-     --   box9 = 9-sample box convolution (for 100%~50% zoom)
-     --   box16 = Up to 16 samples (for 50%~33% zoom)
-     --   box25 = Up to 25 samples (for 33%~25% zoom)
-     --   box36 = Up to 36 samples (for 25%~20% zoom)
-     --   box49 = Up to 49 samples (for 20%~17% zoom)
-     -- A simpler downscaler will be used if the zoom factor is too high for a
-     -- more complex one.  Box25 can antialias an 8k image on a 1080p screen;
-     -- anything beyond that is probably excessive.
-    downscaler: box25
+     --   ssaa4 = Average of 4 bilinear samples (total 9~16 samples)
+     --   ssaa9 = Average of 9 bilinear samples (total 16~36 samples)
+     --   ssaa16 = Average of 16 bilinear samples (total 25~48 samples)
+     -- A simpler downscaler might be used if the requested one is more complex
+     -- than necessary for the current zoom level.
+    downscaler: ssaa16
      -- Background color for window (black, white, #rgb, #rgba, #rrggbb,
      -- #rrggbbaa, or [r g b] or [r g b a] where r,g,b,a are between 0 and 1).
      -- The alpha value is probably meaningless for the window background.
@@ -296,11 +293,9 @@ mappings: [
      -- Set downscaling mode
     [[ctrl shift 1] [downscaler nearest]]
     [[ctrl shift 2] [downscaler linear]]
-    [[ctrl shift 3] [downscaler box9]]
-    [[ctrl shift 4] [downscaler box16]]
-    [[ctrl shift 5] [downscaler box25]]
-    [[ctrl shift 6] [downscaler box36]]
-    [[ctrl shift 7] [downscaler box49]]
+    [[ctrl shift 3] [downscaler ssaa4]]
+    [[ctrl shift 4] [downscaler ssaa9]]
+    [[ctrl shift 5] [downscaler ssaa16]]
      -- Set background color
     [[ctrl b] [toggle
         [window_background white]

@@ -54,12 +54,9 @@ enum class Interpolator {
     Linear = 1,
     Cubic = 2,
     Lanczos16 = 3,
-    Box9 = 5,
-    Box16 = 6,
-    Box25 = 7,
-    Box36 = 8,
-    Box49 = 9,
-//    Box64 = 10,
+    SSAA4 = 5,
+    SSAA9 = 6,
+    SSAA16 = 7,
 };
 
 struct PageProgram : Program {
@@ -69,7 +66,6 @@ struct PageProgram : Program {
     int u_interpolator = -1;
     int u_deringer = -1;
     int u_transparency_background = -1;
-    int u_zoom = -1;
     int u_color_mul = -1;
     int u_color_add = -1;
 
@@ -89,8 +85,6 @@ struct PageProgram : Program {
         expect(u_deringer != -1);
         u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
         expect(u_transparency_background != -1);
-        u_zoom = glGetUniformLocation(id, "u_zoom");
-        expect(u_zoom != -1);
         u_color_mul = glGetUniformLocation(id, "u_color_mul");
         expect(u_color_mul != -1);
         u_color_add = glGetUniformLocation(id, "u_color_add");
@@ -129,11 +123,9 @@ void draw_pages (
         auto downscaler = settings.get(&RenderSettings::downscaler);
          // Don't use higher sample count than necessary.
         Downscaler necessary =
-            zoom >= 1/2.f ? Downscaler::Box9
-          : zoom >= 1/3.f ? Downscaler::Box16
-          : zoom >= 1/4.f ? Downscaler::Box25
-          : zoom >= 1/5.f ? Downscaler::Box36
-          :                 Downscaler::Box49;
+            zoom >= 1/2.f ? Downscaler::SSAA4
+          : zoom >= 1/3.f ? Downscaler::SSAA9
+          :                 Downscaler::SSAA16;
         if (i32(downscaler) > i32(necessary)) {
             downscaler = necessary;
         }
@@ -147,8 +139,6 @@ void draw_pages (
     auto bg = settings.get(&RenderSettings::transparency_background);
     auto bg_scaled = Vec4(bg.r, bg.g, bg.b, bg.a) / 255.f;
     glUniform4fv(program->u_transparency_background, 1, &bg_scaled[0]);
-
-    glUniform1f(program->u_zoom, zoom);
 
     auto& color = settings.get(&RenderSettings::color_range);
     auto color_mul = geo::size(color);
