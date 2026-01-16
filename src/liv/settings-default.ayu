@@ -207,13 +207,14 @@ mappings: [
     [[ctrl shift left] [go left 1000000000]]
     [[ctrl shift down] [go down 1000000000]]
     [[ctrl shift up] [go up 1000000000]]
+     -- Mouse controls
+    [[leftbtn] [next]]
+    [[rightbtn] [prev]]
      -- Toggle drag mode
-    [[leftbtn] [toggle
+    [[middlebtn] [toggle
         [trap_pointer true]
         [trap_pointer false]
     ]]
-    [[middlebtn] [next]]
-    [[rightbtn] [prev]]
      -- Set simultaneous viewed pages
     [[1] [spread_count 1]]
     [[2] [spread_count 2]]
