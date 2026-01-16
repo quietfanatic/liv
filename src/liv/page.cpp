@@ -157,9 +157,8 @@ void draw_pages (
     glUniform3fv(program->u_color_add, 1, &color_add[0]);
 
     for (auto& view : views) {
+        if (!view.page->texture) continue; // Probably failed to load.
         auto texture = &*view.page->texture;
-         // Some validation
-        if (!texture) continue;  // Probably failed to load.
         expect(!!*texture);
         expect(texture->target == GL_TEXTURE_2D);
         plog("drawing page");
