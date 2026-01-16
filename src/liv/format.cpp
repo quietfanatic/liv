@@ -307,61 +307,46 @@ void FormatList::write (UniqueString& r, Book* book, i32 page) const {
     for (auto& token : tokens) token.write(r, book, page);
 }
 
+static FormatCommand FormatToken_get_command (const FormatToken& v) {
+    return v.command;
+}
+static void FormatToken_set_command (FormatToken& v, FormatCommand m) {
+    v.~FormatToken();
+    switch (v.command = m) {
+        case FormatCommand::Literal: new (&v.literal) AnyString(); break;
+        case FormatCommand::IfZoomed:
+        case FormatCommand::ForVisiblePages: new (&v.sublist) FormatList(); break;
+        default: break;
+    }
+}
+static ayu::AnyPtr FormatToken_args (FormatToken& v) {
+    switch (v.command) {
+        case FormatCommand::Literal: return &v.literal;
+        case FormatCommand::IfZoomed:
+        case FormatCommand::ForVisiblePages: return &v.sublist;
+        default: return &v.empty;
+    }
+}
+
 static ayu::Tree FormatToken_to_tree (const FormatToken& v){
     using namespace ayu;
     switch (v.command) {
         case FormatCommand::None: return Tree::array();
         case FormatCommand::Literal: return Tree(v.literal);
-        case FormatCommand::IfZoomed: {
-            auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
-            a.insert(+0, Tree("if_zoomed"));
-            return Tree(move(a));
-        }
-        case FormatCommand::ForVisiblePages: {
-            auto a = AnyArray<Tree>(item_to_tree(&v.sublist));
-            a.insert(+0, Tree("for_visible_pages"));
-            return Tree(move(a));
-        }
-        default: {
-            return Tree(UniqueArray<Tree>::make(item_to_tree(&v.command)));
-        }
+        default: return Tree(); // Fall through to elems
     }
 }
 
-static void FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
+static bool FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
     using namespace ayu;
     v = {};
     if (t.form == Form::String) {
         v.command = FormatCommand::Literal;
         new (&v.literal) AnyString(t);
+        return true;
     }
-    else if (t.form == Form::Array) {
-        auto a = Slice<Tree>(t);
-        if (!a) {
-            v.command = FormatCommand::None;
-            return;
-        }
-        item_from_tree(&v.command, a[0]);
-        switch (v.command) {
-            case FormatCommand::IfZoomed:
-            case FormatCommand::ForVisiblePages: {
-                new (&v.sublist) FormatList();
-                auto args = AnyArray(a.slice(1));
-                item_from_tree(&v.sublist, ayu::Tree(move(args)));
-                break;
-            }
-            default: {
-                if (a.size() != 1) {
-                    raise_LengthRejected(
-                        ayu::Type(),
-                        //ayu::Type::For<FormatToken>(),
-                        1, 1, a.size()
-                    );
-                }
-                break;
-            }
-        }
-    }
+    else if (!Slice<Tree>(t)) return true; // empty array
+    else return false; // use elems
 }
 
 } using namespace liv;
@@ -398,9 +383,20 @@ AYU_DESCRIBE(liv::FormatCommand,
     )
 )
 
+AYU_DESCRIBE(liv::FormatEmpty,
+    elems()
+)
+
 AYU_DESCRIBE(liv::FormatToken,
     to_tree(&FormatToken_to_tree),
-    from_tree(&FormatToken_from_tree)
+    from_tree(&FormatToken_from_tree),
+    elems(
+        elem(value_funcs(
+            &FormatToken_get_command,
+            &FormatToken_set_command
+        )),
+        elem(anyptr_func(&FormatToken_args), collapse)
+    )
 )
 
 AYU_DESCRIBE(liv::FormatList,

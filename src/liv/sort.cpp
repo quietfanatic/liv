@@ -201,7 +201,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     return Tree(move(a));
 }
 
-void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
+bool SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
     using namespace ayu;
     v = {};
     for (auto& e : Slice<Tree>(t)) {
@@ -223,6 +223,7 @@ void SortMethod_from_tree (SortMethod& v, const ayu::Tree& t) {
     if (v.criterion == C::None) {
         raise(e_General, "No sort criterion in sort method");
     }
+    return true;
 }
 
 } using namespace liv;

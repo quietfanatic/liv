@@ -48,9 +48,12 @@ struct FormatList {
     void write (UniqueString&, Book*, i32 page) const;
 };
 
+struct FormatEmpty { };
+
 struct FormatToken {
     FormatCommand command;
     union {
+        FormatEmpty empty;
         AnyString literal;
         FormatList sublist;
     };
