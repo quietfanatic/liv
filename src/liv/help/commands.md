@@ -23,7 +23,7 @@ Application Commands
 - `[prompt_command]` = Show a dialog box asking for a command to be entered,
     then run that command.  The command format is like it is here, but without
     the surrounding `[` and `]`.  This requires that the program `zenity` is
-    installed and available in $PATH.
+    installed and available in `$PATH`.
 - `[say <FormatList>]` = Print some information to stdout from a format list,
     followed by a newline.  See formats.md for documentation on format lists.
 - `[message_box <FormatList> <FormatList>]` = Show a message box with the title
@@ -69,7 +69,7 @@ Layout Commands
 - `[align <Vec2> <Vec2>]` = Set the small and large page alignment values,
     respectively.  See `small_align` and `large_align` in
     res/liv/settings-default.ayu for more information.  If one of the components
-    of the vectors is +nan, then that component will not be changed.  This is so
+    of the vectors is `+nan`, then that component will not be changed.  This is so
     you can change the horizontal alignment without touching the vertical
     alignment or vice versa.
 - `[orientation <Direction>]` = Change viewing orientation

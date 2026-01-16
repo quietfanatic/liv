@@ -28,7 +28,9 @@ After installing dependencies, run this command to build.
 perl make.pl release
 ```
 
-The program and all runtime files will be in `out/rel/`.
+The program and all runtime files will be in `out/rel/`.  You can install it by
+copying it to wherever you want and/or making a symlink somewhere in your
+`$PATH`.
 
 ### USAGE
 
@@ -41,9 +43,9 @@ in the program directory (it may not exist until you run the program once).
 There are comparatively few command-line arguments.  You can get info about them
 with `--help`.
 
-Note that by default, left-clicking in the window will trap the pointer (make it
-invisible and constrain it to the window).  Left-click again or press Escape to
-bring it back.
+Note that by default, middle-clicking in the window will trap the pointer (make
+it invisible and constrain it to the window).  Middle-click again or press
+Escape to bring it back.
 
 ### FEATURES AND ROADMAP
 

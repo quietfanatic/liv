@@ -251,10 +251,10 @@ mappings: [
     [[f] [fullscreen]]
     [[f11] [fullscreen]]
      -- Set auto zoom mode
-    [[0] [auto_zoom_mode fit]]
+    [[backspace] [auto_zoom_mode fit]]
     [[h] [auto_zoom_mode fit_width]]
     [[v] [auto_zoom_mode fit_height]]
-    [[o] [auto_zoom_mode original]]
+    [[0] [auto_zoom_mode original]]
      -- Zoom in by √2
     [["="] [zoom 1.4142135623731]]
      -- Zoom out by √2

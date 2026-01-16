@@ -38,7 +38,7 @@ void main () {
             gl_Position.xy = vec2(gl_Position.y, -gl_Position.x);
             break;
     }
-    gl_Position.zw = vec2(0, 1);
+    gl_Position.zw = vec2(0.0, 1.0);
     v_tex_coords.x = u_tex_rect[corners[gl_VertexID].x];
     v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
 }"
@@ -114,10 +114,17 @@ vec4 dering (vec4 color, vec4 lb, vec4 rb, vec4 lt, vec4 rt, vec2 frac) {
     }
     else if (u_deringer == SMOOTH) {
          // This is easy in one dimension, but generalizing it to two dimensions
-         // is tricky.  You can think of it as taking the four corners and
-         // moving them closer together in linear blend space.
-        vec2 t0 = pow(frac, vec2(1.4, 1.4));
-        vec2 t1 = 1.0 - pow(1.0 - frac, vec2(1.4, 1.4));
+         // is tricky.  You can think of it as taking the four corners used to
+         // clamp the color in the flat diringer, and bringing those four
+         // corners closer together in bilinear filtered space.
+
+         // The higher the leeway, the closer this behaves to the flat deringer.
+         // The lower the leeway (to a limit of 1.0), the closer this behaves to
+         // bilinear filtering.
+        const float leeway = 1.4;
+
+        vec2 t0 = pow(frac, vec2(leeway));
+        vec2 t1 = 1.0 - pow(1.0 - frac, vec2(leeway));
         vec4 bound0 = mix(
             mix(lb, rb, t0.x),
             mix(lt, rt, t0.x),
@@ -347,7 +354,7 @@ void main () {
 
 [ayu::Document {
     program: [liv::PageProgram {
-        shaders: [#/vertex+1 #/fragment+1]
+        shaders: [#vertex #fragment]
     }]
     vertex: [glow::Shader {
         type: GL_VERTEX_SHADER

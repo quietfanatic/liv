@@ -146,6 +146,7 @@ my @resources = (qw(
 ),
     ["liv/help/commands.md" => "help/commands.md"],
     ["liv/help/formats.md" => "help/formats.md"],
+    ["liv/help/liv.desktop" => "help/liv.desktop"],
     ["../LICENSE" => "LICENSE"],
     ["../README.md" => "README.md"],
 );
