@@ -325,22 +325,22 @@ void main () {
         vec2 st = v_tex_coords / vec2(textureSize(u_tex, 0));
         vec2 hdiff = dFdx(st) / 8.0;
         vec2 vdiff = dFdy(st) / 8.0;
-        vec4 s00 = texture(u_tex, st - hdiff*2.0 - vdiff*2.0);
-        vec4 s01 = texture(u_tex, st - hdiff*2.0 - vdiff*1.0);
-        vec4 s02 = texture(u_tex, st - hdiff*2.0 + vdiff*1.0);
-        vec4 s03 = texture(u_tex, st - hdiff*2.0 + vdiff*2.0);
-        vec4 s10 = texture(u_tex, st - hdiff*1.0 - vdiff*2.0);
+        vec4 s00 = texture(u_tex, st - hdiff*3.0 - vdiff*3.0);
+        vec4 s01 = texture(u_tex, st - hdiff*3.0 - vdiff*1.0);
+        vec4 s02 = texture(u_tex, st - hdiff*3.0 + vdiff*1.0);
+        vec4 s03 = texture(u_tex, st - hdiff*3.0 + vdiff*3.0);
+        vec4 s10 = texture(u_tex, st - hdiff*1.0 - vdiff*3.0);
         vec4 s11 = texture(u_tex, st - hdiff*1.0 - vdiff*1.0);
         vec4 s12 = texture(u_tex, st - hdiff*1.0 + vdiff*1.0);
-        vec4 s13 = texture(u_tex, st - hdiff*1.0 + vdiff*2.0);
-        vec4 s20 = texture(u_tex, st + hdiff*1.0 - vdiff*2.0);
+        vec4 s13 = texture(u_tex, st - hdiff*1.0 + vdiff*3.0);
+        vec4 s20 = texture(u_tex, st + hdiff*1.0 - vdiff*3.0);
         vec4 s21 = texture(u_tex, st + hdiff*1.0 - vdiff*1.0);
         vec4 s22 = texture(u_tex, st + hdiff*1.0 + vdiff*1.0);
-        vec4 s23 = texture(u_tex, st + hdiff*1.0 + vdiff*2.0);
-        vec4 s30 = texture(u_tex, st + hdiff*2.0 - vdiff*2.0);
-        vec4 s31 = texture(u_tex, st + hdiff*2.0 - vdiff*1.0);
-        vec4 s32 = texture(u_tex, st + hdiff*2.0 + vdiff*1.0);
-        vec4 s33 = texture(u_tex, st + hdiff*2.0 + vdiff*2.0);
+        vec4 s23 = texture(u_tex, st + hdiff*1.0 + vdiff*3.0);
+        vec4 s30 = texture(u_tex, st + hdiff*3.0 - vdiff*3.0);
+        vec4 s31 = texture(u_tex, st + hdiff*3.0 - vdiff*1.0);
+        vec4 s32 = texture(u_tex, st + hdiff*3.0 + vdiff*1.0);
+        vec4 s33 = texture(u_tex, st + hdiff*3.0 + vdiff*3.0);
         color = (s00 + s01 + s02 + s03
                + s10 + s11 + s12 + s13
                + s20 + s21 + s22 + s23

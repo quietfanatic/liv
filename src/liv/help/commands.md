@@ -8,10 +8,9 @@ res/liv/settings-default.ayu for examples of how to use these.
 Generic Commands
 ----------------
 - `[seq [<commands>]]` = Do multiple commands in sequence.
-- `[toggle <command> <command> <bool>]` = Alternate between two commands every
-    time this command is run.  If the `<bool>` is false, start with the first
-    one, otherwise start with the second one.  Optional arguments are not
-    currently implemented, sorry.
+- `[toggle <command> <command> <bool>?]` = Alternate between two commands every
+    time this command is run.  If the `<bool>` is false (default), start with
+    the first one, otherwise start with the second one.
 
 Application Commands
 --------------------

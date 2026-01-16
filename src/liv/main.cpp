@@ -98,7 +98,7 @@ R"(liv <options> [--] <filenames>
             SDL_ShowSimpleMessageBox(
                 SDL_MESSAGEBOX_ERROR,
                 "LIV Error",
-                cat("Uncaught exceptin: ", e.what(), '\0').data(),
+                cat("Uncaught exception: ", e.what(), '\0').data(),
                 null
             );
         }

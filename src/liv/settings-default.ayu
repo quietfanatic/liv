@@ -92,9 +92,11 @@ render: {
      --   linear = 4-sample bilinear interpolation
      --   ssaa4 = Average of 4 bilinear samples (total 9~16 samples)
      --   ssaa9 = Average of 9 bilinear samples (total 16~36 samples)
-     --   ssaa16 = Average of 16 bilinear samples (total 25~48 samples)
-     -- A simpler downscaler might be used if the requested one is more complex
-     -- than necessary for the current zoom level.
+     --   ssaa16 = Average of 16 bilinear samples (total 25~64 samples)
+     -- A simpler downscaler might be used if the requested one would be
+     -- excessive for the current zoom level.  Honestly ssaa4 looks good enough
+     -- for just about anything, but even ssaa16 is easy for modern computers.
+     -- Sometimes text looks sharper with linear interpolation.
     downscaler: ssaa16
      -- Background color for window (black, white, #rgb, #rgba, #rrggbb,
      -- #rrggbbaa, or [r g b] or [r g b a] where r,g,b,a are between 0 and 1).
