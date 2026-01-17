@@ -232,10 +232,10 @@ mappings: [
      --  - For list books, opens the list file with a text editor (probably).
      --  - For miscellaneous books (multiple command-line arguments, single
      --    image with neighbors), does nothing (probably).
-    [[shift enter] [run [
+    [[shift enter] [run
         [xdg-open]  -- Only works on freedesktop-compatible systems
         [[book_iri]]
-    ]]]
+    ]]
      -- Show some information in a message box.  See help/formats.md
     [[i] [message_box ["Page Info"], [
         [for_visible_pages
@@ -320,15 +320,15 @@ mappings: [
   -------- EXECUTION
     [[q] [quit]]
     [[ctrl q] [quit]]
-    [[ctrl shift q] [seq [
+    [[ctrl shift q] [seq
         [delete_mark]
         [quit]
-    ]]]
+    ]]
     [["`"] [prompt_command]]
-    [[escape] [seq [
+    [[escape] [seq
         [leave_fullscreen]
         [trap_pointer false]
-    ]]]
+    ]]
 ]
 
 }]

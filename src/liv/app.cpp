@@ -22,6 +22,7 @@ static Book* book_with_window_id (App& self, u32 id) {
 
 static void on_event (App& self, SDL_Event* e) {
     current_app = &self;
+    Book* current_book = null;
     switch (e->type) {
         case SDL_QUIT: self.stop(); break;
         case SDL_WINDOWEVENT: {
@@ -37,6 +38,7 @@ static void on_event (App& self, SDL_Event* e) {
         }
         case SDL_KEYDOWN:
              // Some SDL versions send duplicate keypress events for some keys.
+             // TODO: do this for buttons too
             static u64 last_timestamp = 0;
             static u32 last_windowID = 0;
             static i32 last_sym = 0;
@@ -66,7 +68,6 @@ static void on_event (App& self, SDL_Event* e) {
         default: break;
     }
     if (current_book) current_book->on_event(e);
-    current_book = null;
     drop_event:
     current_app = null;
 }
@@ -204,7 +205,6 @@ void App::stop () {
 }
 
 App* current_app = null;
-Book* current_book = null;
 
 } using namespace liv;
 

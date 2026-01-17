@@ -101,9 +101,8 @@ my @sources = (qw(
     dirt/ayu/traversal/test.cpp
     dirt/ayu/traversal/to-tree.cpp
     dirt/ayu/traversal/traversal.cpp
-    dirt/control/command.cpp
-    dirt/control/command-builtins.cpp
     dirt/control/input.cpp
+    dirt/control/registry.cpp
     dirt/geo/floating.t.cpp
     dirt/geo/mat.t.cpp
     dirt/geo/vec.t.cpp

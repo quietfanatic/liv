@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include "../dirt/control/command.h"
 #include "../dirt/control/input.h"
 #include "../dirt/geo/range.h"
 #include "../dirt/geo/vec.h"
@@ -9,6 +8,7 @@
 #include "../dirt/iri/iri.h"
 #include "../dirt/uni/common.h"
 #include "../dirt/uni/strings.h"
+#include "commands.h"
 #include "common.h"
 #include "format.h"
 #include "sort.h"
@@ -82,7 +82,7 @@ enum class TrimMode {
 
 struct Mapping {
     control::Input input;
-    control::Statement action;
+    Statement action;
 };
 
 struct WindowSettings {
@@ -157,7 +157,7 @@ struct Settings {
      // parent will also be transferred unless it is &builtin_default_settings.
     void merge (Settings&&);
 
-    control::Statement* map_input (control::Input);
+    Statement* map_input (control::Input);
 };
 
 template <class T, class Category>

@@ -7,7 +7,7 @@ res/liv/settings-default.ayu for examples of how to use these.
 
 Generic Commands
 ----------------
-- `[seq [<commands>]]` = Do multiple commands in sequence.
+- `[seq <command>...]` = Do multiple commands in sequence.
 - `[toggle <command> <command> <bool>?]` = Alternate between two commands every
     time this command is run.  If the `<bool>` is false (default), start with
     the first one, otherwise start with the second one.
@@ -31,9 +31,9 @@ Application Commands
 - `[clipboard_text <FormatList>]` = Copy formatted text to the OS clipboard.
 - `[shell <FormatList>]` = Run a system shell command with a string generated
     from the given format list.  Don't forget to include spaces.
-- `[run [<FormatList>...]]` = Run a system command with a separate command name
+- `[run <FormatList>...]` = Run a system command with a separate command name
     and argument strings created from format lists.  There will be a lot of
-    square brackets.  Example: `[run [[gvim] [[app_settings_abs]]]]`
+    square brackets.  Example: `[run [gvim] [[app_settings_abs]]]`
 
 Action Commands
 ---------------
@@ -87,7 +87,7 @@ Render Commands
     res/liv/settings-default.ayu for more information.
 - `[transparency_background <Fill>]` = Set the background shown behind
     transparent images.
-- `[color_range [[<float> <float> <float>] [<float float float>]]` = Set the
+- `[color_range [[<float> <float> <float>] [<float float float>]]]` = Set the
     output color range.  For example, use `[[0 0 0] [0.5 0.5 0.5]]` to display
     at half brightness, or `[[0 0 0] [1 1 1]]` to reset to default.
 

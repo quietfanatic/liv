@@ -48,6 +48,5 @@ struct App {
 
  // Temporal state for commands
 extern App* current_app;
-extern Book* current_book;
 
 } // namespace liv
