@@ -36,9 +36,8 @@ static void on_event (App& self, SDL_Event* e) {
             }
             break;
         }
-        case SDL_KEYDOWN:
+        case SDL_KEYDOWN: {
              // Some SDL versions send duplicate keypress events for some keys.
-             // TODO: do this for buttons too
             static u64 last_timestamp = 0;
             static u32 last_windowID = 0;
             static i32 last_sym = 0;
@@ -49,10 +48,22 @@ static void on_event (App& self, SDL_Event* e) {
             last_windowID = e->key.windowID;
             last_sym = e->key.keysym.sym;
             [[fallthrough]];
+        }
         case SDL_KEYUP:
             current_book = book_with_window_id(self, e->key.windowID);
             break;
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONDOWN: {
+            static u64 last_timestamp = 0;
+            static u32 last_windowID = 0;
+            static i32 last_button = 0;
+            if (e->key.timestamp == last_timestamp
+             && e->key.windowID == last_windowID
+             && e->button.button == last_button) goto drop_event;
+            last_timestamp = e->key.timestamp;
+            last_windowID = e->key.windowID;
+            last_button = e->button.button;
+            [[fallthrough]];
+        }
         case SDL_MOUSEBUTTONUP: {
             current_book = book_with_window_id(self, e->button.windowID);
             break;
@@ -223,7 +234,7 @@ static tap::TestSet tests ("liv/app", []{
     auto settings = std::make_unique<Settings>();
     settings->window.size = {{120, 120}};
      // TODO: Figure out how to get headless rendering working on nvidia drivers
-    //settings->window.hidden = true;
+    settings->window.hidden = true;
     settings->window.automated_input = true;
     settings->parent = app.app_settings;
     doesnt_throw([&]{

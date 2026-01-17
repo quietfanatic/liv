@@ -344,6 +344,7 @@ bool Book::idle_processing (const App& app) {
 } using namespace liv;
 
 #ifndef TAP_DISABLE_TESTS
+#include <SDL2/SDL.h>
 #include "../dirt/ayu/resources/resource.h"
 #include "../dirt/glow/image.h"
 #include "../dirt/tap/tap.h"
@@ -357,6 +358,7 @@ static tap::TestSet tests ("liv/book", []{
 
     auto settings = std::make_unique<Settings>();
     settings->window.size = {size};
+    settings->window.hidden = true;
     settings->parent = app.app_settings;
     auto src = BookSource(
         BookType::Misc, Slice<IRI>{
