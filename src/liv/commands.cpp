@@ -171,113 +171,37 @@ CONTROL_COMMAND_COLLAPSED(Command, run)
 
 ///// ACTION COMMANDS
 
-static void next (Book& book) { book.next(); }
-CONTROL_COMMAND_FUNCTION(Command, next, 0)
-
-static void prev (Book& book) { book.prev(); }
-CONTROL_COMMAND_FUNCTION(Command, prev, 0)
-
-static void seek (Book& book, int32 count) { book.seek(count); }
-CONTROL_COMMAND_FUNCTION(Command, seek, 1)
-
-static void go_next (Book& book, Direction dir) { book.go_next(dir); }
-CONTROL_COMMAND_FUNCTION(Command, go_next, 1)
-
-static void go (Book& book, Direction dir, int32 count) {
-    book.go(dir, count);
-}
-CONTROL_COMMAND_FUNCTION(Command, go, 2)
-
-static void trap_pointer (Book& book, bool trap) {
-    book.trap_pointer(trap);
-}
-CONTROL_COMMAND_FUNCTION(Command, trap_pointer, 1)
+CONTROL_COMMAND_METHOD(Command, Book, next, 0)
+CONTROL_COMMAND_METHOD(Command, Book, prev, 0)
+CONTROL_COMMAND_METHOD(Command, Book, seek, 1)
+CONTROL_COMMAND_METHOD(Command, Book, go_next, 1)
+CONTROL_COMMAND_METHOD(Command, Book, go, 2)
+CONTROL_COMMAND_METHOD(Command, Book, trap_pointer, 1)
 
 ///// LAYOUT COMMANDS
 
-static void spread_count (Book& book, int32 count) {
-    book.spread_count(count);
-}
-CONTROL_COMMAND_FUNCTION(Command, spread_count, 1)
-
-static void spread_direction (Book& book, Direction dir) {
-    book.spread_direction(dir);
-}
-CONTROL_COMMAND_FUNCTION(Command, spread_direction, 1)
-
-static void auto_zoom_mode (Book& book, AutoZoomMode mode) {
-    book.auto_zoom_mode(mode);
-}
-CONTROL_COMMAND_FUNCTION(Command, auto_zoom_mode, 1)
-
-static void set_zoom (Book& book, float zoom) {
-    book.set_zoom(zoom);
-}
-CONTROL_COMMAND_FUNCTION(Command, set_zoom, 1)
-
-static void zoom (Book& book, float factor) {
-    book.zoom(factor);
-}
-CONTROL_COMMAND_FUNCTION(Command, zoom, 1)
-
-static void align (Book& book, Vec small, Vec large) {
-    book.align(small, large);
-}
-CONTROL_COMMAND_FUNCTION(Command, align, 2)
-
-static void orientation (Book& book, Direction o) {
-    book.orientation(o);
-}
-CONTROL_COMMAND_FUNCTION(Command, orientation, 1)
-
-static void reset_layout (Book& book) {
-    book.reset_layout();
-}
-CONTROL_COMMAND_FUNCTION(Command, reset_layout, 0)
-
-static void reset_settings (Book& book) {
-    book.reset_settings();
-}
-CONTROL_COMMAND_FUNCTION(Command, reset_settings, 0)
+CONTROL_COMMAND_METHOD(Command, Book, spread_count, 1)
+CONTROL_COMMAND_METHOD(Command, Book, spread_direction, 1)
+CONTROL_COMMAND_METHOD(Command, Book, auto_zoom_mode, 1)
+CONTROL_COMMAND_METHOD(Command, Book, set_zoom, 1)
+CONTROL_COMMAND_METHOD(Command, Book, zoom, 1)
+CONTROL_COMMAND_METHOD(Command, Book, align, 2)
+CONTROL_COMMAND_METHOD(Command, Book, orientation, 1)
+CONTROL_COMMAND_METHOD(Command, Book, reset_layout, 0)
+CONTROL_COMMAND_METHOD(Command, Book, reset_settings, 0)
 
 ///// RENDER COMMANDS
 
-static void upscaler (Book& book, Upscaler mode) {
-    book.upscaler(mode);
-}
-CONTROL_COMMAND_FUNCTION(Command, upscaler, 1)
-
-static void deringer (Book& book, Deringer mode) {
-    book.deringer(mode);
-}
-CONTROL_COMMAND_FUNCTION(Command, deringer, 1)
-
-static void downscaler (Book& book, Downscaler mode) {
-    book.downscaler(mode);
-}
-CONTROL_COMMAND_FUNCTION(Command, downscaler, 1)
-
-static void window_background (Book& book, Fill bg) {
-    book.window_background(bg);
-}
-CONTROL_COMMAND_FUNCTION(Command, window_background, 1)
-
-static void transparency_background (Book& book, Fill bg) {
-    book.transparency_background(bg);
-}
-CONTROL_COMMAND_FUNCTION(Command, transparency_background, 1)
-
-static void color_range (Book& book, const ColorRange& range) {
-    book.color_range(range);
-}
-CONTROL_COMMAND_FUNCTION(Command, color_range, 1)
+CONTROL_COMMAND_METHOD(Command, Book, upscaler, 1)
+CONTROL_COMMAND_METHOD(Command, Book, deringer, 1)
+CONTROL_COMMAND_METHOD(Command, Book, downscaler, 1)
+CONTROL_COMMAND_METHOD(Command, Book, window_background, 1)
+CONTROL_COMMAND_METHOD(Command, Book, transparency_background, 1)
+CONTROL_COMMAND_METHOD(Command, Book, color_range, 1)
 
 ///// BOOK COMMANDS
 
-static void sort (Book& book, SortMethod method) {
-    book.sort(method);
-}
-CONTROL_COMMAND_FUNCTION(Command, sort, 1)
+CONTROL_COMMAND_METHOD(Command, Book, sort, 1)
 
  // TODO: optional argument?
 static void add_to_list (Book& book, const AnyString& list, SortMethod sort) {
@@ -313,9 +237,6 @@ static void move_to_folder (Book& book, const AnyString& folder) {
 }
 CONTROL_COMMAND_FUNCTION(Command, move_to_folder, 1)
 
-static void delete_mark (Book& book) {
-    liv::delete_mark(book);
-}
 CONTROL_COMMAND_FUNCTION(Command, delete_mark, 0)
 
 } // liv::commands
