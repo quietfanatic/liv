@@ -11,12 +11,20 @@
 
 namespace liv {
 
+bool extension_accepted (Str path, Slice<AnyString> exts) {
+    Str ext = iri::path_extension(path);
+    for (auto& e : exts) {
+        if (ascii_eqi(ext, e)) return true;
+    }
+    return false;
+}
+
 NOINLINE static
 UniqueArray<IRI> expand_neighbors (
     const Settings& settings, const IRI& loc
 ) {
     plog("expanding neighbors");
-    auto& extensions = settings.get(&FilesSettings::page_extensions);
+    auto& exts = settings.get(&FilesSettings::page_extensions);
     IRI folder = loc.chop_filename();
     Str self = iri::path_filename(loc.path());
 
@@ -24,16 +32,11 @@ UniqueArray<IRI> expand_neighbors (
 
     for (Str child : Dir(iri::to_fs_path(folder))) {
         expect(child[0]);
-        if (child[0] == '.') continue;
          // Don't check extension if we explicitly requested the file.
         if (child != self) {
-            auto ext = ascii_to_lower(iri::path_extension(child));
-            for (auto& e : extensions) {
-                if (e == ext) goto pick;
-            }
-            continue;
+            if (child[0] == '.') continue;
+            if (!extension_accepted(child, exts)) continue;
         }
-        pick:
         IRI neighbor = iri::from_fs_path(child, folder);
         expect(neighbor);
         r.emplace_back(move(neighbor));
@@ -47,7 +50,7 @@ UniqueArray<IRI> expand_neighbors (
 NOINLINE static
 void expand_recursively_recurse (
     UniqueArray<IRI>& r,
-    Slice<AnyString> extensions,
+    Slice<AnyString> exts,
     Dir& dir,
     const IRI& folder
 ) {
@@ -59,17 +62,12 @@ void expand_recursively_recurse (
             IRI subfolder = iri::from_fs_path(cat(child, '/'), folder);
             expect(subfolder);
             expand_recursively_recurse(
-                r, extensions, subdir, subfolder
+                r, exts, subdir, subfolder
             );
         }
         else {
              // Ignore failure to open, delay it for when we load the page.
-            auto ext = ascii_to_lower(iri::path_extension(child));
-            for (auto& e : extensions) {
-                if (e == ext) goto pick;
-            }
-            continue;
-            pick:
+            if (!extension_accepted(child, exts)) continue;
             IRI neighbor = iri::from_fs_path(child, folder);
             expect(neighbor);
             r.emplace_back(move(neighbor));
@@ -77,14 +75,13 @@ void expand_recursively_recurse (
     }
 }
 
-
 NOINLINE static
 UniqueArray<IRI> expand_recursively (
     const Settings& settings, Slice<IRI> locs, BookType type
 ) {
     plog("expanding recursively");
 
-    auto& extensions = settings.get(&FilesSettings::page_extensions);
+    auto& exts = settings.get(&FilesSettings::page_extensions);
     auto sort = settings.get(&FilesSettings::sort);
     bool sort_everything;
     switch (type) {
@@ -105,12 +102,15 @@ UniqueArray<IRI> expand_recursively (
 
     UniqueArray<IRI> r;
     for (auto& loc : locs) {
-        auto path = iri::to_fs_path(loc);
-        if (Dir dir = Dir::try_open_at(AT_FDCWD, path)) {
-            IRI folder = loc.add_slash_to_path();
+        Dir dir = [&]{
+            auto path = iri::to_fs_path(loc);
+            expect(path);
+            return Dir::try_open_at(AT_FDCWD, move(path));
+        }();
+        if (dir) {
             usize old_size = r.size();
             expand_recursively_recurse(
-                r, extensions, dir, folder
+                r, exts, dir, loc.add_slash_to_path()
             );
             if (!sort_everything) {
                 sort_iris(r.begin() + old_size, r.end(), sort);
@@ -301,7 +301,6 @@ bool PageBlock::idle_processing (const Book* book, const Settings& settings) {
 } // namespace liv
 
 #ifndef TAP_DISABLE_TESTS
-#include <filesystem>
 #include <SDL2/SDL.h>
 #include "../dirt/tap/tap.h"
 

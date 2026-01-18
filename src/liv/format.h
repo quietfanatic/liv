@@ -36,6 +36,7 @@ enum class FormatCommand {
     AppSettingsAbs,
 };
 
+ // This struct might not be necessary.
 struct FormatList {
     UniqueArray<FormatToken> tokens;
     FormatList (FormatList&&) = default;

@@ -1,6 +1,5 @@
 #include "app.h"
 
-#include <filesystem>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include "../dirt/iri/path.h"

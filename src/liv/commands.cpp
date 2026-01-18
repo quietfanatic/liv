@@ -29,7 +29,7 @@ CONTROL_COMMAND_FUNCTION(Command, echo, 1)
 static void seq (Book& book, UniqueArray<Statement>& sts) {
     for (auto& st : sts) st(book);
 }
-CONTROL_COMMAND_COLLAPSED(Command, seq)
+CONTROL_COMMAND_COLLAPSE(Command, seq)
 
 static void toggle (Book& book, Statement& a, Statement& b, bool& flag) {
     ((flag = !flag) ? b : a)(book);
@@ -115,7 +115,7 @@ static void say (Book& book, const FormatList& fmt) {
     fmt.write(s, &book);
     print_utf8(cat(move(s), "\n"));
 }
-CONTROL_COMMAND_FUNCTION(Command, say, 1)
+CONTROL_COMMAND_COLLAPSE(Command, say)
 
  // TODO: allow single parameter
 static void message_box (
@@ -143,14 +143,14 @@ static void clipboard_text (Book& book, const FormatList& fmt) {
     fmt.write(text, &book);
     SDL_SetClipboardText(text.c_str());
 }
-CONTROL_COMMAND_FUNCTION(Command, clipboard_text, 1)
+CONTROL_COMMAND_COLLAPSE(Command, clipboard_text)
 
 static void shell (Book& book, const FormatList& fmt) {
     UniqueString cmd;
     fmt.write(cmd, &book);
     uni::shell(cmd.c_str());
 }
-CONTROL_COMMAND_FUNCTION(Command, shell, 1)
+CONTROL_COMMAND_COLLAPSE(Command, shell)
 
  // Not AnyArray because FormatList is not copyable
 static void run (Book& book, const UniqueArray<FormatList>& fmts) {
@@ -167,7 +167,7 @@ static void run (Book& book, const UniqueArray<FormatList>& fmts) {
     });
     run(strs);
 }
-CONTROL_COMMAND_COLLAPSED(Command, run)
+CONTROL_COMMAND_COLLAPSE(Command, run)
 
 ///// ACTION COMMANDS
 
@@ -203,16 +203,17 @@ CONTROL_COMMAND_METHOD(Command, Book, color_range, 1)
 
 CONTROL_COMMAND_METHOD(Command, Book, sort, 1)
 
- // TODO: optional argument?
 static void add_to_list (Book& book, const AnyString& list, SortMethod sort) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
 
     auto loc = iri::from_fs_path(list);
     const IRI& entry = book.block.pages[visible.l]->location;
+    if (sort.criterion == SortCriterion::None)
+        sort.criterion = SortCriterion::Natural;
     add_to_list(loc, entry, sort);
 }
-CONTROL_COMMAND_FUNCTION(Command, add_to_list, 2)
+CONTROL_COMMAND_FUNCTION(Command, add_to_list, 1)
 
 static void remove_from_list (Book& book, const AnyString& list) {
     auto visible = book.visible_range();

@@ -23,14 +23,15 @@ Application Commands
     then run that command.  The command format is like it is here, but without
     the surrounding `[` and `]`.  This requires that the program `zenity` is
     installed and available in `$PATH`.
-- `[say <FormatList>]` = Print some information to stdout from a format list,
-    followed by a newline.  See formats.md for documentation on format lists.
+- `[say <FormatToken>...]` = Print some information to stdout from a format
+    list, followed by a newline.  See formats.md for documentation on format
+    lists.
 - `[message_box <FormatList> <FormatList>]` = Show a message box with the title
     from the first format list and the content from the second.  Uses either
     zenity or SDL's builtin message box.
-- `[clipboard_text <FormatList>]` = Copy formatted text to the OS clipboard.
-- `[shell <FormatList>]` = Run a system shell command with a string generated
-    from the given format list.  Don't forget to include spaces.
+- `[clipboard_text <FormatToken>...]` = Copy formatted text to the OS clipboard.
+- `[shell <FormatToken>...]` = Run a system shell command with a string
+    generated from the given format list.  Don't forget to include spaces.
 - `[run <FormatList>...]` = Run a system command with a separate command name
     and argument strings created from format lists.  There will be a lot of
     square brackets.  Example: `[run [gvim] [[app_settings_abs]]]`
@@ -111,10 +112,10 @@ Book Commands
     given path.  This does not remove the page from the current book.  To do
     both, use the `seq` command as follows:
 ```
-[seq [
+[seq
     [move_to_folder myfolder]
     [remove_from_book]
-]]
+]
 ```
 - `[delete_mark]` = Clear the app's memory for this book.  The mark file will be
     regenerated if you take any action afterward except quitting.

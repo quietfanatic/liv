@@ -226,7 +226,7 @@ mappings: [
     [[alt up] [spread_direction up]]
   -------- INFORMATION
      -- Print filename of current page to stdout
-    [[enter] [say [[page_abs]]]]
+    [[enter] [say [page_abs]]]
      -- Open current book in the desktop's preferred application.
      --  - For folder books, opens the folder with the file manager (probably).
      --  - For list books, opens the list file with a text editor (probably).
@@ -247,7 +247,7 @@ mappings: [
         ]
     ]]]
      -- Copy page filename to clipboard
-    [[ctrl c] [clipboard_text [[page_abs]]]]
+    [[ctrl c] [clipboard_text [page_abs]]]
   -------- LAYOUT
      -- Toggle fullscreen mode
     [[f] [fullscreen]]
