@@ -6,6 +6,7 @@
 #include "../dirt/ayu/traversal/from-tree.h"
 #include "../dirt/ayu/traversal/to-tree.h"
 #include "../dirt/iri/path.h"
+#include "../dirt/geo/scalar.h"
 #include "../dirt/uni/text.h"
 #include "common.h"
 
@@ -15,74 +16,83 @@ using ModTime = decltype(fs::last_write_time(fs::path()));
 using C = SortCriterion;
 using F = SortFlags;
 
- // Go through a bit of work to only instantiate a single copy of
- // std::stable_sort
-struct Comparator {
-    using Cmp = bool (const Comparator&, u32, u32) noexcept;
+IRI* comparing_iris;
+void* comparing_props;
 
-    IRI* iris;
-    void* props;
-    Cmp* f; // Should point to an instantiation of cmp
-
-    bool operator() (u32 a, u32 b) const noexcept {
-        return (*f)(*this, a, b);
-    }
-
-    template <SortMethod method>
-    static bool cmp (const Comparator& self, u32 a, u32 b) noexcept {
-        auto iris = self.iris;
-        auto modtimes = (ModTime*)self.props;
-        auto sizes = (usize*)self.props;
-        if constexpr (method.flags % F::Reverse) {
-            u32 t = a; a = b; b = t;
+ // TODO: use qsort_r or maybe SDL_qsort_r
+template <SortMethod method>
+int compare_iris (const void* ap, const void* bp) noexcept {
+    auto iris = comparing_iris;
+    auto modtimes = (ModTime*)comparing_props;
+    auto sizes = (usize*)comparing_props;
+    u32 a = *(u32*)ap;
+    u32 b = *(u32*)bp;
+    int res;
+    switch (method.criterion) {
+        case C::Natural: {
+            expect(iris[a].has_path());
+            expect(iris[b].has_path());
+            res = uni::natural_compare_path(
+                iris[a].path(),
+                iris[b].path()
+            );
+            break;
         }
-        switch (method.criterion) {
-            case C::Natural: {
-                expect(iris[a].has_path());
-                expect(iris[b].has_path());
-                return uni::natural_lessthan_path(
-                    iris[a].path(),
-                    iris[b].path()
-                );
-            }
-            case C::Unicode: {
-                expect(iris[a].has_path());
-                expect(iris[b].has_path());
-                 // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
-                 // have to go this far, we should consider making strings hold
-                 // char8_t by default instead of char...
-                return GenericStr<char8_t>(iris[a].path()) <
-                       GenericStr<char8_t>(iris[b].path());
-            }
-            case C::LastModified: {
-                return modtimes[a] < modtimes[b];
-            }
-            case C::FileSize: {
-                return sizes[a] < sizes[b];
-            }
-            default: never();
+        case C::Unicode: {
+            expect(iris[a].has_path());
+            expect(iris[b].has_path());
+             // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
+             // have to go this far, we should consider making strings hold
+             // char8_t by default instead of char...
+             //
+             // TODO: This doesn't decode %-sequences!  Oops!
+            Str aa = iris[a].path();
+            Str bb = iris[b].path();
+            usize s = geo::min(aa.size(), bb.size());
+            res = std::memcmp(aa.data(), bb.data(), s);
+            if (!res) res = aa.size() - bb.size();
+            break;
         }
+        case C::LastModified: {
+            res = modtimes[a] < modtimes[b] ? -1
+                : modtimes[a] > modtimes[b] ? 1 : 0;
+            break;
+        }
+        case C::FileSize: {
+            res = sizes[a] < sizes[b] ? -1 : sizes[a] > sizes[b] ? 1 : 0;
+            break;
+        }
+        default: never();
     }
+    if constexpr (method.flags % F::Reverse) {
+        res = -res;
+    }
+    if (!res) res = a - b;
+    return res;
 };
+
+using Comparator = decltype(compare_iris<SortMethod{}>);
 
 NOINLINE static
 void sort_with_props (
-    IRI* iris, u32 len, Comparator::Cmp* cmp, void* props
+    IRI* iris, u32 len, Comparator* cmp, void* props
 ) {
      // Sort an array of indexes as a proxy for the actual array of IRIs.  We
-     // need to do this because std::stable_sort doesn't give the comparing
-     // function a way to see the current indexes of the items it's comparing
-     // (and you can't compare the addresses of the passed-in references,
-     // because they may be in a temporary buffer or already moved).  However,
-     // since moving 4-byte integers is much cheaper than 24-byte IRIs, this
-     // ends up being slightly faster than sorting the IRI array, at least for
-     // large sets (and it's much faster than sorting an array of std::pair<IRI,
-     // ModTime> or such).
+     // need to do this because the standard library sorting algorithm doesn't
+     // give the comparing function a way to see the current indexes of the
+     // items it's comparing (and you can't compare the addresses of the
+     // passed-in references, because they may be in a temporary buffer or
+     // already moved).  However, since moving 4-byte integers is cheaper than
+     // 24-byte IRIs, this ends up being slightly faster than sorting the IRI
+     // array, at least for large sets (and it's much faster than sorting an
+     // array of std::pair<IRI, ModTime> or such).
     auto indexes = std::unique_ptr<u32[]>(new u32[len]);
     for (usize i = 0; i < len; i++) {
         indexes[i] = i;
     }
-    std::stable_sort(&indexes[0], &indexes[0] + len, Comparator(iris, props, cmp));
+    comparing_iris = iris;
+    comparing_props = props;
+    std::qsort(&indexes[0], len, sizeof(indexes[0]), cmp);
      // Now reorder the input according to the sorted indexes.  This algorithm
      // looks wild but it works and is O(n).  Basically, we're finding closed
      // loops of indexes, and rotating the items backwards along that loop.
@@ -125,24 +135,24 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
     switch (method.criterion) {
         case C::Natural: {
             auto cmp = method.flags % F::Reverse
-                ? &Comparator::cmp<SortMethod{C::Natural, F::Reverse}>
-                : &Comparator::cmp<SortMethod{C::Natural, F::None}>;
+                ? &compare_iris<SortMethod{C::Natural, F::Reverse}>
+                : &compare_iris<SortMethod{C::Natural, F::None}>;
 
             sort_with_props(begin, len, cmp, null);
             break;
         }
         case C::Unicode: {
             auto cmp = method.flags % F::Reverse
-                ? &Comparator::cmp<SortMethod{C::Unicode, F::Reverse}>
-                : &Comparator::cmp<SortMethod{C::Unicode, F::None}>;
+                ? &compare_iris<SortMethod{C::Unicode, F::Reverse}>
+                : &compare_iris<SortMethod{C::Unicode, F::None}>;
 
             sort_with_props(begin, len, cmp, null);
             break;
         }
         case C::LastModified: {
             auto cmp = method.flags % F::Reverse
-                ? &Comparator::cmp<SortMethod{C::LastModified, F::Reverse}>
-                : &Comparator::cmp<SortMethod{C::LastModified, F::None}>;
+                ? &compare_iris<SortMethod{C::LastModified, F::Reverse}>
+                : &compare_iris<SortMethod{C::LastModified, F::None}>;
 
             auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
             for (u32 i = 0; i < len; i++) {
@@ -153,8 +163,8 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
         }
         case C::FileSize: {
             auto cmp = method.flags % F::Reverse
-                ? &Comparator::cmp<SortMethod{C::FileSize, F::Reverse}>
-                : &Comparator::cmp<SortMethod{C::FileSize, F::None}>;
+                ? &compare_iris<SortMethod{C::FileSize, F::Reverse}>
+                : &compare_iris<SortMethod{C::FileSize, F::None}>;
 
             auto sizes = std::unique_ptr<usize[]>(new usize[len]);
             for (u32 i = 0; i < len; i++) {
