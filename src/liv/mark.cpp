@@ -145,7 +145,7 @@ AYU_DESCRIBE(liv::Mark,
     attrs(
         attr("source", &Mark::source),
         attr("state", &Mark::state, include),
-        attr("page", mixed_funcs<AnyString>(
+        attr("page", funcs(
             [](const Mark& v){
                  // Book sources with multiple source locations will never have
                  // marks.
