@@ -118,7 +118,7 @@ App::App () : loop{
 
 App::~App () { }
 
-static void add_book (
+static Book* add_book (
     App& self, BookSource&& src,
     std::unique_ptr<Settings> settings
 ) {
@@ -142,54 +142,54 @@ static void add_book (
         glow::require_sdl(SDL_GetWindowID(book->view.window)),
         &*book
     );
-    self.books.emplace_back(move(book));
+    return &*self.books.emplace_back(move(book));
 }
 
-void App::open_args (
+Book* App::open_args (
     Slice<AnyString> args, std::unique_ptr<Settings> settings
 ) {
     if (args.size() == 1) {
         if (fs::is_directory(args[0])) {
-            open_folder(args[0], move(settings));
+            return open_folder(args[0], move(settings));
         }
-        else open_file(args[0], move(settings));
+        else return open_file(args[0], move(settings));
     }
-    else open_files(args, move(settings));
+    else return open_files(args, move(settings));
 }
 
-void App::open_files (
+Book* App::open_files (
     Slice<AnyString> filenames, std::unique_ptr<Settings> settings
 ) {
     auto iris = UniqueArray<IRI>(filenames.size(), [=](u32 i){
         return iri::from_fs_path(filenames[i]);
     });
     auto src = BookSource(BookType::Misc, iris);
-    add_book(*this, move(src), move(settings));
+    return add_book(*this, move(src), move(settings));
 }
 
-void App::open_file (
+Book* App::open_file (
     const AnyString& file, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(file);
     auto src = BookSource(BookType::FileWithNeighbors, Slice<IRI>{loc});
-    add_book(*this, move(src), move(settings));
+    return add_book(*this, move(src), move(settings));
 }
 
-void App::open_folder (
+Book* App::open_folder (
     const AnyString& folder, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = BookSource(BookType::Folder, Slice<IRI>{loc});
-    add_book(*this, move(src), move(settings));
+    return add_book(*this, move(src), move(settings));
 }
 
-void App::open_list (
+Book* App::open_list (
     const AnyString& list_path, std::unique_ptr<Settings> settings
 ) {
     constexpr IRI stdin_loc = "liv:stdin";
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
     auto src = BookSource(BookType::List, Slice<IRI>{loc});
-    add_book(*this, move(src), move(settings));
+    return add_book(*this, move(src), move(settings));
 }
 
 void App::close_book (Book* book) {

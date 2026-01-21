@@ -33,6 +33,7 @@ int main (int argc, char** argv) {
     bool list = false;
     bool done_flags = false;
     std::optional<SortMethod> sort;
+    Statement headless;
      // TODO: --no-mark, --data-folder, --settings
     for (int i = 1; i < argc; i++) {
         auto arg = StaticString(argv[i]);
@@ -50,6 +51,9 @@ int main (int argc, char** argv) {
                 sort.emplace();
                 ayu::item_from_list_string(&*sort, arg.slice(7));
             }
+            else if (arg.substr(0, 11) == "--headless=") {
+                ayu::item_from_list_string(&headless, arg.slice(11));
+            }
             else raise(e_General, cat("Unrecognized option ", arg));
         }
         else args.emplace_back(arg);
@@ -66,6 +70,8 @@ R"(liv <options> [--] <filenames>
         and <flags...> is zero or more of:
             reverse not_args not_lists
         See res/liv/settings-default.ayu for more documentation.
+    --headless='command': Don't open a window.  Instead, run a command (see
+        help/commands.md) and then exit.
 )"
         );
         return 255;
@@ -74,20 +80,25 @@ R"(liv <options> [--] <filenames>
     try {
         auto settings = std::make_unique<Settings>();
         settings->files.sort = sort;
+        if (headless) settings->window.hidden = true;
         App app;
+        Book* book;
         if (list) {
             if (args.size() != 1) {
                 raise(e_General,
                     "Wrong number of arguments given with --list (must be 1)"
                 );
             }
-            app.open_list(args[0], move(settings));
+            book = app.open_list(args[0], move(settings));
         }
         else {
-            app.open_args(move(args), move(settings));
+            book = app.open_args(move(args), move(settings));
         }
         plog("opened args");
-        app.run();
+        if (headless) {
+            headless(*book);
+        }
+        else app.run();
     }
     catch (std::exception& e) {
         auto res = run({
