@@ -126,15 +126,18 @@ static void message_box (
     UniqueString m;
     message.write(m, &book);
     auto res = run({
+        "kdialog", "--title", t, "--msgbox", m
+    });
+    if (!res.command_wasnt_found()) return;
+    res = run({
         "zenity", "--no-markup", cat("--title=", t), "--info", cat("--text=", m)
     });
-    if (res.command_wasnt_found()) {
-        SDL_ShowSimpleMessageBox(
-            SDL_MESSAGEBOX_INFORMATION,
-            t.c_str(), m.c_str(),
-            book.view.window
-        );
-    }
+    if (!res.command_wasnt_found()) return;
+    SDL_ShowSimpleMessageBox(
+        SDL_MESSAGEBOX_INFORMATION,
+        t.c_str(), m.c_str(),
+        book.view.window
+    );
 }
 CONTROL_COMMAND_FUNCTION(Command, message_box, 2)
 

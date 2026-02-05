@@ -8,6 +8,7 @@
 namespace liv {
 
 static void validate_location (const IRI& loc) {
+    if (loc == "liv:stdin") return;
     if (loc.scheme() != "file" || !loc.hierarchical()) {
         raise(e_General, "IRI given to BookSource is not a proper file IRI");
     }
