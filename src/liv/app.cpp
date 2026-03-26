@@ -2,8 +2,9 @@
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
-#include "../dirt/iri/path.h"
 #include "../dirt/ayu/resources/resource.h"
+#include "../dirt/iri/path.h"
+#include "../dirt/uni/time.h"
 #include "book-source.h"
 #include "book.h"
 #include "mark.h"
@@ -20,6 +21,8 @@ static Book* book_with_window_id (App& self, u32 id) {
 }
 
 static void on_event (App& self, SDL_Event* e) {
+    static double last_timestamp = 0;
+    static u32 last_windowID = 0;
     current_app = &self;
     Book* current_book = null;
     switch (e->type) {
@@ -36,14 +39,19 @@ static void on_event (App& self, SDL_Event* e) {
             break;
         }
         case SDL_KEYDOWN: {
-             // Some SDL versions send duplicate keypress events for some keys.
-            static u64 last_timestamp = 0;
-            static u32 last_windowID = 0;
+             // The SDL 3->2 transition layer is really poorly tested.  At
+             // present, it sends duplicate events for key and mousebutton
+             // presses (at least on wayland).  Thought that was bad enough?
+             // It also started failing to update the timestamp, so we can't
+             // even use e->key.timestamp to discard duplicate events any more!
+             // We have to manually manage our own timestamps in order to make
+             // the API work like it's supposed to.
             static i32 last_sym = 0;
-            if (e->key.timestamp == last_timestamp
+            double timestamp = steady_clock();
+            if (std::fabs(timestamp - last_timestamp) < 0.01
              && e->key.windowID == last_windowID
              && e->key.keysym.sym == last_sym) goto drop_event;
-            last_timestamp = e->key.timestamp;
+            last_timestamp = timestamp;
             last_windowID = e->key.windowID;
             last_sym = e->key.keysym.sym;
             [[fallthrough]];
@@ -52,13 +60,12 @@ static void on_event (App& self, SDL_Event* e) {
             current_book = book_with_window_id(self, e->key.windowID);
             break;
         case SDL_MOUSEBUTTONDOWN: {
-            static u64 last_timestamp = 0;
-            static u32 last_windowID = 0;
             static i32 last_button = 0;
-            if (e->key.timestamp == last_timestamp
+            double timestamp = steady_clock();
+            if (std::fabs(timestamp - last_timestamp) < 0.01
              && e->key.windowID == last_windowID
              && e->button.button == last_button) goto drop_event;
-            last_timestamp = e->key.timestamp;
+            last_timestamp = timestamp;
             last_windowID = e->key.windowID;
             last_button = e->button.button;
             [[fallthrough]];

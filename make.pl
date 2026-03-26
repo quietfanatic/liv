@@ -113,7 +113,7 @@ my @sources = (qw(
     dirt/glow/image-texture.cpp
     dirt/glow/image-transform.cpp
     dirt/glow/image.cpp
-    dirt/glow/load-image.cpp
+    dirt/glow/load-image-sail.cpp
     dirt/glow/program.cpp
     dirt/glow/resource-image.cpp
     dirt/glow/resource-texture.cpp
