@@ -76,6 +76,9 @@ struct Book {
     void transparency_background (Fill);
     void color_range (const ColorRange&);
      // Not a command, but we need to figure out how to make this configurable.
+     // ALSO!  The input is in window coordinates, not page coordinates.  So for
+     // instance, if the orientation is Direction::Right, then scrolling up will
+     // reveal the right side of the page.
     void scroll (Vec amount);
 
      // Preload pages perhaps

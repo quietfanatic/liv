@@ -324,6 +324,16 @@ void Book::color_range (const ColorRange& range) {
 }
 
 void Book::scroll (Vec amount) {
+     // Rotate so scrolling works intuitively when the page is rotated
+    switch (state.settings->get(&LayoutSettings::orientation)) {
+        case Direction::Right:
+            amount = {amount.y, -amount.x}; break;
+        case Direction::Left:
+            amount = {-amount.y, amount.x}; break;
+        case Direction::Down:
+            amount = {-amount.x, -amount.y}; break;
+        case Direction::Up: [[likely]] break;
+    }
     state.manual_zoom = {view.get_zoom()};
     state.manual_offset = {view.clamp_offset(view.get_offset() + amount)};
     view.update_zoom();
