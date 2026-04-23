@@ -6,8 +6,8 @@
 
 namespace liv {
 
-struct Command : control::CommandBase<Command, void, Book&> {
-    using control::CommandBase<Command, void, Book&>::CommandBase;
+struct Command : control::CommandBase<Command, void(Book&)> {
+    using control::CommandBase<Command, void(Book&)>::CommandBase;
 };
 
 struct Statement : control::Statement<Command> {

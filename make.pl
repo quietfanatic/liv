@@ -86,12 +86,13 @@ my @sources = (qw(
     dirt/ayu/data/tree.cpp
     dirt/ayu/reflection/access.cpp
     dirt/ayu/reflection/anyptr.cpp
-    dirt/ayu/reflection/anyref.cpp
     dirt/ayu/reflection/anyval.cpp
     dirt/ayu/reflection/describe-builtin.cpp
     dirt/ayu/reflection/describe-standard.cpp
+    dirt/ayu/reflection/link.cpp
     dirt/ayu/reflection/type.cpp
-    dirt/ayu/resources/document.cpp
+    dirt/ayu/resources/collection.cpp
+    dirt/ayu/resources/extension.cpp
     dirt/ayu/resources/resource.cpp
     dirt/ayu/resources/scheme.cpp
     dirt/ayu/traversal/compound.cpp
@@ -111,14 +112,10 @@ my @sources = (qw(
     dirt/glow/file-texture.cpp
     dirt/glow/gl.cpp
     dirt/glow/image-texture.cpp
-    dirt/glow/image-transform.cpp
     dirt/glow/image.cpp
     dirt/glow/load-image-sail.cpp
     dirt/glow/program.cpp
-    dirt/glow/resource-image.cpp
-    dirt/glow/resource-texture.cpp
     dirt/glow/test-environment.cpp
-    dirt/glow/texture-program.cpp
     dirt/glow/texture.cpp
     dirt/iri/iri.cpp
     dirt/iri/path.cpp
@@ -152,6 +149,7 @@ my @resources = (qw(
 my @test_resources = (qw(
     liv/test/*
     dirt/ayu/test/*.ayu
+    dirt/ayu/test/*.ayutest
     dirt/ayu/test/*.json
     dirt/glow/test/*
     dirt/glow/texture-program.ayu

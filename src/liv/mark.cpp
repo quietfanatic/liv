@@ -24,7 +24,7 @@ static IRI get_mark_location (const IRI& location) {
     expect(location);
      // Make sure save folder exists
     fs::create_directory(
-        ayu::resource_filename(marks_folder)
+        ayu::resource_filepath(marks_folder)
     );
     u64 hash = uni::hash64(location.spec());
     char hex [16];
@@ -49,17 +49,17 @@ std::unique_ptr<Book> load_mark (const BookSource& src, Settings& settings) {
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(
-            "Error loading mark file ", ayu::resource_filename(res->name()),
+            "Error loading mark file ", ayu::resource_filepath(res->name()),
             ": ", e.what(), "\n",
             "Mark file for this book will be ignored or overwritten.\n"
         ));
         return null;
     }
-    Mark* mark = res->ref();
+    Mark* mark = res->ptr();
      // Check for hash collision
     if (mark->source != src) [[unlikely]] {
         uni::warn_utf8(cat(
-            "Hash collision in mark file ", ayu::resource_filename(res->name()),
+            "Hash collision in mark file ", ayu::resource_filepath(res->name()),
             ".\nOld source: ", ayu::show(&mark->source),
             "\nNew source: ", ayu::show(&src),
             "\nOld mark will be overwritten with new mark.\n"
@@ -109,21 +109,21 @@ void save_mark (const App& app, Book& book) {
         static auto app_settings_loc =
             ayu::route_from_iri(IRI("#", app_settings_location));
          // TODO: find a way to not require app to be passed in
-        ayu::PushLikelyRef plr (
+        ayu::PushLikelyLink pll (
             app.app_settings, app_settings_loc
         );
         ayu::save(res);
     }
     catch (std::exception& e) {
         uni::warn_utf8(cat(
-            "Failed to save mark file ", ayu::resource_filename(res->name()),
+            "Failed to save mark file ", ayu::resource_filepath(res->name()),
             ": ", e.what(), "\nMark file for this book will not be saved.\n"
         ));
          // Don't propagate exception.
     }
 
      // Give book it's insides back
-    Mark* mark = res->ref();
+    Mark* mark = res->ptr();
     expect(!book.source.locations);
     new (&book.source) BookSource(move(mark->source));
     expect(!book.state.settings);
@@ -135,13 +135,13 @@ void save_mark (const App& app, Book& book) {
 void delete_mark (Book& book) {
     auto& loc = book.source.location_for_mark();
     if (!loc) return;
-    ayu::remove_source(get_mark_location(loc));
+    ayu::delete_source(get_mark_location(loc));
 }
 
 } using namespace liv;
 
 AYU_DESCRIBE(liv::Mark,
-    flags(no_refs_to_children),
+    flags(no_links_to_children),
     attrs(
         attr("source", &Mark::source),
         attr("state", &Mark::state, include),
@@ -174,7 +174,7 @@ static tap::TestSet tests ("liv/mark", []{
     );
      // Delete mark file to make sure we don't see previous test's results
     IRI mark_loc = get_mark_location(src.location_for_mark());
-    ayu::remove_source(mark_loc);
+    ayu::delete_source(mark_loc);
 
     App app;
 
@@ -213,7 +213,7 @@ static tap::TestSet tests ("liv/mark", []{
     is(loaded->state.page_offset, -1);
 
      // Clean up
-    ayu::remove_source(mark_loc);
+    ayu::delete_source(mark_loc);
 
     done_testing();
 });

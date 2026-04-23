@@ -115,11 +115,11 @@ App::App () : loop{
     if (!ayu::source_exists(settings_res->name())) {
         static constexpr IRI template_loc = "res:/liv/settings-template.ayu";
         fs::copy_file(
-            ayu::resource_filename(template_loc),
-            ayu::resource_filename(settings_res->name())
+            ayu::resource_filepath(template_loc),
+            ayu::resource_filepath(settings_res->name())
         );
     }
-    app_settings = settings_res->ref();
+    app_settings = settings_res->ptr();
     plog("Loaded settings");
 }
 

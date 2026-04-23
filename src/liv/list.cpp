@@ -59,7 +59,7 @@ void add_to_list (const IRI& list, const IRI& entry, SortMethod sort) {
         entries = read_list(list);
     }
     catch (Error& e) {
-        if (e.code == e_OpenFailed) {
+        if (e.code == e_IOError) {
              // New file, create it implicitly
         }
         else throw;

@@ -290,7 +290,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             break;
         }
         case FormatCommand::AppSettingsAbs: {
-            encat(s, ayu::resource_filename(app_settings_location));
+            encat(s, ayu::resource_filepath(app_settings_location));
             break;
         }
         default: never();

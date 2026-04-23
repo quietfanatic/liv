@@ -1,4 +1,4 @@
-&vertex_source:
+$vertex_source =
 "#version 300 es
 
  // Declaring and transmitting vertex attributes is annoying, so instead we're
@@ -43,7 +43,7 @@ void main () {
     v_tex_coords.y = u_tex_rect[corners[gl_VertexID].y];
 }"
 
-&fragment_source:
+$fragment_source =
 "#version 300 es
 precision highp float;
 precision highp int;
@@ -352,16 +352,16 @@ void main () {
     color.rgb = color.rgb * u_color_mul + u_color_add;
 }"
 
-[ayu::Document {
+[ayu::Collection {
     program: [liv::PageProgram {
         shaders: [#vertex #fragment]
     }]
     vertex: [glow::Shader {
         type: GL_VERTEX_SHADER
-        source: *vertex_source
+        source: $vertex_source
     }]
     fragment: [glow::Shader {
         type: GL_FRAGMENT_SHADER
-        source: *fragment_source
+        source: $fragment_source
     }]
 }]

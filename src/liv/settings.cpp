@@ -281,7 +281,7 @@ AYU_DESCRIBE(liv::MemorySettings,
 )
 
 AYU_DESCRIBE(liv::Settings,
-    flags(no_refs_to_children),
+    flags(no_links_to_children),
     attrs(
         attr_default("window", &Settings::window, ayu::Tree::object()),
         attr_default("layout", &Settings::layout, ayu::Tree::object()),
@@ -312,8 +312,8 @@ static tap::TestSet tests ("liv/settings", []{
     is(default_res->state(), ayu::RS::Loaded,
         "Loading initial settings loads default settings"
     );
-    const Settings* default_settings = default_res->ref();
-    const Settings* settings = settings_res->ref();
+    const Settings* default_settings = default_res->ptr();
+    const Settings* settings = settings_res->ptr();
     is(settings->parent, default_settings,
         "Settings linked properly to default settings"
     );
