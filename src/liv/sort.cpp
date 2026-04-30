@@ -32,7 +32,7 @@ int compare_iris (const void* ap, const void* bp) noexcept {
         case C::Natural: {
             expect(iris[a].has_path());
             expect(iris[b].has_path());
-            res = uni::natural_compare_path(
+            res = uni::natural_compare(
                 iris[a].path(),
                 iris[b].path()
             );
