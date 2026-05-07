@@ -109,7 +109,6 @@ my @sources = (qw(
     dirt/geo/vec.t.cpp
     dirt/glow/colors.cpp
     dirt/glow/common.cpp
-    dirt/glow/file-texture.cpp
     dirt/glow/gl.cpp
     dirt/glow/image-texture.cpp
     dirt/glow/image.cpp

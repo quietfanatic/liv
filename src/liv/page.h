@@ -6,7 +6,8 @@
 #include "../dirt/geo/rect.h"
 #include "../dirt/geo/scalar.h"
 #include "../dirt/geo/vec.h"
-#include "../dirt/glow/file-texture.h"
+#include "../dirt/glow/load-image.h"
+#include "../dirt/glow/texture.h"
 #include "../dirt/iri/iri.h"
 #include "../dirt/uni/common.h"
 #include "common.h"
@@ -16,7 +17,7 @@ namespace liv {
 
 struct Page {
     IRI location;
-    std::unique_ptr<glow::FileTexture> texture;  // null if not loaded
+    glow::Texture texture;  // 0 if not loaded
     IVec size;
     isize estimated_memory = 0;
     double last_viewed_at = 0;

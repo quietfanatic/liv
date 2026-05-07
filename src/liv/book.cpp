@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL_events.h>
 #include "../dirt/control/input.h"
+#include "../dirt/glow/gl.h"
 #include "mark.h"
 
 namespace liv {

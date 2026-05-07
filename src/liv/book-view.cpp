@@ -1,6 +1,7 @@
 #include "book-view.h"
 
 #include <SDL2/SDL_video.h>
+#include "../dirt/glow/gl.h"
 #include "../dirt/uni/time.h"
 #include "book.h"
 

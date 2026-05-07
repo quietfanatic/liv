@@ -196,7 +196,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::PagePixelBits: {
             if (page < 0) break;
             if (auto& texture = book->block.get(page)->texture) {
-                encat(s, texture->bpp());
+                encat(s, texture.bpp());
             }
             else encat(s, "(unavailable)");
             break;
