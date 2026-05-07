@@ -21,7 +21,7 @@ AYU_DESCRIBE(liv::Statement,
 namespace liv::commands {
 
 ///// GENERIC COMMANDS
-static void echo (Book&, const AnyString& text) {
+static void echo (Book&, const SharedString& text) {
     uni::print_utf8(text);
 }
 CONTROL_COMMAND_FUNCTION(Command, echo, 1)
@@ -90,7 +90,7 @@ static void prompt_command (Book& book) {
         }
         return;
     }
-    AnyString text = move(res.out);
+    SharedString text = move(res.out);
     if (text && text.back() == '\n') text.pop_back();
     book.state.settings->window.last_prompt_command = text;
     book.need_mark = true;
@@ -155,7 +155,7 @@ static void shell (Book& book, const FormatList& fmt) {
 }
 CONTROL_COMMAND_COLLAPSE(Command, shell)
 
- // Not AnyArray because FormatList is not copyable
+ // Not SharedArray because FormatList is not copyable
 static void run (Book& book, const UniqueArray<FormatList>& fmts) {
     auto args = UniqueArray<UniqueString>(
         fmts.size(), [&](u32 i)
@@ -168,7 +168,7 @@ static void run (Book& book, const UniqueArray<FormatList>& fmts) {
     auto strs = UniqueArray<Str>(args.size(), [&args](u32 i){
         return Str(args[i]);
     });
-    run(strs);
+    uni::run(strs);
 }
 CONTROL_COMMAND_COLLAPSE(Command, run)
 
@@ -206,7 +206,7 @@ CONTROL_COMMAND_METHOD(Command, Book, color_range, 1)
 
 CONTROL_COMMAND_METHOD(Command, Book, sort, 1)
 
-static void add_to_list (Book& book, const AnyString& list, SortMethod sort) {
+static void add_to_list (Book& book, const SharedString& list, SortMethod sort) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
 
@@ -218,7 +218,7 @@ static void add_to_list (Book& book, const AnyString& list, SortMethod sort) {
 }
 CONTROL_COMMAND_FUNCTION(Command, add_to_list, 1)
 
-static void remove_from_list (Book& book, const AnyString& list) {
+static void remove_from_list (Book& book, const SharedString& list) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
     auto loc = iri::from_fs_path(list);
@@ -232,7 +232,7 @@ static void remove_from_book (Book& book) {
 }
 CONTROL_COMMAND_FUNCTION(Command, remove_from_book, 0)
 
-static void move_to_folder (Book& book, const AnyString& folder) {
+static void move_to_folder (Book& book, const SharedString& folder) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
     auto& loc = book.block.pages[visible.l]->location;

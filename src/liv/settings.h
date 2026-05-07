@@ -96,7 +96,7 @@ struct WindowSettings {
      // For testing.  Disable workaround for false keypress on window focus.
     std::optional<bool> automated_input;
      // Not sure where to put this but here it is
-    std::optional<AnyString> last_prompt_command;
+    std::optional<SharedString> last_prompt_command;
 };
 struct LayoutSettings {
     std::optional<i32> spread_count;
@@ -126,7 +126,7 @@ struct ControlSettings {
 struct FilesSettings {
     std::optional<SortMethod> sort;
      // Keep these in order
-    std::optional<AnyArray<AnyString>> page_extensions;
+    std::optional<SharedArray<SharedString>> page_extensions;
 };
 struct MemorySettings {
     std::optional<u32> preload_ahead;

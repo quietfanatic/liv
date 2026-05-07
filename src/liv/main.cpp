@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
 #ifndef TAP_DISABLE_TESTS
     tap::allow_testing(argc, argv);
 #endif
-    UniqueArray<AnyString> args;
+    UniqueArray<SharedString> args;
     bool help = false;
     bool list = false;
     bool done_flags = false;

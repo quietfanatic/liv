@@ -153,7 +153,7 @@ static Book* add_book (
 }
 
 Book* App::open_args (
-    Slice<AnyString> args, std::unique_ptr<Settings> settings
+    Slice<SharedString> args, std::unique_ptr<Settings> settings
 ) {
     if (args.size() == 1) {
         if (fs::is_directory(args[0])) {
@@ -165,7 +165,7 @@ Book* App::open_args (
 }
 
 Book* App::open_files (
-    Slice<AnyString> filenames, std::unique_ptr<Settings> settings
+    Slice<SharedString> filenames, std::unique_ptr<Settings> settings
 ) {
     auto iris = UniqueArray<IRI>(filenames.size(), [=](u32 i){
         return iri::from_fs_path(filenames[i]);
@@ -175,7 +175,7 @@ Book* App::open_files (
 }
 
 Book* App::open_file (
-    const AnyString& file, std::unique_ptr<Settings> settings
+    const SharedString& file, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(file);
     auto src = BookSource(BookType::FileWithNeighbors, Slice<IRI>{loc});
@@ -183,7 +183,7 @@ Book* App::open_file (
 }
 
 Book* App::open_folder (
-    const AnyString& folder, std::unique_ptr<Settings> settings
+    const SharedString& folder, std::unique_ptr<Settings> settings
 ) {
     auto loc = iri::from_fs_path(cat(folder, "/"));
     auto src = BookSource(BookType::Folder, Slice<IRI>{loc});
@@ -191,7 +191,7 @@ Book* App::open_folder (
 }
 
 Book* App::open_list (
-    const AnyString& list_path, std::unique_ptr<Settings> settings
+    const SharedString& list_path, std::unique_ptr<Settings> settings
 ) {
     constexpr IRI stdin_loc = "liv:stdin";
     auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);

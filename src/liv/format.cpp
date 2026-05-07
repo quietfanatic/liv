@@ -313,7 +313,7 @@ static FormatCommand FormatToken_get_command (const FormatToken& v) {
 static void FormatToken_set_command (FormatToken& v, FormatCommand m) {
     v.~FormatToken();
     switch (v.command = m) {
-        case FormatCommand::Literal: new (&v.literal) AnyString(); break;
+        case FormatCommand::Literal: new (&v.literal) SharedString(); break;
         case FormatCommand::IfZoomed:
         case FormatCommand::ForVisiblePages: new (&v.sublist) FormatList(); break;
         default: break;
@@ -342,7 +342,7 @@ static bool FormatToken_from_tree (FormatToken& v, const ayu::Tree& t) {
     v = {};
     if (t.form == Form::String) {
         v.command = FormatCommand::Literal;
-        new (&v.literal) AnyString(t);
+        new (&v.literal) SharedString(t);
         return true;
     }
     else if (!Slice<Tree>(t)) return true; // empty array

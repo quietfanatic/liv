@@ -55,7 +55,7 @@ struct FormatToken {
     FormatCommand command;
     union {
         FormatEmpty empty;
-        AnyString literal;
+        SharedString literal;
         FormatList sublist;
     };
 
@@ -64,7 +64,7 @@ struct FormatToken {
         std::memcpy((void*)this, &o, sizeof(FormatToken));
         std::memset((void*)&o, 0, sizeof(FormatToken));
     }
-    FormatToken (const AnyString& lit) :
+    FormatToken (const SharedString& lit) :
         command(FormatCommand::Literal),
         literal(lit)
     { }
@@ -87,7 +87,7 @@ struct FormatToken {
 
     constexpr ~FormatToken () {
         switch (command) {
-            case FormatCommand::Literal: literal.~AnyString(); break;
+            case FormatCommand::Literal: literal.~SharedString(); break;
             case FormatCommand::IfZoomed:
             case FormatCommand::ForVisiblePages:
                 sublist.~FormatList();

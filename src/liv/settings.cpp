@@ -5,7 +5,7 @@
 
 namespace liv {
 
-static constexpr AnyString extensions [] = {
+static constexpr SharedString extensions [] = {
     "bmp", "gif", "jfif", "jpe", "jpeg", "jpg",
     "png", "tif", "tiff", "xbm", "xpm", "webp",
 };
@@ -57,7 +57,7 @@ Settings builtin_default_settings = {
         .sort = {SortMethod{
             SortCriterion::Natural, SortFlags::NotArgs | SortFlags::NotLists
         }},
-        .page_extensions = {StaticArray<AnyString>(
+        .page_extensions = {StaticArray<SharedString>(
             extensions, sizeof(extensions)/sizeof(extensions[0])
         )},
     },

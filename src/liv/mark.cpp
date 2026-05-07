@@ -150,9 +150,9 @@ AYU_DESCRIBE(liv::Mark,
                  // Book sources with multiple source locations will never have
                  // marks.
                 expect(v.source.locations.size() == 1);
-                return AnyString(v.page.relative_to(v.source.locations[0]));
+                return SharedString(v.page.relative_to(v.source.locations[0]));
             },
-            [](Mark& v, const AnyString& s){
+            [](Mark& v, const SharedString& s){
                 expect(v.source.locations.size() == 1);
                 v.page = IRI(s, v.source.locations[0]);
             }

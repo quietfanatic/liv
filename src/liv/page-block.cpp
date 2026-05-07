@@ -11,7 +11,7 @@
 
 namespace liv {
 
-bool extension_accepted (Str path, Slice<AnyString> exts) {
+bool extension_accepted (Str path, Slice<SharedString> exts) {
     Str ext = iri::path_extension(path);
     for (auto& e : exts) {
         if (ascii_eqi(ext, e)) return true;
@@ -50,7 +50,7 @@ UniqueArray<IRI> expand_neighbors (
 NOINLINE static
 void expand_recursively_recurse (
     UniqueArray<IRI>& r,
-    Slice<AnyString> exts,
+    Slice<SharedString> exts,
     Dir& dir,
     const IRI& folder
 ) {

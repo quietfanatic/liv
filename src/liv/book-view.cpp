@@ -253,7 +253,7 @@ bool BookView::draw_if_needed () {
     if (need_title) {
          // Theoretically we track whether we need to do the title independently
          // of whether we need to draw.
-        AnyString title;
+        SharedString title;
         IRange visible = book->visible_range();
         if (book->block.count() == 0) {
             title = "Little Image Viewer (nothing loaded)";

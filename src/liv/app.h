@@ -17,19 +17,19 @@ struct App {
     ~App();
 
      // Select between open_files, open_file, and open_folder.
-    Book* open_args (Slice<AnyString> args, std::unique_ptr<Settings>);
+    Book* open_args (Slice<SharedString> args, std::unique_ptr<Settings>);
      // Open all files and folders (recursively) in a temporary book.
-    Book* open_files (Slice<AnyString> filenames, std::unique_ptr<Settings>);
+    Book* open_files (Slice<SharedString> filenames, std::unique_ptr<Settings>);
      // Open one file as the current page, including all other files in the same
      // folder (non-recursively) as pages in a temporary book.
-    Book* open_file (const AnyString& filename, std::unique_ptr<Settings>);
+    Book* open_file (const SharedString& filename, std::unique_ptr<Settings>);
      // Open all files in the folder (recursively) as a book.
-    Book* open_folder (const AnyString& filename, std::unique_ptr<Settings>);
+    Book* open_folder (const SharedString& filename, std::unique_ptr<Settings>);
      // Open all files and folders (recursively) written in the list
      // one-per-line as a book (temporary if filename is - for stdin).
      // This changes the CWD to the folder containing the filename (if it isn't
      // stdin).
-    Book* open_list (const AnyString& filename, std::unique_ptr<Settings>);
+    Book* open_list (const SharedString& filename, std::unique_ptr<Settings>);
 
     void close_book (Book*);
 
