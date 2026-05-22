@@ -214,7 +214,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             }
             else {
                 double time = p->load_finished_at - p->load_started_at;
-                expect(time >= 0 && time <= 1000000);
+                assume(time >= 0 && time <= 1000000);
                 encat(s, round(time * 1000) / 1000.0, 's');
             }
             break;

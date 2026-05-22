@@ -73,24 +73,24 @@ struct PageProgram : Program {
 
     void Program_after_link () override {
         u_orientation = glGetUniformLocation(id, "u_orientation");
-        expect(u_orientation != -1);
+        assume(u_orientation != -1);
         u_screen_rect = glGetUniformLocation(id, "u_screen_rect");
-        expect(u_screen_rect != -1);
+        assume(u_screen_rect != -1);
         u_tex_rect = glGetUniformLocation(id, "u_tex_rect");
-        expect(u_tex_rect != -1);
+        assume(u_tex_rect != -1);
         int u_tex = glGetUniformLocation(id, "u_tex");
-        expect(u_tex != -1);
+        assume(u_tex != -1);
         glUniform1i(u_tex, 0);
         u_interpolator = glGetUniformLocation(id, "u_interpolator");
-        expect(u_interpolator != -1);
+        assume(u_interpolator != -1);
         u_deringer = glGetUniformLocation(id, "u_deringer");
-        expect(u_deringer != -1);
+        assume(u_deringer != -1);
         u_transparency_background = glGetUniformLocation(id, "u_transparency_background");
-        expect(u_transparency_background != -1);
+        assume(u_transparency_background != -1);
         u_color_mul = glGetUniformLocation(id, "u_color_mul");
-        expect(u_color_mul != -1);
+        assume(u_color_mul != -1);
         u_color_add = glGetUniformLocation(id, "u_color_add");
-        expect(u_color_add != -1);
+        assume(u_color_add != -1);
         plog("linked gl program");
     }
 };
@@ -150,7 +150,7 @@ void draw_pages (
 
     for (auto& view : views) {
         if (!view.page->texture) continue; // Probably failed to load.
-        expect(view.page->texture.target == GL_TEXTURE_2D);
+        assume(view.page->texture.target == GL_TEXTURE_2D);
         plog("drawing page");
 
         view.page->last_viewed_at = view_time;

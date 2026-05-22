@@ -31,14 +31,14 @@ UniqueArray<IRI> expand_neighbors (
     UniqueArray<IRI> r;
 
     for (Str child : Dir(iri::to_filepath(folder))) {
-        expect(child[0]);
+        assume(child[0]);
          // Don't check extension if we explicitly requested the file.
         if (child != self) {
             if (child[0] == '.') continue;
             if (!extension_accepted(child, exts)) continue;
         }
         IRI neighbor = iri::from_filepath(child, folder);
-        expect(neighbor);
+        assume(neighbor);
         r.emplace_back(move(neighbor));
     };
 
@@ -55,12 +55,12 @@ void expand_recursively_recurse (
     const IRI& folder
 ) {
     for (Str child : dir) {
-        expect(child);
+        assume(child);
         if (child[0] == '.') continue;
          // TODO: reduce string copies
         if (Dir subdir = Dir::try_open_at(dir.fd, child)) {
             IRI subfolder = iri::from_filepath(cat(child, '/'), folder);
-            expect(subfolder);
+            assume(subfolder);
             expand_recursively_recurse(
                 r, exts, subdir, subfolder
             );
@@ -69,7 +69,7 @@ void expand_recursively_recurse (
              // Ignore failure to open, delay it for when we load the page.
             if (!extension_accepted(child, exts)) continue;
             IRI neighbor = iri::from_filepath(child, folder);
-            expect(neighbor);
+            assume(neighbor);
             r.emplace_back(move(neighbor));
         }
     }
@@ -104,7 +104,7 @@ UniqueArray<IRI> expand_recursively (
     for (auto& loc : locs) {
         Dir dir = [&]{
             auto path = iri::to_filepath(loc);
-            expect(path);
+            assume(path);
             return Dir::try_open_at(AT_FDCWD, move(path));
         }();
         if (dir) {
@@ -211,7 +211,7 @@ void PageBlock::unload_page (Page* page) {
     if (page && page->texture) {
         page->unload();
         estimated_page_memory -= page->estimated_memory;
-        expect(estimated_page_memory >= 0);
+        assume(estimated_page_memory >= 0);
     }
 }
 

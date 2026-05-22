@@ -89,13 +89,13 @@ IRI BookSource::base_for_page_rel_book_parent () const {
             break;
         }
         case BookType::Folder: {
-            expect(locations[0].path().back() == '/');
-            expect(locations[0] && locations[0].hierarchical());
+            assume(locations[0].path().back() == '/');
+            assume(locations[0] && locations[0].hierarchical());
             if (auto parent = locations[0].chop_last_slash()) {
                 return parent;
             }
             else {
-                expect(parent.error() == iri::Error::PathOutsideRoot);
+                assume(parent.error() == iri::Error::PathOutsideRoot);
                 r = &locations[0];
                 break;
             }
@@ -106,7 +106,7 @@ IRI BookSource::base_for_page_rel_book_parent () const {
             break;
         }
         case BookType::FileWithNeighbors: {
-            expect(locations[0].path().back() != '/');
+            assume(locations[0].path().back() != '/');
             r = &locations[0];
             break;
         }

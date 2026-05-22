@@ -16,7 +16,7 @@ BookView::BookView (Book* book) :
 {
     plog("created window");
     SDL_SetWindowResizable(window, SDL_TRUE);
-    expect(!SDL_GL_SetSwapInterval(1));
+    assume(!SDL_GL_SetSwapInterval(1));
     if (book->state.settings->get(&WindowSettings::fullscreen)) {
         window.set_fullscreen(true);
     }
@@ -55,7 +55,7 @@ void gen_spread (BookView& self) {
     for (i32 i : self.book->visible_range()) {
         if (Page* page = block.get(i)) {
             block.load_page(page);
-            pages.emplace_back_expect_capacity(page, GNAN);
+            pages.emplace_back_assume_capacity(page, GNAN);
         }
     }
     switch (state.settings->get(&LayoutSettings::spread_direction)) {
@@ -128,7 +128,7 @@ float BookView::get_zoom () {
     if (!need_zoom) return zoom;
     auto& state = book->state;
     if (state.manual_zoom) {
-        expect(defined(*state.manual_zoom));
+        assume(defined(*state.manual_zoom));
         zoom = *state.manual_zoom;
     }
     else {
@@ -176,7 +176,7 @@ Vec BookView::get_offset () {
     if (!need_offset) return offset;
     auto& state = book->state;
     if (state.manual_offset) {
-        expect(defined(*state.manual_offset));
+        assume(defined(*state.manual_offset));
         offset = *state.manual_offset;
     }
     else {

@@ -30,8 +30,8 @@ int compare_iris (const void* ap, const void* bp) noexcept {
     int res;
     switch (method.criterion) {
         case C::Natural: {
-            expect(iris[a].has_path());
-            expect(iris[b].has_path());
+            assume(iris[a].has_path());
+            assume(iris[b].has_path());
             res = uni::natural_compare(
                 iris[a].path(),
                 iris[b].path()
@@ -39,8 +39,8 @@ int compare_iris (const void* ap, const void* bp) noexcept {
             break;
         }
         case C::Unicode: {
-            expect(iris[a].has_path());
-            expect(iris[b].has_path());
+            assume(iris[a].has_path());
+            assume(iris[b].has_path());
              // Make sure we put UTF-8 high bytes after ASCII bytes.  If we
              // have to go this far, we should consider making strings hold
              // char8_t by default instead of char...
@@ -197,7 +197,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     auto cap = 1 + std::popcount(u8(v.flags));
     auto a = UniqueArray<Tree>(Capacity(cap));
     SortMethodToken c = {v.criterion, F::None};
-    a.push_back_expect_capacity(item_to_tree(&c));
+    a.push_back_assume_capacity(item_to_tree(&c));
     for (
         auto flag = F::Reverse;
         flag <= F::NotLists;
@@ -205,7 +205,7 @@ ayu::Tree SortMethod_to_tree (const SortMethod& v) {
     ) {
         if (v.flags % flag) {
             SortMethodToken f = {C::None, flag};
-            a.push_back_expect_capacity(item_to_tree(&f));
+            a.push_back_assume_capacity(item_to_tree(&f));
         }
     }
     return Tree(move(a));

@@ -21,7 +21,7 @@ struct Mark {
 };
 
 static IRI get_mark_location (const IRI& location) {
-    expect(location);
+    assume(location);
      // Make sure save folder exists
     fs::create_directory(
         ayu::resource_filepath(marks_folder)
@@ -122,9 +122,9 @@ void save_mark (const App& app, Book& book) {
 
      // Give book it's insides back
     Mark* mark = res->ptr();
-    expect(!book.source.locations);
+    assume(!book.source.locations);
     new (&book.source) BookSource(move(mark->source));
-    expect(!book.state.settings);
+    assume(!book.state.settings);
     new (&book.state) BookState(move(mark->state));
      // Don't keep resource loaded
     ayu::force_unload(res);
@@ -147,11 +147,11 @@ AYU_DESCRIBE(liv::Mark,
             [](const Mark& v){
                  // Book sources with multiple source locations will never have
                  // marks.
-                expect(v.source.locations.size() == 1);
+                assume(v.source.locations.size() == 1);
                 return SharedString(v.page.relative_to(v.source.locations[0]));
             },
             [](Mark& v, const SharedString& s){
-                expect(v.source.locations.size() == 1);
+                assume(v.source.locations.size() == 1);
                 v.page = IRI(s, v.source.locations[0]);
             }
         )),

@@ -139,7 +139,7 @@ static Book* add_book (
         PageBlock block (src, *settings);
         BookState state (move(settings));
         if (src.type == BookType::FileWithNeighbors) {
-            expect(src.locations.size() == 1);
+            assume(src.locations.size() == 1);
             i32 start = block.find(src.locations[0]);
             if (start >= 0) state.page_offset = start;
         }

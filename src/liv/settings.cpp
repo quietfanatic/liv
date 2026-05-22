@@ -129,7 +129,7 @@ void Settings::merge (Settings&& o) {
 #undef LIV_MERGE
     mappings.reserve(mappings.size() + o.mappings.size());
     o.mappings.consume([this](Mapping&& m){
-        mappings.emplace_back_expect_capacity(move(m));
+        mappings.emplace_back_assume_capacity(move(m));
     });
     if (o.parent != &builtin_default_settings) parent = o.parent;
 }
