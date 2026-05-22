@@ -20,9 +20,9 @@ int main (int argc, char** argv) {
     plog("main");
     glow::require_sdl(SDL_SetHint("SDL_HINT_VIDEO_ALLOW_SCREENSAVER", "1"));
     char* base = glow::require_sdl(SDL_GetBasePath());
-     // TODO: allow resource schemes to be readonly
-    ayu::FolderResourceScheme res_scheme ("res", cat(base, + "res"));
-    ayu::FolderResourceScheme data_scheme ("data", UniqueString(base));
+    auto res_scheme =
+        ayu::UnsaveableScheme<ayu::FolderScheme>("res", cat(base, + "res"));
+    auto data_scheme = ayu::FolderScheme("data", UniqueString(base));
     free(base);
     plog("set up");
 #ifndef TAP_DISABLE_TESTS

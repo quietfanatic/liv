@@ -30,14 +30,14 @@ UniqueArray<IRI> expand_neighbors (
 
     UniqueArray<IRI> r;
 
-    for (Str child : Dir(iri::to_fs_path(folder))) {
+    for (Str child : Dir(iri::to_filepath(folder))) {
         expect(child[0]);
          // Don't check extension if we explicitly requested the file.
         if (child != self) {
             if (child[0] == '.') continue;
             if (!extension_accepted(child, exts)) continue;
         }
-        IRI neighbor = iri::from_fs_path(child, folder);
+        IRI neighbor = iri::from_filepath(child, folder);
         expect(neighbor);
         r.emplace_back(move(neighbor));
     };
@@ -59,7 +59,7 @@ void expand_recursively_recurse (
         if (child[0] == '.') continue;
          // TODO: reduce string copies
         if (Dir subdir = Dir::try_open_at(dir.fd, child)) {
-            IRI subfolder = iri::from_fs_path(cat(child, '/'), folder);
+            IRI subfolder = iri::from_filepath(cat(child, '/'), folder);
             expect(subfolder);
             expand_recursively_recurse(
                 r, exts, subdir, subfolder
@@ -68,7 +68,7 @@ void expand_recursively_recurse (
         else {
              // Ignore failure to open, delay it for when we load the page.
             if (!extension_accepted(child, exts)) continue;
-            IRI neighbor = iri::from_fs_path(child, folder);
+            IRI neighbor = iri::from_filepath(child, folder);
             expect(neighbor);
             r.emplace_back(move(neighbor));
         }
@@ -103,7 +103,7 @@ UniqueArray<IRI> expand_recursively (
     UniqueArray<IRI> r;
     for (auto& loc : locs) {
         Dir dir = [&]{
-            auto path = iri::to_fs_path(loc);
+            auto path = iri::to_filepath(loc);
             expect(path);
             return Dir::try_open_at(AT_FDCWD, move(path));
         }();
@@ -313,10 +313,10 @@ static tap::TestSet tests ("liv/page-block", []{
     auto here = IRI("res/liv/", iri::program_location());
 
     BookSource misc_src {BookType::Misc, Slice<IRI>{
-        iri::from_fs_path("test/image.png", here),
-        iri::from_fs_path("test/image2.png", here),
-        iri::from_fs_path("test/non-image.txt", here),
-        iri::from_fs_path("test/", here)
+        iri::from_filepath("test/image.png", here),
+        iri::from_filepath("test/image2.png", here),
+        iri::from_filepath("test/non-image.txt", here),
+        iri::from_filepath("test/", here)
     }};
     PageBlock misc_block {misc_src, *settings};
     is(misc_block.pages.size(), 5u, "BookType::Misc");
@@ -327,21 +327,21 @@ static tap::TestSet tests ("liv/page-block", []{
     is(misc_block.pages[4]->location.relative_to(here), "test/image2.png", "BookType::Misc 4");
     ok(misc_src.location_for_mark().empty(), "BookType::Misc shouldn't be remembered");
 
-    BookSource folder_src {BookType::Folder, {iri::from_fs_path("test/", here)}};
+    BookSource folder_src {BookType::Folder, {iri::from_filepath("test/", here)}};
     PageBlock folder_block {folder_src, *settings};
     is(folder_block.pages.size(), 2u, "BookType::Folder");
     is(folder_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::Folder 0");
     is(folder_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::Folder 1");
     is(folder_src.location_for_mark().relative_to(here), "test/", "BookType::Folder name for mark");
 
-    BookSource file_src {BookType::FileWithNeighbors, {iri::from_fs_path("test/image2.png", here)}};
+    BookSource file_src {BookType::FileWithNeighbors, {iri::from_filepath("test/image2.png", here)}};
     PageBlock file_block {file_src, *settings};
     is(file_block.pages.size(), 2u, "BookType::FileWithNeighbors");
     is(file_block.pages[0]->location.relative_to(here), "test/image.png", "BookType::FilewithNeighbors 0");
     is(file_block.pages[1]->location.relative_to(here), "test/image2.png", "BookType::FilewithNeighbors 1");
     ok(file_src.location_for_mark().empty(), "BookType::FileWithNeighbors shouldn't be remembered");
 
-    BookSource list_src {BookType::List, {iri::from_fs_path("test/list.lst", here)}};
+    BookSource list_src {BookType::List, {iri::from_filepath("test/list.lst", here)}};
     PageBlock list_block {list_src, *settings};
     is(list_block.pages.size(), 2u, "BookType::List");
      // Intentionally backwards

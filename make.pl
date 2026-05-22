@@ -14,6 +14,7 @@ my @linker = 'g++';
 
 my @includes = ('/usr/include/sail');
 my @compile_opts = (map("-I$_", @includes), qw(
+    -DGLOW_USE_SAIL
     -msse2 -mfpmath=sse
     -fstrict-aliasing -fstack-protector
     -Wall -Wextra -Wno-unused-value
@@ -102,19 +103,17 @@ my @sources = (qw(
     dirt/ayu/traversal/test.cpp
     dirt/ayu/traversal/to-tree.cpp
     dirt/ayu/traversal/traversal.cpp
-    dirt/control/input.cpp
-    dirt/control/registry.cpp
+    dirt/cmd/registry.cpp
     dirt/geo/floating.t.cpp
     dirt/geo/mat.t.cpp
     dirt/geo/vec.t.cpp
     dirt/glow/colors.cpp
     dirt/glow/common.cpp
     dirt/glow/gl.cpp
-    dirt/glow/image-texture.cpp
+    dirt/glow/image-qoi.cpp
+    dirt/glow/image-sail.cpp
     dirt/glow/image.cpp
-    dirt/glow/load-image-sail.cpp
     dirt/glow/program.cpp
-    dirt/glow/test-environment.cpp
     dirt/glow/texture.cpp
     dirt/iri/iri.cpp
     dirt/iri/path.cpp
@@ -124,10 +123,12 @@ my @sources = (qw(
     dirt/uni/io.cpp
     dirt/uni/lilac-global-override.cpp
     dirt/uni/lilac.cpp
+    dirt/uni/mem.cpp
     dirt/uni/shell.cpp
     dirt/uni/text.cpp
     dirt/uni/utf.cpp
     dirt/whereami/whereami.c
+    dirt/wind/input.cpp
     dirt/wind/passive_loop.cpp
     dirt/wind/window.cpp
 ),
@@ -150,8 +151,8 @@ my @test_resources = (qw(
     dirt/ayu/test/*.ayu
     dirt/ayu/test/*.ayutest
     dirt/ayu/test/*.json
-    dirt/glow/test/*
-    dirt/glow/texture-program.ayu
+    dirt/glow/test/*.ayu
+    dirt/glow/test/*.qoi
 ));
 
 ##### RULES

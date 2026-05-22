@@ -95,12 +95,10 @@ void save_mark (const App& app, Book& book) {
 
      // Borrow some of book's internals.  This is kinda bad but it's the easiest
      // way to serialize them.
-    auto res = ayu::SharedResource(
-        get_mark_location(loc),
-        ayu::AnyVal::make<Mark>(
-            move(book.source), move(book.state), move(page_loc), now()
-        )
-    );
+    auto res = ayu::SharedResource(get_mark_location(loc));
+    res->new_value(ayu::AnyVal::make<Mark>(
+        move(book.source), move(book.state), move(page_loc), now()
+    ));
 
     try {
          // Most if not all mark files will have settings/parent set to the app

@@ -117,7 +117,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::BookAbs: {
             auto&& loc = book->source.location_for_mark();
             if (loc) {
-                encat(s, iri::to_fs_path(loc));
+                encat(s, iri::to_filepath(loc));
             }
             break;
         }
@@ -142,7 +142,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
         case FormatCommand::PageAbs: {
             if (page < 0) break;
             auto&& loc = book->block.pages[page]->location;
-            encat(s, iri::to_fs_path(loc));
+            encat(s, iri::to_filepath(loc));
             break;
         }
         case FormatCommand::PageRelCwd: {
@@ -172,7 +172,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             if (page < 0) break;
             std::error_code code;
             auto&& loc = book->block.pages[page]->location;
-            auto size = fs::file_size(iri::to_fs_path(loc), code);
+            auto size = fs::file_size(iri::to_filepath(loc), code);
             if (size == decltype(size)(-1)) {
                 encat(s, "(unavailable)");
             }
@@ -224,7 +224,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             if (!size(visible)) break;
             auto paths = UniqueArray<UniqueString>(size(visible), [=](auto i){
                 auto&& loc = book->block.pages[visible[i]]->location;
-                return iri::to_fs_path(loc);
+                return iri::to_filepath(loc);
             });
             merge_paths(s, paths);
             break;
@@ -286,7 +286,7 @@ void FormatToken::write (UniqueString& s, Book* book, i32 page) const {
             break;
         }
         case FormatCommand::Cwd: {
-            encat(s, iri::to_fs_path(iri::working_directory()));
+            encat(s, iri::to_filepath(iri::working_directory()));
             break;
         }
         case FormatCommand::AppSettingsAbs: {
@@ -409,7 +409,7 @@ AYU_DESCRIBE(liv::FormatList,
 static tap::TestSet tests ("liv/format", []{
     using namespace tap;
 
-    fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
+    fs::current_path(iri::to_filepath(iri::program_location().chop_filename()));
 
     Str fmt_ayu =
         "["

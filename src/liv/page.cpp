@@ -23,10 +23,10 @@ void Page::load () {
     if (texture) return;
     plog("Loading page");
     load_started_at = now();
-    auto filename = iri::to_fs_path(location);
+    auto filename = iri::to_filepath(location);
     try {
         new (&texture) Texture(GL_TEXTURE_2D);
-        load_texture_from_file(GL_TEXTURE_2D, filename);
+        texture_from_file(GL_TEXTURE_2D, filename);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         size = texture.size();

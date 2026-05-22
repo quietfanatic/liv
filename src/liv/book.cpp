@@ -1,8 +1,8 @@
 #include "book.h"
 
 #include <SDL2/SDL_events.h>
-#include "../dirt/control/input.h"
 #include "../dirt/glow/gl.h"
+#include "../dirt/wind/input.h"
 #include "mark.h"
 
 namespace liv {
@@ -105,7 +105,7 @@ void Book::on_event (SDL_Event* e) {
         }
         default: break;
     }
-    if (auto input = control::input_from_event(e)) {
+    if (auto input = wind::input_from_event(e)) {
         auto action = state.settings->map_input(input);
         if (action && *action) {
             ayu::dump(*action);

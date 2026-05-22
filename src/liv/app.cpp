@@ -168,7 +168,7 @@ Book* App::open_files (
     Slice<SharedString> filenames, std::unique_ptr<Settings> settings
 ) {
     auto iris = UniqueArray<IRI>(filenames.size(), [=](u32 i){
-        return iri::from_fs_path(filenames[i]);
+        return iri::from_filepath(filenames[i]);
     });
     auto src = BookSource(BookType::Misc, iris);
     return add_book(*this, move(src), move(settings));
@@ -177,7 +177,7 @@ Book* App::open_files (
 Book* App::open_file (
     const SharedString& file, std::unique_ptr<Settings> settings
 ) {
-    auto loc = iri::from_fs_path(file);
+    auto loc = iri::from_filepath(file);
     auto src = BookSource(BookType::FileWithNeighbors, Slice<IRI>{loc});
     return add_book(*this, move(src), move(settings));
 }
@@ -185,7 +185,7 @@ Book* App::open_file (
 Book* App::open_folder (
     const SharedString& folder, std::unique_ptr<Settings> settings
 ) {
-    auto loc = iri::from_fs_path(cat(folder, "/"));
+    auto loc = iri::from_filepath(cat(folder, "/"));
     auto src = BookSource(BookType::Folder, Slice<IRI>{loc});
     return add_book(*this, move(src), move(settings));
 }
@@ -194,7 +194,7 @@ Book* App::open_list (
     const SharedString& list_path, std::unique_ptr<Settings> settings
 ) {
     constexpr IRI stdin_loc = "liv:stdin";
-    auto loc = list_path == "-" ? stdin_loc : iri::from_fs_path(list_path);
+    auto loc = list_path == "-" ? stdin_loc : iri::from_filepath(list_path);
     auto src = BookSource(BookType::List, Slice<IRI>{loc});
     return add_book(*this, move(src), move(settings));
 }
@@ -234,7 +234,7 @@ App* current_app = null;
 static tap::TestSet tests ("liv/app", []{
     using namespace tap;
 
-    fs::current_path(iri::to_fs_path(iri::program_location().chop_filename()));
+    fs::current_path(iri::to_filepath(iri::program_location().chop_filename()));
 
     App app;
     auto settings = std::make_unique<Settings>();
@@ -260,24 +260,24 @@ static tap::TestSet tests ("liv/app", []{
     app.run();
     pass("App stopped on SDL_QUIT message");
 
-    control::send_input_as_event(
-        {.type = control::InputType::Key, .code = SDLK_RIGHT}, window_id
+    wind::send_input_as_event(
+        {.type = wind::InputType::Key, .code = SDLK_RIGHT}, window_id
     );
     SDL_PushEvent(&quit_event);
     app.run();
 
     is(app.books[0]->state.page_offset, 1, "Pressing right goes to next page");
 
-    control::send_input_as_event(
-        {.type = control::InputType::Key, .code = SDLK_LEFT}, window_id
+    wind::send_input_as_event(
+        {.type = wind::InputType::Key, .code = SDLK_LEFT}, window_id
     );
     SDL_PushEvent(&quit_event);
     app.run();
 
     is(app.books[0]->state.page_offset, 0, "Pressing left goes to previous page");
 
-    control::send_input_as_event(
-        {.type = control::InputType::Key, .flags = control::InputFlags::Ctrl, .code = SDLK_q}, window_id
+    wind::send_input_as_event(
+        {.type = wind::InputType::Key, .flags = wind::InputFlags::Ctrl, .code = SDLK_q}, window_id
     );
     app.run();
     pass("App stopped on Ctrl-Q");

@@ -15,7 +15,7 @@
 
 AYU_DESCRIBE(liv::Command)
 AYU_DESCRIBE(liv::Statement,
-    delegate(base<control::Statement<liv::Command>>())
+    delegate(base<cmd::Statement<liv::Command>>())
 )
 
 namespace liv::commands {
@@ -24,31 +24,31 @@ namespace liv::commands {
 static void echo (Book&, const SharedString& text) {
     uni::print_utf8(text);
 }
-CONTROL_COMMAND_FUNCTION(Command, echo, 1)
+CMD_COMMAND_FUNCTION(Command, echo, 1)
 
 static void seq (Book& book, UniqueArray<Statement>& sts) {
     for (auto& st : sts) st(book);
 }
-CONTROL_COMMAND_COLLAPSE(Command, seq)
+CMD_COMMAND_COLLAPSE(Command, seq)
 
 static void toggle (Book& book, Statement& a, Statement& b, bool& flag) {
     ((flag = !flag) ? b : a)(book);
 }
-CONTROL_COMMAND_FUNCTION(Command, toggle, 2)
+CMD_COMMAND_FUNCTION(Command, toggle, 2)
 
 ///// APP AND WINDOW COMMANDS
 
 static void quit (Book&) {
     if (current_app) current_app->stop();
 }
-CONTROL_COMMAND_FUNCTION(Command, quit, 0)
+CMD_COMMAND_FUNCTION(Command, quit, 0)
 
 static void fullscreen (Book& book) {
     book.view.window.set_fullscreen(
         !book.view.window.is_fullscreen()
     );
 }
-CONTROL_COMMAND_FUNCTION(Command, fullscreen, 0)
+CMD_COMMAND_FUNCTION(Command, fullscreen, 0)
 
 static void leave_fullscreen (Book& book) {
      // Check if we're already fullscreen to avoid generating a size changed
@@ -57,7 +57,7 @@ static void leave_fullscreen (Book& book) {
         book.view.window.set_fullscreen(false);
     }
 }
-CONTROL_COMMAND_FUNCTION(Command, leave_fullscreen, 0)
+CMD_COMMAND_FUNCTION(Command, leave_fullscreen, 0)
 
 static void leave_fullscreen_or_quit (Book& book) {
     if (book.view.window.is_fullscreen()) {
@@ -67,7 +67,7 @@ static void leave_fullscreen_or_quit (Book& book) {
         current_app->stop();
     }
 }
-CONTROL_COMMAND_FUNCTION(Command, leave_fullscreen_or_quit, 0)
+CMD_COMMAND_FUNCTION(Command, leave_fullscreen_or_quit, 0)
 
 static void prompt_command (Book& book) {
     auto last = book.state.settings->get(
@@ -108,14 +108,14 @@ static void prompt_command (Book& book) {
         });
     }
 }
-CONTROL_COMMAND_FUNCTION(Command, prompt_command, 0)
+CMD_COMMAND_FUNCTION(Command, prompt_command, 0)
 
 static void say (Book& book, const FormatList& fmt) {
     UniqueString s;
     fmt.write(s, &book);
     print_utf8(cat(move(s), "\n"));
 }
-CONTROL_COMMAND_COLLAPSE(Command, say)
+CMD_COMMAND_COLLAPSE(Command, say)
 
  // TODO: allow single parameter
 static void message_box (
@@ -139,21 +139,21 @@ static void message_box (
         book.view.window
     );
 }
-CONTROL_COMMAND_FUNCTION(Command, message_box, 2)
+CMD_COMMAND_FUNCTION(Command, message_box, 2)
 
 static void clipboard_text (Book& book, const FormatList& fmt) {
     UniqueString text;
     fmt.write(text, &book);
     SDL_SetClipboardText(text.c_str());
 }
-CONTROL_COMMAND_COLLAPSE(Command, clipboard_text)
+CMD_COMMAND_COLLAPSE(Command, clipboard_text)
 
 static void shell (Book& book, const FormatList& fmt) {
     UniqueString cmd;
     fmt.write(cmd, &book);
     uni::shell(cmd.c_str());
 }
-CONTROL_COMMAND_COLLAPSE(Command, shell)
+CMD_COMMAND_COLLAPSE(Command, shell)
 
  // Not SharedArray because FormatList is not copyable
 static void run (Book& book, const UniqueArray<FormatList>& fmts) {
@@ -170,78 +170,78 @@ static void run (Book& book, const UniqueArray<FormatList>& fmts) {
     });
     uni::run(strs);
 }
-CONTROL_COMMAND_COLLAPSE(Command, run)
+CMD_COMMAND_COLLAPSE(Command, run)
 
 ///// ACTION COMMANDS
 
-CONTROL_COMMAND_METHOD(Command, Book, next, 0)
-CONTROL_COMMAND_METHOD(Command, Book, prev, 0)
-CONTROL_COMMAND_METHOD(Command, Book, seek, 1)
-CONTROL_COMMAND_METHOD(Command, Book, go_next, 1)
-CONTROL_COMMAND_METHOD(Command, Book, go, 2)
-CONTROL_COMMAND_METHOD(Command, Book, trap_pointer, 1)
+CMD_COMMAND_METHOD(Command, Book, next, 0)
+CMD_COMMAND_METHOD(Command, Book, prev, 0)
+CMD_COMMAND_METHOD(Command, Book, seek, 1)
+CMD_COMMAND_METHOD(Command, Book, go_next, 1)
+CMD_COMMAND_METHOD(Command, Book, go, 2)
+CMD_COMMAND_METHOD(Command, Book, trap_pointer, 1)
 
 ///// LAYOUT COMMANDS
 
-CONTROL_COMMAND_METHOD(Command, Book, spread_count, 1)
-CONTROL_COMMAND_METHOD(Command, Book, spread_direction, 1)
-CONTROL_COMMAND_METHOD(Command, Book, auto_zoom_mode, 1)
-CONTROL_COMMAND_METHOD(Command, Book, set_zoom, 1)
-CONTROL_COMMAND_METHOD(Command, Book, zoom, 1)
-CONTROL_COMMAND_METHOD(Command, Book, align, 2)
-CONTROL_COMMAND_METHOD(Command, Book, orientation, 1)
-CONTROL_COMMAND_METHOD(Command, Book, reset_layout, 0)
-CONTROL_COMMAND_METHOD(Command, Book, reset_settings, 0)
+CMD_COMMAND_METHOD(Command, Book, spread_count, 1)
+CMD_COMMAND_METHOD(Command, Book, spread_direction, 1)
+CMD_COMMAND_METHOD(Command, Book, auto_zoom_mode, 1)
+CMD_COMMAND_METHOD(Command, Book, set_zoom, 1)
+CMD_COMMAND_METHOD(Command, Book, zoom, 1)
+CMD_COMMAND_METHOD(Command, Book, align, 2)
+CMD_COMMAND_METHOD(Command, Book, orientation, 1)
+CMD_COMMAND_METHOD(Command, Book, reset_layout, 0)
+CMD_COMMAND_METHOD(Command, Book, reset_settings, 0)
 
 ///// RENDER COMMANDS
 
-CONTROL_COMMAND_METHOD(Command, Book, upscaler, 1)
-CONTROL_COMMAND_METHOD(Command, Book, deringer, 1)
-CONTROL_COMMAND_METHOD(Command, Book, downscaler, 1)
-CONTROL_COMMAND_METHOD(Command, Book, window_background, 1)
-CONTROL_COMMAND_METHOD(Command, Book, transparency_background, 1)
-CONTROL_COMMAND_METHOD(Command, Book, color_range, 1)
+CMD_COMMAND_METHOD(Command, Book, upscaler, 1)
+CMD_COMMAND_METHOD(Command, Book, deringer, 1)
+CMD_COMMAND_METHOD(Command, Book, downscaler, 1)
+CMD_COMMAND_METHOD(Command, Book, window_background, 1)
+CMD_COMMAND_METHOD(Command, Book, transparency_background, 1)
+CMD_COMMAND_METHOD(Command, Book, color_range, 1)
 
 ///// BOOK COMMANDS
 
-CONTROL_COMMAND_METHOD(Command, Book, sort, 1)
+CMD_COMMAND_METHOD(Command, Book, sort, 1)
 
 static void add_to_list (Book& book, const SharedString& list, SortMethod sort) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
 
-    auto loc = iri::from_fs_path(list);
+    auto loc = iri::from_filepath(list);
     const IRI& entry = book.block.pages[visible.l]->location;
     if (sort.criterion == SortCriterion::None)
         sort.criterion = SortCriterion::Natural;
     add_to_list(loc, entry, sort);
 }
-CONTROL_COMMAND_FUNCTION(Command, add_to_list, 1)
+CMD_COMMAND_FUNCTION(Command, add_to_list, 1)
 
 static void remove_from_list (Book& book, const SharedString& list) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
-    auto loc = iri::from_fs_path(list);
+    auto loc = iri::from_filepath(list);
     const IRI& entry = book.block.pages[visible.l]->location;
     liv::remove_from_list(loc, entry);
 }
-CONTROL_COMMAND_FUNCTION(Command, remove_from_list, 1)
+CMD_COMMAND_FUNCTION(Command, remove_from_list, 1)
 
 static void remove_from_book (Book& book) {
     book.remove_current_page();
 }
-CONTROL_COMMAND_FUNCTION(Command, remove_from_book, 0)
+CMD_COMMAND_FUNCTION(Command, remove_from_book, 0)
 
 static void move_to_folder (Book& book, const SharedString& folder) {
     auto visible = book.visible_range();
     if (!size(visible)) return;
     auto& loc = book.block.pages[visible.l]->location;
     auto new_path = cat(folder, '/', iri::path_filename(loc.path()));
-    fs::rename(iri::to_fs_path(loc), new_path);
+    fs::rename(iri::to_filepath(loc), new_path);
 }
-CONTROL_COMMAND_FUNCTION(Command, move_to_folder, 1)
+CMD_COMMAND_FUNCTION(Command, move_to_folder, 1)
 
-CONTROL_COMMAND_FUNCTION(Command, delete_mark, 0)
+CMD_COMMAND_FUNCTION(Command, delete_mark, 0)
 
 } // liv::commands
 

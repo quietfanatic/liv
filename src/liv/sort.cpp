@@ -156,7 +156,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
 
             auto modtimes = std::unique_ptr<ModTime[]>(new ModTime[len]);
             for (u32 i = 0; i < len; i++) {
-                modtimes[i] = fs::last_write_time(iri::to_fs_path(begin[i]));
+                modtimes[i] = fs::last_write_time(iri::to_filepath(begin[i]));
             }
             sort_with_props(begin, len, cmp, &modtimes[0]);
             break;
@@ -168,7 +168,7 @@ void sort_iris (IRI* begin, IRI* end, SortMethod method) {
 
             auto sizes = std::unique_ptr<usize[]>(new usize[len]);
             for (u32 i = 0; i < len; i++) {
-                sizes[i] = fs::file_size(iri::to_fs_path(begin[i]));
+                sizes[i] = fs::file_size(iri::to_filepath(begin[i]));
             }
             sort_with_props(begin, len, cmp, &sizes[0]);
             break;

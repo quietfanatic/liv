@@ -19,7 +19,7 @@ UniqueArray<IRI> read_list (const IRI& loc) {
             if (c == EOF) break;
             else if (c == '\n') {
                 if (line) {
-                    r.emplace_back(iri::from_fs_path(line));
+                    r.emplace_back(iri::from_filepath(line));
                     line = "";
                 }
             }
@@ -30,10 +30,10 @@ UniqueArray<IRI> read_list (const IRI& loc) {
         }
     }
     else {
-        for (char c : string_from_file(iri::to_fs_path(loc))) {
+        for (char c : string_from_file(iri::to_filepath(loc))) {
             if (c == '\n') {
                 if (line) {
-                    r.emplace_back(iri::from_fs_path(line, loc));
+                    r.emplace_back(iri::from_filepath(line, loc));
                     line = "";
                 }
             }
@@ -47,9 +47,9 @@ UniqueArray<IRI> read_list (const IRI& loc) {
 void write_list (const IRI& loc, Slice<IRI> entries) {
     UniqueString s;
     for (auto& e : entries) {
-        encat(s, iri::to_fs_path(e), '\n');
+        encat(s, iri::to_filepath(e), '\n');
     }
-    string_to_file(s, iri::to_fs_path(loc));
+    string_to_file(iri::to_filepath(loc), s);
 }
 
 void add_to_list (const IRI& list, const IRI& entry, SortMethod sort) {

@@ -6,7 +6,7 @@
 #include "../dirt/geo/rect.h"
 #include "../dirt/geo/scalar.h"
 #include "../dirt/geo/vec.h"
-#include "../dirt/glow/load-image.h"
+#include "../dirt/glow/image.h"
 #include "../dirt/glow/texture.h"
 #include "../dirt/iri/iri.h"
 #include "../dirt/uni/common.h"
