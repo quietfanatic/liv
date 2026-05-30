@@ -33,7 +33,7 @@ int main (int argc, char** argv) {
     bool list = false;
     bool done_flags = false;
     std::optional<SortMethod> sort;
-    Statement headless;
+    Instruction headless;
      // TODO: --no-mark, --data-folder, --settings
     for (int i = 1; i < argc; i++) {
         auto arg = StaticString(argv[i]);

@@ -134,7 +134,7 @@ void Settings::merge (Settings&& o) {
     if (o.parent != &builtin_default_settings) parent = o.parent;
 }
 
-Statement* Settings::map_input (wind::Input input) {
+Instruction* Settings::map_input (wind::Input input) {
     for (auto& [binding, action] : mappings) {
         if (input_matches_binding(input, binding)) {
             return &action;

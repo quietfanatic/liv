@@ -82,7 +82,7 @@ enum class TrimMode {
 
 struct Mapping {
     wind::Input input;
-    Statement action;
+    Instruction action;
 };
 
 struct WindowSettings {
@@ -157,7 +157,7 @@ struct Settings {
      // parent will also be transferred unless it is &builtin_default_settings.
     void merge (Settings&&);
 
-    Statement* map_input (wind::Input);
+    Instruction* map_input (wind::Input);
 };
 
 template <class T, class Category>

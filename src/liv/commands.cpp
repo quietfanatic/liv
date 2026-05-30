@@ -14,8 +14,8 @@
 #include "settings.h"
 
 AYU_DESCRIBE(liv::Command)
-AYU_DESCRIBE(liv::Statement,
-    delegate(base<cmd::Statement<liv::Command>>())
+AYU_DESCRIBE(liv::Instruction,
+    delegate(base<cmd::Instruction<liv::Command>>())
 )
 
 namespace liv::commands {
@@ -26,12 +26,12 @@ static void echo (Book&, const SharedString& text) {
 }
 CMD_COMMAND_FUNCTION(Command, echo, 1)
 
-static void seq (Book& book, UniqueArray<Statement>& sts) {
+static void seq (Book& book, UniqueArray<Instruction>& sts) {
     for (auto& st : sts) st(book);
 }
 CMD_COMMAND_COLLAPSE(Command, seq)
 
-static void toggle (Book& book, Statement& a, Statement& b, bool& flag) {
+static void toggle (Book& book, Instruction& a, Instruction& b, bool& flag) {
     ((flag = !flag) ? b : a)(book);
 }
 CMD_COMMAND_FUNCTION(Command, toggle, 2)
@@ -95,7 +95,7 @@ static void prompt_command (Book& book) {
     book.state.settings->window.last_prompt_command = text;
     book.need_mark = true;
     try {
-        Statement cmd;
+        Instruction cmd;
         ayu::item_from_list_string(&cmd, text);
         cmd(book);
     }

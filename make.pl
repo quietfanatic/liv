@@ -7,7 +7,7 @@ use File::Copy;
 ##### COMMAND LINE CONFIGURATION
 
 my %compilers = (
-    'cpp' => [qw(g++ -std=c++20 -fno-threadsafe-statics -ftemplate-backtrace-limit=0 -fconcepts-diagnostics-depth=4)],
+    'cpp' => [qw(g++ -std=c++23 -fno-threadsafe-statics -ftemplate-backtrace-limit=0 -fconcepts-diagnostics-depth=4)],
     'c' => ['gcc']
 );
 my @linker = 'g++';
